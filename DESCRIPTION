@@ -1,8 +1,8 @@
 Package: ggcube
 Type: Package
-Title: What the Package Does (Title Case)
-Version: 0.1.0
-Author: Who wrote it
+Title: 3D plotting with ggplot2
+Version: 0.1.0.9000
+Author: Matthew Kling
 Maintainer: The package maintainer <yourself@somewhere.net>
 Description: More about what it does (maybe more than one line)
     Use four spaces when indenting paragraphs within the Description.
@@ -11,3 +11,10 @@ Encoding: UTF-8
 LazyData: true
 URL: https://github.com/matthewkling/ggcube
 BugReports: https://github.com/matthewkling/ggcube/issues
+Depends: 
+    dplyr,
+    ggplot2,
+    R (>= 3.5),
+    stringr,
+    tidyr
+RoxygenNote: 7.3.2
