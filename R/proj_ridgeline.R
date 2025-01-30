@@ -41,6 +41,7 @@ proj_ridgeline <- function(mapping = NULL, data = NULL,
                            geom = "polygon", position = "identity",
                            na.rm = FALSE, show.legend = NA,
                            inherit.aes = TRUE,
+                           prj,
                            ...) {
       layer(
             stat = StatProjRidgeline,
@@ -50,7 +51,7 @@ proj_ridgeline <- function(mapping = NULL, data = NULL,
             position = position,
             show.legend = show.legend,
             inherit.aes = inherit.aes,
-            params = list(na.rm = na.rm, ...)
+            params = list(prj = prj, na.rm = na.rm, ...)
       )
 }
 

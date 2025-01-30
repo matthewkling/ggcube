@@ -4,16 +4,29 @@
 #' This function creates a `proj` object containing the parameters needed to
 #' project 3D data onto a 2D surface.
 #'
+#' @param pitch,roll,yaw rotation angles around the x-, y, and z-axes, respectively, in degrees.
+#' @param shear_xy,shear_xz,shear_yz bivariate shear factors in each dimension.
+#' @param persp logical indicating whether to project the data using perspective (i.e., with
+#'    objects farther from the viewer drawn smaller). Default is FALSE.
+#' @param dist scaled distance on the rotated z-axis from the center of the data to viewer;
+#'    only used if `persp = TRUE`.
+#' @param hjust,vjust scaled distance on the rotated x- and y-axes from the center of the
+#'    data to the viewer; only used if `persp = TRUE`.
+#' @param data data.frame from which to compute axis limits and breaks. The first 3 variables
+#'    should corresponding to the x, y, and z variables that will be supplied to `aes()`.
+#' @return an object of class `proj`.
 #' @export
-projection <- function(shear = 0, yaw = 0, pitch = 0, roll = 0,
-                       persp = F, dist = 1, hjust = .5, vjust = .5,
+projection <- function(pitch = 0, roll = 0, yaw = 0,
+                       shear_xy = 0, shear_xz = 0, shear_yz = 0,
+                       persp = FALSE, dist = 1, hjust = .5, vjust = .5,
                        xlim = NULL, ylim = NULL, zlim = NULL,
                        xbreaks = NULL, ybreaks = NULL, zbreaks = NULL,
                        data = NULL){
 
       # placeholder for parameter checks and messages
 
-      prj <- list(shear = shear, yaw = yaw, pitch = pitch, roll = roll,
+      prj <- list(yaw = yaw, pitch = pitch, roll = roll,
+                  shear_xy = shear_xy, shear_xz = shear_xz, shear_yz = shear_yz,
                   persp = persp, dist = dist, hjust = hjust, vjust = vjust,
                   xlim = xlim, ylim = ylim, zlim = zlim)
       class(prj) <- "proj"
@@ -37,7 +50,10 @@ project <- function(data, prj = projection(), expand = 0) {
 
         # shear
         shr <- diag(3)
-        shr[2, 1] <- prj$shear
+        # shr[2, 1] <- prj$shear
+        shr[2, 1] <- prj$shear_xy
+        shr[3, 1] <- prj$shear_xz
+        shr[3, 2] <- prj$shear_yz
 
         # rotate
         yaw <- prj$yaw / 180 * pi

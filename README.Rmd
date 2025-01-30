@@ -26,9 +26,9 @@ This package is under development, and a stable version has not yet been release
 
 ## Example
 
-To use ggcube, you use standard ggplot2 code along with a `projection()` and one or more `proj_*()` layer functions.
+To use ggcube, you define a `projection()` and then use standard ggplot code along with one or more `proj_*()` layer functions.
 
-Let's make a 3D scatterplot of the `mpg` dataset. We'll use `proj_data(geom = "point")` to add our main data, and `proj_margin()` to add some marginal scatter plots as well. ggplot2 is flexible and powerful, but a downside to using it for 3D plots is that in addition to adding our data, we also have to explicitly build up the reference layers like the panel background, gridlines, and labels. 
+Let's make a 3D scatterplot of the `mpg` dataset. We'll use `proj_data(geom = "point")` to add our main data, and `proj_margin()` to add some marginal scatter plots as well. In addition to adding our data, we also have to explicitly build up the reference layers like the panel background, gridlines, and labels. 
 
 ```{r example, warning = FALSE, message = FALSE}
 library(ggcube)
@@ -44,7 +44,7 @@ prj <- projection(pitch = -20, roll = 160,
 d %>%
       ggplot(aes(displ, hwy, z = cty, color = factor(cyl))) +
       proj_panel(prj = prj) +
-      proj_gridlines(prj = prj) +
+      proj_gridlines(prj = prj, color = "white") +
       proj_margin(prj = prj, geom = "point", 
                   color = "gray40", size = 1, alpha = .5) +
       proj_data(prj = prj, geom = "point", size = 3) +
@@ -55,14 +55,31 @@ d %>%
       proj_label(prj = prj, axis = "z", title = "city MPG",
                  edge = c("xmin", "ymax")) +
       coord_fixed() +
-      theme_void()
+      theme_cube()
 ```
 
+As another example, let's use `proj_surface()` to plot a projection of a 3D function:
 
-As another example, let's plot the `mountain` data set that comes with the package, using the
-`proj_ridgeline()` function to visualize a 3D surface:
+```{r surface, warning = FALSE, message = FALSE}
+# create data and define projection
+d <- expand_grid(x = seq(-10, 10, .5),
+                 y = seq(-10, 10, .5)) %>%
+      mutate(z = cos(sqrt(x^2 + y^2)))
+prj <- projection(data = d, pitch = 35, yaw = 55,
+                  persp = T, dist = 1, zlim = c(-3, 3))
 
-```{r example2, warning = FALSE, message = FALSE}
+# highlight terrain attributes using after_stat
+ggplot(d, aes(x, y, z = z, fill = after_stat(dzdy))) +
+      proj_surface(prj = prj) +
+      scale_fill_viridis_c(option = "B") +
+      theme_cube() +
+      coord_fixed()
+```
+
+Finally, let's plot the `mountain` data set that comes with the package, using the
+`proj_ridgeline()` function to visualize a 3D landscape:
+
+```{r ridgeline, warning = FALSE, message = FALSE}
 prj <- projection(pitch = 75, yaw = 55,
                   persp = T, dist = 1,
                   data = mountain)
@@ -71,7 +88,7 @@ mountain %>%
       ggplot(aes(x, y, z = z)) +
       proj_ridgeline(prj = prj, geom = "polygon", piece = "y",
                      fill = "black", color = "white", linewidth = .15) +
-      theme_void()
+      theme_cube()
 ```
 
 
