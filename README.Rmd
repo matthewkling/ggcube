@@ -33,14 +33,14 @@ Let's make a 3D scatterplot of the `mpg` dataset. We'll use `proj_data(geom = "p
 ```{r example, warning = FALSE, message = FALSE}
 library(ggcube)
 
-# get data
+# data
 d <- select(mpg, displ, hwy, cty, cyl)
 
-# define projection
+# projection
 prj <- projection(pitch = -20, roll = 160, 
                   persp = TRUE, dist = 2, data = d)
 
-# build plot
+# plot
 d %>%
       ggplot(aes(displ, hwy, z = cty, color = factor(cyl))) +
       proj_panel(prj = prj) +
@@ -61,29 +61,62 @@ d %>%
 As another example, let's use `proj_surface()` to plot a projection of a 3D function:
 
 ```{r surface, warning = FALSE, message = FALSE}
-# create data and define projection
+# data
 d <- expand_grid(x = seq(-10, 10, .5),
                  y = seq(-10, 10, .5)) %>%
       mutate(z = cos(sqrt(x^2 + y^2)))
+
+# projection
 prj <- projection(data = d, pitch = 35, yaw = 55,
                   persp = T, dist = 1, zlim = c(-3, 3))
 
-# highlight terrain attributes using after_stat
+# plot, highlighting terrain attributes with after_stat
 ggplot(d, aes(x, y, z = z, fill = after_stat(dzdy))) +
       proj_surface(prj = prj) +
       scale_fill_viridis_c(option = "B") +
       theme_cube() +
       coord_fixed()
 ```
+We can also create an arbitrary third axis along which to array a set of data. Here's an example using a map of the US:
+
+```{r layers, warning = FALSE, message = FALSE}
+# data
+country <- map_data("usa") %>% mutate(z = 0)
+state <- map_data("state") %>% mutate(z = 1)
+county <- map_data("county") %>% mutate(z = 2)
+d <- bind_rows(country, state, county)
+
+# projection
+prj <- projection(pitch = 75, yaw = 30,
+                  persp = T, dist = 3,
+                  zlim = c(-1, 5),
+                  data = d %>% select(long, lat, z))
+
+# plot
+d %>%
+      ggplot(aes(long, lat, z = z, fill = z,
+                 group = paste(z, group), order = order)) +
+      proj_panel(prj = prj, faces = "zmin") +
+      proj_gridlines(prj = prj, faces = "zmin", color = "white") +
+      proj_data(prj = prj, geom = "polygon", 
+                color = "black", linewidth = .05) +
+      scale_fill_gradient(high = "red", low = "gold") +
+      theme_cube(legend.position = "none") +
+      coord_fixed()
+```
+
+
 
 Finally, let's plot the `mountain` data set that comes with the package, using the
 `proj_ridgeline()` function to visualize a 3D landscape:
 
 ```{r ridgeline, warning = FALSE, message = FALSE}
+# projection
 prj <- projection(pitch = 75, yaw = 55,
                   persp = T, dist = 1,
                   data = mountain)
 
+# plot
 mountain %>%
       ggplot(aes(x, y, z = z)) +
       proj_ridgeline(prj = prj, geom = "polygon", piece = "y",
