@@ -75,28 +75,28 @@ rather than combining with them. This is most useful for helper functions
 that define both data and aesthetics and shouldn't inherit behaviour from
 the default plot specification, e.g. \code{\link[ggplot2:borders]{borders()}}.}
 
-\item{prj}{A `proj` object created by \code{projection()}.}
+\item{prj}{A \code{proj} object created by \code{projection()}.}
 
 \item{faces}{A character vector indicating which of the six faces of the projected cube to
 select. Can be any combination of the following:
 \itemize{
-  \item \code{"all"} all six faces
-  \item \code{"near"} faces touching the cube corner nearest the viewer
-  \item \code{"far"} faces touching the cube corner farthest from the viewer
-  \item \code{"open"} faces whose inside surface faces the viewer
-  \item \code{"closed"} faces whose outside surface faces the viewer
-  \item \code{"xmin"} face at the low end of the x-axis
-  \item \code{"xmax"} face at the high end of the x-axis
-  \item \code{"ymin"} face at the low end of the y-axis
-  \item \code{"ymax"} face at the high end of the y-axis
-  \item \code{"zmin"} face at the low end of the z-axis
-  \item \code{"zmax"} face at the high end of the z-axis
-  \item \code{"left"} face farthest to the left
-  \item \code{"right"} face farthest to the right
-  \item \code{"top"} face closest to the top
-  \item \code{"bottom"} face closest to the bottom
-  \item \code{"front"} face closest to the viewer
-  \item \code{"back"} face farthest from the viewer
+\item \code{"all"} all six faces
+\item \code{"near"} faces touching the cube corner nearest the viewer
+\item \code{"far"} faces touching the cube corner farthest from the viewer
+\item \code{"open"} faces whose inside surface faces the viewer
+\item \code{"closed"} faces whose outside surface faces the viewer
+\item \code{"xmin"} face at the low end of the x-axis
+\item \code{"xmax"} face at the high end of the x-axis
+\item \code{"ymin"} face at the low end of the y-axis
+\item \code{"ymax"} face at the high end of the y-axis
+\item \code{"zmin"} face at the low end of the z-axis
+\item \code{"zmax"} face at the high end of the z-axis
+\item \code{"left"} face farthest to the left
+\item \code{"right"} face farthest to the right
+\item \code{"top"} face closest to the top
+\item \code{"bottom"} face closest to the bottom
+\item \code{"front"} face closest to the viewer
+\item \code{"back"} face farthest from the viewer
 }}
 
 \item{...}{Other arguments passed on to \code{\link[ggplot2:layer]{layer()}}'s \code{params} argument. These

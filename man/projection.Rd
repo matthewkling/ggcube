@@ -27,24 +27,25 @@ projection(
 \arguments{
 \item{pitch, roll, yaw}{rotation angles around the x-, y, and z-axes, respectively, in degrees.}
 
-\item{shear_xy, shear_xz, shear_yz}{bivariate shear factors in each dimension.}
+\item{shear_xy, shear_xz, shear_yz}{bivariate shear factors in each dimension, useful for
+specifying oblique projections.}
 
 \item{persp}{logical indicating whether to project the data using perspective (i.e., with
 objects farther from the viewer drawn smaller). Default is FALSE.}
 
 \item{dist}{scaled distance on the rotated z-axis from the center of the data to viewer;
-only used if `persp = TRUE`.}
+only used if \code{persp = TRUE}.}
 
 \item{hjust, vjust}{scaled distance on the rotated x- and y-axes from the center of the
-data to the viewer; only used if `persp = TRUE`.}
+data to the viewer; only used if \code{persp = TRUE}.}
 
 \item{data}{data.frame from which to compute axis limits and breaks. The first 3 variables
-should corresponding to the x, y, and z variables that will be supplied to `aes()`.}
+should corresponding to the x, y, and z variables that will be supplied to \code{aes()}.}
 }
 \value{
-an object of class `proj`.
+an object of class \code{proj}.
 }
 \description{
-This function creates a `proj` object containing the parameters needed to
+This function creates a \code{proj} object containing the parameters needed to
 project 3D data onto a 2D surface.
 }

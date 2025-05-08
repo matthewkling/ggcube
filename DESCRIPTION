@@ -17,4 +17,5 @@ Depends:
     R (>= 3.5),
     stringr,
     tidyr
+Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2

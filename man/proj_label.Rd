@@ -66,7 +66,7 @@ rather than combining with them. This is most useful for helper functions
 that define both data and aesthetics and shouldn't inherit behaviour from
 the default plot specification, e.g. \code{\link[ggplot2:borders]{borders()}}.}
 
-\item{prj}{A `proj` object created by \code{projection()}.}
+\item{prj}{A \code{proj} object created by \code{projection()}.}
 
 \item{axis}{A character indicating which axis to label; either "x", "y", or "z".}
 

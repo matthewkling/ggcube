@@ -46,7 +46,21 @@ StatProjSurface <- ggproto("StatProjSurface", Stat,
 
 
 
-#' Surface
+#' 3D surface
+#'
+#' This stat visualizes a 3D surface by constructing a set of rectangular polygons and projecting them into 2D.
+#' This function requires regular data, in which x and y coordinates form a grid, each combination of x and y
+#' appears once, and the associated z value gives the height of the surface at that location.
+#'
+#' @details
+#' The following `after_stat()` variables are available:
+#' * `after_stat(dzdx)`: the slope of the tile in the x-direction
+#' * `after_stat(dzdy)`: the slope of the tile in the y-direction
+#' * `after_stat(slope)`: the overall slope of the tile
+#' * `after_stat(aspect)`: the directional orientation of the tile
+#' * `after_stat(x)`: the x-coordinate after projection
+#' * `after_stat(y)`: the y-coordinate after projection
+#' * `after_stat(z)`: the z-coordinate after projection
 #'
 #' @param prj A `proj` object created by \code{projection()}.
 #' @examples
@@ -72,7 +86,7 @@ StatProjSurface <- ggproto("StatProjSurface", Stat,
 #'       scale_fill_viridis_c(option = "B") +
 #'       theme_cube() +
 #'       coord_fixed()
-#' @return a ggplot
+#' @return a ggplot layer
 #' @export
 proj_surface <- function(mapping = NULL, data = NULL,
                       geom = "polygon", position = "identity",

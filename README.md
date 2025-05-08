@@ -6,7 +6,7 @@
 <!-- badges: start -->
 <!-- badges: end -->
 
-The ggcube library is an extension of ggplot2 for 3D plotting.
+The `ggcube` library is an extension of ggplot2 for 3D plotting.
 
 This package is under development, and a stable version has not yet been
 released.
@@ -57,8 +57,8 @@ As another example, let’s use `proj_surface()` to plot a projection of a
 
 ``` r
 # data
-d <- expand_grid(x = seq(-10, 10, .5),
-                 y = seq(-10, 10, .5)) %>%
+d <- expand_grid(x = seq(-10, 10, .25),
+                 y = seq(-10, 10, .25)) %>%
       mutate(z = cos(sqrt(x^2 + y^2)))
 
 # projection
@@ -69,8 +69,7 @@ prj <- projection(data = d, pitch = 35, yaw = 55,
 ggplot(d, aes(x, y, z = z, fill = after_stat(dzdy))) +
       proj_surface(prj = prj) +
       scale_fill_viridis_c(option = "B") +
-      theme_cube() +
-      coord_fixed()
+      theme_cube()
 ```
 
 <img src="man/figures/README-surface-1.png" width="100%" /> We can also
@@ -105,8 +104,9 @@ d %>%
 
 <img src="man/figures/README-layers-1.png" width="100%" />
 
-Finally, let’s plot the `mountain` data set that comes with the package,
-using the `proj_ridgeline()` function to visualize a 3D landscape:
+As a final example, let’s plot the `mountain` data set that comes with
+the package, using the `proj_ridgeline()` function to visualize a 3D
+landscape:
 
 ``` r
 # projection

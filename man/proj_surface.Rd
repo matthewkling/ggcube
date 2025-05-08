@@ -2,7 +2,7 @@
 % Please edit documentation in R/proj_surface.R
 \name{proj_surface}
 \alias{proj_surface}
-\title{Surface}
+\title{3D surface}
 \usage{
 proj_surface(
   mapping = NULL,
@@ -17,13 +17,27 @@ proj_surface(
 )
 }
 \arguments{
-\item{prj}{A `proj` object created by \code{projection()}.}
+\item{prj}{A \code{proj} object created by \code{projection()}.}
 }
 \value{
-a ggplot
+a ggplot layer
 }
 \description{
-Surface
+This stat visualizes a 3D surface by constructing a set of rectangular polygons and projecting them into 2D.
+This function requires regular data, in which x and y coordinates form a grid, each combination of x and y
+appears once, and the associated z value gives the height of the surface at that location.
+}
+\details{
+The following \code{after_stat()} variables are available:
+\itemize{
+\item \code{after_stat(dzdx)}: the slope of the tile in the x-direction
+\item \code{after_stat(dzdy)}: the slope of the tile in the y-direction
+\item \code{after_stat(slope)}: the overall slope of the tile
+\item \code{after_stat(aspect)}: the directional orientation of the tile
+\item \code{after_stat(x)}: the x-coordinate after projection
+\item \code{after_stat(y)}: the y-coordinate after projection
+\item \code{after_stat(z)}: the z-coordinate after projection
+}
 }
 \examples{
 library(tidyverse)

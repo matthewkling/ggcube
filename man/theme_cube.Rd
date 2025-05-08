@@ -7,12 +7,12 @@
 theme_cube(...)
 }
 \arguments{
-\item{...}{arguments passed to `ggplot2::theme()`}
+\item{...}{arguments passed to \code{ggplot2::theme()}}
 }
 \value{
 a gg theme object
 }
 \description{
-This is a variant on `ggplot::theme_gray()` with blank panel background,
+This is a variant on \code{ggplot::theme_gray()} with blank panel background,
 grid, and axis elements.
 }

@@ -5,7 +5,8 @@
 #' project 3D data onto a 2D surface.
 #'
 #' @param pitch,roll,yaw rotation angles around the x-, y, and z-axes, respectively, in degrees.
-#' @param shear_xy,shear_xz,shear_yz bivariate shear factors in each dimension.
+#' @param shear_xy,shear_xz,shear_yz bivariate shear factors in each dimension, useful for
+#'    specifying oblique projections.
 #' @param persp logical indicating whether to project the data using perspective (i.e., with
 #'    objects farther from the viewer drawn smaller). Default is FALSE.
 #' @param dist scaled distance on the rotated z-axis from the center of the data to viewer;
