@@ -12,10 +12,15 @@ LazyData: true
 URL: https://github.com/matthewkling/ggcube
 BugReports: https://github.com/matthewkling/ggcube/issues
 Depends: 
-    dplyr,
-    ggplot2,
     R (>= 3.5),
+    ggplot2
+Imports:
+    dplyr,
+    tidyr,
     stringr,
-    tidyr
+    scales,
+    grid,
+    lifecycle,
+    labeling
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
