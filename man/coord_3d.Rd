@@ -14,6 +14,8 @@ coord_3d(
   clip = "off",
   faces = "background",
   auto_text_orientation = TRUE,
+  scales = "free",
+  ratio = c(1, 1, 1),
   xtext = "auto",
   ytext = "auto",
   ztext = "auto"
@@ -46,13 +48,27 @@ drawing outside the plot panel (recommended for 3D plots).}
 rotate to align with the projected axis directions. When \code{FALSE}, uses theme
 text angle settings.}
 
+\item{scales}{Character string specifying aspect ratio behavior:
+\itemize{
+\item \code{"free"} (default): Each axis scales independently to fill cube space,
+then \code{ratio} applies to standardized coordinates. This gives maximum
+visual range for each dimension.
+\item \code{"fixed"}: Maintains proportional relationship to the displayed
+coordinate system (including any expansion/padding), then \code{ratio}
+applies to these scale-space proportions. Similar to \code{coord_fixed()}
+but for 3D - visual ratios match the labeled axis ranges.
+}}
+
+\item{ratio}{Numeric vector of length 3 specifying relative axis lengths as
+\code{c(x, y, z)}. Defaults to \code{c(1, 1, 1)} for equal proportions.
+\itemize{
+\item With \code{scales = "free"}: Ratios apply to cube coordinates
+\item With \code{scales = "fixed"}: Ratios apply to scale-space coordinates
+}}
+
 \item{xtext, ytext, ztext}{Character strings or length-2 character vectors specifying
 axis label placement. Use \code{"auto"} for automatic selection, or specify
 \code{c("face1", "face2")} to place labels on the edge shared by those faces.}
-}
-\value{
-A list containing the coordinate system object and default theme modifications.
-When added to a ggplot, provides 3D projection and appropriate plot margins.
 }
 \description{
 \code{coord_3d} creates a 3D coordinate system that projects 3D data onto a 2D plot.
@@ -62,35 +78,24 @@ intelligent edge selection for optimal readability.
 \examples{
 library(ggplot2)
 
-# Basic 3D scatterplot
-ggplot(mtcars, aes(mpg, wt, z = qsec, color = cyl)) +
+# Default free scales (current behavior - maximum visual range)
+ggplot(mtcars, aes(mpg, wt, z = qsec)) +
   geom_point() +
   coord_3d()
 
-# Custom rotation angles
+# Fixed scales - visual proportions match coordinate system (like coord_fixed)
 ggplot(mtcars, aes(mpg, wt, z = qsec)) +
   geom_point() +
-  coord_3d(pitch = 45, roll = 60, yaw = 15)
+  coord_3d(scales = "fixed")
 
-# Without perspective (orthographic projection)
+# Custom cube ratios (make z twice as tall visually)
 ggplot(mtcars, aes(mpg, wt, z = qsec)) +
   geom_point() +
-  coord_3d(persp = FALSE)
+  coord_3d(scales = "free", ratio = c(1, 1, 2))
 
-# Manual axis label placement
+# Custom scale ratios (z gets twice the visual space relative to its scale range)
 ggplot(mtcars, aes(mpg, wt, z = qsec)) +
   geom_point() +
-  coord_3d(xtext = c("ymin", "zmax"), ytext = c("xmax", "zmin"))
-
-# Use with complete themes (apply theme first)
-ggplot(mtcars, aes(mpg, wt, z = qsec)) +
-  geom_point() +
-  theme_bw() +  # Apply complete theme first
-  coord_3d()    # Then apply 3D coordinate system
+  coord_3d(scales = "fixed", ratio = c(1, 1, 2))
 
 }
-\seealso{
-\code{\link{scale_z_continuous}} for z-axis scaling,
-\code{\link{theme_cube}} for 3D-specific themes
-}
-\concept{3D coordinate functions}

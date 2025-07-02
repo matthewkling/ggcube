@@ -1,21 +1,30 @@
-
-
-#' Generate grid data using actual scale breaks
+#' Generate grid data using actual scale breaks with aspect ratio
 #'
 #' @param visible_faces Character vector of visible face names
 #' @param scale_info List containing limits and breaks for x, y, z
+#' @param scales Aspect ratio behavior ("free" or "fixed")
+#' @param ratio Length-3 numeric vector of axis ratios
 #' @return Data frame with grid lines in standard domain, including break values
-make_scale_grid <- function(visible_faces, scale_info) {
+make_scale_grid <- function(visible_faces, scale_info, scales = "free", ratio = c(1, 1, 1)) {
 
-      # Transform real-world breaks to standard domain [-0.5, 0.5]
-      x_breaks_std <- scale_to_standard(scale_info$x$breaks, scale_info$x$limits)
-      y_breaks_std <- scale_to_standard(scale_info$y$breaks, scale_info$y$limits)
-      z_breaks_std <- scale_to_standard(scale_info$z$breaks, scale_info$z$limits)
+      # Calculate effective ratios using scale ranges (includes expansion)
+      scale_ranges <- list(
+            x = scale_info$x$limits,
+            y = scale_info$y$limits,
+            z = scale_info$z$limits
+      )
 
-      # Full extents in standard domain (always -0.5 to 0.5)
-      x_extent_std <- c(-0.5, 0.5)
-      y_extent_std <- c(-0.5, 0.5)
-      z_extent_std <- c(-0.5, 0.5)
+      effective_ratios <- compute_effective_ratios(scale_ranges, scales, ratio)
+
+      # Transform real-world breaks to standard domain with aspect
+      x_breaks_std <- scale_to_standard(scale_info$x$breaks, scale_info$x$limits) * effective_ratios[1]
+      y_breaks_std <- scale_to_standard(scale_info$y$breaks, scale_info$y$limits) * effective_ratios[2]
+      z_breaks_std <- scale_to_standard(scale_info$z$breaks, scale_info$z$limits) * effective_ratios[3]
+
+      # Full extents in standard domain with aspect
+      x_extent_std <- c(-0.5, 0.5) * effective_ratios[1]
+      y_extent_std <- c(-0.5, 0.5) * effective_ratios[2]
+      z_extent_std <- c(-0.5, 0.5) * effective_ratios[3]
 
       grid_data <- list()
       group_id <- 1
@@ -28,8 +37,7 @@ make_scale_grid <- function(visible_faces, scale_info) {
 
       # Generate grid lines for each visible face using actual breaks
       if ("xmin" %in% visible_faces) {
-            x_val <- -0.5
-            # Lines marking Y breaks (extend across full Z range)
+            x_val <- x_extent_std[1]
             for (i in seq_along(y_breaks_std)) {
                   y_val <- y_breaks_std[i]
                   y_break <- scale_info$y$breaks[i]
@@ -37,7 +45,6 @@ make_scale_grid <- function(visible_faces, scale_info) {
                         create_line(rep(x_val, 2), rep(y_val, 2), z_extent_std, group_id, "xmin", y_break, "y")
                   group_id <- group_id + 1
             }
-            # Lines marking Z breaks (extend across full Y range)
             for (i in seq_along(z_breaks_std)) {
                   z_val <- z_breaks_std[i]
                   z_break <- scale_info$z$breaks[i]
@@ -48,8 +55,7 @@ make_scale_grid <- function(visible_faces, scale_info) {
       }
 
       if ("xmax" %in% visible_faces) {
-            x_val <- 0.5
-            # Lines marking Y breaks (extend across full Z range)
+            x_val <- x_extent_std[2]
             for (i in seq_along(y_breaks_std)) {
                   y_val <- y_breaks_std[i]
                   y_break <- scale_info$y$breaks[i]
@@ -57,7 +63,6 @@ make_scale_grid <- function(visible_faces, scale_info) {
                         create_line(rep(x_val, 2), rep(y_val, 2), z_extent_std, group_id, "xmax", y_break, "y")
                   group_id <- group_id + 1
             }
-            # Lines marking Z breaks (extend across full Y range)
             for (i in seq_along(z_breaks_std)) {
                   z_val <- z_breaks_std[i]
                   z_break <- scale_info$z$breaks[i]
@@ -68,8 +73,7 @@ make_scale_grid <- function(visible_faces, scale_info) {
       }
 
       if ("ymin" %in% visible_faces) {
-            y_val <- -0.5
-            # Lines marking X breaks (extend across full Z range)
+            y_val <- y_extent_std[1]
             for (i in seq_along(x_breaks_std)) {
                   x_val <- x_breaks_std[i]
                   x_break <- scale_info$x$breaks[i]
@@ -77,7 +81,6 @@ make_scale_grid <- function(visible_faces, scale_info) {
                         create_line(rep(x_val, 2), rep(y_val, 2), z_extent_std, group_id, "ymin", x_break, "x")
                   group_id <- group_id + 1
             }
-            # Lines marking Z breaks (extend across full X range)
             for (i in seq_along(z_breaks_std)) {
                   z_val <- z_breaks_std[i]
                   z_break <- scale_info$z$breaks[i]
@@ -88,8 +91,7 @@ make_scale_grid <- function(visible_faces, scale_info) {
       }
 
       if ("ymax" %in% visible_faces) {
-            y_val <- 0.5
-            # Lines marking X breaks (extend across full Z range)
+            y_val <- y_extent_std[2]
             for (i in seq_along(x_breaks_std)) {
                   x_val <- x_breaks_std[i]
                   x_break <- scale_info$x$breaks[i]
@@ -97,7 +99,6 @@ make_scale_grid <- function(visible_faces, scale_info) {
                         create_line(rep(x_val, 2), rep(y_val, 2), z_extent_std, group_id, "ymax", x_break, "x")
                   group_id <- group_id + 1
             }
-            # Lines marking Z breaks (extend across full X range)
             for (i in seq_along(z_breaks_std)) {
                   z_val <- z_breaks_std[i]
                   z_break <- scale_info$z$breaks[i]
@@ -108,8 +109,7 @@ make_scale_grid <- function(visible_faces, scale_info) {
       }
 
       if ("zmin" %in% visible_faces) {
-            z_val <- -0.5
-            # Lines marking X breaks (extend across full Y range)
+            z_val <- z_extent_std[1]
             for (i in seq_along(x_breaks_std)) {
                   x_val <- x_breaks_std[i]
                   x_break <- scale_info$x$breaks[i]
@@ -117,7 +117,6 @@ make_scale_grid <- function(visible_faces, scale_info) {
                         create_line(rep(x_val, 2), y_extent_std, rep(z_val, 2), group_id, "zmin", x_break, "x")
                   group_id <- group_id + 1
             }
-            # Lines marking Y breaks (extend across full X range)
             for (i in seq_along(y_breaks_std)) {
                   y_val <- y_breaks_std[i]
                   y_break <- scale_info$y$breaks[i]
@@ -128,8 +127,7 @@ make_scale_grid <- function(visible_faces, scale_info) {
       }
 
       if ("zmax" %in% visible_faces) {
-            z_val <- 0.5
-            # Lines marking X breaks (extend across full Y range)
+            z_val <- z_extent_std[2]
             for (i in seq_along(x_breaks_std)) {
                   x_val <- x_breaks_std[i]
                   x_break <- scale_info$x$breaks[i]
@@ -137,7 +135,6 @@ make_scale_grid <- function(visible_faces, scale_info) {
                         create_line(rep(x_val, 2), y_extent_std, rep(z_val, 2), group_id, "zmax", x_break, "x")
                   group_id <- group_id + 1
             }
-            # Lines marking Y breaks (extend across full X range)
             for (i in seq_along(y_breaks_std)) {
                   y_val <- y_breaks_std[i]
                   y_break <- scale_info$y$breaks[i]
@@ -156,13 +153,28 @@ make_scale_grid <- function(visible_faces, scale_info) {
 }
 
 
-make_face_panels <- function(visible_faces){
+make_face_panels <- function(visible_faces, scales = "free", ratio = c(1, 1, 1), scale_ranges = NULL){
       if (length(visible_faces) == 0) return(NULL)
+
+      # Calculate effective ratios using scale ranges (includes expansion)
+      effective_ratios <- compute_effective_ratios(scale_ranges, scales, ratio)
+
       panels <- list()
-      corners <- expand.grid(x = c(-0.5, 0.5), y = c(-0.5, 0.5), z = c(-0.5, 0.5))
+      corners <- expand.grid(x = c(-0.5, 0.5) * effective_ratios[1],
+                             y = c(-0.5, 0.5) * effective_ratios[2],
+                             z = c(-0.5, 0.5) * effective_ratios[3])
 
       for(face in visible_faces){
-            crnrs <- corners[corners[substr(face, 1, 1)] == switch(substr(face, 2, 4), "min" = -.5, "max" = .5), ]
+            # Extract the axis and min/max from face name
+            face_axis <- substr(face, 1, 1)
+            face_value <- ifelse(substr(face, 2, 4) == "min", -0.5, 0.5)
+
+            # Find which axis index this corresponds to
+            axis_index <- which(c("x", "y", "z") == face_axis)
+            face_value <- face_value * effective_ratios[axis_index]
+
+            # Select corners where this axis equals the face value
+            crnrs <- corners[corners[face_axis] == face_value, ]
             crnrs$face <- face
             crnrs <- crnrs[c(1, 3, 4, 2)]
             panels[[length(panels) + 1]] <- crnrs
@@ -334,7 +346,10 @@ render_cube <- function(self, panel_params, theme, layer = "background"){
       # 1. Render panels
       if (show_panels && !is.null(visible_faces)) {
             tryCatch({
-                  face_corners <- make_face_panels(visible_faces)
+                  face_corners <- make_face_panels(visible_faces, panel_params$scales, panel_params$ratio,
+                                                   list(x = panel_params$scale_info$x$limits,
+                                                        y = panel_params$scale_info$y$limits,
+                                                        z = panel_params$scale_info$z$limits))
                   if (!is.null(face_corners) && nrow(face_corners) > 0) {
                         face_corners_transformed <- transform_3d_standard(face_corners, panel_params$proj)
                         face_corners_transformed$face <- face_corners$face
@@ -377,7 +392,10 @@ render_cube <- function(self, panel_params, theme, layer = "background"){
       # 3. Render panel.border
       if (show_border && !is.null(visible_faces)) {
             tryCatch({
-                  face_corners <- make_face_panels(visible_faces)
+                  face_corners <- make_face_panels(visible_faces, panel_params$scales, panel_params$ratio,
+                                                   list(x = panel_params$scale_info$x$limits,
+                                                        y = panel_params$scale_info$y$limits,
+                                                        z = panel_params$scale_info$z$limits))
                   if (!is.null(face_corners) && nrow(face_corners) > 0) {
                         face_corners_transformed <- transform_3d_standard(face_corners, panel_params$proj)
                         face_corners_transformed$face <- face_corners$face

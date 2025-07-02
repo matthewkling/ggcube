@@ -1,6 +1,104 @@
-# library(ggplot2)
-# library(grid)
-# library(tidyverse)
+#' 3D coordinate system
+#'
+#' \code{coord_3d} creates a 3D coordinate system that projects 3D data onto a 2D plot.
+#' It supports rotation, perspective projection, and automatic axis labeling with
+#' intelligent edge selection for optimal readability.
+#'
+#' @param pitch Rotation around x-axis in degrees. Positive values rotate "up" towards viewer.
+#' @param roll Rotation around y-axis in degrees. Positive values rotate "right" edge towards viewer.
+#' @param yaw Rotation around z-axis in degrees. Positive values rotate counterclockwise when viewed from above.
+#' @param persp Logical indicating whether to apply perspective projection. When \code{TRUE},
+#'   objects farther from the viewer appear smaller.
+#' @param dist Distance from viewer to center of the data cube when \code{persp = TRUE}.
+#'   Larger values create less perspective distortion.
+#' @param expand Logical indicating whether to expand axis ranges beyond the data range,
+#'   similar to standard ggplot2 behavior.
+#' @param clip Character string indicating clipping behavior. Use \code{"off"} to allow
+#'   drawing outside the plot panel (recommended for 3D plots).
+#' @param faces Character string specifying which cube faces to render. Options include
+#'   \code{"all"}, \code{"background"}, \code{"foreground"}, or specific face names like
+#'   \code{"xmin"}, \code{"ymax"}, etc.
+#' @param auto_text_orientation Logical indicating whether axis text should automatically
+#'   rotate to align with the projected axis directions. When \code{FALSE}, uses theme
+#'   text angle settings.
+#' @param scales Character string specifying aspect ratio behavior:
+#'   \itemize{
+#'     \item \code{"free"} (default): Each axis scales independently to fill cube space,
+#'       then \code{ratio} applies to standardized coordinates. This gives maximum
+#'       visual range for each dimension.
+#'     \item \code{"fixed"}: Maintains proportional relationship to the displayed
+#'       coordinate system (including any expansion/padding), then \code{ratio}
+#'       applies to these scale-space proportions. Similar to \code{coord_fixed()}
+#'       but for 3D - visual ratios match the labeled axis ranges.
+#'   }
+#' @param ratio Numeric vector of length 3 specifying relative axis lengths as
+#'   \code{c(x, y, z)}. Defaults to \code{c(1, 1, 1)} for equal proportions.
+#'   \itemize{
+#'     \item With \code{scales = "free"}: Ratios apply to cube coordinates
+#'     \item With \code{scales = "fixed"}: Ratios apply to scale-space coordinates
+#'   }
+#' @param xtext,ytext,ztext Character strings or length-2 character vectors specifying
+#'   axis label placement. Use \code{"auto"} for automatic selection, or specify
+#'   \code{c("face1", "face2")} to place labels on the edge shared by those faces.
+#'
+#' @examples
+#' library(ggplot2)
+#'
+#' # Default free scales (current behavior - maximum visual range)
+#' ggplot(mtcars, aes(mpg, wt, z = qsec)) +
+#'   geom_point() +
+#'   coord_3d()
+#'
+#' # Fixed scales - visual proportions match coordinate system (like coord_fixed)
+#' ggplot(mtcars, aes(mpg, wt, z = qsec)) +
+#'   geom_point() +
+#'   coord_3d(scales = "fixed")
+#'
+#' # Custom cube ratios (make z twice as tall visually)
+#' ggplot(mtcars, aes(mpg, wt, z = qsec)) +
+#'   geom_point() +
+#'   coord_3d(scales = "free", ratio = c(1, 1, 2))
+#'
+#' # Custom scale ratios (z gets twice the visual space relative to its scale range)
+#' ggplot(mtcars, aes(mpg, wt, z = qsec)) +
+#'   geom_point() +
+#'   coord_3d(scales = "fixed", ratio = c(1, 1, 2))
+#'
+#' @export
+coord_3d <- function(pitch = -30, roll = 30, yaw = 0,
+                     persp = TRUE, dist = 3,
+                     expand = TRUE, clip = "off",
+                     faces = "background",
+                     auto_text_orientation = TRUE,
+                     scales = "free",
+                     ratio = c(1, 1, 1),
+                     xtext = "auto", ytext = "auto", ztext = "auto") {
+
+      # Validate parameters
+      if (!scales %in% c("free", "fixed")) {
+            stop("scales must be 'free' or 'fixed'")
+      }
+
+      if (!is.numeric(ratio) || length(ratio) != 3 || any(ratio <= 0)) {
+            stop("ratio must be a positive numeric vector of length 3")
+      }
+
+      list(
+            ggproto(NULL, Coord3D,
+                    pitch = pitch, roll = roll, yaw = yaw,
+                    persp = persp, dist = dist,
+                    expand = expand, clip = clip,
+                    faces = faces,
+                    auto_text_orientation = auto_text_orientation,
+                    scales = scales,
+                    ratio = ratio,
+                    xtext = xtext, ytext = ytext, ztext = ztext
+            ),
+            theme(plot.margin = margin(20, 20, 20, 20, "pt"))
+      )
+}
+
+
 
 
 Coord3D <- ggproto("Coord3D", CoordCartesian,
@@ -15,6 +113,8 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                    clip = "off",
                    faces = "background",
                    auto_text_orientation = TRUE,
+                   scales = "free",
+                   ratio = c(1, 1, 1),
 
                    plot_bounds = c(0, 1, 0, 1),  # [xmin, xmax, ymin, ymax]
 
@@ -25,6 +125,7 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                          original_y_range <- NULL
                          original_z_range <- NULL
 
+                         ## fixme -- ugly and inefficent
                          tryCatch({
                                # Look for the original plot data in parent environments
                                for (i in 1:10) {
@@ -414,6 +515,10 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                          scale_x$name <- ""
                          scale_y$name <- ""
 
+                         # Store aspect ratio information
+                         panel_params$scales <- self$scales
+                         panel_params$ratio <- self$ratio
+
                          panel_params$proj <- list(pitch = self$pitch, roll = self$roll, yaw = self$yaw,
                                                    persp = self$persp, dist = self$dist)
 
@@ -424,10 +529,38 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                          panel_params$visible_faces_fg <- visible_faces_fgbg$fg
                          panel_params$visible_faces_bg <- visible_faces_fgbg$bg
 
+                         # Calculate effective ratios for bounds calculation
+                         effective_ratios <- compute_effective_ratios(
+                               list(x = panel_params$scale_info$x$limits,
+                                    y = panel_params$scale_info$y$limits,
+                                    z = panel_params$scale_info$z$limits),
+                               panel_params$scales,
+                               panel_params$ratio
+                         )
+
+                         # Helper function to compute plot bounds
+                         calculate_plot_bounds <- function(all_bounds_x, all_bounds_y){
+                               x_bounds <- range(all_bounds_x, na.rm = TRUE)
+                               y_bounds <- range(all_bounds_y, na.rm = TRUE)
+
+                               # Add padding
+                               x_padding <- diff(x_bounds) * 0.05
+                               y_padding <- diff(y_bounds) * 0.05
+                               x_bounds <- c(x_bounds[1] - x_padding, x_bounds[2] + x_padding)
+                               y_bounds <- c(y_bounds[1] - y_padding, y_bounds[2] + y_padding)
+
+                               # Store the natural aspect ratio for later use
+                               bounds_aspect <<- diff(y_bounds) / diff(x_bounds)
+
+                               # Use proportional bounds
+                               c(x_bounds[1], x_bounds[2], y_bounds[1], y_bounds[2])
+                         }
+
                          # Calculate plot bounds using SCALE BREAKS and TITLE POSITIONS
                          if (self$grid) {
                                all_faces <- c("xmin", "xmax", "ymin", "ymax", "zmin", "zmax")
-                               full_grid <- make_scale_grid(all_faces, panel_params$scale_info)
+                               full_grid <- make_scale_grid(all_faces, panel_params$scale_info,
+                                                            panel_params$scales, panel_params$ratio)
 
                                if (!is.null(full_grid)) {
                                      # Transform the FULL grid to get base bounds
@@ -437,80 +570,70 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                                      all_bounds_x <- full_grid_transformed$x
                                      all_bounds_y <- full_grid_transformed$y
 
-                                     # Add title positions to bounds calculation
-                                     for (axis in c("x", "y", "z")) {
+                                     if(F){
+                                           # Add title positions to bounds calculation
+                                           for (axis in c("x", "y", "z")) {
 
-                                           # Use same edge selection logic as the rendering
-                                           axis_selection <- select_axis_edge_and_face(axis, visible_faces, panel_params$proj)
+                                                 # Use same edge selection logic as the rendering
+                                                 axis_selection <- select_axis_edge_and_face(axis, visible_faces, panel_params$proj)
 
-                                           if (!is.null(axis_selection)) {
-                                                 # Use the selected edge center for title position in bounds calculation
-                                                 edge_center_x <- (axis_selection$edge_p1_2d$x + axis_selection$edge_p2_2d$x) / 2
-                                                 edge_center_y <- (axis_selection$edge_p1_2d$y + axis_selection$edge_p2_2d$y) / 2
+                                                 if (!is.null(axis_selection)) {
+                                                       # Use the selected edge center for title position in bounds calculation
+                                                       edge_center_x <- (axis_selection$edge_p1_2d$x + axis_selection$edge_p2_2d$x) / 2
+                                                       edge_center_y <- (axis_selection$edge_p1_2d$y + axis_selection$edge_p2_2d$y) / 2
 
-                                                 # Add some offset for the title (approximate)
-                                                 title_offset <- 0.15  # Reasonable estimate for bounds calculation
+                                                       # Add some offset for the title (approximate)
+                                                       title_offset <- 0.15 * effective_ratios[match(axis, c("x", "y", "z"))]
 
-                                                 # Calculate perpendicular offset direction (same logic as in rendering)
-                                                 edge_dx <- axis_selection$edge_p2_2d$x - axis_selection$edge_p1_2d$x
-                                                 edge_dy <- axis_selection$edge_p2_2d$y - axis_selection$edge_p1_2d$y
-                                                 edge_length <- sqrt(edge_dx^2 + edge_dy^2)
+                                                       # Calculate perpendicular offset direction (same logic as in rendering)
+                                                       edge_dx <- axis_selection$edge_p2_2d$x - axis_selection$edge_p1_2d$x
+                                                       edge_dy <- axis_selection$edge_p2_2d$y - axis_selection$edge_p1_2d$y
+                                                       edge_length <- sqrt(edge_dx^2 + edge_dy^2)
 
-                                                 if (edge_length > 0) {
-                                                       # Get cube center for offset direction
-                                                       cube_center_3d <- data.frame(x = 0, y = 0, z = 0)
-                                                       cube_center_2d <- transform_3d_standard(cube_center_3d, panel_params$proj)
+                                                       if (edge_length > 0) {
+                                                             # Get cube center for offset direction
+                                                             cube_center_3d <- data.frame(x = 0, y = 0, z = 0)
+                                                             cube_center_2d <- transform_3d_standard(cube_center_3d, panel_params$proj)
 
-                                                       # Calculate perpendicular directions
-                                                       perp1_dx <- -edge_dy / edge_length
-                                                       perp1_dy <- edge_dx / edge_length
-                                                       perp2_dx <- edge_dy / edge_length
-                                                       perp2_dy <- -edge_dx / edge_length
+                                                             # Calculate perpendicular directions
+                                                             perp1_dx <- -edge_dy / edge_length
+                                                             perp1_dy <- edge_dx / edge_length
+                                                             perp2_dx <- edge_dy / edge_length
+                                                             perp2_dy <- -edge_dx / edge_length
 
-                                                       # Choose direction away from cube center
-                                                       to_edge_dx <- edge_center_x - cube_center_2d$x
-                                                       to_edge_dy <- edge_center_y - cube_center_2d$y
+                                                             # Choose direction away from cube center
+                                                             to_edge_dx <- edge_center_x - cube_center_2d$x
+                                                             to_edge_dy <- edge_center_y - cube_center_2d$y
 
-                                                       dot1 <- perp1_dx * to_edge_dx + perp1_dy * to_edge_dy
-                                                       dot2 <- perp2_dx * to_edge_dx + perp2_dy * to_edge_dy
+                                                             dot1 <- perp1_dx * to_edge_dx + perp1_dy * to_edge_dy
+                                                             dot2 <- perp2_dx * to_edge_dx + perp2_dy * to_edge_dy
 
-                                                       if (abs(dot1) > abs(dot2)) {
-                                                             offset_dx <- sign(dot1) * perp1_dx * title_offset
-                                                             offset_dy <- sign(dot1) * perp1_dy * title_offset
-                                                       } else {
-                                                             offset_dx <- sign(dot2) * perp2_dx * title_offset
-                                                             offset_dy <- sign(dot2) * perp2_dy * title_offset
+                                                             if (abs(dot1) > abs(dot2)) {
+                                                                   offset_dx <- sign(dot1) * perp1_dx * title_offset
+                                                                   offset_dy <- sign(dot1) * perp1_dy * title_offset
+                                                             } else {
+                                                                   offset_dx <- sign(dot2) * perp2_dx * title_offset
+                                                                   offset_dy <- sign(dot2) * perp2_dy * title_offset
+                                                             }
+
+                                                             # Add title position to bounds
+                                                             title_x <- edge_center_x + offset_dx
+                                                             title_y <- edge_center_y + offset_dy
+                                                             all_bounds_x <- c(all_bounds_x, title_x)
+                                                             all_bounds_y <- c(all_bounds_y, title_y)
                                                        }
-
-                                                       # Add title position to bounds
-                                                       title_x <- edge_center_x + offset_dx
-                                                       title_y <- edge_center_y + offset_dy
-                                                       all_bounds_x <- c(all_bounds_x, title_x)
-                                                       all_bounds_y <- c(all_bounds_y, title_y)
                                                  }
                                            }
                                      }
 
-                                     # Calculate bounds and store
-                                     x_bounds <- range(all_bounds_x, na.rm = TRUE)
-                                     y_bounds <- range(all_bounds_y, na.rm = TRUE)
-
-                                     x_center <- mean(x_bounds)
-                                     y_center <- mean(y_bounds)
-                                     max_half_range <- max(diff(x_bounds), diff(y_bounds)) / 2
-
-                                     panel_params$plot_bounds <- c(
-                                           x_center - max_half_range,  # xmin
-                                           x_center + max_half_range,  # xmax
-                                           y_center - max_half_range,  # ymin
-                                           y_center + max_half_range   # ymax
-                                     )
+                                     panel_params$plot_bounds <- calculate_plot_bounds(all_bounds_x, all_bounds_y)
                                } else {
                                      panel_params$plot_bounds <- c(-1, 1, -1, 1)
                                }
 
                                # Generate grid for selected faces using real scale breaks
-                               selected_grid <- make_scale_grid(visible_faces, panel_params$scale_info)
+                               selected_grid <- make_scale_grid(visible_faces, panel_params$scale_info,
+                                                                panel_params$scales, panel_params$ratio)
 
                                if (!is.null(selected_grid)) {
                                      selected_grid_transformed <- transform_3d_standard(selected_grid, panel_params$proj)
@@ -524,27 +647,15 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                                      panel_params$grid_transformed <- NULL
                                }
                          } else {
-                               # No grid - use default bounds based on standard cube
-                               standard_cube <- data.frame(
-                                     x = c(-0.5, 0.5, -0.5, 0.5, -0.5, 0.5, -0.5, 0.5),
-                                     y = c(-0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5, 0.5),
-                                     z = c(-0.5, -0.5, -0.5, -0.5, 0.5, 0.5, 0.5, 0.5)
+                               # No grid - use aspect-adjusted cube bounds
+                               aspect_cube <- data.frame(
+                                     x = c(-0.5, 0.5, -0.5, 0.5, -0.5, 0.5, -0.5, 0.5) * effective_ratios[1],
+                                     y = c(-0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5, 0.5) * effective_ratios[2],
+                                     z = c(-0.5, -0.5, -0.5, -0.5, 0.5, 0.5, 0.5, 0.5) * effective_ratios[3]
                                )
-                               cube_transformed <- transform_3d_standard(standard_cube, panel_params$proj)
+                               cube_transformed <- transform_3d_standard(aspect_cube, panel_params$proj)
 
-                               x_bounds <- range(cube_transformed$x, na.rm = TRUE)
-                               y_bounds <- range(cube_transformed$y, na.rm = TRUE)
-
-                               x_center <- mean(x_bounds)
-                               y_center <- mean(y_bounds)
-                               max_half_range <- max(diff(x_bounds), diff(y_bounds)) / 2
-
-                               panel_params$plot_bounds <- c(
-                                     x_center - max_half_range,  # xmin
-                                     x_center + max_half_range,  # xmax
-                                     y_center - max_half_range,  # ymin
-                                     y_center + max_half_range   # ymax
-                               )
+                               panel_params$plot_bounds <- calculate_plot_bounds(all_bounds_x, all_bounds_y)
                                panel_params$grid_transformed <- NULL
                          }
 
@@ -553,6 +664,9 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
 
                    # Force 1:1 aspect ratio
                    aspect = function(self, ranges) {
+                         if (exists("bounds_aspect")) {
+                               return(bounds_aspect)
+                         }
                          return(1)
                    },
 
@@ -566,36 +680,27 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                    },
 
                    transform = function(self, data, panel_params) {
-
                          # Add z column if missing
                          if (!"z" %in% names(data)) {
                                data$z <- 0
                          }
 
-                         # Handle z-value scaling - either auto-detect OR explicit limits, not both
+                         # Handle z-value scaling
                          if (panel_params$z_auto_detect %||% FALSE) {
-
-                               # Get the original data range for mapping (not the expanded limits)
                                original_range <- panel_params$scale_info$z$original_range %||% NULL
                                expanded_limits <- panel_params$scale_info$z$limits
 
                                if (!is.null(original_range) && length(original_range) == 2) {
-
-                                     # Map from [0,1] back to original data range (not expanded range)
                                      original_range_width <- original_range[2] - original_range[1]
                                      data$z <- data$z * original_range_width + original_range[1]
-
                                } else {
-                                     # Fallback to using expanded limits if original range not available
                                      z_limits <- expanded_limits
                                      if (!is.null(z_limits) && length(z_limits) == 2) {
                                            scale_range <- z_limits[2] - z_limits[1]
                                            data$z <- data$z * scale_range + z_limits[1]
                                      }
                                }
-
                          } else {
-                               # Use the existing manual fix for explicit limits
                                if ("z" %in% names(data)) {
                                      z_limits <- panel_params$scale_info$z$limits
                                      if (!is.null(z_limits) && length(z_limits) == 2) {
@@ -605,18 +710,19 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                                }
                          }
 
-                         # Use scale limits for consistent scaling
-                         data_ranges <- list(
+                         # Use scale limits for consistent scaling (includes expansion)
+                         scale_ranges <- list(
                                x = panel_params$scale_info$x$limits,
                                y = panel_params$scale_info$y$limits,
                                z = panel_params$scale_info$z$limits
                          )
 
-                         # Scale data to standard domain [-0.5, 0.5] using scale limits
-                         data_std <- data.frame(
-                               x = scale_to_standard(data$x, data_ranges$x),
-                               y = scale_to_standard(data$y, data_ranges$y),
-                               z = scale_to_standard(data$z, data_ranges$z)
+                         # Scale data to standard domain with aspect ratio
+                         data_std <- scale_to_standard(
+                               data[c("x", "y", "z")],
+                               scale_ranges,
+                               panel_params$scales,
+                               panel_params$ratio
                          )
 
                          # Apply 3D transformation in standard domain
@@ -688,116 +794,4 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                          return(list(x = scales_x, y = scales_y))
                    }
 )
-
-
-
-#' 3D coordinate system
-#'
-#' \code{coord_3d} creates a 3D coordinate system that projects 3D data onto a 2D plot.
-#' It supports rotation, perspective projection, and automatic axis labeling with
-#' intelligent edge selection for optimal readability.
-#'
-#' @param pitch Rotation around x-axis in degrees. Positive values rotate "up" towards viewer.
-#' @param roll Rotation around y-axis in degrees. Positive values rotate "right" edge towards viewer.
-#' @param yaw Rotation around z-axis in degrees. Positive values rotate counterclockwise when viewed from above.
-#' @param persp Logical indicating whether to apply perspective projection. When \code{TRUE},
-#'   objects farther from the viewer appear smaller.
-#' @param dist Distance from viewer to center of the data cube when \code{persp = TRUE}.
-#'   Larger values create less perspective distortion.
-#' @param expand Logical indicating whether to expand axis ranges beyond the data range,
-#'   similar to standard ggplot2 behavior.
-#' @param clip Character string indicating clipping behavior. Use \code{"off"} to allow
-#'   drawing outside the plot panel (recommended for 3D plots).
-#' @param faces Character string specifying which cube faces to render. Options include
-#'   \code{"all"}, \code{"background"}, \code{"foreground"}, or specific face names like
-#'   \code{"xmin"}, \code{"ymax"}, etc.
-#' @param auto_text_orientation Logical indicating whether axis text should automatically
-#'   rotate to align with the projected axis directions. When \code{FALSE}, uses theme
-#'   text angle settings.
-#' @param xtext,ytext,ztext Character strings or length-2 character vectors specifying
-#'   axis label placement. Use \code{"auto"} for automatic selection, or specify
-#'   \code{c("face1", "face2")} to place labels on the edge shared by those faces.
-#'
-#' @return A list containing the coordinate system object and default theme modifications.
-#'   When added to a ggplot, provides 3D projection and appropriate plot margins.
-#'
-#' @examples
-#' library(ggplot2)
-#'
-#' # Basic 3D scatterplot
-#' ggplot(mtcars, aes(mpg, wt, z = qsec, color = cyl)) +
-#'   geom_point() +
-#'   coord_3d()
-#'
-#' # Custom rotation angles
-#' ggplot(mtcars, aes(mpg, wt, z = qsec)) +
-#'   geom_point() +
-#'   coord_3d(pitch = 45, roll = 60, yaw = 15)
-#'
-#' # Without perspective (orthographic projection)
-#' ggplot(mtcars, aes(mpg, wt, z = qsec)) +
-#'   geom_point() +
-#'   coord_3d(persp = FALSE)
-#'
-#' # Manual axis label placement
-#' ggplot(mtcars, aes(mpg, wt, z = qsec)) +
-#'   geom_point() +
-#'   coord_3d(xtext = c("ymin", "zmax"), ytext = c("xmax", "zmin"))
-#'
-#' # Use with complete themes (apply theme first)
-#' ggplot(mtcars, aes(mpg, wt, z = qsec)) +
-#'   geom_point() +
-#'   theme_bw() +  # Apply complete theme first
-#'   coord_3d()    # Then apply 3D coordinate system
-#'
-#' @seealso \code{\link{scale_z_continuous}} for z-axis scaling,
-#'   \code{\link{theme_cube}} for 3D-specific themes
-#' @family 3D coordinate functions
-#' @export
-coord_3d <- function(pitch = -30, roll = 30, yaw = 0,
-                     persp = TRUE, dist = 3,
-                     expand = TRUE, clip = "off",
-                     faces = "background",
-                     auto_text_orientation = TRUE,
-                     xtext = "auto", ytext = "auto", ztext = "auto") {
-
-      list(
-            ggproto(NULL, Coord3D,
-                    pitch = pitch, roll = roll, yaw = yaw,
-                    persp = persp, dist = dist,
-                    expand = expand, clip = clip,
-                    faces = faces,
-                    auto_text_orientation = auto_text_orientation,
-                    xtext = xtext, ytext = ytext, ztext = ztext
-            ),
-            theme(plot.margin = margin(20, 20, 20, 20, "pt"))
-      )
-}
-
-
-# # test =================
-#
-# test <- function(...) {
-#       df <- data.frame(x = rnorm(2000, 0, .9),
-#                        y = runif(2000, -1, 0),
-#                        z = runif(2000, .003, .004))
-#       ggplot(df, aes(x = x, y = y, z = z, color = z)) +
-#             geom_point() +
-#             scale_color_viridis_c() +
-#             theme_bw() +
-#             coord_3d(...)
-# }
-#
-#
-# pitch = runif(1, 0, 360)
-# roll = runif(1, 0, 360)
-# yaw = runif(1, 0, 360)
-#
-# test(pitch = pitch, roll = roll, yaw = yaw, xtext = c("ymin", "zmin")) +
-#       labs(x = "x axis title", y = "y axis title", z = "z axis title") +
-#       theme(panel.background = element_rect(fill = "gray"),
-#             panel.foreground = element_rect(alpha = 0),
-#             plot.margin = margin(20, 20, 20, 20, "pt"),
-#             legend.position = "bottom")
-
 
