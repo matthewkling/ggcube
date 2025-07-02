@@ -34,21 +34,46 @@ variables with \code{\link[=after_stat]{after_stat()}}.}
 \item \code{"alpha"}: Alpha shape triangulation (can capture non-convex topologies like toruses)
 }}
 
-\item{alpha}{Alpha parameter for alpha shape triangulation. Smaller values create
-more detailed surfaces but may fragment. Larger values create smoother surfaces
-but may fill holes. Only used when \code{method = "alpha"}.}
-
-\item{light}{A lighting specification object created by \code{lighting()}}
+\item{alpha}{Alpha parameter for alpha shape triangulation. \strong{IMPORTANT:} Alpha shapes
+are extremely sensitive to the coordinate scales of your data. See Details section.}
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics.}
 
 \item{...}{Other arguments passed on to \code{\link[=layer]{layer()}}.}
+
+\item{lighting_spec}{A lighting specification object created by \code{lighting()}}
 }
 \description{
-\code{stat_hull()} creates triangulated surfaces from 3D point clouds using either
-convex hull or alpha shape algorithms. It computes surface normals and applies
+\code{stat_hull()} turns 3D point clouds into surface hulls consisting of triangular polygons,
+using either convex hull or alpha shape algorithms. It computes surface normals and applies
 various lighting models to create realistic 3D surface visualizations.
 }
+\section{Alpha scale sensitivity}{
+
+\strong{Alpha shape method is highly sensitive to coordinate scales.} The \code{alpha} parameter
+that works for data scaled 0-1 will likely fail for data scaled 0-1000.
+
+\strong{Guidelines for choosing alpha:}
+\itemize{
+\item Start with \code{alpha = 1.0} and adjust based on results
+\item For data with mixed scales (e.g., x: 0-1, y: 0-1000), consider rescaling your data first
+\item Larger alpha values → smoother, more connected surfaces
+\item Smaller alpha values → more detailed surfaces, but may fragment
+\item If you get no triangles, try increasing alpha by 10x
+\item If surface fills unwanted holes, try decreasing alpha by 10x
+}
+
+\strong{Example scale effects:}
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{# These require very different alpha values:
+data_small <- data.frame(x = runif(100, 0, 1), y = runif(100, 0, 1), z = runif(100, 0, 1))
+data_large <- data.frame(x = runif(100, 0, 100), y = runif(100, 0, 100), z = runif(100, 0, 100))
+
+stat_hull(data = data_small, alpha = 0.5)    # Might work well
+stat_hull(data = data_large, alpha = 50)     # Might need much larger alpha
+}\if{html}{\out{</div>}}
+}
+
 \section{Computed variables}{
 
 \itemize{
@@ -80,7 +105,7 @@ Computed variables can be accessed using \code{\link[=after_stat]{after_stat()}}
 \examples{
 library(ggplot2)
 
-# Generate sphere points
+# Generate sphere points (coordinates roughly 0-1 scale)
 set.seed(123)
 theta <- runif(200, 0, 2*pi)
 phi <- acos(runif(200, -1, 1))
@@ -90,47 +115,28 @@ sphere_df <- data.frame(
   z = cos(phi)
 )
 
-# Basic surface with Lambert lighting
+# Convex hull (no scale sensitivity)
 ggplot(sphere_df, aes(x, y, z = z)) +
-  stat_surface(aes(fill = after_stat(light)), method = "hull") +
+  stat_hull(aes(fill = after_stat(light)), method = "hull") +
   scale_fill_gradient(low = "black", high = "white") +
   coord_3d()
 
-# Surface with normal-to-RGB coloring
+# Alpha shape (scale-sensitive - alpha ~1 works for unit sphere)
 ggplot(sphere_df, aes(x, y, z = z)) +
-  stat_surface(aes(fill = after_stat(light)),
-               method = "hull", light = "normal_rgb") +
-  coord_3d()
-
-# Quantized lighting (cel shading effect)
-ggplot(sphere_df, aes(x, y, z = z)) +
-  stat_surface(aes(fill = after_stat(light)),
-               method = "hull", lighting = "quantize", n_levels = 3) +
+  stat_hull(aes(fill = after_stat(light)), method = "alpha", alpha = 1.0) +
   scale_fill_gradient(low = "black", high = "white") +
   coord_3d()
 
-# Signed lighting with continuous gradient
-ggplot(sphere_df, aes(x, y, z = z)) +
-  stat_surface(aes(fill = after_stat(light)),
-               method = "hull", light = "signed") +
-  scale_fill_gradient2(low = "blue", mid = "gray", high = "white") +
-  coord_3d()
-
-# Custom light direction
-ggplot(sphere_df, aes(x, y, z = z)) +
-  stat_surface(aes(fill = after_stat(light)),
-               method = "hull", light_dir = c(1, 1, 1)) +
+# For larger coordinate scales, increase alpha proportionally:
+sphere_large <- sphere_df * 100  # Scale up by 100x
+ggplot(sphere_large, aes(x, y, z = z)) +
+  stat_hull(aes(fill = after_stat(light)),
+            method = "alpha", alpha = 100) +  # Increase alpha ~100x
   scale_fill_gradient(low = "black", high = "white") +
-  coord_3d()
-
-# Rotated RGB color scheme
-ggplot(sphere_df, aes(x, y, z = z)) +
-  stat_surface(aes(fill = after_stat(light)), light = "normal_rgb",
-               method = "hull") +
   coord_3d()
 
 }
 \seealso{
 \code{\link[=coord_3d]{coord_3d()}} for 3D coordinate systems, \link{geom_polygon_3d} for the
-default geometry with depth sorting.
+default geometry with depth sorting, \code{\link[=lighting]{lighting()}} for lighting specifications.
 }

@@ -100,11 +100,14 @@ StatSurface <- ggproto("StatSurface", Stat,
 #' - `face_id`: Quad group identifier
 #'
 #' @examples
-#' # Basic terrain surface
-#' ggplot(mountain, aes(x, y, z)) +
-#'   stat_surface(aes(fill = after_stat(elevation))) +
+#' # Generate and visualize a basic surface
+#' d <- mutate(expand_grid(x = -20:20, y = -20:20),
+#'       z = sqrt(x^2 + y^2) / 1.5,
+#'       z = cos(z) - z)
+#' ggplot(d, aes(x, y, z)) +
+#'   stat_surface(aes(fill = after_stat(normal_x))) +
 #'   scale_fill_viridis_c() +
-#'   coord_3d()
+#'   coord_3d(pitch = 0, roll = 130, yaw = 30)
 #'
 #' @export
 stat_surface <- function(mapping = NULL, data = NULL,

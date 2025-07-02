@@ -116,8 +116,8 @@ StatHull <- ggproto("StatHull", Stat,
 
 #' Create 3D convex and alpha hulls with lighting
 #'
-#' `stat_hull()` creates triangulated surfaces from 3D point clouds using either
-#' convex hull or alpha shape algorithms. It computes surface normals and applies
+#' `stat_hull()` turns 3D point clouds into surface hulls consisting of triangular polygons,
+#' using either convex hull or alpha shape algorithms. It computes surface normals and applies
 #' various lighting models to create realistic 3D surface visualizations.
 #'
 #' @param mapping Set of aesthetic mappings created by [aes()]. The required
@@ -131,11 +131,32 @@ StatHull <- ggproto("StatHull", Stat,
 #' @param method Triangulation method. Either:
 #'   - `"hull"`: Convex hull triangulation (works well for convex shapes like spheres)
 #'   - `"alpha"`: Alpha shape triangulation (can capture non-convex topologies like toruses)
-#' @param alpha Alpha parameter for alpha shape triangulation. Smaller values create
-#'   more detailed surfaces but may fragment. Larger values create smoother surfaces
-#'   but may fill holes. Only used when `method = "alpha"`.
-#' @param light A lighting specification object created by \code{lighting()}
+#' @param alpha Alpha parameter for alpha shape triangulation. **IMPORTANT:** Alpha shapes
+#'   are extremely sensitive to the coordinate scales of your data. See Details section.
+#' @param lighting_spec A lighting specification object created by \code{lighting()}
 #' @param inherit.aes If `FALSE`, overrides the default aesthetics.
+#'
+#' @section Alpha scale sensitivity:
+#' **Alpha shape method is highly sensitive to coordinate scales.** The `alpha` parameter
+#' that works for data scaled 0-1 will likely fail for data scaled 0-1000.
+#'
+#' **Guidelines for choosing alpha:**
+#' - Start with `alpha = 1.0` and adjust based on results
+#' - For data with mixed scales (e.g., x: 0-1, y: 0-1000), consider rescaling your data first
+#' - Larger alpha values → smoother, more connected surfaces
+#' - Smaller alpha values → more detailed surfaces, but may fragment
+#' - If you get no triangles, try increasing alpha by 10x
+#' - If surface fills unwanted holes, try decreasing alpha by 10x
+#'
+#' **Example scale effects:**
+#' ```r
+#' # These require very different alpha values:
+#' data_small <- data.frame(x = runif(100, 0, 1), y = runif(100, 0, 1), z = runif(100, 0, 1))
+#' data_large <- data.frame(x = runif(100, 0, 100), y = runif(100, 0, 100), z = runif(100, 0, 100))
+#'
+#' stat_hull(data = data_small, alpha = 0.5)    # Might work well
+#' stat_hull(data = data_large, alpha = 50)     # Might need much larger alpha
+#' ```
 #'
 #' @section Computed variables:
 #' - `light`: Computed lighting value (numeric for most methods, hex color for `normal_rgb`)
@@ -158,7 +179,7 @@ StatHull <- ggproto("StatHull", Stat,
 #' @examples
 #' library(ggplot2)
 #'
-#' # Generate sphere points
+#' # Generate sphere points (coordinates roughly 0-1 scale)
 #' set.seed(123)
 #' theta <- runif(200, 0, 2*pi)
 #' phi <- acos(runif(200, -1, 1))
@@ -168,47 +189,28 @@ StatHull <- ggproto("StatHull", Stat,
 #'   z = cos(phi)
 #' )
 #'
-#' # Basic surface with Lambert lighting
+#' # Convex hull (no scale sensitivity)
 #' ggplot(sphere_df, aes(x, y, z = z)) +
-#'   stat_surface(aes(fill = after_stat(light)), method = "hull") +
+#'   stat_hull(aes(fill = after_stat(light)), method = "hull") +
 #'   scale_fill_gradient(low = "black", high = "white") +
 #'   coord_3d()
 #'
-#' # Surface with normal-to-RGB coloring
+#' # Alpha shape (scale-sensitive - alpha ~1 works for unit sphere)
 #' ggplot(sphere_df, aes(x, y, z = z)) +
-#'   stat_surface(aes(fill = after_stat(light)),
-#'                method = "hull", light = "normal_rgb") +
-#'   coord_3d()
-#'
-#' # Quantized lighting (cel shading effect)
-#' ggplot(sphere_df, aes(x, y, z = z)) +
-#'   stat_surface(aes(fill = after_stat(light)),
-#'                method = "hull", lighting = "quantize", n_levels = 3) +
+#'   stat_hull(aes(fill = after_stat(light)), method = "alpha", alpha = 1.0) +
 #'   scale_fill_gradient(low = "black", high = "white") +
 #'   coord_3d()
 #'
-#' # Signed lighting with continuous gradient
-#' ggplot(sphere_df, aes(x, y, z = z)) +
-#'   stat_surface(aes(fill = after_stat(light)),
-#'                method = "hull", light = "signed") +
-#'   scale_fill_gradient2(low = "blue", mid = "gray", high = "white") +
-#'   coord_3d()
-#'
-#' # Custom light direction
-#' ggplot(sphere_df, aes(x, y, z = z)) +
-#'   stat_surface(aes(fill = after_stat(light)),
-#'                method = "hull", light_dir = c(1, 1, 1)) +
+#' # For larger coordinate scales, increase alpha proportionally:
+#' sphere_large <- sphere_df * 100  # Scale up by 100x
+#' ggplot(sphere_large, aes(x, y, z = z)) +
+#'   stat_hull(aes(fill = after_stat(light)),
+#'             method = "alpha", alpha = 100) +  # Increase alpha ~100x
 #'   scale_fill_gradient(low = "black", high = "white") +
-#'   coord_3d()
-#'
-#' # Rotated RGB color scheme
-#' ggplot(sphere_df, aes(x, y, z = z)) +
-#'   stat_surface(aes(fill = after_stat(light)), light = "normal_rgb",
-#'                method = "hull") +
 #'   coord_3d()
 #'
 #' @seealso [coord_3d()] for 3D coordinate systems, [geom_polygon_3d] for the
-#'   default geometry with depth sorting.
+#'   default geometry with depth sorting, [lighting()] for lighting specifications.
 #'
 #' @export
 stat_hull <- function(mapping = NULL, data = NULL,
@@ -240,109 +242,6 @@ stat_hull <- function(mapping = NULL, data = NULL,
 
 
 
-GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
-                         required_aes = c("x", "y", "z", "group"),
-                         default_aes = aes(
-                               fill = "grey80", colour = NA, linewidth = 0.5, linetype = 1, alpha = 1
-                         ),
-
-                         draw_panel = function(data, panel_params, coord) {
-                               # Transform ALL data at once
-                               coords <- coord$transform(data, panel_params)
-
-                               # Split by group and calculate depths
-                               coords_split <- split(coords, coords$group)
-                               group_depths <- sapply(coords_split, function(tri) {
-                                     mean(tri$z_proj, na.rm = TRUE)
-                               })
-
-                               # Sort groups by depth (back to front)
-                               ordered_groups <- names(sort(group_depths, decreasing = TRUE))
-
-                               # Draw each polygon individually to preserve aesthetics
-                               polygon_grobs <- list()
-                               for(i in seq_along(ordered_groups)) {
-                                     poly_data <- coords_split[[ordered_groups[i]]]
-
-                                     # Sort by order if present to get correct vertex sequence
-                                     if ("order" %in% names(poly_data)) {
-                                           poly_data <- poly_data[order(poly_data$order), ]
-                                     }
-
-                                     # Draw this polygon
-                                     polygon_grobs[[i]] <- grid::polygonGrob(
-                                           x = poly_data$x,
-                                           y = poly_data$y,
-                                           default.units = "npc",
-                                           gp = grid::gpar(
-                                                 col = poly_data$colour[1],
-                                                 fill = poly_data$fill[1],
-                                                 lwd = poly_data$linewidth[1] * .pt,
-                                                 lty = poly_data$linetype[1]
-                                           ),
-                                           name = paste0("polygon_", i)
-                                     )
-                               }
-
-                               # Combine all polygon grobs
-                               do.call(grid::grobTree, polygon_grobs)
-                         },
-
-                         draw_key = draw_key_polygon
-)
-
-
-#' 3D polygon geometry with depth sorting
-#'
-#' `geom_polygon_3d()` renders 3D polygons with proper depth sorting for realistic
-#' 3D surface visualization. It's designed to work with surface data
-#' from [stat_hull()] and [stat_surface()], as well as other data.
-#'
-#' @param mapping Set of aesthetic mappings created by [aes()].
-#' @param data The data to be displayed in this layer.
-#' @param stat The statistical transformation to use on the data. Defaults to "identity".
-#' @param position Position adjustment, defaults to "identity".
-#' @param ... Other arguments passed on to [layer()].
-#' @param na.rm If `FALSE`, missing values are removed with a warning.
-#' @param show.legend Logical indicating whether this layer should be included in legends.
-#' @param inherit.aes If `FALSE`, overrides the default aesthetics.
-#'
-#' @section Aesthetics:
-#' `geom_polygon_3d()` requires:
-#' - **x**: X coordinate
-#' - **y**: Y coordinate
-#' - **z**: Z coordinate (for depth sorting)
-#' - **group**: Polygon grouping variable
-#'
-#' And understands these additional aesthetics:
-#' - `fill`: Polygon fill color
-#' - `colour`: Border color
-#' - `linewidth`: Border line width
-#' - `linetype`: Border line type
-#' - `alpha`: Transparency
-#'
-#' @examples
-#' # Typically used via stat_surface() or stat_terrain()
-#' ggplot(sphere_data, aes(x, y, z)) +
-#'   stat_surface(method = "hull") +
-#'   coord_3d()
-#'
-#' # Can be used directly with pre-triangulated data
-#' ggplot(triangle_data, aes(x, y, z, group = triangle_id)) +
-#'   geom_polygon_3d(fill = "lightblue") +
-#'   coord_3d()
-#'
-#' @seealso [stat_hull()] and [stat_surface()].
-#' @export
-geom_polygon_3d <- function(mapping = NULL, data = NULL, stat = "identity",
-                            position = "identity", ..., na.rm = FALSE,
-                            show.legend = NA, inherit.aes = TRUE) {
-      layer(
-            geom = GeomPolygon3D, mapping = mapping, data = data, stat = stat,
-            position = position, show.legend = show.legend, inherit.aes = inherit.aes,
-            params = list(na.rm = na.rm, ...)
-      )
-}
 
 
 
