@@ -6,8 +6,8 @@
 #' @param scale_info List containing limits and breaks for x, y, z
 #' @return Data frame with grid lines in standard domain, including break values
 make_scale_grid <- function(visible_faces, scale_info) {
-      # Transform real-world breaks to standard domain [-0.5, 0.5]
 
+      # Transform real-world breaks to standard domain [-0.5, 0.5]
       x_breaks_std <- scale_to_standard(scale_info$x$breaks, scale_info$x$limits)
       y_breaks_std <- scale_to_standard(scale_info$y$breaks, scale_info$y$limits)
       z_breaks_std <- scale_to_standard(scale_info$z$breaks, scale_info$z$limits)

@@ -21,6 +21,7 @@ Imports:
     scales,
     grid,
     lifecycle,
-    labeling
+    labeling,
+    alphashape3d
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2

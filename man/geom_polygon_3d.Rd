@@ -58,7 +58,7 @@ And understands these additional aesthetics:
 }
 
 \examples{
-# Typically used via stat_surface()
+# Typically used via stat_surface() or stat_terrain()
 ggplot(sphere_data, aes(x, y, z)) +
   stat_surface(method = "hull") +
   coord_3d()

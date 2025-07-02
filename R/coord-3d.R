@@ -53,6 +53,7 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
 
                          # Helper function to apply ggplot2-style expansion and generate breaks
                          apply_axis_expansion <- function(original_range, scale_obj, axis_name) {
+
                                if (is.null(original_range)) {
                                      # Fallback to scale limits if no original range
                                      limits <- scale_obj$dimension()
@@ -113,24 +114,32 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                                      ))
                                }
 
-                               # Apply expansion (default 5% on each side, like ggplot2)
-                               expand_factor <- 0.05
-                               range_width <- diff(original_range)
-
-                               if (range_width > 0) {
-                                     expanded_min <- original_range[1] - range_width * expand_factor
-                                     expanded_max <- original_range[2] + range_width * expand_factor
-                                     expanded_range <- c(expanded_min, expanded_max)
+                               # Get expansion from scale, with fallback to ggplot2 default
+                               if (inherits(scale_obj$expand, "waiver")) {
+                                     expand_factor <- 0.05  # Default 5% expansion
                                } else {
-                                     # Handle zero-width case
-                                     expanded_range <- original_range[1] + c(-0.1, 0.1)
+                                     expand_factor <- scale_obj$expand[1]  # Use user-specified expansion
+                               }
+
+                               if (expand_factor == 0) {
+                                     # No expansion
+                                     expanded_range <- original_range
+                               } else {
+                                     range_width <- diff(original_range)
+                                     if (range_width > 0) {
+                                           expanded_min <- original_range[1] - range_width * expand_factor
+                                           expanded_max <- original_range[2] + range_width * expand_factor
+                                           expanded_range <- c(expanded_min, expanded_max)
+                                     } else {
+                                           expanded_range <- original_range[1] + c(-0.1, 0.1)
+                                     }
                                }
 
                                # Generate nice breaks for the expanded range
                                breaks <- scales::extended_breaks(n = 5)(expanded_range)
 
                                # Final limits encompass all breaks (like ggplot2)
-                               final_limits <- range(breaks)
+                               final_limits <- range(c(breaks, expanded_range))
 
                                # Generate labels (use scale's label function if available)
                                labels_func <- scale_obj$labels
@@ -248,24 +257,32 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                                            # scale_z_continuous() called without limits or explicit breaks - auto-detect with expansion
                                            if (!is.null(original_z_range)) {
 
-                                                 # Apply same expansion logic as x/y
-                                                 expand_factor <- 0.05
-                                                 range_width <- diff(original_z_range)
-
-                                                 if (range_width > 0) {
-                                                       expanded_min <- original_z_range[1] - range_width * expand_factor
-                                                       expanded_max <- original_z_range[2] + range_width * expand_factor
-                                                       expanded_range <- c(expanded_min, expanded_max)
+                                                 # Get expansion from z scale if available
+                                                 if (exists("expand", envir = .z_scale_cache) && !inherits(.z_scale_cache$expand, "waiver")) {
+                                                       expand_factor <- .z_scale_cache$expand[1]
                                                  } else {
-                                                       # Handle zero-width case
-                                                       expanded_range <- original_z_range[1] + c(-0.1, 0.1)
+                                                       expand_factor <- 0.05  # Default
+                                                 }
+
+                                                 if (expand_factor == 0) {
+                                                       # No expansion
+                                                       expanded_range <- original_z_range
+                                                 } else {
+                                                       # Apply expansion
+                                                       range_width <- diff(original_z_range)
+                                                       if (range_width > 0) {
+                                                             expanded_range <- c(original_z_range[1] - range_width * expand_factor,
+                                                                                 original_z_range[2] + range_width * expand_factor)
+                                                       } else {
+                                                             expanded_range <- original_z_range[1] + c(-0.1, 0.1)
+                                                       }
                                                  }
 
                                                  # Generate nice breaks for the expanded range
                                                  z_breaks <- scales::extended_breaks(n = 5)(expanded_range)
 
                                                  # Final limits encompass all breaks (like ggplot2)
-                                                 final_limits <- range(z_breaks)
+                                                 final_limits <- range(c(z_breaks, expanded_range))
 
                                                  # Process labels for ALL breaks
                                                  if (is.null(z_labels_param) || inherits(z_labels_param, "waiver")) {

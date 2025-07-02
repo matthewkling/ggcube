@@ -12,10 +12,7 @@ stat_surface(
   ...,
   method = "alpha",
   alpha = 1,
-  light_dir = c(0, 0, 1),
-  lighting = "lambert",
-  n_levels = 3,
-  clamp_negative = TRUE,
+  lighting = lighting("lambert"),
   inherit.aes = TRUE
 )
 }
@@ -43,26 +40,7 @@ variables with \code{\link[=after_stat]{after_stat()}}.}
 more detailed surfaces but may fragment. Larger values create smoother surfaces
 but may fill holes. Only used when \code{method = "alpha"}.}
 
-\item{light_dir}{Numeric vector of length 3 specifying the light direction in
-3D space. For most lighting methods, this defines the illumination direction.
-For \code{lighting = "normal_rgb"}, this defines the orientation of the RGB
-coordinate system (surfaces facing this direction will be brightest/whitest).
-Default is \code{c(0, 0, 1)} (light from above).}
-
-\item{lighting}{Lighting model to apply (accessed via the computed variable \code{light}):
-\itemize{
-\item \code{"lambert"}: Standard diffuse lighting (surfaces facing away from light are dark)
-\item \code{"signed"}: Continuous lighting gradient including negative values
-\item \code{"ambient"}: Uniform lighting with no directional component
-\item \code{"quantize"}: Quantized lighting with discrete levels
-\item \code{"normal_rgb"}: Map surface normals to RGB colors (automatic identity scaling)
-\item \code{"normal_x"}, \code{"normal_y"}, \code{"normal_z"}: Individual normal components
-}}
-
-\item{n_levels}{Number of discrete levels for \code{lighting = "quantize"}. Default is 3.}
-
-\item{clamp_negative}{Logical indicating whether to clamp negative lighting values
-to the lowest level when using \code{lighting = "quantize"}. Default is \code{TRUE}.}
+\item{lighting}{A lighting specification object created by \code{lighting()}}
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics.}
 }

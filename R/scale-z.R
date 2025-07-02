@@ -73,6 +73,7 @@ scale_z_continuous <- function(name = waiver(), breaks = waiver(), n.breaks = NU
       .z_scale_cache$n.breaks <- n.breaks
       .z_scale_cache$name <- name
       .z_scale_cache$labels <- labels
+      .z_scale_cache$expand <- expand
 
       continuous_scale(
             aesthetics = "z",

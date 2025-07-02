@@ -2,8 +2,7 @@ StatSurface <- ggproto("StatSurface", Stat,
                        required_aes = c("x", "y", "z"),
 
                        compute_group = function(data, scales, method = "alpha", alpha = 1.0,
-                                                light_dir = c(0, 0, 1), lighting = "lambert",
-                                                n_levels = 3, clamp_negative = TRUE) {
+                                                lighting = "lambert") {
                              coords <- as.matrix(data[, c("x", "y", "z")])
 
                              # Get triangle indices
@@ -84,100 +83,7 @@ StatSurface <- ggproto("StatSurface", Stat,
                              }
                              # For alpha shapes: keep original normals (no orientation fix yet)
 
-                             # Apply lighting model
-                             light_dir <- light_dir / sqrt(sum(light_dir^2))
-                             dot_products <- rowSums(normals * matrix(rep(light_dir, nrow(normals)),
-                                                                      nrow = nrow(normals), byrow = TRUE))
-
-                             light <- switch(lighting,
-                                             lambert = pmax(0, dot_products),          # Standard diffuse lighting
-                                             signed = dot_products,                    # Unclamped: full -1 to +1 range
-                                             ambient = rep(0.5, length(dot_products)), # Uniform lighting
-                                             quantize = {                              # Quantized lighting with parameters
-                                                   if(clamp_negative) {
-                                                         # Negative values → lowest level (0)
-                                                         # Positive values → quantized across remaining levels
-                                                         result <- numeric(length(dot_products))
-
-                                                         # All negative values get level 0
-                                                         negative_mask <- dot_products <= 0
-                                                         result[negative_mask] <- 0
-
-                                                         # Positive values get quantized across levels 1 to n_levels
-                                                         positive_mask <- dot_products > 0
-                                                         if(any(positive_mask)) {
-                                                               pos_vals <- dot_products[positive_mask]
-                                                               # Quantize positive values into (n_levels - 1) bins
-                                                               breaks <- seq(0, 1, length.out = n_levels)  # n_levels-1 intervals
-                                                               quantized <- cut(pos_vals, breaks = breaks, labels = FALSE, include.lowest = TRUE)
-                                                               # Map to levels 1/(n_levels-1), 2/(n_levels-1), ..., 1
-                                                               result[positive_mask] <- quantized / (n_levels - 1)
-                                                         }
-                                                         result
-                                                   } else {
-                                                         # Quantize full range [-1, 1]
-                                                         breaks <- seq(-1, 1, length.out = n_levels + 1)
-                                                         quantized <- cut(dot_products, breaks = breaks, labels = FALSE, include.lowest = TRUE)
-                                                         (quantized - 1) / (n_levels - 1)
-                                                   }
-                                             },
-                                             normal_rgb = {                            # Map normals to RGB hex colors
-                                                   # Create rotation so that normals aligned with light_dir map to white
-                                                   light_dir_norm <- light_dir / sqrt(sum(light_dir^2))
-
-                                                   # Target direction for white color in RGB space
-                                                   white_dir <- c(1, 1, 1) / sqrt(3)
-
-                                                   # Create rotation matrix using Rodrigues' formula
-                                                   # We want to rotate FROM white_dir TO light_dir_norm
-                                                   # So we can apply the inverse rotation to normals
-
-                                                   # Cross product for rotation axis (white_dir × light_dir_norm)
-                                                   v <- c(
-                                                         white_dir[2] * light_dir_norm[3] - white_dir[3] * light_dir_norm[2],
-                                                         white_dir[3] * light_dir_norm[1] - white_dir[1] * light_dir_norm[3],
-                                                         white_dir[1] * light_dir_norm[2] - white_dir[2] * light_dir_norm[1]
-                                                   )
-
-                                                   s <- sqrt(sum(v^2))  # sine of angle
-                                                   c <- sum(white_dir * light_dir_norm)  # cosine of angle
-
-                                                   if (s < 1e-10) {
-                                                         # Vectors are already aligned or opposite
-                                                         if (c > 0) {
-                                                               rot_matrix <- diag(3)  # Identity matrix
-                                                         } else {
-                                                               # 180 degree rotation - use any perpendicular axis
-                                                               rot_matrix <- -diag(3)
-                                                         }
-                                                   } else {
-                                                         # Rodrigues' rotation formula
-                                                         # R = I + [v]× + [v]×^2 * (1-c)/s^2
-                                                         v_cross <- matrix(c(
-                                                               0, -v[3], v[2],
-                                                               v[3], 0, -v[1],
-                                                               -v[2], v[1], 0
-                                                         ), nrow = 3, byrow = TRUE)
-
-                                                         rot_matrix <- diag(3) + v_cross + v_cross %*% v_cross * ((1 - c) / s^2)
-                                                   }
-
-                                                   # Apply rotation to normals
-                                                   rotated_normals <- normals %*% rot_matrix
-
-                                                   # Scale normals from [-1,1] to [0,1] for RGB
-                                                   r <- (rotated_normals[,1] + 1) / 2
-                                                   g <- (rotated_normals[,2] + 1) / 2
-                                                   b <- (rotated_normals[,3] + 1) / 2
-
-                                                   # Convert to hex colors
-                                                   rgb(r, g, b)
-                                             },
-                                             normal_x = (normals[,1] + 1) / 2,         # X-normal as color (0-1 range)
-                                             normal_y = (normals[,2] + 1) / 2,         # Y-normal as color (0-1 range)
-                                             normal_z = (normals[,3] + 1) / 2,         # Z-normal as color (0-1 range)
-                                             stop("Unknown lighting method")
-                             )
+                             light_val <- compute_lighting(normals, lighting)
 
                              # Flatten triangle data with all computed variables
                              verts <- coords[as.vector(t(tri)), ]
@@ -185,11 +91,11 @@ StatSurface <- ggproto("StatSurface", Stat,
                              normal_x <- rep(normals[,1], each = 3)
                              normal_y <- rep(normals[,2], each = 3)
                              normal_z <- rep(normals[,3], each = 3)
-                             light_val <- rep(light, each = 3)
+                             light_val <- rep(light_val, each = 3)
                              triangle_index <- rep(1:nrow(tri), each = 3)
 
-                             # Auto-wrap RGB colors with I() for identity scaling
-                             if (lighting == "normal_rgb") {
+                             # Re-apply identity scaling for RGB colors after rep()
+                             if (lighting$method == "normal_rgb") {
                                    light_val <- I(light_val)
                              }
 
@@ -228,21 +134,7 @@ StatSurface <- ggproto("StatSurface", Stat,
 #' @param alpha Alpha parameter for alpha shape triangulation. Smaller values create
 #'   more detailed surfaces but may fragment. Larger values create smoother surfaces
 #'   but may fill holes. Only used when `method = "alpha"`.
-#' @param lighting Lighting model to apply (accessed via the computed variable `light`):
-#'   - `"lambert"`: Standard diffuse lighting (surfaces facing away from light are dark)
-#'   - `"signed"`: Continuous lighting gradient including negative values
-#'   - `"ambient"`: Uniform lighting with no directional component
-#'   - `"quantize"`: Quantized lighting with discrete levels
-#'   - `"normal_rgb"`: Map surface normals to RGB colors (automatic identity scaling)
-#'   - `"normal_x"`, `"normal_y"`, `"normal_z"`: Individual normal components
-#' @param n_levels Number of discrete levels for `lighting = "quantize"`. Default is 3.
-#' @param clamp_negative Logical indicating whether to clamp negative lighting values
-#'   to the lowest level when using `lighting = "quantize"`. Default is `TRUE`.
-#' @param light_dir Numeric vector of length 3 specifying the light direction in
-#'   3D space. For most lighting methods, this defines the illumination direction.
-#'   For `lighting = "normal_rgb"`, this defines the orientation of the RGB
-#'   coordinate system (surfaces facing this direction will be brightest/whitest).
-#'   Default is `c(0, 0, 1)` (light from above).
+#' @param lighting A lighting specification object created by \code{lighting()}
 #' @param inherit.aes If `FALSE`, overrides the default aesthetics.
 #'
 #' @section Computed variables:
@@ -323,8 +215,7 @@ stat_surface <- function(mapping = NULL, data = NULL,
                          geom = GeomPolygon3D, # nonstandard syntax, but `"polygon_3d"` failed
                          position = "identity", ...,
                          method = "alpha", alpha = 1.0,
-                         light_dir = c(0, 0, 1), lighting = "lambert",
-                         n_levels = 3, clamp_negative = TRUE,
+                         lighting = lighting("lambert"),
                          inherit.aes = TRUE) {
 
       default_mapping <- aes(group = after_stat(face_id))
@@ -342,10 +233,7 @@ stat_surface <- function(mapping = NULL, data = NULL,
       layer(
             stat = StatSurface, data = data, mapping = mapping, geom = geom,
             position = position, inherit.aes = inherit.aes,
-            params = list(method = method, alpha = alpha, light_dir = light_dir,
-                          lighting = lighting, n_levels = n_levels,
-                          clamp_negative = clamp_negative,
-                          ...)
+            params = list(method = method, alpha = alpha, lighting = lighting, ...)
       )
 }
 
@@ -368,29 +256,35 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                                })
 
                                # Sort groups by depth (back to front)
-                               ordered_groups <- names(sort(group_depths, decreasing = FALSE))
+                               ordered_groups <- names(sort(group_depths, decreasing = TRUE))
 
-                               # Draw each triangle individually to preserve aesthetics
-                               triangle_grobs <- list()
+                               # Draw each polygon individually to preserve aesthetics
+                               polygon_grobs <- list()
                                for(i in seq_along(ordered_groups)) {
-                                     tri_data <- coords_split[[ordered_groups[i]]]
+                                     poly_data <- coords_split[[ordered_groups[i]]]
 
-                                     # Draw this triangle as individual polygon
-                                     triangle_grobs[[i]] <- grid::polygonGrob(
-                                           x = tri_data$x,
-                                           y = tri_data$y,
+                                     # Sort by order if present to get correct vertex sequence
+                                     if ("order" %in% names(poly_data)) {
+                                           poly_data <- poly_data[order(poly_data$order), ]
+                                     }
+
+                                     # Draw this polygon
+                                     polygon_grobs[[i]] <- grid::polygonGrob(
+                                           x = poly_data$x,
+                                           y = poly_data$y,
+                                           default.units = "npc",
                                            gp = grid::gpar(
-                                                 col = tri_data$colour[1],      # Take first value for this triangle
-                                                 fill = tri_data$fill[1],       # Take first value for this triangle
-                                                 lwd = tri_data$linewidth[1] * .pt,
-                                                 lty = tri_data$linetype[1]
+                                                 col = poly_data$colour[1],
+                                                 fill = poly_data$fill[1],
+                                                 lwd = poly_data$linewidth[1] * .pt,
+                                                 lty = poly_data$linetype[1]
                                            ),
-                                           name = paste0("triangle_", i)
+                                           name = paste0("polygon_", i)
                                      )
                                }
 
-                               # Combine all triangle grobs
-                               do.call(grid::grobTree, triangle_grobs)
+                               # Combine all polygon grobs
+                               do.call(grid::grobTree, polygon_grobs)
                          },
 
                          draw_key = draw_key_polygon
@@ -427,7 +321,7 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
 #' - `alpha`: Transparency
 #'
 #' @examples
-#' # Typically used via stat_surface()
+#' # Typically used via stat_surface() or stat_terrain()
 #' ggplot(sphere_data, aes(x, y, z)) +
 #'   stat_surface(method = "hull") +
 #'   coord_3d()
@@ -469,7 +363,7 @@ geom_polygon_3d <- function(mapping = NULL, data = NULL, stat = "identity",
 #                    method = "hull", light_dir = c(1, 1, 0), lighting = "lambert") +
 #       scale_fill_gradient(low = "gray10", high = "white") +
 #       scale_color_gradient(low = "gray10", high = "white") +
-#       coord_3d(pitch = 0, roll = 0, dist = 2)
+#       coord_3d(pitch = rnorm(1, 0, 360), roll = rnorm(1, 0, 360), yaw = rnorm(1, 0, 360), dist = 2)
 #
 # ggplot(df, aes(x, y, z = z)) +
 #       stat_surface(aes(fill = after_stat(light), color = after_stat(light)),
