@@ -1,8 +1,8 @@
-StatSurface <- ggproto("StatSurface", Stat,
+StatHull <- ggproto("StatHull", Stat,
                        required_aes = c("x", "y", "z"),
 
                        compute_group = function(data, scales, method = "alpha", alpha = 1.0,
-                                                lighting = "lambert") {
+                                                light = lighting("lambert")) {
                              coords <- as.matrix(data[, c("x", "y", "z")])
 
                              # Get triangle indices
@@ -83,7 +83,7 @@ StatSurface <- ggproto("StatSurface", Stat,
                              }
                              # For alpha shapes: keep original normals (no orientation fix yet)
 
-                             light_val <- compute_lighting(normals, lighting)
+                             light_val <- compute_lighting(normals, light)
 
                              # Flatten triangle data with all computed variables
                              verts <- coords[as.vector(t(tri)), ]
@@ -95,7 +95,7 @@ StatSurface <- ggproto("StatSurface", Stat,
                              triangle_index <- rep(1:nrow(tri), each = 3)
 
                              # Re-apply identity scaling for RGB colors after rep()
-                             if (lighting$method == "normal_rgb") {
+                             if (light$method == "normal_rgb") {
                                    light_val <- I(light_val)
                              }
 
@@ -114,9 +114,9 @@ StatSurface <- ggproto("StatSurface", Stat,
 )
 
 
-#' Create 3D surface triangulation with lighting
+#' Create 3D convex and alpha hulls with lighting
 #'
-#' `stat_surface()` creates triangulated surfaces from 3D point clouds using either
+#' `stat_hull()` creates triangulated surfaces from 3D point clouds using either
 #' convex hull or alpha shape algorithms. It computes surface normals and applies
 #' various lighting models to create realistic 3D surface visualizations.
 #'
@@ -134,7 +134,7 @@ StatSurface <- ggproto("StatSurface", Stat,
 #' @param alpha Alpha parameter for alpha shape triangulation. Smaller values create
 #'   more detailed surfaces but may fragment. Larger values create smoother surfaces
 #'   but may fill holes. Only used when `method = "alpha"`.
-#' @param lighting A lighting specification object created by \code{lighting()}
+#' @param light A lighting specification object created by \code{lighting()}
 #' @param inherit.aes If `FALSE`, overrides the default aesthetics.
 #'
 #' @section Computed variables:
@@ -144,7 +144,7 @@ StatSurface <- ggproto("StatSurface", Stat,
 #' - `face_id`: Triangle group identifier
 #'
 #' @section Aesthetics:
-#' `stat_surface()` requires the following aesthetics:
+#' `stat_hull()` requires the following aesthetics:
 #' - **x**: X coordinate
 #' - **y**: Y coordinate
 #' - **z**: Z coordinate
@@ -177,7 +177,7 @@ StatSurface <- ggproto("StatSurface", Stat,
 #' # Surface with normal-to-RGB coloring
 #' ggplot(sphere_df, aes(x, y, z = z)) +
 #'   stat_surface(aes(fill = after_stat(light)),
-#'                method = "hull", lighting = "normal_rgb") +
+#'                method = "hull", light = "normal_rgb") +
 #'   coord_3d()
 #'
 #' # Quantized lighting (cel shading effect)
@@ -190,7 +190,7 @@ StatSurface <- ggproto("StatSurface", Stat,
 #' # Signed lighting with continuous gradient
 #' ggplot(sphere_df, aes(x, y, z = z)) +
 #'   stat_surface(aes(fill = after_stat(light)),
-#'                method = "hull", lighting = "signed") +
+#'                method = "hull", light = "signed") +
 #'   scale_fill_gradient2(low = "blue", mid = "gray", high = "white") +
 #'   coord_3d()
 #'
@@ -203,7 +203,7 @@ StatSurface <- ggproto("StatSurface", Stat,
 #'
 #' # Rotated RGB color scheme
 #' ggplot(sphere_df, aes(x, y, z = z)) +
-#'   stat_surface(aes(fill = after_stat(light)), lighting = "normal_rgb",
+#'   stat_surface(aes(fill = after_stat(light)), light = "normal_rgb",
 #'                method = "hull") +
 #'   coord_3d()
 #'
@@ -211,12 +211,13 @@ StatSurface <- ggproto("StatSurface", Stat,
 #'   default geometry with depth sorting.
 #'
 #' @export
-stat_surface <- function(mapping = NULL, data = NULL,
+stat_hull <- function(mapping = NULL, data = NULL,
                          geom = GeomPolygon3D, # nonstandard syntax, but `"polygon_3d"` failed
-                         position = "identity", ...,
+                         position = "identity",
                          method = "alpha", alpha = 1.0,
-                         lighting = lighting("lambert"),
-                         inherit.aes = TRUE) {
+                         light = lighting("lambert"),
+                         inherit.aes = TRUE,
+                         ...) {
 
       default_mapping <- aes(group = after_stat(face_id))
 
@@ -231,9 +232,9 @@ stat_surface <- function(mapping = NULL, data = NULL,
       }
 
       layer(
-            stat = StatSurface, data = data, mapping = mapping, geom = geom,
+            stat = StatHull, data = data, mapping = mapping, geom = geom,
             position = position, inherit.aes = inherit.aes,
-            params = list(method = method, alpha = alpha, lighting = lighting, ...)
+            params = list(method = method, alpha = alpha, light = light, ...)
       )
 }
 
@@ -294,8 +295,8 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
 #' 3D polygon geometry with depth sorting
 #'
 #' `geom_polygon_3d()` renders 3D polygons with proper depth sorting for realistic
-#' 3D surface visualization. It's designed to work with triangulated surface data
-#' from [stat_surface()], as well as other .
+#' 3D surface visualization. It's designed to work with surface data
+#' from [stat_hull()] and [stat_surface()], as well as other data.
 #'
 #' @param mapping Set of aesthetic mappings created by [aes()].
 #' @param data The data to be displayed in this layer.
@@ -331,7 +332,7 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
 #'   geom_polygon_3d(fill = "lightblue") +
 #'   coord_3d()
 #'
-#' @seealso [stat_surface()] for surface triangulation
+#' @seealso [stat_hull()] and [stat_surface()].
 #' @export
 geom_polygon_3d <- function(mapping = NULL, data = NULL, stat = "identity",
                             position = "identity", ..., na.rm = FALSE,
@@ -359,15 +360,15 @@ geom_polygon_3d <- function(mapping = NULL, data = NULL, stat = "identity",
 # )
 #
 # ggplot(df, aes(x, y, z = z)) +
-#       stat_surface(aes(fill = after_stat(light), color = after_stat(light)),
-#                    method = "hull", light_dir = c(1, 1, 0), lighting = "lambert") +
+#       stat_hull(aes(fill = after_stat(light), color = after_stat(light)),
+#                    method = "hull", light = lighting("signed")) +
 #       scale_fill_gradient(low = "gray10", high = "white") +
 #       scale_color_gradient(low = "gray10", high = "white") +
 #       coord_3d(pitch = rnorm(1, 0, 360), roll = rnorm(1, 0, 360), yaw = rnorm(1, 0, 360), dist = 2)
 #
 # ggplot(df, aes(x, y, z = z)) +
-#       stat_surface(aes(fill = after_stat(light), color = after_stat(light)),
-#                    method = "hull", light_dir = c(1, 1, 1),lighting = "normal_rgb",
+#       stat_hull(aes(fill = after_stat(light), color = after_stat(light)),
+#                    method = "hull", light = lighting("normal_rgb"),
 #                    linewidth = .2) +
 #       coord_3d() +
 #       theme_void()

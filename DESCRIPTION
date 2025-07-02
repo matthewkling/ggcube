@@ -22,6 +22,7 @@ Imports:
     grid,
     lifecycle,
     labeling,
-    alphashape3d
+    alphashape3d,
+    geometry
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2

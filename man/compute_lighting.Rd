@@ -8,12 +8,14 @@ compute_lighting(normals, lighting = lighting("lambert"))
 }
 \arguments{
 \item{normals}{Matrix with 3 columns (x, y, z normal components), where each
-row represents a face normal vector}
+row represents a face normal vector. Should be unit vectors (normalized).}
 
 \item{lighting}{A lighting specification object created by \code{lighting()}}
 }
 \value{
-Vector of lighting values (numeric for most methods, hex colors for normal_rgb)
+Vector of lighting values. For most methods, returns numeric values.
+For \code{method = "normal_rgb"}, returns hex color strings with \code{I()}
+class for identity scaling.
 }
 \description{
 Computes lighting values from surface normals using various lighting models.

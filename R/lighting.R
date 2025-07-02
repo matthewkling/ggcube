@@ -120,10 +120,11 @@ print.lighting <- function(x, ...) {
 #' consistent lighting behavior.
 #'
 #' @param normals Matrix with 3 columns (x, y, z normal components), where each
-#'   row represents a face normal vector
+#'   row represents a face normal vector. Should be unit vectors (normalized).
 #' @param lighting A lighting specification object created by \code{lighting()}
-#' @return Vector of lighting values (numeric for most methods, hex colors for normal_rgb)
-#' @export
+#' @return Vector of lighting values. For most methods, returns numeric values.
+#'   For \code{method = "normal_rgb"}, returns hex color strings with \code{I()}
+#'   class for identity scaling.
 compute_lighting <- function(normals, lighting = lighting("lambert")) {
 
       # Validate inputs

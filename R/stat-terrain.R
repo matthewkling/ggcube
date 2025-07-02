@@ -1,74 +1,8 @@
-#' 3D terrain surface from regular grid data
-#'
-#' Creates 3D surfaces from regularly gridded data (like elevation maps).
-#' Assumes data is on a regular x,y grid and creates quadrilateral faces.
-#'
-#' @param mapping Set of aesthetic mappings created by [aes()].
-#' @param data The data to be displayed in this layer.
-#' @param geom The geometric object to use display the data. Defaults to
-#'   [GeomPolygon3D] for proper 3D depth sorting.
-#' @param position Position adjustment, defaults to "identity".
-#' @param na.rm If `FALSE`, missing values are removed with a warning.
-#' @param show.legend Logical indicating whether this layer should be included in legends.
-#' @param inherit.aes If `FALSE`, overrides the default aesthetics.
-#' @param lighting A lighting specification object created by \code{lighting()}
-#' @param ... Other arguments passed on to [layer()].
-#'
-#' @section Aesthetics:
-#' `stat_terrain()` requires the following aesthetics:
-#' - **x**: X coordinate
-#' - **y**: Y coordinate
-#' - **z**: Z coordinate (elevation/height)
-#'
-#' @section Computed variables:
-#' - `light`: Computed lighting value (numeric for most methods, hex color for `normal_rgb`)
-#' - `normal_x`, `normal_y`, `normal_z`: Surface normal components
-#' - `slope`: Gradient magnitude from original terrain calculations
-#' - `aspect`: Direction of steepest slope from original terrain calculations
-#' - `dzdx`, `dzdy`: Partial derivatives from original terrain calculations
-#' - `face_id`: Quad group identifier
-#'
-#' @examples
-#' # Using the built-in volcano dataset
-#' volcano_df <- expand.grid(x = 1:nrow(volcano), y = 1:ncol(volcano))
-#' volcano_df$z <- as.vector(volcano)
-#'
-#' # Basic terrain surface
-#' ggplot(volcano_df, aes(x, y, z = z)) +
-#'   stat_terrain(aes(fill = after_stat(elevation))) +
-#'   scale_fill_viridis_c() +
-#'   coord_3d()
-#'
-#' @export
-stat_terrain <- function(mapping = NULL, data = NULL, geom = GeomPolygon3D,
-                         position = "identity", na.rm = FALSE, show.legend = NA,
-                         inherit.aes = TRUE,
-                         lighting = lighting("lambert"),
-                         ...) {
 
-      # Set default group mapping like stat_surface does
-      default_mapping <- aes(group = after_stat(face_id))
-
-      if (!is.null(mapping)) {
-            mapping_names <- names(mapping)
-            if (!"group" %in% mapping_names) {
-                  mapping <- modifyList(default_mapping, mapping)
-            }
-      } else {
-            mapping <- default_mapping
-      }
-
-      layer(
-            stat = StatTerrain, data = data, mapping = mapping, geom = geom,
-            position = position, show.legend = show.legend, inherit.aes = inherit.aes,
-            params = list(na.rm = na.rm, lighting = lighting, ...)
-      )
-}
-
-StatTerrain <- ggproto("StatTerrain", Stat,
+StatSurface <- ggproto("StatSurface", Stat,
                        required_aes = c("x", "y", "z"),
 
-                       compute_group = function(data, scales, na.rm = FALSE, lighting = lighting("lambert")) {
+                       compute_group = function(data, scales, na.rm = FALSE, light = lighting("lambert")) {
 
                              # Remove missing values if requested
                              if (na.rm) {
@@ -77,7 +11,7 @@ StatTerrain <- ggproto("StatTerrain", Stat,
 
                              # Check we have enough data
                              if (nrow(data) < 4) {
-                                   stop("stat_terrain requires at least 4 points")
+                                   stop("stat_surface requires at least 4 points")
                              }
 
                              # Detect grid structure
@@ -88,7 +22,7 @@ StatTerrain <- ggproto("StatTerrain", Stat,
                              }
 
                              # Create quadrilateral faces from grid cells using user's fast function
-                             faces <- create_grid_quads(data)  # User's function
+                             faces <- create_grid_quads(data)
 
                              # Get unique faces for normal/lighting computation
                              face_data <- faces %>%
@@ -107,13 +41,13 @@ StatTerrain <- ggproto("StatTerrain", Stat,
                              normals <- normals / normal_lengths
 
                              # Apply lighting models to the normals
-                             light_vals <- compute_lighting(normals, lighting)
+                             light_vals <- compute_lighting(normals, light)
 
                              # Expand lighting values to match vertices (4 per face)
                              light_expanded <- rep(light_vals, each = 4)
 
                              # Re-apply identity scaling for RGB colors after rep()
-                             if (lighting$method == "normal_rgb") {
+                             if (light$method == "normal_rgb") {
                                    light_expanded <- I(light_expanded)
                              }
 
@@ -134,6 +68,70 @@ StatTerrain <- ggproto("StatTerrain", Stat,
                              return(faces)
                        }
 )
+
+#' 3D surface from regular grid data
+#'
+#' Creates 3D surfaces from regularly gridded data (like elevation maps).
+#' Assumes data is on a regular x,y grid and creates quadrilateral faces.
+#'
+#' @param mapping Set of aesthetic mappings created by [aes()].
+#' @param data The data to be displayed in this layer.
+#' @param geom The geometric object to use display the data. Defaults to
+#'   [GeomPolygon3D] for proper 3D depth sorting.
+#' @param position Position adjustment, defaults to "identity".
+#' @param na.rm If `FALSE`, missing values are removed with a warning.
+#' @param show.legend Logical indicating whether this layer should be included in legends.
+#' @param inherit.aes If `FALSE`, overrides the default aesthetics.
+#' @param light A lighting specification object created by \code{lighting()}
+#' @param ... Other arguments passed on to [layer()].
+#'
+#' @section Aesthetics:
+#' `stat_surface()` requires the following aesthetics:
+#' - **x**: X coordinate
+#' - **y**: Y coordinate
+#' - **z**: Z coordinate (elevation/height)
+#'
+#' @section Computed variables:
+#' - `light`: Computed lighting value (numeric for most methods, hex color for `normal_rgb`)
+#' - `normal_x`, `normal_y`, `normal_z`: Surface normal components
+#' - `slope`: Gradient magnitude from original surface calculations
+#' - `aspect`: Direction of steepest slope from original surface calculations
+#' - `dzdx`, `dzdy`: Partial derivatives from original surface calculations
+#' - `face_id`: Quad group identifier
+#'
+#' @examples
+#' # Basic terrain surface
+#' ggplot(mountain, aes(x, y, z)) +
+#'   stat_surface(aes(fill = after_stat(elevation))) +
+#'   scale_fill_viridis_c() +
+#'   coord_3d()
+#'
+#' @export
+stat_surface <- function(mapping = NULL, data = NULL,
+                         geom = GeomPolygon3D,
+                         position = "identity",
+                         light = lighting("lambert"),
+                         na.rm = FALSE, show.legend = NA, inherit.aes = TRUE,
+                         ...) {
+
+      # Set default group mapping like stat_surface does
+      default_mapping <- aes(group = after_stat(face_id))
+
+      if (!is.null(mapping)) {
+            mapping_names <- names(mapping)
+            if (!"group" %in% mapping_names) {
+                  mapping <- modifyList(default_mapping, mapping)
+            }
+      } else {
+            mapping <- default_mapping
+      }
+
+      layer(
+            stat = StatSurface, data = data, mapping = mapping, geom = geom,
+            position = position, show.legend = show.legend, inherit.aes = inherit.aes,
+            params = list(na.rm = na.rm, light = light, ...)
+      )
+}
 
 # Helper function to detect if data is on regular grid
 detect_grid_structure <- function(data) {
@@ -173,7 +171,7 @@ detect_grid_structure <- function(data) {
       )
 }
 
-create_grid_quads <- function(data, grid_info) {
+create_grid_quads <- function(data) {
       data <- data %>%
             ungroup() %>%
             mutate(group = 1:nrow(.))
@@ -211,7 +209,7 @@ create_grid_quads <- function(data, grid_info) {
 
 
 # ggplot(mountain, aes(x, y, z)) +
-#       stat_terrain(aes(fill = after_stat(light),
+#       stat_surface(aes(fill = after_stat(light),
 #                        color = after_stat(light)),
 #                    linewidth = .1) +
 #       theme_bw() + coord_3d(pitch = 0, roll = 130, yaw = 240) +
@@ -220,8 +218,8 @@ create_grid_quads <- function(data, grid_info) {
 # expand_grid(x = -20:20, y = -20:20) %>%
 #       mutate(z = -sqrt(x^2 + y^2)) %>%
 #       ggplot(aes(x, y, z)) +
-#       stat_terrain(aes(fill = after_stat(light), color = after_stat(light)),
-#                    lighting = lighting("signed"),
+#       stat_surface(aes(fill = after_stat(light), color = after_stat(light)),
+#                    light = lighting("signed"),
 #                    linewidth = .1) +
 #       theme_bw() +
 #       coord_3d(pitch = 0, roll = 130, yaw = 60, persp = T) +
