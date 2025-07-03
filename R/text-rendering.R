@@ -255,7 +255,163 @@ calculate_trigonometric_components <- function(theta, offsets, text_dimensions, 
       ))
 }
 
-# Updated create_axis_labels function (working version)
+# NEW HELPER FUNCTIONS
+
+# Helper function to calculate gridline position
+calculate_gridline_position <- function(gridline_data, axis_uses_start) {
+      if (axis_uses_start) {
+            return(list(x = gridline_data$x[1], y = gridline_data$y[1]))
+      } else {
+            return(list(x = gridline_data$x[nrow(gridline_data)], y = gridline_data$y[nrow(gridline_data)]))
+      }
+}
+
+# Helper function to calculate offset direction
+calculate_offset_direction <- function(gridline_data, target_x, target_y) {
+      gridline_center_x <- mean(gridline_data$x)
+      gridline_center_y <- mean(gridline_data$y)
+
+      center_to_target_dx <- target_x - gridline_center_x
+      center_to_target_dy <- target_y - gridline_center_y
+      center_to_target_length <- sqrt(center_to_target_dx^2 + center_to_target_dy^2)
+
+      if (center_to_target_length == 0) {
+            return(NULL)
+      }
+
+      return(list(
+            dx = center_to_target_dx / center_to_target_length,
+            dy = center_to_target_dy / center_to_target_length,
+            center_x = gridline_center_x,
+            center_y = gridline_center_y,
+            length = center_to_target_length
+      ))
+}
+
+# Helper function to calculate text rotation and justification
+calculate_text_rotation_and_justification <- function(gridline_data, auto_text_orientation, theme_elements, is_title = FALSE, axis_angle = NULL) {
+      if (is_title && !is.null(axis_angle)) {
+            # For titles, use axis angle (parallel to axis edge)
+            angle_radians <- axis_angle
+      } else {
+            # For labels, use gridline angle (parallel to gridline)
+            gridline_dx <- gridline_data$x[nrow(gridline_data)] - gridline_data$x[1]
+            gridline_dy <- gridline_data$y[nrow(gridline_data)] - gridline_data$y[1]
+            angle_radians <- atan2(gridline_dy, gridline_dx)
+      }
+
+      angle_degrees <- angle_radians * 180 / pi
+
+      # Ensure readable orientation
+      if (abs(angle_degrees) > 90) {
+            angle_degrees <- angle_degrees + 180
+            if (angle_degrees > 180) angle_degrees <- angle_degrees - 360
+      }
+
+      if (auto_text_orientation) {
+            result <- list(
+                  angle = angle_degrees,
+                  vjust = 0.5
+            )
+            # Add hjust calculation for labels (not titles)
+            if (!is_title) {
+                  result$hjust <- NULL  # Will be calculated in caller based on position
+                  result$gridline_center_x <- mean(gridline_data$x)
+                  result$gridline_center_y <- mean(gridline_data$y)
+            } else {
+                  element_type <- "axis_title"
+                  result$hjust <- theme_elements[[element_type]]$hjust %||% 0.5
+            }
+            return(result)
+      } else {
+            element_type <- if (is_title) "axis_title" else "axis_text"
+            return(list(
+                  angle = theme_elements[[element_type]]$angle %||% 0,
+                  hjust = theme_elements[[element_type]]$hjust %||% 0.5,
+                  vjust = theme_elements[[element_type]]$vjust %||% 0.5
+            ))
+      }
+}
+
+# Helper function to resolve label text
+resolve_label_text <- function(break_value, axis_labels, axis_breaks) {
+      if (!is.null(axis_labels) && !is.null(axis_breaks)) {
+            break_index <- which.min(abs(axis_breaks - break_value))
+            if (length(break_index) > 0 && break_index <= length(axis_labels)) {
+                  return(as.character(axis_labels[break_index]))
+            }
+      }
+      return(as.character(break_value))
+}
+
+# Helper function to scale coordinates to NPC
+scale_to_npc_coordinates <- function(x_2d, y_2d, plot_bounds) {
+      x_scaled <- (x_2d - plot_bounds[1]) / (plot_bounds[2] - plot_bounds[1])
+      y_scaled <- (y_2d - plot_bounds[3]) / (plot_bounds[4] - plot_bounds[3])
+
+      if (is.na(x_scaled) || is.na(y_scaled)) {
+            return(NULL)
+      }
+
+      return(list(x = x_scaled, y = y_scaled))
+}
+
+# Helper function to create text grob
+create_text_grob <- function(text, x_npc, y_npc, rotation_info, theme_elements, is_title = FALSE) {
+      element_type <- if (is_title) "axis_title" else "axis_text"
+
+      # Get appropriate theme elements
+      colour <- theme_elements[[element_type]]$colour %||% "black"
+      fontsize <- theme_elements[[element_type]]$size %||% (if (is_title) 11 else 8.5)
+      fontfamily <- theme_elements[[element_type]]$family %||% ""
+      fontface <- theme_elements[[element_type]]$face %||% "plain"
+
+      # Handle unit-based fontsize
+      if (inherits(fontsize, "unit")) {
+            fontsize <- as.numeric(fontsize)
+      }
+
+      tryCatch({
+            grid::textGrob(
+                  label = as.character(text),
+                  x = as.numeric(x_npc),
+                  y = as.numeric(y_npc),
+                  hjust = as.numeric(rotation_info$hjust),
+                  vjust = as.numeric(rotation_info$vjust),
+                  rot = as.numeric(rotation_info$angle),
+                  default.units = "npc",
+                  gp = grid::gpar(
+                        fontsize = fontsize,
+                        col = colour,
+                        fontfamily = fontfamily,
+                        fontface = fontface
+                  )
+            )
+      }, error = function(e) {
+            NULL
+      })
+}
+
+# Higher-level helper combining multiple steps
+calculate_text_position_with_offset <- function(gridline_data, axis_uses_start, offset_distance, plot_bounds) {
+      # Get base position
+      base_pos <- calculate_gridline_position(gridline_data, axis_uses_start)
+
+      # Calculate offset direction
+      offset_dir <- calculate_offset_direction(gridline_data, base_pos$x, base_pos$y)
+      if (is.null(offset_dir)) return(NULL)
+
+      # Apply offset
+      final_x <- base_pos$x + offset_dir$dx * offset_distance
+      final_y <- base_pos$y + offset_dir$dy * offset_distance
+
+      # Scale to NPC
+      return(scale_to_npc_coordinates(final_x, final_y, plot_bounds))
+}
+
+# REFACTORED MAIN FUNCTIONS
+
+# Refactored create_axis_labels function
 create_axis_labels <- function(axis, edge_gridlines, theme_elements, offsets, text_dimensions,
                                panel_params, auto_text_orientation, plot_bounds, chosen_edge) {
 
@@ -276,110 +432,40 @@ create_axis_labels <- function(axis, edge_gridlines, theme_elements, offsets, te
             gridline_data <- edge_gridlines[edge_gridlines$group == group_id, ]
 
             if (nrow(gridline_data) >= 2) {
-                  # Use consistent endpoint choice based on boundary matching
-                  if (axis_uses_start) {
-                        label_x <- gridline_data$x[1]
-                        label_y <- gridline_data$y[1]
-                  } else {
-                        label_x <- gridline_data$x[nrow(gridline_data)]
-                        label_y <- gridline_data$y[nrow(gridline_data)]
-                  }
-
                   # Calculate theta using helper function
                   theta <- calculate_theta(axis_angle, gridline_data)
-
-                  # Calculate gridline angle for rotation (labels should be parallel to their gridline)
-                  gridline_dx <- gridline_data$x[nrow(gridline_data)] - gridline_data$x[1]
-                  gridline_dy <- gridline_data$y[nrow(gridline_data)] - gridline_data$y[1]
-                  gridline_angle <- atan2(gridline_dy, gridline_dx)
 
                   # Calculate text offset using helper function
                   text_offset_total <- calculate_trigonometric_components(theta, offsets, text_dimensions, theme_elements, plot_bounds)$text_offset_total
 
-                  # Apply offset away from gridline center
-                  gridline_center_x <- mean(gridline_data$x)
-                  gridline_center_y <- mean(gridline_data$y)
+                  # Use helper to calculate position with offset
+                  position_npc <- calculate_text_position_with_offset(gridline_data, axis_uses_start, text_offset_total, plot_bounds)
 
-                  center_to_label_dx <- label_x - gridline_center_x
-                  center_to_label_dy <- label_y - gridline_center_y
-                  center_to_label_length <- sqrt(center_to_label_dx^2 + center_to_label_dy^2)
+                  if (is.null(position_npc)) next
 
-                  if (center_to_label_length > 0) {
-                        label_x <- label_x + (center_to_label_dx / center_to_label_length) * text_offset_total
-                        label_y <- label_y + (center_to_label_dy / center_to_label_length) * text_offset_total
+                  # Calculate rotation and justification using helper
+                  rotation_info <- calculate_text_rotation_and_justification(gridline_data, auto_text_orientation, theme_elements, is_title = FALSE, axis_angle = NULL)
+
+                  # Calculate hjust for labels when using auto orientation
+                  if (auto_text_orientation && is.null(rotation_info$hjust)) {
+                        # Get the original position for comparison
+                        label_pos <- calculate_gridline_position(gridline_data, axis_uses_start)
+
+                        condition1 <- label_pos$x < rotation_info$gridline_center_x
+                        condition2 <- abs(rotation_info$angle) <= 90
+                        rotation_info$hjust <- if (condition1 == condition2) 1 else 0
                   }
 
-                  # Calculate label rotation to be parallel to gridline
-                  gridline_angle_degrees <- gridline_angle * 180 / pi
-
-                  # Ensure readable orientation
-                  if (abs(gridline_angle_degrees) > 90) {
-                        gridline_angle_degrees <- gridline_angle_degrees + 180
-                        if (gridline_angle_degrees > 180) gridline_angle_degrees <- gridline_angle_degrees - 360
-                  }
-
-                  # Calculate justification
-                  condition1 <- label_x < gridline_center_x
-                  condition2 <- abs(gridline_angle_degrees) <= 90
-                  hjust <- if (condition1 == condition2) 1 else 0
-
-                  # Get the custom labels if available
+                  # Get label text using helper
                   axis_labels <- panel_params$scale_info[[axis]]$labels %||% NULL
                   axis_breaks <- panel_params$scale_info[[axis]]$breaks %||% NULL
+                  label_text <- resolve_label_text(gridline_data$break_value[1], axis_labels, axis_breaks)
 
-                  if (!is.null(axis_labels) && !is.null(axis_breaks)) {
-                        # Find which break this gridline corresponds to
-                        break_value <- gridline_data$break_value[1]
-                        break_index <- which.min(abs(axis_breaks - break_value))
+                  # Create grob using helper
+                  label_grob <- create_text_grob(label_text, position_npc$x, position_npc$y, rotation_info, theme_elements, is_title = FALSE)
 
-                        if (length(break_index) > 0 && break_index <= length(axis_labels)) {
-                              label_text <- as.character(axis_labels[break_index])
-                        } else {
-                              # Fallback to break value
-                              label_text <- as.character(break_value)
-                        }
-                  } else {
-                        # Fallback to break value
-                        label_text <- as.character(gridline_data$break_value[1])
-                  }
-
-                  x_scaled <- (label_x - plot_bounds[1]) / (plot_bounds[2] - plot_bounds[1])
-                  y_scaled <- (label_y - plot_bounds[3]) / (plot_bounds[4] - plot_bounds[3])
-
-                  if (!is.na(x_scaled) && !is.na(y_scaled)) {
-                        if (auto_text_orientation) {
-                              final_angle <- gridline_angle_degrees
-                              final_hjust <- hjust
-                              final_vjust <- 0.5
-                        } else {
-                              final_angle <- theme_elements$axis_text$angle %||% 0
-                              final_hjust <- theme_elements$axis_text$hjust %||% 0.5
-                              final_vjust <- theme_elements$axis_text$vjust %||% 0.5
-                        }
-
-                        label_grob <- tryCatch({
-                              grid::textGrob(
-                                    label = as.character(label_text),
-                                    x = as.numeric(x_scaled),
-                                    y = as.numeric(y_scaled),
-                                    hjust = as.numeric(final_hjust),
-                                    vjust = as.numeric(final_vjust),
-                                    rot = as.numeric(final_angle),
-                                    default.units = "npc",
-                                    gp = grid::gpar(
-                                          fontsize = text_dimensions$fontsize,
-                                          col = theme_elements$axis_text$colour %||% "black",
-                                          fontfamily = theme_elements$axis_text$family %||% "",
-                                          fontface = theme_elements$axis_text$face %||% "plain"
-                                    )
-                              )
-                        }, error = function(e) {
-                              NULL
-                        })
-
-                        if (!is.null(label_grob)) {
-                              all_labels[[length(all_labels) + 1]] <- label_grob
-                        }
+                  if (!is.null(label_grob)) {
+                        all_labels[[length(all_labels) + 1]] <- label_grob
                   }
             }
       }
@@ -389,7 +475,7 @@ create_axis_labels <- function(axis, edge_gridlines, theme_elements, offsets, te
                   cube_center_2d = cube_center_2d))
 }
 
-# Updated create_axis_title function with all title logic
+# Refactored create_axis_title function
 create_axis_title <- function(axis, edge_gridlines, theme_elements, offsets, text_dimensions,
                               panel_params, auto_text_orientation, plot_bounds, chosen_edge, axis_uses_start) {
 
@@ -431,92 +517,20 @@ create_axis_title <- function(axis, edge_gridlines, theme_elements, offsets, tex
       # Calculate theta using helper function (same as create_axis_labels)
       theta <- calculate_theta(axis_angle, center_gridline)
 
-      # Use the shared helper function to get components
-      components <- calculate_trigonometric_components(theta, offsets, text_dimensions, theme_elements, plot_bounds)
+      # Get offset distance
+      title_offset_total <- calculate_trigonometric_components(theta, offsets, text_dimensions, theme_elements, plot_bounds)$title_offset_total
 
-      # For debugging, try just a + b first
-      title_offset_total <- components$a + components$b  # Test with labels position
-      # title_offset_total <- components$title_offset_total  # Full formula when ready
-
-      # Get the label position for this center gridline (same logic as labels)
-      if (axis_uses_start) {
-            start_x <- center_gridline$x[1]
-            start_y <- center_gridline$y[1]
-      } else {
-            start_x <- center_gridline$x[nrow(center_gridline)]
-            start_y <- center_gridline$y[nrow(center_gridline)]
-      }
-
-      # Calculate direction from gridline center (same as labels)
-      gridline_center_x <- mean(center_gridline$x)
-      gridline_center_y <- mean(center_gridline$y)
-
-      center_to_endpoint_dx <- start_x - gridline_center_x
-      center_to_endpoint_dy <- start_y - gridline_center_y
-      center_to_endpoint_length <- sqrt(center_to_endpoint_dx^2 + center_to_endpoint_dy^2)
-
-      if (center_to_endpoint_length == 0) {
-            return(list())  # Cannot calculate direction
-      }
-
-      # Normalize the direction (same as labels)
-      unit_x <- center_to_endpoint_dx / center_to_endpoint_length
-      unit_y <- center_to_endpoint_dy / center_to_endpoint_length
-
-      # Calculate title position using shared components
-      title_x_2d <- gridline_center_x + unit_x * title_offset_total
-      title_y_2d <- gridline_center_y + unit_y * title_offset_total
-
-      # Calculate title rotation using axis angle
-      title_angle <- axis_angle * 180 / pi
-      if (abs(title_angle) > 90) {
-            title_angle <- title_angle + 180
-            if (title_angle > 180) title_angle <- title_angle - 360
-      }
-
-      # Convert to NPC coordinates
-      x_scaled <- (title_x_2d - plot_bounds[1]) / (plot_bounds[2] - plot_bounds[1])
-      y_scaled <- (title_y_2d - plot_bounds[3]) / (plot_bounds[4] - plot_bounds[3])
-
-      if (is.na(x_scaled) || is.na(y_scaled)) {
+      # Use the same position calculation as labels for consistency
+      position_npc <- calculate_text_position_with_offset(center_gridline, axis_uses_start, title_offset_total, plot_bounds)
+      if (is.null(position_npc)) {
             return(list())  # Invalid coordinates
       }
 
-      # Apply theme settings for angle and justification
-      if (auto_text_orientation) {
-            final_title_angle <- title_angle
-            final_title_hjust <- theme_elements$axis_title$hjust %||% 0.5
-            final_title_vjust <- theme_elements$axis_title$vjust %||% 0.5
-      } else {
-            final_title_angle <- theme_elements$axis_title$angle %||% 0
-            final_title_hjust <- theme_elements$axis_title$hjust %||% 0.5
-            final_title_vjust <- theme_elements$axis_title$vjust %||% 0.5
-      }
+      # Calculate rotation and justification using helper
+      rotation_info <- calculate_text_rotation_and_justification(center_gridline, auto_text_orientation, theme_elements, is_title = TRUE, axis_angle = axis_angle)
 
-      safe_title_fontsize <- tryCatch({
-            size_val <- theme_elements$axis_title$size %||% 11
-            if (inherits(size_val, "unit")) as.numeric(size_val) else as.numeric(size_val)
-      }, error = function(e) 11)
-
-      title_grob <- tryCatch({
-            grid::textGrob(
-                  label = as.character(axis_name),
-                  x = as.numeric(x_scaled),
-                  y = as.numeric(y_scaled),
-                  hjust = as.numeric(final_title_hjust),
-                  vjust = as.numeric(final_title_vjust),
-                  rot = as.numeric(final_title_angle),
-                  default.units = "npc",
-                  gp = grid::gpar(
-                        fontsize = safe_title_fontsize,
-                        col = theme_elements$axis_title$colour %||% "black",
-                        fontfamily = theme_elements$axis_title$family %||% "",
-                        fontface = theme_elements$axis_title$face %||% "plain"
-                  )
-            )
-      }, error = function(e) {
-            NULL
-      })
+      # Create title grob using helper
+      title_grob <- create_text_grob(axis_name, position_npc$x, position_npc$y, rotation_info, theme_elements, is_title = TRUE)
 
       if (!is.null(title_grob)) {
             return(list(title_grob))
@@ -525,7 +539,7 @@ create_axis_title <- function(axis, edge_gridlines, theme_elements, offsets, tex
       }
 }
 
-# Simplified render_axis_text function
+# Simplified render_axis_text function (unchanged except uses refactored functions)
 render_axis_text <- function(self, panel_params, theme) {
       tryCatch({
             all_labels <- list()
@@ -536,10 +550,19 @@ render_axis_text <- function(self, panel_params, theme) {
             plot_height <- panel_params$plot_bounds[4] - panel_params$plot_bounds[3]
             pt_to_plot_factor <- max(plot_width, plot_height) / 400
 
+            # Calculate effective ratios for edge selection
+            effective_ratios <- compute_effective_ratios(
+                  list(x = panel_params$scale_info$x$limits,
+                       y = panel_params$scale_info$y$limits,
+                       z = panel_params$scale_info$z$limits),
+                  panel_params$scales,
+                  panel_params$ratio
+            )
+
             for (axis in c("x", "y", "z")) {
 
-                  # Get edge + face
-                  axis_selection <- get_axis_selection(axis, self, panel_params)
+                  # Get edge + face (now passing effective_ratios)
+                  axis_selection <- get_axis_selection(axis, self, panel_params, effective_ratios)
 
                   # Skip this axis if no valid edge/face combination
                   if (is.null(axis_selection)) {
@@ -567,14 +590,14 @@ render_axis_text <- function(self, panel_params, theme) {
 
                   text_dimensions <- measure_axis_text_dimensions(edge_gridlines, theme_elements, axis_labels, axis_breaks)
 
-                  # Create axis labels using parallel function
+                  # Create axis labels using refactored function
                   label_result <- create_axis_labels(axis, edge_gridlines, theme_elements, offsets, text_dimensions,
                                                      panel_params, self$auto_text_orientation, panel_params$plot_bounds, chosen_edge)
 
                   all_labels <- c(all_labels, label_result$labels)
                   axis_uses_start <- label_result$axis_uses_start
 
-                  # Create axis titles using merged function
+                  # Create axis titles using refactored function
                   title_result <- create_axis_title(axis, edge_gridlines, theme_elements, offsets, text_dimensions,
                                                     panel_params, self$auto_text_orientation, panel_params$plot_bounds, chosen_edge, axis_uses_start)
 

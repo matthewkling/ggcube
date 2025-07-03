@@ -60,11 +60,82 @@ filter_edges_by_visible_faces <- function(edges, visible_faces) {
       return(visible_edges)
 }
 
-score_edges <- function(edges, proj) {
+# Helper function for perpendicularity scoring
+calculate_perpendicularity_score <- function(edge, proj, effective_ratios) {
+
+      # Get 2D directions for all three axes using cube corners
+      axis_directions_2d <- list()
+
+      # X-axis direction: from (-0.5, 0, 0) to (0.5, 0, 0)
+      x_3d <- data.frame(
+            x = c(-0.5, 0.5) * effective_ratios[1],
+            y = c(0, 0),
+            z = c(0, 0)
+      )
+      x_2d <- transform_3d_standard(x_3d, proj)
+      axis_directions_2d$x <- c(x_2d$x[2] - x_2d$x[1], x_2d$y[2] - x_2d$y[1])
+
+      # Y-axis direction: from (0, -0.5, 0) to (0, 0.5, 0)
+      y_3d <- data.frame(
+            x = c(0, 0),
+            y = c(-0.5, 0.5) * effective_ratios[2],
+            z = c(0, 0)
+      )
+      y_2d <- transform_3d_standard(y_3d, proj)
+      axis_directions_2d$y <- c(y_2d$x[2] - y_2d$x[1], y_2d$y[2] - y_2d$y[1])
+
+      # Z-axis direction: from (0, 0, -0.5) to (0, 0, 0.5)
+      z_3d <- data.frame(
+            x = c(0, 0),
+            y = c(0, 0),
+            z = c(-0.5, 0.5) * effective_ratios[3]
+      )
+      z_2d <- transform_3d_standard(z_3d, proj)
+      axis_directions_2d$z <- c(z_2d$x[2] - z_2d$x[1], z_2d$y[2] - z_2d$y[1])
+
+      # Get this edge's 2D direction
+      edge_dir_2d <- c(edge$p2_2d$x - edge$p1_2d$x, edge$p2_2d$y - edge$p1_2d$y)
+      edge_length_2d <- sqrt(sum(edge_dir_2d^2))
+
+      if (edge_length_2d == 0) return(0)  # Degenerate edge
+
+      edge_dir_2d <- edge_dir_2d / edge_length_2d  # Normalize
+
+      # Calculate perpendicularity to the two axes that should be perpendicular
+      other_axes <- setdiff(c("x", "y", "z"), edge$axis)
+
+      perp_scores <- numeric(2)
+      for (i in 1:2) {
+            other_axis_dir <- axis_directions_2d[[other_axes[i]]]
+            other_axis_length <- sqrt(sum(other_axis_dir^2))
+
+            if (other_axis_length > 0) {
+                  other_axis_dir <- other_axis_dir / other_axis_length  # Normalize
+
+                  # Calculate angle between edge and this perpendicular axis
+                  dot_product <- sum(edge_dir_2d * other_axis_dir)
+                  angle_rad <- acos(pmax(-1, pmin(1, abs(dot_product))))  # Clamp for numerical stability
+                  angle_deg <- angle_rad * 180 / pi
+
+                  # Score based on deviation from 90 degrees (perfect perpendicularity)
+                  deviation_from_90 <- abs(angle_deg - 90)
+                  perp_scores[i] <- 90 - deviation_from_90  # Higher score = more perpendicular
+            }
+      }
+
+      # Return average perpendicularity score (0-90, higher is better)
+      return(mean(perp_scores))
+}
+
+score_edges <- function(edges, proj, effective_ratios) {
       if (length(edges) == 0) return(list())
 
-      # Get convex hull of all 8 cube corners for reference
-      all_corners <- expand.grid(x = c(-0.5, 0.5), y = c(-0.5, 0.5), z = c(-0.5, 0.5))
+      # Get convex hull of all 8 cube corners for reference (NOW WITH CORRECT ASPECT RATIOS)
+      all_corners <- expand.grid(
+            x = c(-0.5, 0.5) * effective_ratios[1],
+            y = c(-0.5, 0.5) * effective_ratios[2],
+            z = c(-0.5, 0.5) * effective_ratios[3]
+      )
       all_corners_2d <- transform_3d_standard(all_corners, proj)
       hull_indices <- chull(all_corners_2d$x, all_corners_2d$y)
       hull_points <- all_corners_2d[hull_indices, ]
@@ -80,8 +151,12 @@ score_edges <- function(edges, proj) {
             p1_2d <- transform_3d_standard(p1_df, proj)
             p2_2d <- transform_3d_standard(p2_df, proj)
 
+            # Store 2D points in edge object FIRST
+            edges[[i]]$p1_2d <- p1_2d
+            edges[[i]]$p2_2d <- p2_2d
+
             # 1. Convex hull membership
-            # An edge is on the hull only if its endpoitns are consecutive vertices in the hull
+            # An edge is on the hull only if its endpoints are consecutive vertices in the hull
             # Note: chull() returns indices in counter-clockwise order, so consecutive
             # indices represent adjacent vertices on the hull boundary
             p1_is_hull_vertex <- any(abs(hull_vertices$x - p1_2d$x) < 1e-10 & abs(hull_vertices$y - p1_2d$y) < 1e-10)
@@ -102,19 +177,21 @@ score_edges <- function(edges, proj) {
                   on_hull <- FALSE
             }
 
-            # 2. Depth score (average z of endpoints - lower is better/closer)
+            # 2. NEW: Perpendicularity score (NOW calculated after 2D points are stored)
+            perpendicularity_score <- calculate_perpendicularity_score(edges[[i]], proj, effective_ratios)
+
+            # 3. Depth score (average z of endpoints - lower is better/closer)
             avg_depth <- (p1_2d$z + p2_2d$z) / 2
 
-            # 3. Corner score (average x+y of endpoints - lower is better/more bottom-left)
+            # 4. Corner score (average x+y of endpoints - lower is better/more bottom-left)
             avg_corner <- ((p1_2d$x + p1_2d$y) + (p2_2d$x + p2_2d$y)) / 2
 
             # Store scores
             edges[[i]]$on_hull <- on_hull
+            edges[[i]]$perpendicularity_score <- perpendicularity_score
             edges[[i]]$depth_score <- avg_depth
             edges[[i]]$corner_score <- avg_corner
             edges[[i]]$edge_length <- sqrt((p2_2d$x - p1_2d$x)^2 + (p2_2d$y - p1_2d$y)^2)
-            edges[[i]]$p1_2d <- p1_2d
-            edges[[i]]$p2_2d <- p2_2d
       }
 
       return(edges)
@@ -127,14 +204,15 @@ select_best_edge <- function(scored_edges) {
       hull_edges <- scored_edges[sapply(scored_edges, function(e) e$on_hull)]
       edges <- if(length(hull_edges) > 0) hull_edges else scored_edges
 
-      # STEP 2: Among edges, sort by length (desc), then depth (asc), then corner (asc)
+      # STEP 2: Among edges, sort by: perpendicularity (desc), length (desc), depth (asc), corner (asc)
       edge_data <- data.frame(
             index = seq_along(edges),
+            perpendicularity = sapply(edges, function(e) e$perpendicularity_score),
             length = sapply(edges, function(e) e$edge_length),
             depth = sapply(edges, function(e) e$depth_score),
             corner = sapply(edges, function(e) e$corner_score)
       )
-      edge_data <- edge_data[order(-edge_data$length, edge_data$depth, edge_data$corner), ]
+      edge_data <- edge_data[order(-edge_data$perpendicularity, -edge_data$length, edge_data$depth, edge_data$corner), ]
       best_edge <- edges[[edge_data$index[1]]]
       return(best_edge)
 }
@@ -193,7 +271,7 @@ select_best_face_for_edge <- function(edge, visible_faces, proj) {
 }
 
 
-select_axis_edge_and_face <- function(axis, visible_faces, proj) {
+select_axis_edge_and_face <- function(axis, visible_faces, proj, effective_ratios) {
       # Step 1: Enumerate all possible edges for this axis
       all_edges <- enumerate_axis_edges(axis)
 
@@ -204,8 +282,8 @@ select_axis_edge_and_face <- function(axis, visible_faces, proj) {
             return(NULL)  # No valid edges for this axis
       }
 
-      # Step 3: Score edges
-      scored_edges <- score_edges(visible_edges, proj)
+      # Step 3: Score edges (now with effective_ratios)
+      scored_edges <- score_edges(visible_edges, proj, effective_ratios)
 
       # Step 4: Select best edge
       best_edge <- select_best_edge(scored_edges)
@@ -231,7 +309,7 @@ select_axis_edge_and_face <- function(axis, visible_faces, proj) {
 }
 
 
-get_axis_selection <- function(axis, self, panel_params) {
+get_axis_selection <- function(axis, self, panel_params, effective_ratios) {
       # Get the appropriate text parameter for this axis
       axis_override <- switch(axis,
                               "x" = self$xtext,
@@ -239,15 +317,15 @@ get_axis_selection <- function(axis, self, panel_params) {
                               "z" = self$ztext)
 
       if (length(axis_override) == 1 && axis_override == "auto") {
-            # Use automatic selection
-            return(select_axis_edge_and_face(axis, panel_params$visible_faces, panel_params$proj))
+            # Use automatic selection (needs effective_ratios for scoring)
+            return(select_axis_edge_and_face(axis, panel_params$visible_faces, panel_params$proj, effective_ratios))
       } else if (length(axis_override) == 2) {
-            # Manual override: c("face1", "face2") -> use edge shared by these faces
+            # Manual override (doesn't need effective_ratios)
             return(create_manual_axis_selection(axis, axis_override[1], axis_override[2],
                                                 panel_params$proj, panel_params$visible_faces))
       } else {
             warning("Invalid ", axis, "text specification, using auto")
-            return(select_axis_edge_and_face(axis, panel_params$visible_faces, panel_params$proj))
+            return(select_axis_edge_and_face(axis, panel_params$visible_faces, panel_params$proj, effective_ratios))
       }
 }
 
@@ -294,7 +372,7 @@ create_manual_axis_selection <- function(axis, face1, face2, proj, visible_faces
       } else {
             # Neither visible - warn and fall back to auto
             warning("Neither ", face1, " nor ", face2, " is visible, falling back to auto selection")
-            return(select_axis_edge_and_face(axis, visible_faces, proj))
+            return(select_axis_edge_and_face(axis, visible_faces, proj, c(1, 1, 1)))  # Use default ratios for fallback
       }
 
       # Create edge endpoints
@@ -334,4 +412,3 @@ create_manual_axis_selection <- function(axis, face1, face2, proj, visible_faces
             edge_p2_2d = edge_p2_2d
       ))
 }
-
