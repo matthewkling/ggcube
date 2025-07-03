@@ -1,16 +1,15 @@
-facets <- function(proj){
+facets <- function(proj, effective_ratios = c(1, 1, 1)){
 
-      facets <- as.matrix(expand.grid(x = c("xmin", "xmax"),
-                                      y = c("ymin", "ymax"),
-                                      z = c("zmin", "zmax")))
-
-      corners <- expand.grid(x = c(-.5, .5),
-                             y = c(-.5, .5),
-                             z = c(-.5, .5))
+      # Apply aspect ratios to cube corners
+      corners <- expand.grid(x = c(-.5, .5) * effective_ratios[1],
+                             y = c(-.5, .5) * effective_ratios[2],
+                             z = c(-.5, .5) * effective_ratios[3])
 
       corners_p <- transform_3d_standard(corners, proj)
 
-      f <- bind_cols(setNames(as.data.frame(facets),
+      f <- bind_cols(setNames(as.data.frame(expand.grid(x = c("xmin", "xmax"),
+                                                        y = c("ymin", "ymax"),
+                                                        z = c("zmin", "zmax"))),
                               c("fx", "fy", "fz")),  corners_p) %>%
             gather(facet, value, fx:fz) %>%
             mutate(facet = str_remove(facet, "f"),
@@ -23,8 +22,8 @@ facets <- function(proj){
       f
 }
 
-vertices <- function(proj){
-      f <- facets(proj)
+vertices <- function(proj, effective_ratios = c(1, 1, 1)){
+      f <- facets(proj, effective_ratios)
 
       v <- f %>%
             mutate(on_hull = 1:nrow(.) %in% chull(x, y)) %>%
@@ -44,10 +43,9 @@ vertices <- function(proj){
       v
 }
 
+face_info <- function(proj, effective_ratios = c(1, 1, 1)){
 
-face_info <- function(proj){
-
-      v <- vertices(proj)
+      v <- vertices(proj, effective_ratios)
       h <- v %>%
             group_by(facet) %>%
             summarize(xmin = min(x), xmean = mean(x), xmax = max(x),
@@ -84,8 +82,7 @@ face_info <- function(proj){
       h %>% arrange(zmean, foreground) # rendering order
 }
 
-
-select_visible_faces <- function(faces_param, proj){
+select_visible_faces <- function(faces_param, proj, effective_ratios = c(1, 1, 1)){
 
       rules <- c("all", "none", "near", "far", "background", "foreground",
                  "left", "right", "top", "bottom", "front", "back")
@@ -94,7 +91,7 @@ select_visible_faces <- function(faces_param, proj){
       rules <- rules[rules %in% faces]
       facets <- facets[facets %in% faces]
 
-      f <- face_info(proj)
+      f <- face_info(proj, effective_ratios)
       rules <- sapply(rules, function(x){
             switch(x,
                    all = f$facet,

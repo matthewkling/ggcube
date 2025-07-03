@@ -77,7 +77,6 @@ scale_z_continuous <- function(name = waiver(), breaks = waiver(), n.breaks = NU
 
       continuous_scale(
             aesthetics = "z",
-            scale_name = "z_continuous",
             palette = identity,
             name = name,
             breaks = breaks,

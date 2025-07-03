@@ -68,6 +68,7 @@ score_edges <- function(edges, proj) {
       all_corners_2d <- transform_3d_standard(all_corners, proj)
       hull_indices <- chull(all_corners_2d$x, all_corners_2d$y)
       hull_points <- all_corners_2d[hull_indices, ]
+      hull_vertices <- all_corners_2d[hull_indices, ]
 
       # Score each edge
       for (i in seq_along(edges)) {
@@ -83,7 +84,6 @@ score_edges <- function(edges, proj) {
             # An edge is on the hull only if its endpoitns are consecutive vertices in the hull
             # Note: chull() returns indices in counter-clockwise order, so consecutive
             # indices represent adjacent vertices on the hull boundary
-            hull_vertices <- all_corners_2d[hull_indices, ]
             p1_is_hull_vertex <- any(abs(hull_vertices$x - p1_2d$x) < 1e-10 & abs(hull_vertices$y - p1_2d$y) < 1e-10)
             p2_is_hull_vertex <- any(abs(hull_vertices$x - p2_2d$x) < 1e-10 & abs(hull_vertices$y - p2_2d$y) < 1e-10)
 

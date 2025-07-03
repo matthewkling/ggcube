@@ -522,8 +522,17 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                          panel_params$proj <- list(pitch = self$pitch, roll = self$roll, yaw = self$yaw,
                                                    persp = self$persp, dist = self$dist)
 
-                         # Calculate visible faces
-                         visible_faces_fgbg <- select_visible_faces(self$faces, panel_params$proj)
+                         # Calculate effective ratios for face detection
+                         effective_ratios <- compute_effective_ratios(
+                               list(x = panel_params$scale_info$x$limits,
+                                    y = panel_params$scale_info$y$limits,
+                                    z = panel_params$scale_info$z$limits),
+                               panel_params$scales,
+                               panel_params$ratio
+                         )
+
+                         # Calculate visible faces using aspect-adjusted cube
+                         visible_faces_fgbg <- select_visible_faces(self$faces, panel_params$proj, effective_ratios)
                          visible_faces <- do.call("c", visible_faces_fgbg)
                          panel_params$visible_faces <- visible_faces
                          panel_params$visible_faces_fg <- visible_faces_fgbg$fg
@@ -643,6 +652,8 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                                      panel_params$grid_transformed$z_proj <- selected_grid_transformed$z
                                      panel_params$grid_transformed$break_value <- selected_grid$break_value
                                      panel_params$grid_transformed$break_axis <- selected_grid$break_axis
+                                     panel_params$grid_transformed$start_boundaries <- selected_grid$start_boundaries
+                                     panel_params$grid_transformed$end_boundaries <- selected_grid$end_boundaries
                                } else {
                                      panel_params$grid_transformed <- NULL
                                }
