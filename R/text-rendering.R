@@ -20,7 +20,7 @@ extract_axis_theme_elements <- function(axis, theme) {
       ))
 }
 
-calculate_axis_offsets <- function(theme_elements, auto_text_orientation, pt_to_plot_factor) {
+calculate_axis_offsets <- function(theme_elements, rotate_labels, pt_to_plot_factor) {
       parent_margin <- theme_elements$parent_text$margin %||% margin()
       axis_margin <- theme_elements$axis_text$margin %||% margin()
 
@@ -52,7 +52,7 @@ calculate_axis_offsets <- function(theme_elements, auto_text_orientation, pt_to_
       }
 
       # Calculate offsets
-      if (auto_text_orientation) {
+      if (rotate_labels) {
             base_offset <- max(margin_l, margin_r)
       } else {
             base_offset <- max(margin_t, margin_r, margin_b, margin_l)
@@ -289,7 +289,7 @@ calculate_offset_direction <- function(gridline_data, target_x, target_y) {
 }
 
 # Helper function to calculate text rotation and justification
-calculate_text_rotation_and_justification <- function(gridline_data, auto_text_orientation, theme_elements, is_title = FALSE, axis_angle = NULL) {
+calculate_text_rotation_and_justification <- function(gridline_data, rotate_labels, theme_elements, is_title = FALSE, axis_angle = NULL) {
       if (is_title && !is.null(axis_angle)) {
             # For titles, use axis angle (parallel to axis edge)
             angle_radians <- axis_angle
@@ -308,7 +308,7 @@ calculate_text_rotation_and_justification <- function(gridline_data, auto_text_o
             if (angle_degrees > 180) angle_degrees <- angle_degrees - 360
       }
 
-      if (auto_text_orientation) {
+      if (rotate_labels) {
             result <- list(
                   angle = angle_degrees,
                   vjust = 0.5
@@ -413,7 +413,7 @@ calculate_text_position_with_offset <- function(gridline_data, axis_uses_start, 
 
 # Refactored create_axis_labels function
 create_axis_labels <- function(axis, edge_gridlines, theme_elements, offsets, text_dimensions,
-                               panel_params, auto_text_orientation, plot_bounds, chosen_edge) {
+                               panel_params, rotate_labels, plot_bounds, chosen_edge) {
 
       # Create text labels using the selected edge/face
       cube_center_3d <- data.frame(x = 0, y = 0, z = 0)
@@ -444,10 +444,10 @@ create_axis_labels <- function(axis, edge_gridlines, theme_elements, offsets, te
                   if (is.null(position_npc)) next
 
                   # Calculate rotation and justification using helper
-                  rotation_info <- calculate_text_rotation_and_justification(gridline_data, auto_text_orientation, theme_elements, is_title = FALSE, axis_angle = NULL)
+                  rotation_info <- calculate_text_rotation_and_justification(gridline_data, rotate_labels, theme_elements, is_title = FALSE, axis_angle = NULL)
 
                   # Calculate hjust for labels when using auto orientation
-                  if (auto_text_orientation && is.null(rotation_info$hjust)) {
+                  if (rotate_labels && is.null(rotation_info$hjust)) {
                         # Get the original position for comparison
                         label_pos <- calculate_gridline_position(gridline_data, axis_uses_start)
 
@@ -477,7 +477,7 @@ create_axis_labels <- function(axis, edge_gridlines, theme_elements, offsets, te
 
 # Refactored create_axis_title function
 create_axis_title <- function(axis, edge_gridlines, theme_elements, offsets, text_dimensions,
-                              panel_params, auto_text_orientation, plot_bounds, chosen_edge, axis_uses_start) {
+                              panel_params, rotate_labels, plot_bounds, chosen_edge, axis_uses_start) {
 
       # Get axis name (title)
       axis_name <- panel_params$scale_info[[axis]]$name
@@ -517,8 +517,11 @@ create_axis_title <- function(axis, edge_gridlines, theme_elements, offsets, tex
       # Calculate theta using helper function (same as create_axis_labels)
       theta <- calculate_theta(axis_angle, center_gridline)
 
-      # Get offset distance
-      title_offset_total <- calculate_trigonometric_components(theta, offsets, text_dimensions, theme_elements, plot_bounds)$title_offset_total
+      # Use the shared helper function to get components
+      components <- calculate_trigonometric_components(theta, offsets, text_dimensions, theme_elements, plot_bounds)
+
+      # Use the full title offset formula for proper spacing beyond labels
+      title_offset_total <- components$title_offset_total
 
       # Use the same position calculation as labels for consistency
       position_npc <- calculate_text_position_with_offset(center_gridline, axis_uses_start, title_offset_total, plot_bounds)
@@ -527,7 +530,7 @@ create_axis_title <- function(axis, edge_gridlines, theme_elements, offsets, tex
       }
 
       # Calculate rotation and justification using helper
-      rotation_info <- calculate_text_rotation_and_justification(center_gridline, auto_text_orientation, theme_elements, is_title = TRUE, axis_angle = axis_angle)
+      rotation_info <- calculate_text_rotation_and_justification(center_gridline, rotate_labels, theme_elements, is_title = TRUE, axis_angle = axis_angle)
 
       # Create title grob using helper
       title_grob <- create_text_grob(axis_name, position_npc$x, position_npc$y, rotation_info, theme_elements, is_title = TRUE)
@@ -561,8 +564,8 @@ render_axis_text <- function(self, panel_params, theme) {
 
             for (axis in c("x", "y", "z")) {
 
-                  # Get edge + face (now passing effective_ratios)
-                  axis_selection <- get_axis_selection(axis, self, panel_params, effective_ratios)
+                  # Get edge + face (now passing effective_ratios and weights)
+                  axis_selection <- get_axis_selection(axis, self, panel_params, effective_ratios, weights = c(0.5, 0.3, 0.2))
 
                   # Skip this axis if no valid edge/face combination
                   if (is.null(axis_selection)) {
@@ -574,7 +577,7 @@ render_axis_text <- function(self, panel_params, theme) {
 
                   theme_elements <- extract_axis_theme_elements(axis, theme)
 
-                  offsets <- calculate_axis_offsets(theme_elements, self$auto_text_orientation, pt_to_plot_factor)
+                  offsets <- calculate_axis_offsets(theme_elements, self$rotate_labels, pt_to_plot_factor)
 
                   # Get gridlines for the chosen face
                   edge_gridlines <- panel_params$grid_transformed[
@@ -592,14 +595,14 @@ render_axis_text <- function(self, panel_params, theme) {
 
                   # Create axis labels using refactored function
                   label_result <- create_axis_labels(axis, edge_gridlines, theme_elements, offsets, text_dimensions,
-                                                     panel_params, self$auto_text_orientation, panel_params$plot_bounds, chosen_edge)
+                                                     panel_params, self$rotate_labels, panel_params$plot_bounds, chosen_edge)
 
                   all_labels <- c(all_labels, label_result$labels)
                   axis_uses_start <- label_result$axis_uses_start
 
                   # Create axis titles using refactored function
                   title_result <- create_axis_title(axis, edge_gridlines, theme_elements, offsets, text_dimensions,
-                                                    panel_params, self$auto_text_orientation, panel_params$plot_bounds, chosen_edge, axis_uses_start)
+                                                    panel_params, self$rotate_labels, panel_params$plot_bounds, chosen_edge, axis_uses_start)
 
                   all_titles <- c(all_titles, title_result)
             }

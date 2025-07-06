@@ -13,12 +13,12 @@ coord_3d(
   expand = TRUE,
   clip = "off",
   faces = "background",
-  auto_text_orientation = TRUE,
+  xlabels = "auto",
+  ylabels = "auto",
+  zlabels = "auto",
+  rotate_labels = TRUE,
   scales = "free",
-  ratio = c(1, 1, 1),
-  xtext = "auto",
-  ytext = "auto",
-  ztext = "auto"
+  ratio = c(1, 1, 1)
 )
 }
 \arguments{
@@ -44,9 +44,23 @@ drawing outside the plot panel (recommended for 3D plots).}
 \code{"all"}, \code{"background"}, \code{"foreground"}, or specific face names like
 \code{"xmin"}, \code{"ymax"}, etc.}
 
-\item{auto_text_orientation}{Logical indicating whether axis text should automatically
+\item{xlabels, ylabels, zlabels}{Character strings or length-2 character vectors specifying
+axis label (text and title) placement. Each parameter accepts:
+\itemize{
+\item \code{"auto"} (default): Automatic edge selection based on an algorithm
+that prioritizes edges that are visible on the edge of the plot and considers
+several attributes of face geometry for better readability.
+\item \code{c("face1", "face2")}: Manual edge specification using two adjacent
+face names (e.g., \code{c("xmin", "ymin")} selects the edge shared by the
+xmin and ymin faces). The \strong{first face} in the vector determines which
+face the axis labels will be aligned with, while the second face
+identifies which edge of this face gets labelled. Available face names are:
+"xmin", "xmax", "ymin", "ymax", "zmin", "zmax".
+}}
+
+\item{rotate_labels}{Logical indicating whether axis labels (text and titles) should automatically
 rotate to align with the projected axis directions. When \code{FALSE}, uses theme
-text angle settings.}
+text and title angle settings.}
 
 \item{scales}{Character string specifying aspect ratio behavior:
 \itemize{
@@ -65,10 +79,6 @@ but for 3D - visual ratios match the labeled axis ranges.
 \item With \code{scales = "free"}: Ratios apply to cube coordinates
 \item With \code{scales = "fixed"}: Ratios apply to scale-space coordinates
 }}
-
-\item{xtext, ytext, ztext}{Character strings or length-2 character vectors specifying
-axis label placement. Use \code{"auto"} for automatic selection, or specify
-\code{c("face1", "face2")} to place labels on the edge shared by those faces.}
 }
 \description{
 \code{coord_3d} creates a 3D coordinate system that projects 3D data onto a 2D plot.
