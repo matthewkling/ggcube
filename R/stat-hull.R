@@ -83,7 +83,13 @@ StatHull <- ggproto("StatHull", Stat,
                           }
                           # For alpha shapes: keep original normals (no orientation fix yet)
 
-                          light_val <- compute_lighting(normals, light)
+                          # Calculate face centers for positional lighting
+                          face_centers <- matrix(0, nrow = nrow(tri), ncol = 3)
+                          for(i in 1:nrow(tri)) {
+                                face_centers[i,] <- (A[i,] + B[i,] + C[i,]) / 3
+                          }
+
+                          light_val <- compute_lighting(normals, light, face_centers)
 
                           # Flatten triangle data with all computed variables
                           verts <- coords[as.vector(t(tri)), ]
@@ -91,12 +97,12 @@ StatHull <- ggproto("StatHull", Stat,
                           normal_x <- rep(normals[,1], each = 3)
                           normal_y <- rep(normals[,2], each = 3)
                           normal_z <- rep(normals[,3], each = 3)
-                          light_val <- rep(light_val, each = 3)
+                          light_val_expanded <- rep(light_val, each = 3)
                           triangle_index <- rep(1:nrow(tri), each = 3)
 
                           # Re-apply identity scaling for RGB colors after rep()
                           if (light$method == "normal_rgb") {
-                                light_val <- I(light_val)
+                                light_val_expanded <- I(light_val_expanded)
                           }
 
                           result <- data.frame(
@@ -108,7 +114,7 @@ StatHull <- ggproto("StatHull", Stat,
                                 normal_x = normal_x,
                                 normal_y = normal_y,
                                 normal_z = normal_z,
-                                light = light_val,
+                                light = light_val_expanded,
                                 # Add lighting parameters for blend processing
                                 blend_enabled = light$blend,
                                 blend_strength = light$blend_strength,
@@ -116,6 +122,16 @@ StatHull <- ggproto("StatHull", Stat,
                                 lighting_method = light$method,
                                 stringsAsFactors = FALSE
                           )
+
+                          # Preserve all non-coordinate columns for each vertex
+                          # Get original indices for each vertex
+                          vertex_indices <- as.vector(t(tri))
+
+                          # Preserve all non-coordinate columns from original data
+                          non_coord_cols <- setdiff(names(data), c("x", "y", "z"))
+                          for (col_name in non_coord_cols) {
+                                result[[col_name]] <- data[[col_name]][vertex_indices]
+                          }
 
                           return(result)
                     }

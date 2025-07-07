@@ -1,7 +1,8 @@
 StatSurface <- ggproto("StatSurface", Stat,
                        required_aes = c("x", "y", "z"),
 
-                       compute_group = function(data, scales, na.rm = FALSE, light = lighting("lambert")) {
+                       compute_group = function(data, scales, na.rm = FALSE,
+                                                light = lighting("lambert")) {
 
                              # Remove missing values if requested
                              if (na.rm) {
@@ -20,7 +21,7 @@ StatSurface <- ggproto("StatSurface", Stat,
                                    stop("Data must be on a regular, complete grid. Each x,y combination should appear exactly once.")
                              }
 
-                             # Create quadrilateral faces from grid cells using user's fast function
+                             # Create quadrilateral faces from grid cells
                              faces <- create_grid_quads(data)
 
                              # Get unique faces for normal/lighting computation
@@ -191,24 +192,32 @@ detect_grid_structure <- function(data) {
       )
 }
 
+#' Create quadrilateral faces from grid data
+#'
+#' @param data Regular grid data frame
+#' @return Data frame with quad faces and computed gradients
 create_grid_quads <- function(data) {
       data <- data %>%
             ungroup() %>%
             mutate(group = 1:nrow(.))
+
       dy <- data %>%
             group_by(x) %>%
             mutate(y = lag(y),
                    z = lag(z)) %>%
             ungroup()
+
       dx <- data %>%
             group_by(y) %>%
             mutate(x = lag(x),
                    z = lag(z)) %>%
             ungroup()
+
       dxy <- data.frame(x = dx$x,
                         y = dy$y) %>%
             left_join(data, by = join_by(x, y)) %>%
             mutate(group = dx$group)
+
       d <- bind_rows(data, dx, dxy, dy) %>%
             na.omit() %>%
             group_by(group) %>%
@@ -224,23 +233,6 @@ create_grid_quads <- function(data) {
             ungroup() %>%
             arrange(group, order) %>%
             as.data.frame()
+
       return(d)
 }
-
-
-# ggplot(mountain, aes(x, y, z)) +
-#       stat_surface(aes(fill = after_stat(light),
-#                        color = after_stat(light)),
-#                    linewidth = .1) +
-#       theme_bw() + coord_3d(pitch = 0, roll = 130, yaw = 240) +
-#       theme(legend.position = "bottom")
-#
-# expand_grid(x = -20:20, y = -20:20) %>%
-#       mutate(z = -sqrt(x^2 + y^2)) %>%
-#       ggplot(aes(x, y, z)) +
-#       stat_surface(aes(fill = after_stat(light), color = after_stat(light)),
-#                    light = lighting("signed"),
-#                    linewidth = .1) +
-#       theme_bw() +
-#       coord_3d(pitch = 0, roll = 130, yaw = 60, persp = T) +
-#       theme(legend.position = "bottom")

@@ -164,7 +164,6 @@ create_voxels <- function(data, x_spacing, y_spacing, z_spacing, width, selected
                         corner_indices <- face_definitions[[face_name]]
 
                         # Create face vertices with voxel-grouped face_id
-                        # Carry forward all original data columns for aesthetic mapping
                         face_vertices <- data.frame(
                               x = sapply(corner_indices, function(idx) corners[[idx]][1]),
                               y = sapply(corner_indices, function(idx) corners[[idx]][2]),
@@ -175,12 +174,10 @@ create_voxels <- function(data, x_spacing, y_spacing, z_spacing, width, selected
                               order = 1:4
                         )
 
-                        # Carry forward all columns from original data (for aesthetic mapping)
-                        for (col_name in names(point)) {
-                              if (!col_name %in% names(face_vertices)) {
-                                    # Replicate the value for all 4 vertices of this face
-                                    face_vertices[[col_name]] <- rep(point[[col_name]], 4)
-                              }
+                        # Preserve all non-coordinate columns
+                        non_coord_cols <- setdiff(names(point), c("x", "y", "z"))
+                        for (col_name in non_coord_cols) {
+                              face_vertices[[col_name]] <- rep(point[[col_name]], 4)
                         }
 
                         all_faces[[length(all_faces) + 1]] <- face_vertices
