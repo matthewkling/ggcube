@@ -72,8 +72,11 @@ StatVoxel <- ggproto("StatVoxel", Stat,
                            # Calculate face normals
                            face_normals <- calculate_voxel_face_normals(voxel_faces)
 
+                           # Calculate face centers for positional lighting
+                           face_centers <- calculate_voxel_face_centers(voxel_faces)
+
                            # Apply lighting
-                           light_vals <- compute_lighting(face_normals, light)
+                           light_vals <- compute_lighting(face_normals, light, face_centers)
 
                            # Add lighting and normal components to faces data
                            voxel_faces$light <- light_vals
@@ -235,6 +238,42 @@ calculate_voxel_face_normals <- function(voxel_faces) {
       return(vertex_normals)
 }
 
+#' Calculate face centers for voxel faces
+#'
+#' @param voxel_faces Data frame with voxel face vertices
+#' @return Matrix of face centers (one row per face, 3 columns for x,y,z)
+calculate_voxel_face_centers <- function(voxel_faces) {
+
+      if (nrow(voxel_faces) == 0) {
+            return(matrix(nrow = 0, ncol = 3))
+      }
+
+      # Get unique faces
+      unique_faces <- unique(voxel_faces$face_id)
+      face_centers <- matrix(0, nrow = length(unique_faces), ncol = 3)
+
+      for (i in seq_along(unique_faces)) {
+            face_data <- voxel_faces[voxel_faces$face_id == unique_faces[i], ]
+
+            # Calculate geometric center of the rectangular face (mean of 4 vertices)
+            face_centers[i, 1] <- mean(face_data$x)  # Center x
+            face_centers[i, 2] <- mean(face_data$y)  # Center y
+            face_centers[i, 3] <- mean(face_data$z)  # Center z
+      }
+
+      # Expand face centers to match number of vertices (4 per face)
+      vertex_face_centers <- matrix(0, nrow = nrow(voxel_faces), ncol = 3)
+      for (i in seq_along(unique_faces)) {
+            face_indices <- which(voxel_faces$face_id == unique_faces[i])
+            # Assign the same face center to all vertices of this face
+            for (idx in face_indices) {
+                  vertex_face_centers[idx, ] <- face_centers[i, ]
+            }
+      }
+
+      return(vertex_face_centers)
+}
+
 #' 3D voxel visualization from sparse 3D data
 #'
 #' Creates true 3D voxel visualizations from sparse 3D point data.
@@ -296,11 +335,26 @@ calculate_voxel_face_normals <- function(voxel_faces) {
 #'   scale_fill_viridis_c() +
 #'   coord_3d()
 #'
-#' # Minecraft-style building with lighting
+#' # Directional lighting (like sunlight)
 #' ggplot(voxel_data, aes(x, y, z)) +
 #'   stat_voxel(aes(fill = after_stat(light)),
-#'              light = lighting("lambert")) +
+#'              light = lighting("lambert", direction = c(1, 1, 1))) +
 #'   scale_fill_gradient(low = "darkgreen", high = "lightgreen") +
+#'   coord_3d()
+#'
+#' # Positional lighting (point light source)
+#' ggplot(voxel_data, aes(x, y, z)) +
+#'   stat_voxel(aes(fill = after_stat(light)),
+#'              light = lighting("lambert", position = c(5, 5, 4))) +
+#'   scale_fill_gradient(low = "darkblue", high = "white") +
+#'   coord_3d()
+#'
+#' # Positional lighting with distance falloff
+#' ggplot(voxel_data, aes(x, y, z)) +
+#'   stat_voxel(aes(fill = after_stat(light)),
+#'              light = lighting("lambert", position = c(2, 2, 5),
+#'                              distance_falloff = TRUE)) +
+#'   scale_fill_gradient(low = "black", high = "yellow") +
 #'   coord_3d()
 #'
 #' # Show only visible faces for performance
@@ -309,10 +363,11 @@ calculate_voxel_face_normals <- function(voxel_faces) {
 #'              faces = c("zmax", "ymax", "xmax")) +
 #'   coord_3d()
 #'
-#' # Molecular visualization with gaps
+#' # Molecular visualization with gaps and positional lighting
 #' ggplot(voxel_data, aes(x, y, z)) +
-#'   stat_voxel(aes(fill = density),
-#'              width = 0.8, light = lighting("ambient")) +
+#'   stat_voxel(aes(fill = after_stat(light)),
+#'              width = 0.8,
+#'              light = lighting("signed", position = c(2, 2, 4))) +
 #'   scale_fill_gradient2(low = "blue", mid = "white", high = "red") +
 #'   coord_3d()
 #'
@@ -323,7 +378,9 @@ calculate_voxel_face_normals <- function(voxel_faces) {
 #'   filter(abs(field_strength) > 0.3)  # Only show significant values
 #'
 #' ggplot(field_data, aes(x, y, z)) +
-#'   stat_voxel(aes(fill = field_strength, alpha = abs(field_strength))) +
+#'   stat_voxel(aes(fill = field_strength, alpha = abs(field_strength)),
+#'              light = lighting("lambert", position = c(3, 3, 5),
+#'                              distance_falloff = TRUE)) +
 #'   scale_fill_gradient2() +
 #'   coord_3d()
 #'

@@ -2,11 +2,13 @@
 % Please edit documentation in R/lighting.R
 \name{lighting}
 \alias{lighting}
-\title{Create lighting specification for 3D surface rendering}
+\title{Create lighting specification for 3D surface rendering with positional light support}
 \usage{
 lighting(
   method = "lambert",
   direction = c(1, 1, 1),
+  position = NULL,
+  distance_falloff = FALSE,
   levels = 3,
   clamp_negative = TRUE
 )
@@ -22,60 +24,68 @@ lighting(
 \item \code{"normal_x"}, \code{"normal_y"}, \code{"normal_z"}: Individual normal components
 }}
 
-\item{direction}{Numeric vector of length 3 specifying light direction in 3D space.
-For most lighting methods, this defines the illumination direction.
-For \code{method = "normal_rgb"}, this defines the orientation of the RGB
-coordinate system (surfaces facing this direction will be brightest).
-Default is \code{c(1, 1, 1)} (diagonal lighting from upper-right-front).}
+\item{direction}{Numeric vector of length 3 specifying light direction in 3D space
+for directional lighting. Only used if \code{position} is NULL. Default is \code{c(1, 1, 1)}.}
+
+\item{position}{Numeric vector of length 3 specifying light source position in
+data coordinate space for positional lighting. When specified, each face gets
+its own light direction calculated from the light position to the face center.
+Mutually exclusive with \code{direction}. Default is NULL (use directional lighting).}
+
+\item{distance_falloff}{Logical indicating whether to apply distance-based
+intensity falloff for positional lighting using inverse square law
+(intensity ∝ 1/distance²). Only used when \code{position} is specified.
+Default is FALSE.}
 
 \item{levels}{Integer number of discrete levels for \code{method = "quantize"}.
 Default is 3.}
 
 \item{clamp_negative}{Logical indicating whether to clamp negative lighting values
-to the lowest level when using \code{method = "quantize"}. If \code{TRUE},
-surfaces facing away from light get the darkest level. If \code{FALSE},
-the full range from -1 to 1 is quantized. Default is \code{TRUE}.}
+to the lowest level when using \code{method = "quantize"}. Default is TRUE.}
 }
 \value{
 A \code{lighting} object that can be passed to 3D surface stats.
 }
 \description{
-Creates a lighting specification object that encapsulates lighting parameters
-for use with 3D surface stats like \code{stat_surface()} and \code{stat_terrain()}.
-This provides a clean, reusable way to specify complex lighting configurations.
+Creates a lighting specification object that supports both directional lighting
+(parallel rays like sunlight) and positional lighting (point light sources with
+per-face light directions and optional distance falloff).
 }
 \examples{
 library(ggplot2)
 data(mountain)
 
-# Basic Lambert lighting (classic hillshading)
-ggplot(mountain, aes(x, y, z = z)) +
-  stat_terrain(aes(fill = after_stat(light)),
-               lighting = lighting("lambert")) +
-  scale_fill_gradient(low = "black", high = "white") +
-  coord_3d()
-
-# Quantized lighting (cel shading effect)
-ggplot(mountain, aes(x, y, z = z)) +
-  stat_terrain(aes(fill = after_stat(light)),
-               lighting = lighting("quantize", levels = 5)) +
-  scale_fill_gradient(low = "darkgreen", high = "white") +
-  coord_3d()
-
-# Normal-to-RGB coloring with custom light orientation
-ggplot(mountain, aes(x, y, z = z)) +
-  stat_terrain(aes(fill = after_stat(light)),
-               lighting = lighting("normal_rgb", direction = c(-1, 1, 1))) +
-  coord_3d()
-
-# Custom light direction for dramatic shadows
+# Directional lighting (classic hillshading)
 ggplot(mountain, aes(x, y, z = z)) +
   stat_surface(aes(fill = after_stat(light)),
-               lighting = lighting("lambert", direction = c(1, 0, 0.5))) +
-  scale_fill_gradient2(low = "navy", mid = "grey", high = "white") +
+               lighting = lighting("lambert", direction = c(1, 1, 1))) +
+  coord_3d()
+
+# Positional lighting (point light source)
+ggplot(mountain, aes(x, y, z = z)) +
+  stat_surface(aes(fill = after_stat(light)),
+               lighting = lighting("lambert", position = c(50, 30, 200))) +
+  coord_3d()
+
+# Positional lighting with distance falloff
+ggplot(mountain, aes(x, y, z = z)) +
+  stat_surface(aes(fill = after_stat(light)),
+               lighting = lighting("lambert", position = c(50, 30, 200),
+                                  distance_falloff = TRUE)) +
+  coord_3d()
+
+# Voxel scene with positional lighting
+voxel_data <- data.frame(
+  x = c(1, 2, 3, 2, 1),
+  y = c(1, 1, 2, 3, 2),
+  z = c(1, 2, 1, 1, 3)
+)
+ggplot(voxel_data, aes(x, y, z)) +
+  stat_voxel(aes(fill = after_stat(light)),
+             lighting = lighting("lambert", position = c(2, 2, 5))) +
   coord_3d()
 
 }
 \seealso{
-\code{\link{stat_surface}}, \code{\link{stat_terrain}} for using lighting specifications
+\code{\link{stat_surface}}, \code{\link{stat_voxel}}, \code{\link{stat_pillar}}
 }

@@ -99,11 +99,26 @@ ggplot(voxel_data, aes(x, y, z)) +
   scale_fill_viridis_c() +
   coord_3d()
 
-# Minecraft-style building with lighting
+# Directional lighting (like sunlight)
 ggplot(voxel_data, aes(x, y, z)) +
   stat_voxel(aes(fill = after_stat(light)),
-             light = lighting("lambert")) +
+             light = lighting("lambert", direction = c(1, 1, 1))) +
   scale_fill_gradient(low = "darkgreen", high = "lightgreen") +
+  coord_3d()
+
+# Positional lighting (point light source)
+ggplot(voxel_data, aes(x, y, z)) +
+  stat_voxel(aes(fill = after_stat(light)),
+             light = lighting("lambert", position = c(5, 5, 4))) +
+  scale_fill_gradient(low = "darkblue", high = "white") +
+  coord_3d()
+
+# Positional lighting with distance falloff
+ggplot(voxel_data, aes(x, y, z)) +
+  stat_voxel(aes(fill = after_stat(light)),
+             light = lighting("lambert", position = c(2, 2, 5),
+                             distance_falloff = TRUE)) +
+  scale_fill_gradient(low = "black", high = "yellow") +
   coord_3d()
 
 # Show only visible faces for performance
@@ -112,10 +127,11 @@ ggplot(voxel_data, aes(x, y, z)) +
              faces = c("zmax", "ymax", "xmax")) +
   coord_3d()
 
-# Molecular visualization with gaps
+# Molecular visualization with gaps and positional lighting
 ggplot(voxel_data, aes(x, y, z)) +
-  stat_voxel(aes(fill = density),
-             width = 0.8, light = lighting("ambient")) +
+  stat_voxel(aes(fill = after_stat(light)),
+             width = 0.8,
+             light = lighting("signed", position = c(2, 2, 4))) +
   scale_fill_gradient2(low = "blue", mid = "white", high = "red") +
   coord_3d()
 
@@ -126,7 +142,9 @@ field_data <- expand.grid(x = 1:5, y = 1:5, z = 1:3) \%>\%
   filter(abs(field_strength) > 0.3)  # Only show significant values
 
 ggplot(field_data, aes(x, y, z)) +
-  stat_voxel(aes(fill = field_strength, alpha = abs(field_strength))) +
+  stat_voxel(aes(fill = field_strength, alpha = abs(field_strength)),
+             light = lighting("lambert", position = c(3, 3, 5),
+                             distance_falloff = TRUE)) +
   scale_fill_gradient2() +
   coord_3d()
 

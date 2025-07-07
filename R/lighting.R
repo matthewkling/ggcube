@@ -1,8 +1,8 @@
-#' Create lighting specification for 3D surface rendering
+#' Create lighting specification for 3D surface rendering with positional light support
 #'
-#' Creates a lighting specification object that encapsulates lighting parameters
-#' for use with 3D surface stats like \code{stat_surface()} and \code{stat_terrain()}.
-#' This provides a clean, reusable way to specify complex lighting configurations.
+#' Creates a lighting specification object that supports both directional lighting
+#' (parallel rays like sunlight) and positional lighting (point light sources with
+#' per-face light directions and optional distance falloff).
 #'
 #' @param method Character string specifying lighting model:
 #'   \itemize{
@@ -13,17 +13,20 @@
 #'     \item \code{"normal_rgb"}: Map surface normals to RGB colors
 #'     \item \code{"normal_x"}, \code{"normal_y"}, \code{"normal_z"}: Individual normal components
 #'   }
-#' @param direction Numeric vector of length 3 specifying light direction in 3D space.
-#'   For most lighting methods, this defines the illumination direction.
-#'   For \code{method = "normal_rgb"}, this defines the orientation of the RGB
-#'   coordinate system (surfaces facing this direction will be brightest).
-#'   Default is \code{c(1, 1, 1)} (diagonal lighting from upper-right-front).
+#' @param direction Numeric vector of length 3 specifying light direction in 3D space
+#'   for directional lighting. Only used if \code{position} is NULL. Default is \code{c(1, 1, 1)}.
+#' @param position Numeric vector of length 3 specifying light source position in
+#'   data coordinate space for positional lighting. When specified, each face gets
+#'   its own light direction calculated from the light position to the face center.
+#'   Mutually exclusive with \code{direction}. Default is NULL (use directional lighting).
+#' @param distance_falloff Logical indicating whether to apply distance-based
+#'   intensity falloff for positional lighting using inverse square law
+#'   (intensity ∝ 1/distance²). Only used when \code{position} is specified.
+#'   Default is FALSE.
 #' @param levels Integer number of discrete levels for \code{method = "quantize"}.
 #'   Default is 3.
 #' @param clamp_negative Logical indicating whether to clamp negative lighting values
-#'   to the lowest level when using \code{method = "quantize"}. If \code{TRUE},
-#'   surfaces facing away from light get the darkest level. If \code{FALSE},
-#'   the full range from -1 to 1 is quantized. Default is \code{TRUE}.
+#'   to the lowest level when using \code{method = "quantize"}. Default is TRUE.
 #'
 #' @return A \code{lighting} object that can be passed to 3D surface stats.
 #'
@@ -31,37 +34,42 @@
 #' library(ggplot2)
 #' data(mountain)
 #'
-#' # Basic Lambert lighting (classic hillshading)
-#' ggplot(mountain, aes(x, y, z = z)) +
-#'   stat_terrain(aes(fill = after_stat(light)),
-#'                lighting = lighting("lambert")) +
-#'   scale_fill_gradient(low = "black", high = "white") +
-#'   coord_3d()
-#'
-#' # Quantized lighting (cel shading effect)
-#' ggplot(mountain, aes(x, y, z = z)) +
-#'   stat_terrain(aes(fill = after_stat(light)),
-#'                lighting = lighting("quantize", levels = 5)) +
-#'   scale_fill_gradient(low = "darkgreen", high = "white") +
-#'   coord_3d()
-#'
-#' # Normal-to-RGB coloring with custom light orientation
-#' ggplot(mountain, aes(x, y, z = z)) +
-#'   stat_terrain(aes(fill = after_stat(light)),
-#'                lighting = lighting("normal_rgb", direction = c(-1, 1, 1))) +
-#'   coord_3d()
-#'
-#' # Custom light direction for dramatic shadows
+#' # Directional lighting (classic hillshading)
 #' ggplot(mountain, aes(x, y, z = z)) +
 #'   stat_surface(aes(fill = after_stat(light)),
-#'                lighting = lighting("lambert", direction = c(1, 0, 0.5))) +
-#'   scale_fill_gradient2(low = "navy", mid = "grey", high = "white") +
+#'                lighting = lighting("lambert", direction = c(1, 1, 1))) +
 #'   coord_3d()
 #'
-#' @seealso \code{\link{stat_surface}}, \code{\link{stat_terrain}} for using lighting specifications
+#' # Positional lighting (point light source)
+#' ggplot(mountain, aes(x, y, z = z)) +
+#'   stat_surface(aes(fill = after_stat(light)),
+#'                lighting = lighting("lambert", position = c(50, 30, 200))) +
+#'   coord_3d()
+#'
+#' # Positional lighting with distance falloff
+#' ggplot(mountain, aes(x, y, z = z)) +
+#'   stat_surface(aes(fill = after_stat(light)),
+#'                lighting = lighting("lambert", position = c(50, 30, 200),
+#'                                   distance_falloff = TRUE)) +
+#'   coord_3d()
+#'
+#' # Voxel scene with positional lighting
+#' voxel_data <- data.frame(
+#'   x = c(1, 2, 3, 2, 1),
+#'   y = c(1, 1, 2, 3, 2),
+#'   z = c(1, 2, 1, 1, 3)
+#' )
+#' ggplot(voxel_data, aes(x, y, z)) +
+#'   stat_voxel(aes(fill = after_stat(light)),
+#'              lighting = lighting("lambert", position = c(2, 2, 5))) +
+#'   coord_3d()
+#'
+#' @seealso \code{\link{stat_surface}}, \code{\link{stat_voxel}}, \code{\link{stat_pillar}}
 #' @export
 lighting <- function(method = "lambert",
                      direction = c(1, 1, 1),
+                     position = NULL,
+                     distance_falloff = FALSE,
                      levels = 3,
                      clamp_negative = TRUE) {
 
@@ -72,9 +80,26 @@ lighting <- function(method = "lambert",
             stop("method must be one of: ", paste(valid_methods, collapse = ", "))
       }
 
+      # Validate mutually exclusive direction/position
+      if (!is.null(position) && !identical(direction, c(1, 1, 1))) {
+            stop("direction and position are mutually exclusive. Use either direction for directional lighting or position for positional lighting.")
+      }
+
       # Validate direction
       if (!is.numeric(direction) || length(direction) != 3) {
             stop("direction must be a numeric vector of length 3")
+      }
+
+      # Validate position if provided
+      if (!is.null(position)) {
+            if (!is.numeric(position) || length(position) != 3) {
+                  stop("position must be a numeric vector of length 3")
+            }
+      }
+
+      # Validate distance_falloff
+      if (!is.logical(distance_falloff) || length(distance_falloff) != 1) {
+            stop("distance_falloff must be a single logical value")
       }
 
       # Validate levels
@@ -92,6 +117,8 @@ lighting <- function(method = "lambert",
             list(
                   method = method,
                   direction = direction,
+                  position = position,
+                  distance_falloff = distance_falloff,
                   levels = as.integer(levels),
                   clamp_negative = clamp_negative
             ),
@@ -103,7 +130,18 @@ lighting <- function(method = "lambert",
 print.lighting <- function(x, ...) {
       cat("Lighting specification:\n")
       cat("  Method:", x$method, "\n")
-      cat("  Direction: [", paste(x$direction, collapse = ", "), "]\n")
+
+      if (!is.null(x$position)) {
+            cat("  Position: [", paste(x$position, collapse = ", "), "] (positional lighting)\n")
+            if (x$distance_falloff) {
+                  cat("  Distance falloff: enabled\n")
+            } else {
+                  cat("  Distance falloff: disabled\n")
+            }
+      } else {
+            cat("  Direction: [", paste(x$direction, collapse = ", "), "] (directional lighting)\n")
+      }
+
       if (x$method == "quantize") {
             cat("  Levels:", x$levels, "\n")
             cat("  Clamp negative:", x$clamp_negative, "\n")
@@ -111,21 +149,22 @@ print.lighting <- function(x, ...) {
       invisible(x)
 }
 
-
-
-#' Apply lighting models to surface normals
+#' Apply lighting models to surface normals with positional light support
 #'
 #' Computes lighting values from surface normals using various lighting models.
-#' This function is shared between stat_surface and stat_terrain to ensure
-#' consistent lighting behavior.
+#' Supports both directional lighting (parallel rays) and positional lighting
+#' (point light sources with per-face light directions).
 #'
 #' @param normals Matrix with 3 columns (x, y, z normal components), where each
 #'   row represents a face normal vector. Should be unit vectors (normalized).
 #' @param lighting A lighting specification object created by \code{lighting()}
+#' @param face_centers Matrix with 3 columns (x, y, z coordinates) representing
+#'   the center position of each face in data coordinate space. Required for
+#'   positional lighting, optional for directional lighting.
 #' @return Vector of lighting values. For most methods, returns numeric values.
 #'   For \code{method = "normal_rgb"}, returns hex color strings with \code{I()}
 #'   class for identity scaling.
-compute_lighting <- function(normals, lighting = lighting("lambert")) {
+compute_lighting <- function(normals, lighting = lighting("lambert"), face_centers = NULL) {
 
       # Validate inputs
       if (!is.matrix(normals) || ncol(normals) != 3) {
@@ -141,17 +180,63 @@ compute_lighting <- function(normals, lighting = lighting("lambert")) {
             stop("lighting method must be one of: ", paste(valid_lighting, collapse = ", "))
       }
 
-      if (!is.numeric(params$direction) || length(params$direction) != 3) {
-            stop("light direction must be a numeric vector of length 3")
+      # Check if positional lighting is requested
+      use_positional <- !is.null(params$position)
+
+      if (use_positional) {
+            # Positional lighting: need face centers
+            if (is.null(face_centers)) {
+                  stop("face_centers required for positional lighting")
+            }
+            if (!is.matrix(face_centers) || ncol(face_centers) != 3 || nrow(face_centers) != nrow(normals)) {
+                  stop("face_centers must be a matrix with 3 columns and same number of rows as normals")
+            }
+
+            # Calculate per-face light directions
+            light_directions <- calculate_positional_light_directions(face_centers, params$position)
+
+            # Calculate per-face dot products
+            dot_products <- rowSums(normals * light_directions)
+
+            # Apply distance falloff if requested
+            if (params$distance_falloff) {
+                  distances <- sqrt(rowSums((face_centers - matrix(rep(params$position, nrow(face_centers)),
+                                                                   nrow = nrow(face_centers), byrow = TRUE))^2))
+                  # Prevent division by zero and extreme values
+                  distances <- pmax(distances, 0.1)
+                  falloff_factor <- 1 / (distances^2)
+                  # Normalize falloff to prevent extreme values
+                  falloff_factor <- falloff_factor / max(falloff_factor)
+
+                  # For signed lighting, interpolate between -1 (dark) and full lighting value
+                  if (params$method == "signed") {
+                        dot_products <- -1 + falloff_factor * (dot_products + 1)
+                  } else {
+                        # For other methods, scale toward appropriate dark value
+                        if (params$method == "lambert") {
+                              # Lambert: interpolate between 0 (dark) and full value
+                              dot_products <- dot_products * falloff_factor
+                        } else {
+                              # General case: scale the lighting values
+                              dot_products <- dot_products * falloff_factor
+                        }
+                  }
+            }
+
+      } else {
+            # Directional lighting: uniform direction for all faces
+            if (!is.numeric(params$direction) || length(params$direction) != 3) {
+                  stop("light direction must be a numeric vector of length 3")
+            }
+
+            # Normalize light direction
+            light_dir_norm <- normalize_light_direction(params$direction)
+
+            # Compute dot products between normals and light direction
+            dot_products <- compute_light_dot_products(normals, light_dir_norm)
       }
 
-      # Normalize light direction
-      light_dir_norm <- normalize_light_direction(params$direction)
-
-      # Compute dot products between normals and light direction
-      dot_products <- compute_light_dot_products(normals, light_dir_norm)
-
-      # Apply lighting model
+      # Apply lighting model (same for both directional and positional)
       light <- switch(params$method,
                       lambert = pmax(0, dot_products),          # Standard diffuse lighting
                       signed = dot_products,                    # Unclamped: full -1 to +1 range
@@ -185,7 +270,14 @@ compute_lighting <- function(normals, lighting = lighting("lambert")) {
                             }
                       },
                       normal_rgb = {                            # Map normals to RGB hex colors
-                            compute_normal_rgb_lighting(normals, light_dir_norm)
+                            if (use_positional) {
+                                  # For positional lighting, use average light direction for RGB mapping
+                                  avg_light_dir <- colMeans(light_directions)
+                                  compute_normal_rgb_lighting(normals, avg_light_dir)
+                            } else {
+                                  light_dir_norm <- normalize_light_direction(params$direction)
+                                  compute_normal_rgb_lighting(normals, light_dir_norm)
+                            }
                       },
                       normal_x = (normals[,1] + 1) / 2,         # X-normal as color (0-1 range)
                       normal_y = (normals[,2] + 1) / 2,         # Y-normal as color (0-1 range)
@@ -199,6 +291,25 @@ compute_lighting <- function(normals, lighting = lighting("lambert")) {
       }
 
       return(light)
+}
+
+#' Calculate per-face light directions for positional lighting
+#'
+#' @param face_centers Matrix with 3 columns (x, y, z face center coordinates)
+#' @param light_position Numeric vector of length 3 (x, y, z light position)
+#' @return Matrix with 3 columns (normalized light direction vectors)
+calculate_positional_light_directions <- function(face_centers, light_position) {
+      # Calculate light directions from each face center TO the light position
+      light_vectors <- matrix(rep(light_position, nrow(face_centers)),
+                              nrow = nrow(face_centers), byrow = TRUE) - face_centers
+
+      # Normalize each light direction vector
+      light_lengths <- sqrt(rowSums(light_vectors^2))
+      # Prevent division by zero
+      light_lengths <- pmax(light_lengths, 1e-10)
+
+      # Return normalized light directions
+      light_vectors / light_lengths
 }
 
 #' Normalize light direction vector
