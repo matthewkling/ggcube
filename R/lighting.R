@@ -27,6 +27,16 @@
 #'   Default is 3.
 #' @param clamp_negative Logical indicating whether to clamp negative lighting values
 #'   to the lowest level when using \code{method = "quantize"}. Default is TRUE.
+#' @param blend Logical indicating whether to blend lighting with existing fill colors
+#'   rather than replacing them. When TRUE, lighting modulates the base fill colors
+#'   to create highlights and shadows. Default is FALSE.
+#' @param blend_strength Numeric value controlling the intensity of lighting blending.
+#'   1.0 gives full black-to-white range, 0.5 gives subtle lighting effects.
+#'   Only used when \code{blend = TRUE}. Default is 1.0.
+#' @param highlight_color Color to blend toward for bright areas when blending.
+#'   Default is "white".
+#' @param shadow_color Color to blend toward for dark areas when blending.
+#'   Default is "black".
 #'
 #' @return A \code{lighting} object that can be passed to 3D surface stats.
 #'
@@ -37,20 +47,35 @@
 #' # Directional lighting (classic hillshading)
 #' ggplot(mountain, aes(x, y, z = z)) +
 #'   stat_surface(aes(fill = after_stat(light)),
-#'                lighting = lighting("lambert", direction = c(1, 1, 1))) +
+#'                light = lighting("lambert", direction = c(1, 1, 1))) +
+#'   coord_3d()
+#'
+#' # Blended lighting with material colors
+#' ggplot(mountain, aes(x, y, z = z)) +
+#'   stat_surface(aes(fill = z),
+#'                light = lighting("lambert", blend = TRUE)) +
+#'   scale_fill_viridis_c() +
+#'   coord_3d()
+#'
+#' # Custom highlight/shadow colors
+#' ggplot(mountain, aes(x, y, z = z)) +
+#'   stat_surface(fill = "red",
+#'                light = lighting("lambert", blend = TRUE,
+#'                                highlight_color = "yellow",
+#'                                shadow_color = "darkred")) +
 #'   coord_3d()
 #'
 #' # Positional lighting (point light source)
 #' ggplot(mountain, aes(x, y, z = z)) +
 #'   stat_surface(aes(fill = after_stat(light)),
-#'                lighting = lighting("lambert", position = c(50, 30, 200))) +
+#'                light = lighting("lambert", position = c(50, 30, 200))) +
 #'   coord_3d()
 #'
 #' # Positional lighting with distance falloff
 #' ggplot(mountain, aes(x, y, z = z)) +
 #'   stat_surface(aes(fill = after_stat(light)),
-#'                lighting = lighting("lambert", position = c(50, 30, 200),
-#'                                   distance_falloff = TRUE)) +
+#'                light = lighting("lambert", position = c(50, 30, 200),
+#'                                distance_falloff = TRUE)) +
 #'   coord_3d()
 #'
 #' # Voxel scene with positional lighting
@@ -61,7 +86,7 @@
 #' )
 #' ggplot(voxel_data, aes(x, y, z)) +
 #'   stat_voxel(aes(fill = after_stat(light)),
-#'              lighting = lighting("lambert", position = c(2, 2, 5))) +
+#'              light = lighting("lambert", position = c(2, 2, 5))) +
 #'   coord_3d()
 #'
 #' @seealso \code{\link{stat_surface}}, \code{\link{stat_voxel}}, \code{\link{stat_pillar}}
@@ -71,7 +96,11 @@ lighting <- function(method = "lambert",
                      position = NULL,
                      distance_falloff = FALSE,
                      levels = 3,
-                     clamp_negative = TRUE) {
+                     clamp_negative = TRUE,
+                     blend = FALSE,
+                     blend_strength = 1.0,
+                     highlight_color = "white",
+                     shadow_color = "black") {
 
       # Validate method
       valid_methods <- c("lambert", "signed", "ambient", "quantize",
@@ -112,6 +141,24 @@ lighting <- function(method = "lambert",
             stop("clamp_negative must be a single logical value")
       }
 
+      # Validate blend
+      if (!is.logical(blend) || length(blend) != 1) {
+            stop("blend must be a single logical value")
+      }
+
+      # Validate blend_strength
+      if (!is.numeric(blend_strength) || length(blend_strength) != 1 || blend_strength < 0) {
+            stop("blend_strength must be a single non-negative numeric value")
+      }
+
+      # Validate colors
+      tryCatch({
+            col2rgb(highlight_color)
+            col2rgb(shadow_color)
+      }, error = function(e) {
+            stop("highlight_color and shadow_color must be valid color specifications")
+      })
+
       # Create lighting specification object
       structure(
             list(
@@ -120,7 +167,11 @@ lighting <- function(method = "lambert",
                   position = position,
                   distance_falloff = distance_falloff,
                   levels = as.integer(levels),
-                  clamp_negative = clamp_negative
+                  clamp_negative = clamp_negative,
+                  blend = blend,
+                  blend_strength = blend_strength,
+                  highlight_color = highlight_color,
+                  shadow_color = shadow_color
             ),
             class = "lighting"
       )
@@ -146,6 +197,15 @@ print.lighting <- function(x, ...) {
             cat("  Levels:", x$levels, "\n")
             cat("  Clamp negative:", x$clamp_negative, "\n")
       }
+
+      if (x$blend) {
+            cat("  Blending: enabled (strength =", x$blend_strength, ")\n")
+            cat("  Highlight color:", x$highlight_color, "\n")
+            cat("  Shadow color:", x$shadow_color, "\n")
+      } else {
+            cat("  Blending: disabled\n")
+      }
+
       invisible(x)
 }
 

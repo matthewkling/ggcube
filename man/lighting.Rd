@@ -10,7 +10,11 @@ lighting(
   position = NULL,
   distance_falloff = FALSE,
   levels = 3,
-  clamp_negative = TRUE
+  clamp_negative = TRUE,
+  blend = FALSE,
+  blend_strength = 1,
+  highlight_color = "white",
+  shadow_color = "black"
 )
 }
 \arguments{
@@ -42,6 +46,20 @@ Default is 3.}
 
 \item{clamp_negative}{Logical indicating whether to clamp negative lighting values
 to the lowest level when using \code{method = "quantize"}. Default is TRUE.}
+
+\item{blend}{Logical indicating whether to blend lighting with existing fill colors
+rather than replacing them. When TRUE, lighting modulates the base fill colors
+to create highlights and shadows. Default is FALSE.}
+
+\item{blend_strength}{Numeric value controlling the intensity of lighting blending.
+1.0 gives full black-to-white range, 0.5 gives subtle lighting effects.
+Only used when \code{blend = TRUE}. Default is 1.0.}
+
+\item{highlight_color}{Color to blend toward for bright areas when blending.
+Default is "white".}
+
+\item{shadow_color}{Color to blend toward for dark areas when blending.
+Default is "black".}
 }
 \value{
 A \code{lighting} object that can be passed to 3D surface stats.
@@ -58,20 +76,35 @@ data(mountain)
 # Directional lighting (classic hillshading)
 ggplot(mountain, aes(x, y, z = z)) +
   stat_surface(aes(fill = after_stat(light)),
-               lighting = lighting("lambert", direction = c(1, 1, 1))) +
+               light = lighting("lambert", direction = c(1, 1, 1))) +
+  coord_3d()
+
+# Blended lighting with material colors
+ggplot(mountain, aes(x, y, z = z)) +
+  stat_surface(aes(fill = z),
+               light = lighting("lambert", blend = TRUE)) +
+  scale_fill_viridis_c() +
+  coord_3d()
+
+# Custom highlight/shadow colors
+ggplot(mountain, aes(x, y, z = z)) +
+  stat_surface(fill = "red",
+               light = lighting("lambert", blend = TRUE,
+                               highlight_color = "yellow",
+                               shadow_color = "darkred")) +
   coord_3d()
 
 # Positional lighting (point light source)
 ggplot(mountain, aes(x, y, z = z)) +
   stat_surface(aes(fill = after_stat(light)),
-               lighting = lighting("lambert", position = c(50, 30, 200))) +
+               light = lighting("lambert", position = c(50, 30, 200))) +
   coord_3d()
 
 # Positional lighting with distance falloff
 ggplot(mountain, aes(x, y, z = z)) +
   stat_surface(aes(fill = after_stat(light)),
-               lighting = lighting("lambert", position = c(50, 30, 200),
-                                  distance_falloff = TRUE)) +
+               light = lighting("lambert", position = c(50, 30, 200),
+                               distance_falloff = TRUE)) +
   coord_3d()
 
 # Voxel scene with positional lighting
@@ -82,7 +115,7 @@ voxel_data <- data.frame(
 )
 ggplot(voxel_data, aes(x, y, z)) +
   stat_voxel(aes(fill = after_stat(light)),
-             lighting = lighting("lambert", position = c(2, 2, 5))) +
+             light = lighting("lambert", position = c(2, 2, 5))) +
   coord_3d()
 
 }

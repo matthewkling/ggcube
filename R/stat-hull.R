@@ -83,16 +83,7 @@ StatHull <- ggproto("StatHull", Stat,
                           }
                           # For alpha shapes: keep original normals (no orientation fix yet)
 
-                          # Calculate face centers for positional lighting
-                          face_centers <- matrix(nrow = nrow(tri), ncol = 3)
-                          for(i in 1:nrow(tri)) {
-                                # Calculate centroid of triangular face (mean of 3 vertices)
-                                face_centers[i, 1] <- mean(c(A[i,1], B[i,1], C[i,1]))  # Center x
-                                face_centers[i, 2] <- mean(c(A[i,2], B[i,2], C[i,2]))  # Center y
-                                face_centers[i, 3] <- mean(c(A[i,3], B[i,3], C[i,3]))  # Center z
-                          }
-
-                          light_val <- compute_lighting(normals, light, face_centers)
+                          light_val <- compute_lighting(normals, light)
 
                           # Flatten triangle data with all computed variables
                           verts <- coords[as.vector(t(tri)), ]
@@ -108,7 +99,7 @@ StatHull <- ggproto("StatHull", Stat,
                                 light_val <- I(light_val)
                           }
 
-                          data.frame(
+                          result <- data.frame(
                                 x = verts[,1],
                                 y = verts[,2],
                                 z = verts[,3],
@@ -117,8 +108,17 @@ StatHull <- ggproto("StatHull", Stat,
                                 normal_x = normal_x,
                                 normal_y = normal_y,
                                 normal_z = normal_z,
-                                light = light_val
+                                light = light_val,
+                                # Use unique names to avoid conflicts with ggplot2's "colour" column
+                                blend_enabled = light$blend,
+                                blend_strength = light$blend_strength,
+                                light_highlight = light$highlight_color,
+                                light_shadow = light$shadow_color,
+                                lighting_method = light$method,
+                                stringsAsFactors = FALSE
                           )
+
+                          return(result)
                     }
 )
 
@@ -142,7 +142,7 @@ StatHull <- ggproto("StatHull", Stat,
 #'   - `"alpha"`: Alpha shape triangulation (can capture non-convex topologies like toruses)
 #' @param alpha Alpha parameter for alpha shape triangulation. **IMPORTANT:** Alpha shapes
 #'   are extremely sensitive to the coordinate scales of your data. See Details section.
-#' @param lighting_spec A lighting specification object created by \code{lighting()}
+#' @param light A lighting specification object created by \code{lighting()}
 #' @param inherit.aes If `FALSE`, overrides the default aesthetics.
 #'
 #' @section Alpha scale sensitivity:
@@ -248,35 +248,3 @@ stat_hull <- function(mapping = NULL, data = NULL,
             params = list(method = method, alpha = alpha, light = light, ...)
       )
 }
-
-
-
-
-
-
-
-# test ---------------------------------
-
-# # Random sphere points
-# theta <- runif(1000, 0, 2*pi)
-# phi <- acos(runif(1000, -1, 1))
-# r <- 1
-# df <- data.frame(
-#       x = r * sin(phi) * cos(theta),
-#       y = r * sin(phi) * sin(theta),
-#       z = r * cos(phi)
-# )
-#
-# ggplot(df, aes(x, y, z = z)) +
-#       stat_hull(aes(fill = after_stat(light), color = after_stat(light)),
-#                    method = "hull", light = lighting("signed")) +
-#       scale_fill_gradient(low = "gray10", high = "white") +
-#       scale_color_gradient(low = "gray10", high = "white") +
-#       coord_3d(pitch = rnorm(1, 0, 360), roll = rnorm(1, 0, 360), yaw = rnorm(1, 0, 360), dist = 2)
-#
-# ggplot(df, aes(x, y, z = z)) +
-#       stat_hull(aes(fill = after_stat(light), color = after_stat(light)),
-#                    method = "hull", light = lighting("normal_rgb"),
-#                    linewidth = .2) +
-#       coord_3d() +
-#       theme_void()

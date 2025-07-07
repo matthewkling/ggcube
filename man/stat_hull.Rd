@@ -37,11 +37,11 @@ variables with \code{\link[=after_stat]{after_stat()}}.}
 \item{alpha}{Alpha parameter for alpha shape triangulation. \strong{IMPORTANT:} Alpha shapes
 are extremely sensitive to the coordinate scales of your data. See Details section.}
 
+\item{light}{A lighting specification object created by \code{lighting()}}
+
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics.}
 
 \item{...}{Other arguments passed on to \code{\link[=layer]{layer()}}.}
-
-\item{lighting_spec}{A lighting specification object created by \code{lighting()}}
 }
 \description{
 \code{stat_hull()} turns 3D point clouds into surface hulls consisting of triangular polygons,

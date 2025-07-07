@@ -1,3 +1,71 @@
+#' Blend lighting values with base colors using brightness-only HSV blending
+blend_lighting_with_colors <- function(base_colors, light_values, lighting) {
+
+      if (length(base_colors) != length(light_values)) {
+            stop("base_colors and light_values must have the same length")
+      }
+
+      if (lighting$method == "normal_rgb") {
+            warning("Color blending is not supported with normal_rgb lighting method")
+            return(base_colors)
+      }
+
+      # Handle any invalid values
+      valid_mask <- !is.na(base_colors) & !is.na(light_values) & is.finite(light_values)
+      if (!any(valid_mask)) {
+            return(base_colors)
+      }
+
+      result_colors <- base_colors
+
+      # Process only valid entries
+      valid_base <- base_colors[valid_mask]
+      valid_light <- light_values[valid_mask]
+
+      # Normalize lighting values to [0, 1] if needed
+      if (lighting$method == "signed") {
+            valid_light <- (valid_light + 1) / 2
+      }
+      valid_light <- pmax(0, pmin(1, valid_light))
+
+      # Convert to HSV
+      base_rgb <- col2rgb(valid_base)
+      base_hsv <- rgb2hsv(base_rgb)
+
+      # Modify only brightness (V component)
+      new_hsv <- base_hsv
+
+      for (i in seq_along(valid_light)) {
+            h_val <- base_hsv[1, i]
+            s_val <- base_hsv[2, i]
+            v_val <- base_hsv[3, i]
+            light_val <- valid_light[i]
+
+            # Handle NaN hue (gray colors)
+            if (is.nan(h_val)) h_val <- 0
+
+            if (light_val > 0.5) {
+                  # Brighten
+                  blend_factor <- (light_val - 0.5) * 2 * lighting$blend_strength
+                  new_v <- v_val + blend_factor * (1 - v_val)
+            } else {
+                  # Darken
+                  blend_factor <- (0.5 - light_val) * 2 * lighting$blend_strength
+                  new_v <- v_val * (1 - blend_factor)
+            }
+
+            new_hsv[1, i] <- h_val
+            new_hsv[2, i] <- s_val
+            new_hsv[3, i] <- pmax(0, pmin(1, new_v))
+      }
+
+      # Convert back to colors
+      new_colors <- hsv(new_hsv[1, ], new_hsv[2, ], new_hsv[3, ])
+      result_colors[valid_mask] <- new_colors
+
+      return(result_colors)
+}
+
 GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                          required_aes = c("x", "y", "z", "group"),
                          default_aes = aes(
@@ -7,6 +75,26 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                          draw_panel = function(data, panel_params, coord) {
                                # Transform ALL data at once
                                coords <- coord$transform(data, panel_params)
+
+                               # Extract lighting parameters from special columns
+                               if ("blend_enabled" %in% names(coords) && any(coords$blend_enabled)) {
+                                     # Reconstruct lighting object from columns
+                                     light <- list(
+                                           blend = coords$blend_enabled[1],
+                                           blend_strength = coords$blend_strength[1],
+                                           highlight_color = coords$light_highlight[1],
+                                           shadow_color = coords$light_shadow[1],
+                                           method = coords$lighting_method[1]
+                                     )
+
+                                     # Apply lighting blending if enabled
+                                     if (light$blend && "light" %in% names(coords)) {
+                                           coords$fill <- blend_lighting_with_colors(coords$fill, coords$light, light)
+                                     }
+
+                                     # Clean up lighting parameter columns
+                                     coords <- coords[, !names(coords) %in% c("blend_enabled", "blend_strength", "light_highlight", "light_shadow", "lighting_method")]
+                               }
 
                                # Set up hierarchical object IDs for pillars/voxels
                                if("pillar_id" %in% names(coords)){
