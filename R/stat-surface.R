@@ -1,4 +1,3 @@
-
 StatSurface <- ggproto("StatSurface", Stat,
                        required_aes = c("x", "y", "z"),
 
@@ -40,8 +39,20 @@ StatSurface <- ggproto("StatSurface", Stat,
                              normal_lengths <- sqrt(rowSums(normals^2))
                              normals <- normals / normal_lengths
 
+                             # Calculate face centers for positional lighting
+                             face_centers <- matrix(nrow = nrow(face_data), ncol = 3)
+                             for (i in seq_len(nrow(face_data))) {
+                                   face_group <- face_data$group[i]
+                                   face_vertices <- faces[faces$group == face_group, ]
+
+                                   # Calculate geometric center of the quadrilateral face
+                                   face_centers[i, 1] <- mean(face_vertices$x)  # Center x
+                                   face_centers[i, 2] <- mean(face_vertices$y)  # Center y
+                                   face_centers[i, 3] <- mean(face_vertices$z)  # Center z
+                             }
+
                              # Apply lighting models to the normals
-                             light_vals <- compute_lighting(normals, light)
+                             light_vals <- compute_lighting(normals, light, face_centers)
 
                              # Expand lighting values to match vertices (4 per face)
                              light_expanded <- rep(light_vals, each = 4)
@@ -227,4 +238,3 @@ create_grid_quads <- function(data) {
 #       theme_bw() +
 #       coord_3d(pitch = 0, roll = 130, yaw = 60, persp = T) +
 #       theme(legend.position = "bottom")
-

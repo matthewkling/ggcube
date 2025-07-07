@@ -1,4 +1,3 @@
-
 GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                          required_aes = c("x", "y", "z", "group"),
                          default_aes = aes(
@@ -25,8 +24,16 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                                      mutate(object_depth = max(depth)) %>%  # Farther objects first
                                      group_by(face_id) %>%
                                      mutate(face_depth = mean(depth)) %>%   # Face center depth
-                                     arrange(desc(object_depth), desc(face_depth), order) %>%
                                      ungroup()
+
+                               # Sort by depths, and optionally by order if it exists
+                               if ("order" %in% names(coords)) {
+                                     coords <- coords %>%
+                                           arrange(desc(object_depth), desc(face_depth), order)
+                               } else {
+                                     coords <- coords %>%
+                                           arrange(desc(object_depth), desc(face_depth))
+                               }
 
                                # Create polygon grobs
                                polygon_grobs <- list()

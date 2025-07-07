@@ -1,116 +1,125 @@
 StatHull <- ggproto("StatHull", Stat,
-                       required_aes = c("x", "y", "z"),
+                    required_aes = c("x", "y", "z"),
 
-                       compute_group = function(data, scales, method = "alpha", alpha = 1.0,
-                                                light = lighting("lambert")) {
-                             coords <- as.matrix(data[, c("x", "y", "z")])
+                    compute_group = function(data, scales, method = "alpha", alpha = 1.0,
+                                             light = lighting("lambert")) {
+                          coords <- as.matrix(data[, c("x", "y", "z")])
 
-                             # Get triangle indices
-                             tri <- switch(method,
-                                           alpha = {
-                                                 ashape <- alphashape3d::ashape3d(coords, alpha = alpha)
-                                                 triangles <- ashape$triang
+                          # Get triangle indices
+                          tri <- switch(method,
+                                        alpha = {
+                                              ashape <- alphashape3d::ashape3d(coords, alpha = alpha)
+                                              triangles <- ashape$triang
 
-                                                 # Filter by rhoT <= alpha to get actual alpha shape
-                                                 alpha_triangles <- triangles[triangles[,6] <= alpha, 1:3]
+                                              # Filter by rhoT <= alpha to get actual alpha shape
+                                              alpha_triangles <- triangles[triangles[,6] <= alpha, 1:3]
 
-                                                 if (nrow(alpha_triangles) > 0) {
-                                                       alpha_triangles
-                                                 } else {
-                                                       triangles[, 1:3]
-                                                 }
-                                           },
-                                           hull = {
-                                                 tryCatch({
-                                                       hull_result <- geometry::convhulln(coords)
-                                                       if (is.matrix(hull_result) && ncol(hull_result) == 3) {
-                                                             hull_result
-                                                       } else {
-                                                             stop("Invalid hull result format")
-                                                       }
-                                                 }, error = function(e) {
-                                                       stop("Convex hull computation failed: ", e$message)
-                                                 })
-                                           },
-                                           stop("Unknown method: use 'alpha' or 'hull'")
-                             )
+                                              if (nrow(alpha_triangles) > 0) {
+                                                    alpha_triangles
+                                              } else {
+                                                    triangles[, 1:3]
+                                              }
+                                        },
+                                        hull = {
+                                              tryCatch({
+                                                    hull_result <- geometry::convhulln(coords)
+                                                    if (is.matrix(hull_result) && ncol(hull_result) == 3) {
+                                                          hull_result
+                                                    } else {
+                                                          stop("Invalid hull result format")
+                                                    }
+                                              }, error = function(e) {
+                                                    stop("Convex hull computation failed: ", e$message)
+                                              })
+                                        },
+                                        stop("Unknown method: use 'alpha' or 'hull'")
+                          )
 
-                             # Check that we got valid triangulation
-                             if (is.null(tri) || nrow(tri) == 0) {
-                                   stop("No triangles generated - try adjusting alpha parameter or check data")
-                             }
+                          # Check that we got valid triangulation
+                          if (is.null(tri) || nrow(tri) == 0) {
+                                stop("No triangles generated - try adjusting alpha parameter or check data")
+                          }
 
-                             # Compute face normals using simple cross product
-                             A <- coords[tri[,1], ]
-                             B <- coords[tri[,2], ]
-                             C <- coords[tri[,3], ]
+                          # Compute face normals using simple cross product
+                          A <- coords[tri[,1], ]
+                          B <- coords[tri[,2], ]
+                          C <- coords[tri[,3], ]
 
-                             # Edge vectors
-                             edge1 <- B - A
-                             edge2 <- C - A
+                          # Edge vectors
+                          edge1 <- B - A
+                          edge2 <- C - A
 
-                             # Cross product for each triangle
-                             normals <- matrix(0, nrow = nrow(tri), ncol = 3)
-                             for(i in 1:nrow(tri)) {
-                                   # Cross product: edge1 × edge2
-                                   cross <- c(
-                                         edge1[i,2] * edge2[i,3] - edge1[i,3] * edge2[i,2],
-                                         edge1[i,3] * edge2[i,1] - edge1[i,1] * edge2[i,3],
-                                         edge1[i,1] * edge2[i,2] - edge1[i,2] * edge2[i,1]
-                                   )
+                          # Cross product for each triangle
+                          normals <- matrix(0, nrow = nrow(tri), ncol = 3)
+                          for(i in 1:nrow(tri)) {
+                                # Cross product: edge1 × edge2
+                                cross <- c(
+                                      edge1[i,2] * edge2[i,3] - edge1[i,3] * edge2[i,2],
+                                      edge1[i,3] * edge2[i,1] - edge1[i,1] * edge2[i,3],
+                                      edge1[i,1] * edge2[i,2] - edge1[i,2] * edge2[i,1]
+                                )
 
-                                   # Normalize
-                                   cross_length <- sqrt(sum(cross^2))
-                                   if (cross_length > 0) {
-                                         normals[i,] <- cross / cross_length
-                                   } else {
-                                         normals[i,] <- c(0, 0, 1)  # Default up
-                                   }
-                             }
+                                # Normalize
+                                cross_length <- sqrt(sum(cross^2))
+                                if (cross_length > 0) {
+                                      normals[i,] <- cross / cross_length
+                                } else {
+                                      normals[i,] <- c(0, 0, 1)  # Default up
+                                }
+                          }
 
-                             # For convex hulls: ensure normals point outward from centroid
-                             if (method == "hull") {
-                                   data_center <- colMeans(coords)
-                                   for(i in 1:nrow(tri)) {
-                                         triangle_center <- (A[i,] + B[i,] + C[i,]) / 3
-                                         outward_direction <- triangle_center - data_center
+                          # For convex hulls: ensure normals point outward from centroid
+                          if (method == "hull") {
+                                data_center <- colMeans(coords)
+                                for(i in 1:nrow(tri)) {
+                                      triangle_center <- (A[i,] + B[i,] + C[i,]) / 3
+                                      outward_direction <- triangle_center - data_center
 
-                                         # If normal points inward (negative dot product), flip it
-                                         if (sum(normals[i,] * outward_direction) < 0) {
-                                               normals[i,] <- -normals[i,]
-                                         }
-                                   }
-                             }
-                             # For alpha shapes: keep original normals (no orientation fix yet)
+                                      # If normal points inward (negative dot product), flip it
+                                      if (sum(normals[i,] * outward_direction) < 0) {
+                                            normals[i,] <- -normals[i,]
+                                      }
+                                }
+                          }
+                          # For alpha shapes: keep original normals (no orientation fix yet)
 
-                             light_val <- compute_lighting(normals, light)
+                          # Calculate face centers for positional lighting
+                          face_centers <- matrix(nrow = nrow(tri), ncol = 3)
+                          for(i in 1:nrow(tri)) {
+                                # Calculate centroid of triangular face (mean of 3 vertices)
+                                face_centers[i, 1] <- mean(c(A[i,1], B[i,1], C[i,1]))  # Center x
+                                face_centers[i, 2] <- mean(c(A[i,2], B[i,2], C[i,2]))  # Center y
+                                face_centers[i, 3] <- mean(c(A[i,3], B[i,3], C[i,3]))  # Center z
+                          }
 
-                             # Flatten triangle data with all computed variables
-                             verts <- coords[as.vector(t(tri)), ]
-                             face_id <- rep(paste0("tri_", 1:nrow(tri)), each = 3)
-                             normal_x <- rep(normals[,1], each = 3)
-                             normal_y <- rep(normals[,2], each = 3)
-                             normal_z <- rep(normals[,3], each = 3)
-                             light_val <- rep(light_val, each = 3)
-                             triangle_index <- rep(1:nrow(tri), each = 3)
+                          light_val <- compute_lighting(normals, light, face_centers)
 
-                             # Re-apply identity scaling for RGB colors after rep()
-                             if (light$method == "normal_rgb") {
-                                   light_val <- I(light_val)
-                             }
+                          # Flatten triangle data with all computed variables
+                          verts <- coords[as.vector(t(tri)), ]
+                          face_id <- rep(paste0("tri_", 1:nrow(tri)), each = 3)
+                          normal_x <- rep(normals[,1], each = 3)
+                          normal_y <- rep(normals[,2], each = 3)
+                          normal_z <- rep(normals[,3], each = 3)
+                          light_val <- rep(light_val, each = 3)
+                          triangle_index <- rep(1:nrow(tri), each = 3)
 
-                             data.frame(
-                                   x = verts[,1],
-                                   y = verts[,2],
-                                   z = verts[,3],
-                                   face_id = face_id,
-                                   triangle_index = triangle_index,
-                                   normal_x = normal_x,
-                                   normal_y = normal_y,
-                                   normal_z = normal_z,
-                                   light = light_val
-                             )
-                       }
+                          # Re-apply identity scaling for RGB colors after rep()
+                          if (light$method == "normal_rgb") {
+                                light_val <- I(light_val)
+                          }
+
+                          data.frame(
+                                x = verts[,1],
+                                y = verts[,2],
+                                z = verts[,3],
+                                face_id = face_id,
+                                triangle_index = triangle_index,
+                                normal_x = normal_x,
+                                normal_y = normal_y,
+                                normal_z = normal_z,
+                                light = light_val
+                          )
+                    }
 )
 
 
@@ -214,12 +223,12 @@ StatHull <- ggproto("StatHull", Stat,
 #'
 #' @export
 stat_hull <- function(mapping = NULL, data = NULL,
-                         geom = GeomPolygon3D, # nonstandard syntax, but `"polygon_3d"` failed
-                         position = "identity",
-                         method = "alpha", alpha = 1.0,
-                         light = lighting("lambert"),
-                         inherit.aes = TRUE,
-                         ...) {
+                      geom = GeomPolygon3D, # nonstandard syntax, but `"polygon_3d"` failed
+                      position = "identity",
+                      method = "alpha", alpha = 1.0,
+                      light = lighting("lambert"),
+                      inherit.aes = TRUE,
+                      ...) {
 
       default_mapping <- aes(group = after_stat(face_id))
 
@@ -271,4 +280,3 @@ stat_hull <- function(mapping = NULL, data = NULL,
 #                    linewidth = .2) +
 #       coord_3d() +
 #       theme_void()
-
