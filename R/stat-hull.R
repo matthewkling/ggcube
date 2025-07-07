@@ -109,11 +109,10 @@ StatHull <- ggproto("StatHull", Stat,
                                 normal_y = normal_y,
                                 normal_z = normal_z,
                                 light = light_val,
-                                # Use unique names to avoid conflicts with ggplot2's "colour" column
+                                # Add lighting parameters for blend processing
                                 blend_enabled = light$blend,
                                 blend_strength = light$blend_strength,
-                                light_highlight = light$highlight_color,
-                                light_shadow = light$shadow_color,
+                                blend_mode = light$blend_mode,
                                 lighting_method = light$method,
                                 stringsAsFactors = FALSE
                           )

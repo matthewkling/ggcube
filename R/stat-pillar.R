@@ -82,6 +82,12 @@ StatPillar <- ggproto("StatPillar", Stat,
                             pillar_faces$normal_y <- face_normals[, 2]
                             pillar_faces$normal_z <- face_normals[, 3]
 
+                            # Add lighting parameters for blend processing
+                            pillar_faces$blend_enabled <- light$blend
+                            pillar_faces$blend_strength <- light$blend_strength
+                            pillar_faces$blend_mode <- light$blend_mode
+                            pillar_faces$lighting_method <- light$method
+
                             # Note: RGB colors are already wrapped with I() in compute_lighting()
 
                             return(pillar_faces)

@@ -11,10 +11,9 @@ lighting(
   distance_falloff = FALSE,
   levels = 3,
   clamp_negative = TRUE,
-  blend = FALSE,
+  blend = "neither",
   blend_strength = 1,
-  highlight_color = "white",
-  shadow_color = "black"
+  blend_mode = "hsv"
 )
 }
 \arguments{
@@ -47,19 +46,21 @@ Default is 3.}
 \item{clamp_negative}{Logical indicating whether to clamp negative lighting values
 to the lowest level when using \code{method = "quantize"}. Default is TRUE.}
 
-\item{blend}{Logical indicating whether to blend lighting with existing fill colors
-rather than replacing them. When TRUE, lighting modulates the base fill colors
-to create highlights and shadows. Default is FALSE.}
+\item{blend}{Character string specifying which color aesthetics to blend with lighting.
+Options: "neither" (no blending), "fill" (blend fill colors only),
+"color"/"colour" (blend border colors only), or "both" (blend both fill and border).
+Default is "neither".}
 
 \item{blend_strength}{Numeric value controlling the intensity of lighting blending.
 1.0 gives full black-to-white range, 0.5 gives subtle lighting effects.
-Only used when \code{blend = TRUE}. Default is 1.0.}
+Only used when \code{blend} is not "neither". Default is 1.0.}
 
-\item{highlight_color}{Color to blend toward for bright areas when blending.
-Default is "white".}
-
-\item{shadow_color}{Color to blend toward for dark areas when blending.
-Default is "black".}
+\item{blend_mode}{Character string specifying color blending mode when \code{blend} is not "neither":
+\itemize{
+\item \code{"hsv"}: Modifies HSV brightness/value component (can affect color vibrancy)
+\item \code{"hsl"}: Modifies HSL lightness component (preserves saturation better)
+}
+Default is "hsv".}
 }
 \value{
 A \code{lighting} object that can be passed to 3D surface stats.
@@ -79,19 +80,26 @@ ggplot(mountain, aes(x, y, z = z)) +
                light = lighting("lambert", direction = c(1, 1, 1))) +
   coord_3d()
 
-# Blended lighting with material colors
+# Blended lighting with material colors using HSV
 ggplot(mountain, aes(x, y, z = z)) +
   stat_surface(aes(fill = z),
-               light = lighting("lambert", blend = TRUE)) +
+               light = lighting("lambert", blend = "fill", blend_mode = "hsv")) +
   scale_fill_viridis_c() +
   coord_3d()
 
-# Custom highlight/shadow colors
+# Blended lighting with HSL mode (preserves saturation better)
 ggplot(mountain, aes(x, y, z = z)) +
-  stat_surface(fill = "red",
-               light = lighting("lambert", blend = TRUE,
-                               highlight_color = "yellow",
-                               shadow_color = "darkred")) +
+  stat_surface(aes(fill = z),
+               light = lighting("lambert", blend = "fill", blend_mode = "hsl")) +
+  scale_fill_viridis_c() +
+  coord_3d()
+
+# Blend both fill and border colors to eliminate gaps
+ggplot(mountain, aes(x, y, z = z)) +
+  stat_surface(aes(fill = z, colour = z),
+               light = lighting("lambert", blend = "both")) +
+  scale_fill_viridis_c() +
+  scale_colour_viridis_c() +
   coord_3d()
 
 # Positional lighting (point light source)

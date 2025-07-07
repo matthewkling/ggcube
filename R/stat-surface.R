@@ -68,6 +68,12 @@ StatSurface <- ggproto("StatSurface", Stat,
                              faces$normal_y <- rep(normals[, 2], each = 4)
                              faces$normal_z <- rep(normals[, 3], each = 4)
 
+                             # Add lighting parameters for blend processing
+                             faces$blend_enabled <- light$blend
+                             faces$blend_strength <- light$blend_strength
+                             faces$blend_mode <- light$blend_mode
+                             faces$lighting_method <- light$method
+
                              # Ensure faces are sorted by group then order for proper rendering
                              if ("order" %in% names(faces)) {
                                    faces <- faces[order(faces$group, faces$order), ]

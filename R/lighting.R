@@ -27,16 +27,19 @@
 #'   Default is 3.
 #' @param clamp_negative Logical indicating whether to clamp negative lighting values
 #'   to the lowest level when using \code{method = "quantize"}. Default is TRUE.
-#' @param blend Logical indicating whether to blend lighting with existing fill colors
-#'   rather than replacing them. When TRUE, lighting modulates the base fill colors
-#'   to create highlights and shadows. Default is FALSE.
+#' @param blend Character string specifying which color aesthetics to blend with lighting.
+#'   Options: "neither" (no blending), "fill" (blend fill colors only),
+#'   "color"/"colour" (blend border colors only), or "both" (blend both fill and border).
+#'   Default is "neither".
 #' @param blend_strength Numeric value controlling the intensity of lighting blending.
 #'   1.0 gives full black-to-white range, 0.5 gives subtle lighting effects.
-#'   Only used when \code{blend = TRUE}. Default is 1.0.
-#' @param highlight_color Color to blend toward for bright areas when blending.
-#'   Default is "white".
-#' @param shadow_color Color to blend toward for dark areas when blending.
-#'   Default is "black".
+#'   Only used when \code{blend} is not "neither". Default is 1.0.
+#' @param blend_mode Character string specifying color blending mode when \code{blend} is not "neither":
+#'   \itemize{
+#'     \item \code{"hsv"}: Modifies HSV brightness/value component (can affect color vibrancy)
+#'     \item \code{"hsl"}: Modifies HSL lightness component (preserves saturation better)
+#'   }
+#'   Default is "hsv".
 #'
 #' @return A \code{lighting} object that can be passed to 3D surface stats.
 #'
@@ -50,19 +53,26 @@
 #'                light = lighting("lambert", direction = c(1, 1, 1))) +
 #'   coord_3d()
 #'
-#' # Blended lighting with material colors
+#' # Blended lighting with material colors using HSV
 #' ggplot(mountain, aes(x, y, z = z)) +
 #'   stat_surface(aes(fill = z),
-#'                light = lighting("lambert", blend = TRUE)) +
+#'                light = lighting("lambert", blend = "fill", blend_mode = "hsv")) +
 #'   scale_fill_viridis_c() +
 #'   coord_3d()
 #'
-#' # Custom highlight/shadow colors
+#' # Blended lighting with HSL mode (preserves saturation better)
 #' ggplot(mountain, aes(x, y, z = z)) +
-#'   stat_surface(fill = "red",
-#'                light = lighting("lambert", blend = TRUE,
-#'                                highlight_color = "yellow",
-#'                                shadow_color = "darkred")) +
+#'   stat_surface(aes(fill = z),
+#'                light = lighting("lambert", blend = "fill", blend_mode = "hsl")) +
+#'   scale_fill_viridis_c() +
+#'   coord_3d()
+#'
+#' # Blend both fill and border colors to eliminate gaps
+#' ggplot(mountain, aes(x, y, z = z)) +
+#'   stat_surface(aes(fill = z, colour = z),
+#'                light = lighting("lambert", blend = "both")) +
+#'   scale_fill_viridis_c() +
+#'   scale_colour_viridis_c() +
 #'   coord_3d()
 #'
 #' # Positional lighting (point light source)
@@ -97,10 +107,9 @@ lighting <- function(method = "lambert",
                      distance_falloff = FALSE,
                      levels = 3,
                      clamp_negative = TRUE,
-                     blend = FALSE,
+                     blend = "neither",
                      blend_strength = 1.0,
-                     highlight_color = "white",
-                     shadow_color = "black") {
+                     blend_mode = "hsv") {
 
       # Validate method
       valid_methods <- c("lambert", "signed", "ambient", "quantize",
@@ -142,8 +151,14 @@ lighting <- function(method = "lambert",
       }
 
       # Validate blend
-      if (!is.logical(blend) || length(blend) != 1) {
-            stop("blend must be a single logical value")
+      valid_blend_options <- c("neither", "fill", "color", "colour", "both")
+      if (!blend %in% valid_blend_options) {
+            stop("blend must be one of: ", paste(valid_blend_options, collapse = ", "))
+      }
+
+      # Normalize color spelling to match ggplot2 convention
+      if (blend == "color") {
+            blend <- "colour"
       }
 
       # Validate blend_strength
@@ -151,13 +166,11 @@ lighting <- function(method = "lambert",
             stop("blend_strength must be a single non-negative numeric value")
       }
 
-      # Validate colors
-      tryCatch({
-            col2rgb(highlight_color)
-            col2rgb(shadow_color)
-      }, error = function(e) {
-            stop("highlight_color and shadow_color must be valid color specifications")
-      })
+      # Validate blend_mode
+      valid_blend_modes <- c("hsv", "hsl")
+      if (!blend_mode %in% valid_blend_modes) {
+            stop("blend_mode must be one of: ", paste(valid_blend_modes, collapse = ", "))
+      }
 
       # Create lighting specification object
       structure(
@@ -170,8 +183,7 @@ lighting <- function(method = "lambert",
                   clamp_negative = clamp_negative,
                   blend = blend,
                   blend_strength = blend_strength,
-                  highlight_color = highlight_color,
-                  shadow_color = shadow_color
+                  blend_mode = blend_mode
             ),
             class = "lighting"
       )
@@ -198,10 +210,8 @@ print.lighting <- function(x, ...) {
             cat("  Clamp negative:", x$clamp_negative, "\n")
       }
 
-      if (x$blend) {
-            cat("  Blending: enabled (strength =", x$blend_strength, ")\n")
-            cat("  Highlight color:", x$highlight_color, "\n")
-            cat("  Shadow color:", x$shadow_color, "\n")
+      if (x$blend != "neither") {
+            cat("  Blending:", x$blend, "(strength =", x$blend_strength, ", mode =", x$blend_mode, ")\n")
       } else {
             cat("  Blending: disabled\n")
       }

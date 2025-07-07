@@ -2,20 +2,10 @@
 % Please edit documentation in R/polygon-3d.R
 \name{blend_lighting_with_colors}
 \alias{blend_lighting_with_colors}
-\title{Blend lighting values with base colors using HSV color space}
+\title{Blend lighting values with base colors using HSV or HSL color spaces}
 \usage{
 blend_lighting_with_colors(base_colors, light_values, lighting)
 }
-\arguments{
-\item{base_colors}{Vector of base fill colors (hex, color names, etc.)}
-
-\item{light_values}{Vector of lighting values in \link{0, 1} range}
-
-\item{lighting}{Lighting specification object with blending parameters}
-}
-\value{
-Vector of blended colors
-}
 \description{
-Blend lighting values with base colors using HSV color space
+Blend lighting values with base colors using HSV or HSL color spaces
 }
