@@ -7,10 +7,12 @@ facets <- function(proj, effective_ratios = c(1, 1, 1)){
 
       corners_p <- transform_3d_standard(corners, proj)
 
-      f <- bind_cols(setNames(as.data.frame(expand.grid(x = c("xmin", "xmax"),
-                                                        y = c("ymin", "ymax"),
-                                                        z = c("zmin", "zmax"))),
-                              c("fx", "fy", "fz")),  corners_p) %>%
+      facet_grid <- expand.grid(x = c("xmin", "xmax"),
+                                y = c("ymin", "ymax"),
+                                z = c("zmin", "zmax"),
+                                stringsAsFactors = FALSE)  # Prevent factors
+
+      f <- bind_cols(setNames(facet_grid, c("fx", "fy", "fz")), corners_p) %>%
             gather(facet, value, fx:fz) %>%
             mutate(facet = str_remove(facet, "f"),
                    value = str_remove(value, facet),

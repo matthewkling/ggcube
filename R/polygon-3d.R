@@ -11,12 +11,49 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
 
                                # Split by group and calculate depths
                                coords_split <- split(coords, coords$group)
-                               group_depths <- sapply(coords_split, function(tri) {
-                                     mean(tri$z_proj, na.rm = TRUE)
-                               })
 
-                               # Sort groups by depth (back to front)
-                               ordered_groups <- names(sort(group_depths, decreasing = TRUE))
+                               # Check if we're rendering pillars (has pillar_id column)
+                               has_pillar_ids <- "pillar_id" %in% names(coords)
+
+                               if (has_pillar_ids) {
+                                     # Two-level sorting: pillars first, then faces within pillars
+
+                                     # Calculate pillar depths (using max z_proj of all faces in each pillar)
+                                     pillar_ids <- unique(coords$pillar_id)
+                                     pillar_depths <- sapply(pillar_ids, function(pid) {
+                                           pillar_coords <- coords[coords$pillar_id == pid, ]
+                                           max(pillar_coords$z_proj, na.rm = TRUE)
+                                     })
+                                     names(pillar_depths) <- pillar_ids
+
+                                     # Calculate face depths within each group
+                                     group_depths <- sapply(coords_split, function(poly) {
+                                           max(poly$z_proj, na.rm = TRUE)  # Use closest vertex for faces
+                                     })
+
+                                     # Create sorting key: pillar_depth * 1e6 + face_depth
+                                     # This ensures pillars sort first, then faces within pillars
+                                     group_names <- names(group_depths)
+                                     group_pillar_ids <- sapply(group_names, function(gname) {
+                                           coords_split[[gname]]$pillar_id[1]  # Get pillar_id for this group
+                                     })
+
+                                     # Create combined sorting keys
+                                     sorting_keys <- pillar_depths[as.character(group_pillar_ids)] * 1e6 + group_depths
+                                     names(sorting_keys) <- group_names
+
+                                     # Sort by combined key (back to front)
+                                     ordered_groups <- names(sort(sorting_keys, decreasing = TRUE))
+
+                               } else {
+                                     # Original single-level sorting for surfaces and other geometries
+                                     group_depths <- sapply(coords_split, function(tri) {
+                                           mean(tri$z_proj, na.rm = TRUE)
+                                     })
+
+                                     # Sort groups by depth (back to front)
+                                     ordered_groups <- names(sort(group_depths, decreasing = TRUE))
+                               }
 
                                # Draw each polygon individually to preserve aesthetics
                                polygon_grobs <- list()

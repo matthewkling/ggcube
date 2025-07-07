@@ -135,10 +135,12 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                          original_y_range <- NULL
                          original_z_range <- NULL
 
-                         ## fixme -- ugly and inefficent
+                         # Extract original data ranges for 3D coordinate scaling
+                         # This is necessary because ggplot2 normalizes z-values to [0,1] but we need
+                         # the original ranges for proper 3D scaling and expansion calculations.
+                         # We also extract x/y ranges to ensure consistent handling across all axes.
                          tryCatch({
-                               # Look for the original plot data in parent environments
-                               for (i in 1:10) {
+                               for (i in 1:25) {
                                      env <- parent.frame(i)
                                      if (exists("plot", envir = env)) {
                                            plot_obj <- get("plot", envir = env)
@@ -161,118 +163,6 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                          }, error = function(e) {
                                # Ignore errors - we'll use defaults if this fails
                          })
-
-                         # Helper function to apply ggplot2-style expansion and generate breaks
-                         apply_axis_expansion <- function(original_range, scale_obj, axis_name) {
-
-                               if (is.null(original_range)) {
-                                     # Fallback to scale limits if no original range
-                                     limits <- scale_obj$dimension()
-                                     breaks_raw <- scale_obj$get_breaks()
-                                     labels_raw <- scale_obj$get_labels() %||% as.character(breaks_raw)
-
-                                     # Filter to limits
-                                     keep_indices <- which(breaks_raw >= limits[1] & breaks_raw <= limits[2])
-
-                                     return(list(
-                                           limits = limits,
-                                           breaks = breaks_raw[keep_indices],
-                                           labels = labels_raw[keep_indices]
-                                     ))
-                               }
-
-                               # Check if limits were explicitly set on the scale
-                               scale_limits <- scale_obj$limits
-                               if (!is.null(scale_limits) && length(scale_limits) == 2 && all(!is.na(scale_limits))) {
-                                     # User set explicit limits - use them directly
-                                     limits <- scale_limits
-                                     breaks_raw <- scale_obj$get_breaks()
-                                     labels_raw <- scale_obj$get_labels() %||% as.character(breaks_raw)
-
-                                     # Filter to limits
-                                     keep_indices <- which(breaks_raw >= limits[1] & breaks_raw <= limits[2])
-
-                                     return(list(
-                                           limits = limits,
-                                           breaks = breaks_raw[keep_indices],
-                                           labels = labels_raw[keep_indices]
-                                     ))
-                               }
-
-                               # Check for explicit breaks (even without explicit limits)
-                               breaks_raw <- scale_obj$get_breaks()
-                               labels_raw <- scale_obj$get_labels() %||% as.character(breaks_raw)
-
-                               # Check if breaks look like they were explicitly set (not auto-generated)
-                               # This is a bit heuristic, but we check if breaks are substantially different from auto-generated ones
-                               auto_breaks <- scales::extended_breaks(n = 5)(original_range)
-                               breaks_look_explicit <- !isTRUE(all.equal(sort(breaks_raw), sort(auto_breaks), tolerance = 1e-10))
-
-                               if (breaks_look_explicit) {
-
-                                     # Use explicit breaks and create limits around them
-                                     breaks_range <- range(breaks_raw)
-                                     breaks_padding <- diff(breaks_range) * 0.1  # 10% padding
-                                     if (breaks_padding == 0) breaks_padding <- 0.1  # Handle single break case
-
-                                     final_limits <- c(breaks_range[1] - breaks_padding, breaks_range[2] + breaks_padding)
-
-                                     return(list(
-                                           limits = final_limits,
-                                           breaks = breaks_raw,
-                                           labels = labels_raw,
-                                           original_range = original_range
-                                     ))
-                               }
-
-                               # Get expansion from scale, with fallback to ggplot2 default
-                               if (inherits(scale_obj$expand, "waiver")) {
-                                     expand_factor <- 0.05  # Default 5% expansion
-                               } else {
-                                     expand_factor <- scale_obj$expand[1]  # Use user-specified expansion
-                               }
-
-                               if (expand_factor == 0) {
-                                     # No expansion
-                                     expanded_range <- original_range
-                               } else {
-                                     range_width <- diff(original_range)
-                                     if (range_width > 0) {
-                                           expanded_min <- original_range[1] - range_width * expand_factor
-                                           expanded_max <- original_range[2] + range_width * expand_factor
-                                           expanded_range <- c(expanded_min, expanded_max)
-                                     } else {
-                                           expanded_range <- original_range[1] + c(-0.1, 0.1)
-                                     }
-                               }
-
-                               # Generate nice breaks for the expanded range
-                               breaks <- scales::extended_breaks(n = 5)(expanded_range)
-
-                               # Final limits encompass all breaks (like ggplot2)
-                               final_limits <- range(c(breaks, expanded_range))
-
-                               # Generate labels (use scale's label function if available)
-                               labels_func <- scale_obj$labels
-                               if (is.function(labels_func)) {
-                                     labels <- labels_func(breaks)
-                               } else if (!is.null(labels_func) && !inherits(labels_func, "waiver")) {
-                                     labels <- as.character(labels_func)
-                                     # Ensure length matches breaks
-                                     if (length(labels) != length(breaks)) {
-                                           labels <- rep_len(labels, length(breaks))
-                                     }
-                               } else {
-                                     labels <- as.character(breaks)
-                               }
-
-                               return(list(
-                                     limits = final_limits,
-                                     breaks = breaks,
-                                     labels = labels,
-                                     original_range = original_range
-                               ))
-                         }
 
                          # Apply expansion to x and y axes
                          x_info <- apply_axis_expansion(original_x_range, scale_x, "x")
@@ -557,24 +447,6 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                                panel_params$ratio
                          )
 
-                         # Helper function to compute plot bounds
-                         calculate_plot_bounds <- function(all_bounds_x, all_bounds_y){
-                               x_bounds <- range(all_bounds_x, na.rm = TRUE)
-                               y_bounds <- range(all_bounds_y, na.rm = TRUE)
-
-                               # Add padding
-                               x_padding <- diff(x_bounds) * 0.05
-                               y_padding <- diff(y_bounds) * 0.05
-                               x_bounds <- c(x_bounds[1] - x_padding, x_bounds[2] + x_padding)
-                               y_bounds <- c(y_bounds[1] - y_padding, y_bounds[2] + y_padding)
-
-                               # Store the natural aspect ratio for later use
-                               bounds_aspect <<- diff(y_bounds) / diff(x_bounds)
-
-                               # Use proportional bounds
-                               c(x_bounds[1], x_bounds[2], y_bounds[1], y_bounds[2])
-                         }
-
                          # Calculate plot bounds using SCALE BREAKS and TITLE POSITIONS
                          if (self$grid) {
                                all_faces <- c("xmin", "xmax", "ymin", "ymax", "zmin", "zmax")
@@ -816,3 +688,133 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                    }
 )
 
+
+# Helper function to apply ggplot2-style expansion and generate breaks
+apply_axis_expansion <- function(original_range, scale_obj, axis_name) {
+
+      if (is.null(original_range)) {
+            # Fallback to scale limits if no original range
+            limits <- scale_obj$dimension()
+            breaks_raw <- scale_obj$get_breaks()
+            labels_raw <- scale_obj$get_labels() %||% as.character(breaks_raw)
+
+            # Filter to limits
+            keep_indices <- which(breaks_raw >= limits[1] & breaks_raw <= limits[2])
+
+            return(list(
+                  limits = limits,
+                  breaks = breaks_raw[keep_indices],
+                  labels = labels_raw[keep_indices]
+            ))
+      }
+
+      # Check if limits were explicitly set on the scale
+      scale_limits <- scale_obj$limits
+      if (!is.null(scale_limits) && length(scale_limits) == 2 && all(!is.na(scale_limits))) {
+            # User set explicit limits - use them directly
+            limits <- scale_limits
+            breaks_raw <- scale_obj$get_breaks()
+            labels_raw <- scale_obj$get_labels() %||% as.character(breaks_raw)
+
+            # Filter to limits
+            keep_indices <- which(breaks_raw >= limits[1] & breaks_raw <= limits[2])
+
+            return(list(
+                  limits = limits,
+                  breaks = breaks_raw[keep_indices],
+                  labels = labels_raw[keep_indices]
+            ))
+      }
+
+      # Check for explicit breaks (even without explicit limits)
+      breaks_raw <- scale_obj$get_breaks()
+      labels_raw <- scale_obj$get_labels() %||% as.character(breaks_raw)
+
+      # Check if breaks look like they were explicitly set (not auto-generated)
+      # This is a bit heuristic, but we check if breaks are substantially different from auto-generated ones
+      auto_breaks <- scales::extended_breaks(n = 5)(original_range)
+      breaks_look_explicit <- !isTRUE(all.equal(sort(breaks_raw), sort(auto_breaks), tolerance = 1e-10))
+
+      if (breaks_look_explicit) {
+
+            # Use explicit breaks and create limits around them
+            breaks_range <- range(breaks_raw)
+            breaks_padding <- diff(breaks_range) * 0.1  # 10% padding
+            if (breaks_padding == 0) breaks_padding <- 0.1  # Handle single break case
+
+            final_limits <- c(breaks_range[1] - breaks_padding, breaks_range[2] + breaks_padding)
+
+            return(list(
+                  limits = final_limits,
+                  breaks = breaks_raw,
+                  labels = labels_raw,
+                  original_range = original_range
+            ))
+      }
+
+      # Get expansion from scale, with fallback to ggplot2 default
+      if (inherits(scale_obj$expand, "waiver")) {
+            expand_factor <- 0.05  # Default 5% expansion
+      } else {
+            expand_factor <- scale_obj$expand[1]  # Use user-specified expansion
+      }
+
+      if (expand_factor == 0) {
+            # No expansion
+            expanded_range <- original_range
+      } else {
+            range_width <- diff(original_range)
+            if (range_width > 0) {
+                  expanded_min <- original_range[1] - range_width * expand_factor
+                  expanded_max <- original_range[2] + range_width * expand_factor
+                  expanded_range <- c(expanded_min, expanded_max)
+            } else {
+                  expanded_range <- original_range[1] + c(-0.1, 0.1)
+            }
+      }
+
+      # Generate nice breaks for the expanded range
+      breaks <- scales::extended_breaks(n = 5)(expanded_range)
+
+      # Final limits encompass all breaks (like ggplot2)
+      final_limits <- range(c(breaks, expanded_range))
+
+      # Generate labels (use scale's label function if available)
+      labels_func <- scale_obj$labels
+      if (is.function(labels_func)) {
+            labels <- labels_func(breaks)
+      } else if (!is.null(labels_func) && !inherits(labels_func, "waiver")) {
+            labels <- as.character(labels_func)
+            # Ensure length matches breaks
+            if (length(labels) != length(breaks)) {
+                  labels <- rep_len(labels, length(breaks))
+            }
+      } else {
+            labels <- as.character(breaks)
+      }
+
+      return(list(
+            limits = final_limits,
+            breaks = breaks,
+            labels = labels,
+            original_range = original_range
+      ))
+}
+
+# Helper function to compute plot bounds
+calculate_plot_bounds <- function(all_bounds_x, all_bounds_y){
+      x_bounds <- range(all_bounds_x, na.rm = TRUE)
+      y_bounds <- range(all_bounds_y, na.rm = TRUE)
+
+      # Add padding
+      x_padding <- diff(x_bounds) * 0.05
+      y_padding <- diff(y_bounds) * 0.05
+      x_bounds <- c(x_bounds[1] - x_padding, x_bounds[2] + x_padding)
+      y_bounds <- c(y_bounds[1] - y_padding, y_bounds[2] + y_padding)
+
+      # Store the natural aspect ratio for later use
+      bounds_aspect <<- diff(y_bounds) / diff(x_bounds)
+
+      # Use proportional bounds
+      c(x_bounds[1], x_bounds[2], y_bounds[1], y_bounds[2])
+}
