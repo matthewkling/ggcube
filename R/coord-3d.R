@@ -578,7 +578,7 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                                data$z <- 0
                          }
 
-                         # Handle z-value scaling
+                         # Handle z-value scaling (existing logic unchanged)
                          if (panel_params$z_auto_detect %||% FALSE) {
                                original_range <- panel_params$scale_info$z$original_range %||% NULL
                                expanded_limits <- panel_params$scale_info$z$limits
@@ -603,14 +603,13 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                                }
                          }
 
-                         # Use scale limits for consistent scaling (includes expansion)
+                         # Scale data to standard domain with aspect ratio
                          scale_ranges <- list(
                                x = panel_params$scale_info$x$limits,
                                y = panel_params$scale_info$y$limits,
                                z = panel_params$scale_info$z$limits
                          )
 
-                         # Scale data to standard domain with aspect ratio
                          data_std <- scale_to_standard(
                                data[c("x", "y", "z")],
                                scale_ranges,
@@ -618,26 +617,25 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                                panel_params$ratio
                          )
 
-                         # Apply 3D transformation in standard domain
+                         # Apply 3D transformation (returns x, y, z, depth)
                          transformed <- transform_3d_standard(data_std, panel_params$proj)
 
                          # Store transformed coordinates
                          data$x <- transformed$x
                          data$y <- transformed$y
-                         data$z_proj <- transformed$z  # For depth sorting
+                         data$z <- transformed$z      # Keep for face visibility calculations
+                         data$depth <- transformed$depth  # Use for depth sorting
 
                          # Apply final coordinate transformation to fit plot bounds [0, 1]
                          result <- data
                          result$x <- (data$x - panel_params$plot_bounds[1]) / (panel_params$plot_bounds[2] - panel_params$plot_bounds[1])
                          result$y <- (data$y - panel_params$plot_bounds[3]) / (panel_params$plot_bounds[4] - panel_params$plot_bounds[3])
 
-                         # Order by depth
-                         if ("z_proj" %in% names(result)) {
-                               if ("group" %in% names(result)) {
-                                     result <- result[order(result$group, -result$z_proj), ]
-                               } else {
-                                     result <- result[order(-result$z_proj), ]
-                               }
+                         # Order by depth (farther objects first for back-to-front rendering)
+                         if ("group" %in% names(result)) {
+                               result <- result[order(result$group, -result$depth), ]
+                         } else {
+                               result <- result[order(-result$depth), ]
                          }
 
                          return(result)

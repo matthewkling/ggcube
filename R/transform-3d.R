@@ -46,12 +46,11 @@ apply_perspective <- function(rotated, dist) {
       return(rotated)
 }
 
-#' Transform 3D points using rotation and optional perspective
+#' Transform 3D points using rotation and optional perspective with viewpoint distance
 #'
 #' @param data Data frame with x, y, z columns (in standard [-0.5, 0.5] domain)
 #' @param proj A list of projection parameters
-#' @param dist Distance from viewer to center (for perspective)
-#' @return Data frame with transformed coordinates
+#' @return Data frame with transformed coordinates and depth for sorting
 transform_3d_standard <- function(data, proj = list(pitch = 0, roll = 0, yaw = 0, persp = TRUE, dist = 2)) {
 
       pitch <- proj$pitch
@@ -63,19 +62,29 @@ transform_3d_standard <- function(data, proj = list(pitch = 0, roll = 0, yaw = 0
       # Apply rotation
       rotated <- rotate_3d(as.matrix(data[, c("x", "y", "z")]), pitch, roll, yaw)
 
-      # Apply perspective if needed
       if (persp) {
-            transformed <- apply_perspective(rotated, dist)
-      } else {
-            transformed <- rotated
-      }
+            # Calculate true distance from viewpoint (camera at 0,0,-dist in rotated space)
+            depth <- sqrt(rotated[, 1]^2 + rotated[, 2]^2 + (rotated[, 3] + dist)^2)
 
-      # Return transformed coordinates
-      data.frame(
-            x = transformed[, 1],
-            y = transformed[, 2],
-            z = transformed[, 3]
-      )
+            # Apply perspective transformation
+            transformed <- apply_perspective(rotated, dist)
+
+            # Return transformed coordinates with viewpoint depth
+            return(data.frame(
+                  x = transformed[, 1],
+                  y = transformed[, 2],
+                  z = transformed[, 3],  # Keep z for face visibility calculations
+                  depth = depth          # True viewpoint distance for sorting
+            ))
+      } else {
+            # Orthographic: depth is just negative z (farther = larger depth)
+            return(data.frame(
+                  x = rotated[, 1],
+                  y = rotated[, 2],
+                  z = rotated[, 3],      # Keep z for face visibility
+                  depth = -rotated[, 3]  # Use for sorting
+            ))
+      }
 }
 
 ' Scale data to standard domain with aspect ratio control

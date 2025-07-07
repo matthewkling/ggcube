@@ -2,7 +2,7 @@
 % Please edit documentation in R/transform-3d.R
 \name{transform_3d_standard}
 \alias{transform_3d_standard}
-\title{Transform 3D points using rotation and optional perspective}
+\title{Transform 3D points using rotation and optional perspective with viewpoint distance}
 \usage{
 transform_3d_standard(
   data,
@@ -13,12 +13,10 @@ transform_3d_standard(
 \item{data}{Data frame with x, y, z columns (in standard \link{-0.5, 0.5} domain)}
 
 \item{proj}{A list of projection parameters}
-
-\item{dist}{Distance from viewer to center (for perspective)}
 }
 \value{
-Data frame with transformed coordinates
+Data frame with transformed coordinates and depth for sorting
 }
 \description{
-Transform 3D points using rotation and optional perspective
+Transform 3D points using rotation and optional perspective with viewpoint distance
 }

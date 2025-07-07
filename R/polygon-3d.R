@@ -9,61 +9,31 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                                # Transform ALL data at once
                                coords <- coord$transform(data, panel_params)
 
-                               # Split by group and calculate depths
-                               coords_split <- split(coords, coords$group)
-
-                               # Check if we're rendering pillars (has pillar_id column)
-                               has_pillar_ids <- "pillar_id" %in% names(coords)
-
-                               if (has_pillar_ids) {
-                                     # Two-level sorting: pillars first, then faces within pillars
-
-                                     # Calculate pillar depths (using max z_proj of all faces in each pillar)
-                                     pillar_ids <- unique(coords$pillar_id)
-                                     pillar_depths <- sapply(pillar_ids, function(pid) {
-                                           pillar_coords <- coords[coords$pillar_id == pid, ]
-                                           max(pillar_coords$z_proj, na.rm = TRUE)
-                                     })
-                                     names(pillar_depths) <- pillar_ids
-
-                                     # Calculate face depths within each group
-                                     group_depths <- sapply(coords_split, function(poly) {
-                                           max(poly$z_proj, na.rm = TRUE)  # Use closest vertex for faces
-                                     })
-
-                                     # Create sorting key: pillar_depth * 1e6 + face_depth
-                                     # This ensures pillars sort first, then faces within pillars
-                                     group_names <- names(group_depths)
-                                     group_pillar_ids <- sapply(group_names, function(gname) {
-                                           coords_split[[gname]]$pillar_id[1]  # Get pillar_id for this group
-                                     })
-
-                                     # Create combined sorting keys
-                                     sorting_keys <- pillar_depths[as.character(group_pillar_ids)] * 1e6 + group_depths
-                                     names(sorting_keys) <- group_names
-
-                                     # Sort by combined key (back to front)
-                                     ordered_groups <- names(sort(sorting_keys, decreasing = TRUE))
-
+                               # Set up hierarchical object IDs for pillars/voxels
+                               if("pillar_id" %in% names(coords)){
+                                     coords$object_id <- coords$pillar_id
+                               } else if("voxel_id" %in% names(coords)){
+                                     coords$object_id <- coords$voxel_id
                                } else {
-                                     # Original single-level sorting for surfaces and other geometries
-                                     group_depths <- sapply(coords_split, function(tri) {
-                                           mean(tri$z_proj, na.rm = TRUE)
-                                     })
-
-                                     # Sort groups by depth (back to front)
-                                     ordered_groups <- names(sort(group_depths, decreasing = TRUE))
+                                     # For surfaces and other geoms, treat each face as its own object
+                                     coords$object_id <- coords$group %||% 1:nrow(coords)
                                }
 
-                               # Draw each polygon individually to preserve aesthetics
-                               polygon_grobs <- list()
-                               for(i in seq_along(ordered_groups)) {
-                                     poly_data <- coords_split[[ordered_groups[i]]]
+                               # Calculate depths and sort hierarchically using viewpoint distance
+                               coords <- coords %>%
+                                     group_by(object_id) %>%
+                                     mutate(object_depth = max(depth)) %>%  # Farther objects first
+                                     group_by(face_id) %>%
+                                     mutate(face_depth = mean(depth)) %>%   # Face center depth
+                                     arrange(desc(object_depth), desc(face_depth), order) %>%
+                                     ungroup()
 
-                                     # Sort by order if present to get correct vertex sequence
-                                     if ("order" %in% names(poly_data)) {
-                                           poly_data <- poly_data[order(poly_data$order), ]
-                                     }
+                               # Create polygon grobs
+                               polygon_grobs <- list()
+                               faces <- unique(coords$face_id)
+
+                               for(i in seq_along(faces)){
+                                     poly_data <- filter(coords, face_id == faces[i])
 
                                      # Draw this polygon
                                      polygon_grobs[[i]] <- grid::polygonGrob(
