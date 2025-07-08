@@ -1,7 +1,7 @@
 StatPillar <- ggproto("StatPillar", Stat,
                       required_aes = c("x", "y", "z"),
 
-                      compute_group = function(data, scales, na.rm = FALSE,
+                      compute_panel = function(data, scales, na.rm = FALSE,
                                                width = 1.0, faces = "all",
                                                light = lighting()) {
 
@@ -18,6 +18,17 @@ StatPillar <- ggproto("StatPillar", Stat,
                             # Handle zmin aesthetic (base level for pillars)
                             if (!"zmin" %in% names(data)) {
                                   data$zmin <- min(data$z, na.rm = TRUE)
+                            }
+
+                            # Convert categorical data to numeric positions before calculating spacing
+                            if (is.factor(data$x) || is.character(data$x)) {
+                                  data$x <- as.numeric(as.factor(data$x))
+                            }
+                            if (is.factor(data$y) || is.character(data$y)) {
+                                  data$y <- as.numeric(as.factor(data$y))
+                            }
+                            if (is.factor(data$z) || is.character(data$z)) {
+                                  data$z <- as.numeric(as.factor(data$z))
                             }
 
                             # Calculate grid spacing using resolution (works for both regular and sparse grids)

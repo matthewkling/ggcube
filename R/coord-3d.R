@@ -108,7 +108,113 @@ coord_3d <- function(pitch = -30, roll = 30, yaw = 0,
       )
 }
 
+#' Extract variable names from aesthetic mappings
+#'
+#' @param plot_obj A ggplot object
+#' @return A list with x, y, z character vectors of variable names
+extract_aesthetic_vars <- function(plot_obj) {
+      x_vars <- character(0)
+      y_vars <- character(0)
+      z_vars <- character(0)
 
+      # Helper function to safely extract variables from a mapping
+      extract_vars <- function(mapping) {
+            vars <- list(x = character(0), y = character(0), z = character(0))
+
+            tryCatch({
+                  if (!is.null(mapping$x)) {
+                        vars$x <- all.vars(mapping$x)
+                  }
+                  if (!is.null(mapping$y)) {
+                        vars$y <- all.vars(mapping$y)
+                  }
+                  if (!is.null(mapping$z)) {
+                        vars$z <- all.vars(mapping$z)
+                  }
+            }, error = function(e) {
+                  # If all.vars() fails, ignore this mapping
+            })
+
+            return(vars)
+      }
+
+      # Plot-level mappings
+      if (!is.null(plot_obj$mapping)) {
+            plot_vars <- extract_vars(plot_obj$mapping)
+            x_vars <- c(x_vars, plot_vars$x)
+            y_vars <- c(y_vars, plot_vars$y)
+            z_vars <- c(z_vars, plot_vars$z)
+      }
+
+      # Layer-level mappings
+      if (!is.null(plot_obj$layers)) {
+            for (layer in plot_obj$layers) {
+                  if (!is.null(layer$mapping)) {
+                        layer_vars <- extract_vars(layer$mapping)
+                        x_vars <- c(x_vars, layer_vars$x)
+                        y_vars <- c(y_vars, layer_vars$y)
+                        z_vars <- c(z_vars, layer_vars$z)
+                  }
+            }
+      }
+
+      return(list(
+            x = unique(x_vars),
+            y = unique(y_vars),
+            z = unique(z_vars)
+      ))
+}
+
+#' Extract original data ranges from plot object using aesthetic mappings
+#'
+#' @param plot_obj A ggplot object
+#' @return A list with x, y, z ranges (or NULL if not found)
+extract_original_ranges <- function(plot_obj) {
+      if (is.null(plot_obj$data)) {
+            return(list(x = NULL, y = NULL, z = NULL))
+      }
+
+      aesthetic_vars <- extract_aesthetic_vars(plot_obj)
+
+      # Extract ranges, handling multiple variables per aesthetic and categorical data
+      get_range_for_vars <- function(var_names, data) {
+            if (length(var_names) == 0) return(NULL)
+
+            # Filter to variables that actually exist in the data
+            existing_vars <- var_names[var_names %in% names(data)]
+            if (length(existing_vars) == 0) return(NULL)
+
+            # Get all values from these variables
+            all_values <- unlist(data[existing_vars], use.names = FALSE)
+            if (length(all_values) == 0 || all(is.na(all_values))) return(NULL)
+
+            # Handle categorical/factor variables
+            if (is.factor(all_values) || is.character(all_values)) {
+                  # Convert to factor if character
+                  if (is.character(all_values)) {
+                        all_values <- factor(all_values)
+                  }
+
+                  # Return range based on factor level positions (1, 2, 3, ...)
+                  n_levels <- length(levels(all_values))
+                  if (n_levels > 0) {
+                        # Return a special marker indicating this was categorical
+                        return(structure(c(1, n_levels), categorical = TRUE))
+                  } else {
+                        return(NULL)
+                  }
+            } else {
+                  # Numeric variables - use standard range
+                  return(range(all_values, na.rm = TRUE))
+            }
+      }
+
+      return(list(
+            x = get_range_for_vars(aesthetic_vars$x, plot_obj$data),
+            y = get_range_for_vars(aesthetic_vars$y, plot_obj$data),
+            z = get_range_for_vars(aesthetic_vars$z, plot_obj$data)
+      ))
+}
 
 
 Coord3D <- ggproto("Coord3D", CoordCartesian,
@@ -130,15 +236,11 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
 
                    setup_panel_params = function(self, scale_x, scale_y, params = list()) {
 
-                         # Capture original x, y, z ranges before ggplot2 normalizes them
-                         original_x_range <- NULL
-                         original_y_range <- NULL
-                         original_z_range <- NULL
-
                          # Extract original data ranges for 3D coordinate scaling
                          # This is necessary because ggplot2 normalizes z-values to [0,1] but we need
                          # the original ranges for proper 3D scaling and expansion calculations.
                          # We also extract x/y ranges to ensure consistent handling across all axes.
+                         original_ranges <- list(x = NULL, y = NULL, z = NULL)
                          tryCatch({
                                for (i in 1:25) {
                                      env <- parent.frame(i)
@@ -146,15 +248,7 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                                            plot_obj <- get("plot", envir = env)
                                            if (inherits(plot_obj, "ggplot")) {
                                                  if (!is.null(plot_obj$data)) {
-                                                       if ("x" %in% names(plot_obj$data)) {
-                                                             original_x_range <- range(plot_obj$data$x, na.rm = TRUE)
-                                                       }
-                                                       if ("y" %in% names(plot_obj$data)) {
-                                                             original_y_range <- range(plot_obj$data$y, na.rm = TRUE)
-                                                       }
-                                                       if ("z" %in% names(plot_obj$data)) {
-                                                             original_z_range <- range(plot_obj$data$z, na.rm = TRUE)
-                                                       }
+                                                       original_ranges <- extract_original_ranges(plot_obj)
                                                        break
                                                  }
                                            }
@@ -164,180 +258,75 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                                # Ignore errors - we'll use defaults if this fails
                          })
 
+                         original_x_range <- original_ranges$x
+                         original_y_range <- original_ranges$y
+                         original_z_range <- original_ranges$z
+
                          # Apply expansion to x and y axes
                          x_info <- apply_axis_expansion(original_x_range, scale_x, "x")
                          y_info <- apply_axis_expansion(original_y_range, scale_y, "y")
 
-                         # Handle z-axis (keep existing logic but use helper function)
+                         # Handle z-axis (both continuous and discrete)
                          z_info <- list(limits = c(0, 1), breaks = scales::extended_breaks()(c(0, 1)))  # Default
                          z_auto_detect <- FALSE
 
-                         if (exists("limits", envir = .z_scale_cache)) {
-                               z_limits <- .z_scale_cache$limits
-                               z_breaks <- .z_scale_cache$breaks
+                         # Check if we have cached z scale info
+                         if (exists("type", envir = .z_scale_cache)) {
 
-                               # Check if we have actual limits (not NULL)
-                               if (!is.null(z_limits) && length(z_limits) == 2) {
-                                     # We have explicit limits from scale_z_continuous(limits = c(...))
-
-                                     # Handle breaks
-                                     if (is.function(z_breaks)) {
-                                           z_breaks <- z_breaks(z_limits)
-                                     } else if (inherits(z_breaks, "waiver") || is.null(z_breaks)) {
-                                           n_breaks_val <- .z_scale_cache$n.breaks %||% 5
-                                           z_breaks <- scales::extended_breaks(n = n_breaks_val)(z_limits)
-                                     }
-
-                                     # Filter breaks to be within limits
-                                     filtered_breaks <- z_breaks[z_breaks >= z_limits[1] & z_breaks <= z_limits[2]]
-
-                                     # Process labels
-                                     z_labels_param <- NULL
-                                     if (exists("labels", envir = .z_scale_cache)) {
-                                           z_labels_param <- .z_scale_cache$labels
-                                     }
-
-                                     # Apply label transformation
-                                     if (is.null(z_labels_param) || inherits(z_labels_param, "waiver")) {
-                                           # Use default labels (the break values themselves)
-                                           z_labels <- as.character(filtered_breaks)
-                                     } else if (is.function(z_labels_param)) {
-                                           # Apply label function to breaks
-                                           z_labels <- z_labels_param(filtered_breaks)
-                                     } else {
-                                           # Use provided labels directly
-                                           z_labels <- as.character(z_labels_param)
-                                           # Ensure length matches breaks
-                                           if (length(z_labels) != length(filtered_breaks)) {
-                                                 warning("Length of labels (", length(z_labels), ") does not match length of breaks (", length(z_breaks), ")")
-                                                 z_labels <- rep_len(z_labels, length(filtered_breaks))
-                                           }
-                                     }
-
-                                     z_info <- list(limits = z_limits, breaks = filtered_breaks, labels = z_labels)
-
+                               # Handle discrete Z scales
+                               if (.z_scale_cache$type == "discrete") {
+                                     z_info <- handle_discrete_z_scale(original_z_range)
+                                     z_auto_detect <- TRUE  # Discrete scales auto-convert data
                                } else {
-                                     # No explicit limits - check if we have explicit breaks
-                                     z_labels_param <- NULL
-                                     if (exists("labels", envir = .z_scale_cache)) {
-                                           z_labels_param <- .z_scale_cache$labels
-                                     }
+                                     # Handle continuous Z scales (existing logic)
+                                     z_info <- handle_continuous_z_scale(original_z_range)
+                                     z_auto_detect <- .z_scale_cache$type == "continuous_auto"
+                               }
 
-                                     # Check for explicit breaks (not waiver, not NULL, not function)
-                                     has_explicit_breaks <- !is.null(z_breaks) &&
-                                           !inherits(z_breaks, "waiver") &&
-                                           !is.function(z_breaks) &&
-                                           is.numeric(z_breaks)
+                         } else if (exists("limits", envir = .z_scale_cache)) {
+                               # Legacy path - assume continuous for backward compatibility
+                               z_info <- handle_continuous_z_scale(original_z_range)
+                               z_auto_detect <- TRUE
+                         } else {
+                               # No cached z scale info at all - auto-detect scale type and apply expansion
+                               if (!is.null(original_z_range)) {
+                                     # Auto-detect: check if original data was categorical
+                                     if (is_categorical_range(original_z_range)) {
+                                           # Auto-apply discrete Z scale
+                                           .z_scale_cache$type <- "discrete"
+                                           .z_scale_cache$limits <- NULL  # Let it auto-detect from data
+                                           .z_scale_cache$breaks <- waiver()
+                                           .z_scale_cache$labels <- waiver()
+                                           .z_scale_cache$expand <- waiver()
+                                           .z_scale_cache$drop <- TRUE
 
-                                     if (has_explicit_breaks) {
-
-                                           # Use explicit breaks and create limits around them
-                                           z_range <- range(z_breaks)
-                                           z_padding <- diff(z_range) * 0.1  # 10% padding
-                                           if (z_padding == 0) z_padding <- 0.1  # Handle single break case
-
-                                           final_limits <- c(z_range[1] - z_padding, z_range[2] + z_padding)
-
-                                           # Process labels for explicit breaks
-                                           if (is.null(z_labels_param) || inherits(z_labels_param, "waiver")) {
-                                                 z_labels <- as.character(z_breaks)
-                                           } else if (is.function(z_labels_param)) {
-                                                 z_labels <- z_labels_param(z_breaks)
-                                           } else {
-                                                 z_labels <- as.character(z_labels_param)
-                                                 # Ensure length matches breaks
-                                                 if (length(z_labels) != length(z_breaks)) {
-                                                       warning("Length of labels (", length(z_labels), ") does not match length of breaks (", length(z_breaks), ")")
-                                                       z_labels <- rep_len(z_labels, length(z_breaks))
-                                                 }
-                                           }
-
-                                           z_info <- list(limits = final_limits, breaks = z_breaks, labels = z_labels)
-
+                                           z_info <- handle_discrete_z_scale(original_z_range)
+                                           z_auto_detect <- TRUE
                                      } else {
-                                           # scale_z_continuous() called without limits or explicit breaks - auto-detect with expansion
-                                           if (!is.null(original_z_range)) {
+                                           # Apply continuous expansion logic
+                                           expand_factor <- 0.05
+                                           range_width <- diff(original_z_range)
 
-                                                 # Get expansion from z scale if available
-                                                 if (exists("expand", envir = .z_scale_cache) && !inherits(.z_scale_cache$expand, "waiver")) {
-                                                       expand_factor <- .z_scale_cache$expand[1]
-                                                 } else {
-                                                       expand_factor <- 0.05  # Default
-                                                 }
-
-                                                 if (expand_factor == 0) {
-                                                       # No expansion
-                                                       expanded_range <- original_z_range
-                                                 } else {
-                                                       # Apply expansion
-                                                       range_width <- diff(original_z_range)
-                                                       if (range_width > 0) {
-                                                             expanded_range <- c(original_z_range[1] - range_width * expand_factor,
-                                                                                 original_z_range[2] + range_width * expand_factor)
-                                                       } else {
-                                                             expanded_range <- original_z_range[1] + c(-0.1, 0.1)
-                                                       }
-                                                 }
-
-                                                 # Generate nice breaks for the expanded range
-                                                 z_breaks <- scales::extended_breaks(n = 5)(expanded_range)
-
-                                                 # Final limits encompass all breaks (like ggplot2)
-                                                 final_limits <- range(c(z_breaks, expanded_range))
-
-                                                 # Process labels for ALL breaks
-                                                 if (is.null(z_labels_param) || inherits(z_labels_param, "waiver")) {
-                                                       z_labels <- as.character(z_breaks)
-                                                 } else if (is.function(z_labels_param)) {
-                                                       # Apply label function to all breaks
-                                                       z_labels <- z_labels_param(z_breaks)
-                                                 } else {
-                                                       # Use provided labels directly
-                                                       z_labels <- as.character(z_labels_param)
-                                                       if (length(z_labels) != length(z_breaks)) {
-                                                             warning("Length of labels (", length(z_labels), ") does not match length of breaks (", length(z_breaks), ")")
-                                                             z_labels <- rep_len(z_labels, length(z_breaks))
-                                                       }
-                                                 }
-
-                                                 z_info <- list(
-                                                       limits = final_limits,           # Expanded range for coordinate system
-                                                       breaks = z_breaks,
-                                                       labels = z_labels,
-                                                       original_range = original_z_range  # Store original data range for transform
-                                                 )
-
+                                           if (range_width > 0) {
+                                                 expanded_range <- c(original_z_range[1] - range_width * expand_factor,
+                                                                     original_z_range[2] + range_width * expand_factor)
                                            } else {
-                                                 z_info <- list(limits = c(0, 1), breaks = scales::extended_breaks()(c(0, 1)))
+                                                 expanded_range <- original_z_range[1] + c(-0.1, 0.1)
                                            }
+
+                                           z_breaks <- scales::extended_breaks(n = 5)(expanded_range)
+                                           final_limits <- range(z_breaks)
+                                           z_info <- list(
+                                                 limits = final_limits,
+                                                 breaks = z_breaks,
+                                                 original_range = original_z_range
+                                           )
                                            z_auto_detect <- TRUE
                                      }
-                               }
-                         } else {
-                               # No cached z scale info at all - auto-detect with expansion
-                               if (!is.null(original_z_range)) {
-                                     # Apply same expansion logic
-                                     expand_factor <- 0.05
-                                     range_width <- diff(original_z_range)
-
-                                     if (range_width > 0) {
-                                           expanded_range <- c(original_z_range[1] - range_width * expand_factor,
-                                                               original_z_range[2] + range_width * expand_factor)
-                                     } else {
-                                           expanded_range <- original_z_range[1] + c(-0.1, 0.1)
-                                     }
-
-                                     z_breaks <- scales::extended_breaks(n = 5)(expanded_range)
-                                     final_limits <- range(z_breaks)
-                                     z_info <- list(
-                                           limits = final_limits,           # Expanded range for coordinate system
-                                           breaks = z_breaks,
-                                           original_range = original_z_range  # Store original data range for transform
-                                     )
                                } else {
                                      z_info <- list(limits = c(0, 1), breaks = scales::extended_breaks()(c(0, 1)))
+                                     z_auto_detect <- TRUE
                                }
-                               z_auto_detect <- TRUE
                          }
 
                          # Get axis names with proper labs() support
@@ -578,27 +567,60 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                                data$z <- 0
                          }
 
-                         # Handle z-value scaling (existing logic unchanged)
+                         # Handle z-value scaling for both continuous and discrete
                          if (panel_params$z_auto_detect %||% FALSE) {
-                               original_range <- panel_params$scale_info$z$original_range %||% NULL
-                               expanded_limits <- panel_params$scale_info$z$limits
+                               # Check if we have discrete Z scale
+                               if (!is.null(panel_params$scale_info$z$levels)) {
+                                     # Discrete Z scale - convert categorical values to numeric positions
+                                     z_levels <- panel_params$scale_info$z$levels
 
-                               if (!is.null(original_range) && length(original_range) == 2) {
-                                     original_range_width <- original_range[2] - original_range[1]
-                                     data$z <- data$z * original_range_width + original_range[1]
+                                     # Convert factors/characters to numeric positions
+                                     if (is.factor(data$z)) {
+                                           # Factor data - map to positions based on levels
+                                           data$z <- as.numeric(data$z)
+                                     } else if (is.character(data$z)) {
+                                           # Character data - convert to factor then numeric
+                                           data$z <- as.numeric(factor(data$z, levels = z_levels))
+                                     }
+                                     # If already numeric, assume it's in correct format
+
                                } else {
-                                     z_limits <- expanded_limits
-                                     if (!is.null(z_limits) && length(z_limits) == 2) {
-                                           scale_range <- z_limits[2] - z_limits[1]
-                                           data$z <- data$z * scale_range + z_limits[1]
+                                     # Continuous Z scale (existing logic)
+                                     original_range <- panel_params$scale_info$z$original_range %||% NULL
+                                     expanded_limits <- panel_params$scale_info$z$limits
+
+                                     if (!is.null(original_range) && length(original_range) == 2) {
+                                           original_range_width <- original_range[2] - original_range[1]
+                                           data$z <- data$z * original_range_width + original_range[1]
+                                     } else {
+                                           z_limits <- expanded_limits
+                                           if (!is.null(z_limits) && length(z_limits) == 2) {
+                                                 scale_range <- z_limits[2] - z_limits[1]
+                                                 data$z <- data$z * scale_range + z_limits[1]
+                                           }
                                      }
                                }
                          } else {
-                               if ("z" %in% names(data)) {
-                                     z_limits <- panel_params$scale_info$z$limits
-                                     if (!is.null(z_limits) && length(z_limits) == 2) {
-                                           scale_range <- z_limits[2] - z_limits[1]
-                                           data$z <- data$z * scale_range + z_limits[1]
+                               # Explicit Z scale - check for discrete vs continuous
+                               if (!is.null(panel_params$scale_info$z$levels)) {
+                                     # Discrete Z scale with explicit scale
+                                     z_levels <- panel_params$scale_info$z$levels
+
+                                     # Convert categorical data to numeric positions
+                                     if (is.factor(data$z)) {
+                                           data$z <- as.numeric(data$z)
+                                     } else if (is.character(data$z)) {
+                                           data$z <- as.numeric(factor(data$z, levels = z_levels))
+                                     }
+
+                               } else {
+                                     # Continuous Z scale (existing logic)
+                                     if ("z" %in% names(data)) {
+                                           z_limits <- panel_params$scale_info$z$limits
+                                           if (!is.null(z_limits) && length(z_limits) == 2) {
+                                                 scale_range <- z_limits[2] - z_limits[1]
+                                                 data$z <- data$z * scale_range + z_limits[1]
+                                           }
                                      }
                                }
                          }
@@ -632,8 +654,22 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                          result$y <- (data$y - panel_params$plot_bounds[3]) / (panel_params$plot_bounds[4] - panel_params$plot_bounds[3])
 
                          # Order by depth (farther objects first for back-to-front rendering)
+                         # but preserve vertex order within groups for proper polygon construction
                          if ("group" %in% names(result)) {
-                               result <- result[order(result$group, -result$depth), ]
+                               # Calculate representative depth for each group
+                               group_depths <- aggregate(result$depth, by = list(group = result$group), FUN = mean)
+                               names(group_depths) <- c("group", "group_depth")
+                               result <- merge(result, group_depths, by = "group")
+
+                               # Sort by group depth, then by group, then preserve order within group
+                               if ("order" %in% names(result)) {
+                                     result <- result[order(-result$group_depth, result$group, result$order), ]
+                               } else {
+                                     result <- result[order(-result$group_depth, result$group), ]
+                               }
+
+                               # Clean up temporary column
+                               result$group_depth <- NULL
                          } else {
                                result <- result[order(-result$depth), ]
                          }
@@ -689,6 +725,73 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
 
 # Helper function to apply ggplot2-style expansion and generate breaks
 apply_axis_expansion <- function(original_range, scale_obj, axis_name) {
+
+      # Detect if this is a discrete scale
+      is_discrete_scale <- inherits(scale_obj, "ScaleDiscrete") ||
+            inherits(scale_obj, "ScaleDiscretePosition") ||
+            any(grepl("discrete", class(scale_obj), ignore.case = TRUE))
+
+      if (is_discrete_scale) {
+            # Handle discrete scales
+            return(apply_discrete_axis_expansion(original_range, scale_obj, axis_name))
+      } else {
+            # Handle continuous scales (existing logic)
+            return(apply_continuous_axis_expansion(original_range, scale_obj, axis_name))
+      }
+}
+
+# Helper function for discrete scale expansion
+apply_discrete_axis_expansion <- function(original_range, scale_obj, axis_name) {
+
+      # Get breaks and labels from the scale object
+      breaks_raw <- scale_obj$get_breaks()
+      labels_raw <- scale_obj$get_labels() %||% as.character(breaks_raw)
+
+      if (is.null(breaks_raw) || length(breaks_raw) == 0) {
+            # If no breaks, try to use original range
+            if (!is.null(original_range) && length(original_range) == 2) {
+                  breaks_raw <- seq(original_range[1], original_range[2])
+                  labels_raw <- as.character(breaks_raw)
+            } else {
+                  # Fallback
+                  breaks_raw <- c(1, 2)
+                  labels_raw <- c("1", "2")
+            }
+      }
+
+      # Check if limits were explicitly set on the scale
+      scale_limits <- scale_obj$limits
+      if (!is.null(scale_limits) && length(scale_limits) >= 2 && !all(is.na(scale_limits))) {
+            # User set explicit limits - use them directly
+            limits <- range(match(scale_limits, breaks_raw), na.rm = TRUE)
+            if (any(is.na(limits))) {
+                  # Fallback if matching fails
+                  limits <- c(1, length(breaks_raw))
+            }
+      } else {
+            # Apply discrete expansion (typically ±0.6 units)
+            expand_amount <- 0.6  # Standard discrete expansion
+
+            # Get expansion from scale if available
+            if (!inherits(scale_obj$expand, "waiver")) {
+                  expand_amount <- scale_obj$expand[1] %||% 0.6
+            }
+
+            # Calculate limits with expansion
+            break_range <- range(seq_along(breaks_raw))
+            limits <- c(break_range[1] - expand_amount, break_range[2] + expand_amount)
+      }
+
+      return(list(
+            limits = limits,
+            breaks = seq_along(breaks_raw),  # Numeric positions
+            labels = labels_raw,
+            original_range = original_range
+      ))
+}
+
+# Helper function for continuous scale expansion (extracted from existing logic)
+apply_continuous_axis_expansion <- function(original_range, scale_obj, axis_name) {
 
       if (is.null(original_range)) {
             # Fallback to scale limits if no original range
@@ -815,4 +918,266 @@ calculate_plot_bounds <- function(all_bounds_x, all_bounds_y){
 
       # Use proportional bounds
       c(x_bounds[1], x_bounds[2], y_bounds[1], y_bounds[2])
+}
+
+# Helper function to detect if a range came from categorical data
+is_categorical_range <- function(range_vals) {
+      if (is.null(range_vals) || length(range_vals) != 2) {
+            return(FALSE)
+      }
+
+      # Check for the categorical marker attribute
+      if (!is.null(attr(range_vals, "categorical"))) {
+            return(attr(range_vals, "categorical"))
+      }
+
+      # Fallback: check if the range represents integer positions from categorical conversion
+      # (values like c(1, 3) or c(1, 5) from factor levels)
+      is_integer_like <- all(range_vals == round(range_vals))
+      starts_at_one <- range_vals[1] == 1
+      reasonable_range <- diff(range_vals) <= 100  # Sanity check
+
+      return(is_integer_like && starts_at_one && reasonable_range)
+}
+
+# Helper function to handle discrete Z scales
+handle_discrete_z_scale <- function(original_z_range) {
+
+      # Get parameters from cache
+      z_limits <- .z_scale_cache$limits %||% NULL
+      z_breaks <- .z_scale_cache$breaks %||% waiver()
+      z_labels_param <- .z_scale_cache$labels %||% waiver()
+      z_expand <- .z_scale_cache$expand %||% waiver()
+
+      # Determine the levels/categories
+      if (!is.null(z_limits)) {
+            # Explicit limits provided
+            levels_list <- z_limits
+      } else if (!is.null(original_z_range) && is_categorical_range(original_z_range)) {
+            # Auto-detect from categorical range (c(1, n_levels))
+            n_levels <- original_z_range[2]
+
+            # Try to get actual factor levels from the original data
+            # This is a bit hacky, but we need to extract the actual level names
+            tryCatch({
+                  # Look up the call stack to find the original data
+                  for (i in 1:15) {
+                        env <- parent.frame(i)
+                        if (exists("plot", envir = env)) {
+                              plot_obj <- get("plot", envir = env)
+                              if (inherits(plot_obj, "ggplot") && !is.null(plot_obj$data)) {
+                                    aesthetic_vars <- extract_aesthetic_vars(plot_obj)
+                                    z_vars <- aesthetic_vars$z
+
+                                    if (length(z_vars) > 0) {
+                                          existing_z_vars <- z_vars[z_vars %in% names(plot_obj$data)]
+                                          if (length(existing_z_vars) > 0) {
+                                                z_values <- unlist(plot_obj$data[existing_z_vars], use.names = FALSE)
+                                                if (is.factor(z_values)) {
+                                                      levels_list <- levels(z_values)
+                                                      break
+                                                } else if (is.character(z_values)) {
+                                                      levels_list <- levels(factor(z_values))
+                                                      break
+                                                }
+                                          }
+                                    }
+                              }
+                        }
+                  }
+
+                  # If we couldn't find actual levels, use numeric defaults
+                  if (!exists("levels_list")) {
+                        levels_list <- as.character(seq_len(n_levels))
+                  }
+            }, error = function(e) {
+                  # Fallback to numeric levels
+                  levels_list <- as.character(seq_len(n_levels))
+            })
+      } else {
+            # Fallback
+            levels_list <- c("1", "2")
+      }
+
+      n_levels <- length(levels_list)
+
+      # Generate breaks (integer positions)
+      if (inherits(z_breaks, "waiver") || is.null(z_breaks)) {
+            breaks_positions <- seq_len(n_levels)
+      } else if (is.character(z_breaks)) {
+            # Map break names to positions
+            breaks_positions <- match(z_breaks, levels_list)
+            breaks_positions <- breaks_positions[!is.na(breaks_positions)]
+            if (length(breaks_positions) == 0) breaks_positions <- seq_len(n_levels)
+      } else {
+            # Assume numeric positions
+            breaks_positions <- z_breaks
+      }
+
+      # Generate labels
+      if (inherits(z_labels_param, "waiver") || is.null(z_labels_param)) {
+            labels_final <- levels_list[breaks_positions]
+      } else if (is.function(z_labels_param)) {
+            labels_final <- z_labels_param(levels_list[breaks_positions])
+      } else {
+            labels_final <- as.character(z_labels_param)
+            if (length(labels_final) != length(breaks_positions)) {
+                  labels_final <- rep_len(labels_final, length(breaks_positions))
+            }
+      }
+
+      # Apply discrete expansion
+      expand_amount <- 0.6  # Standard discrete expansion
+      if (!inherits(z_expand, "waiver") && !is.null(z_expand)) {
+            expand_amount <- z_expand[1] %||% 0.6
+      }
+
+      # Calculate limits with expansion
+      final_limits <- c(1 - expand_amount, n_levels + expand_amount)
+
+      return(list(
+            limits = final_limits,
+            breaks = breaks_positions,
+            labels = labels_final,
+            original_range = original_z_range,
+            levels = levels_list  # Store for data conversion
+      ))
+}
+
+# Helper function to handle continuous Z scales (extracted existing logic)
+handle_continuous_z_scale <- function(original_z_range) {
+
+      z_limits <- .z_scale_cache$limits
+      z_breaks <- .z_scale_cache$breaks
+
+      # Check if we have actual limits (not NULL)
+      if (!is.null(z_limits) && length(z_limits) == 2) {
+            # We have explicit limits from scale_z_continuous(limits = c(...))
+
+            # Handle breaks
+            if (is.function(z_breaks)) {
+                  z_breaks <- z_breaks(z_limits)
+            } else if (inherits(z_breaks, "waiver") || is.null(z_breaks)) {
+                  n_breaks_val <- .z_scale_cache$n.breaks %||% 5
+                  z_breaks <- scales::extended_breaks(n = n_breaks_val)(z_limits)
+            }
+
+            # Filter breaks to be within limits
+            filtered_breaks <- z_breaks[z_breaks >= z_limits[1] & z_breaks <= z_limits[2]]
+
+            # Process labels
+            z_labels_param <- .z_scale_cache$labels %||% waiver()
+
+            # Apply label transformation
+            if (is.null(z_labels_param) || inherits(z_labels_param, "waiver")) {
+                  # Use default labels (the break values themselves)
+                  z_labels <- as.character(filtered_breaks)
+            } else if (is.function(z_labels_param)) {
+                  # Apply label function to breaks
+                  z_labels <- z_labels_param(filtered_breaks)
+            } else {
+                  # Use provided labels directly
+                  z_labels <- as.character(z_labels_param)
+                  # Ensure length matches breaks
+                  if (length(z_labels) != length(filtered_breaks)) {
+                        warning("Length of labels (", length(z_labels), ") does not match length of breaks (", length(z_breaks), ")")
+                        z_labels <- rep_len(z_labels, length(filtered_breaks))
+                  }
+            }
+
+            return(list(limits = z_limits, breaks = filtered_breaks, labels = z_labels))
+
+      } else {
+            # No explicit limits - check if we have explicit breaks
+            z_labels_param <- .z_scale_cache$labels %||% waiver()
+
+            # Check for explicit breaks (not waiver, not NULL, not function)
+            has_explicit_breaks <- !is.null(z_breaks) &&
+                  !inherits(z_breaks, "waiver") &&
+                  !is.function(z_breaks) &&
+                  is.numeric(z_breaks)
+
+            if (has_explicit_breaks) {
+
+                  # Use explicit breaks and create limits around them
+                  z_range <- range(z_breaks)
+                  z_padding <- diff(z_range) * 0.1  # 10% padding
+                  if (z_padding == 0) z_padding <- 0.1  # Handle single break case
+
+                  final_limits <- c(z_range[1] - z_padding, z_range[2] + z_padding)
+
+                  # Process labels for explicit breaks
+                  if (is.null(z_labels_param) || inherits(z_labels_param, "waiver")) {
+                        z_labels <- as.character(z_breaks)
+                  } else if (is.function(z_labels_param)) {
+                        z_labels <- z_labels_param(z_breaks)
+                  } else {
+                        z_labels <- as.character(z_labels_param)
+                        # Ensure length matches breaks
+                        if (length(z_labels) != length(z_breaks)) {
+                              warning("Length of labels (", length(z_labels), ") does not match length of breaks (", length(z_breaks), ")")
+                              z_labels <- rep_len(z_labels, length(z_breaks))
+                        }
+                  }
+
+                  return(list(limits = final_limits, breaks = z_breaks, labels = z_labels))
+
+            } else {
+                  # scale_z_continuous() called without limits or explicit breaks - auto-detect with expansion
+                  if (!is.null(original_z_range)) {
+
+                        # Get expansion from z scale if available
+                        if (exists("expand", envir = .z_scale_cache) && !inherits(.z_scale_cache$expand, "waiver")) {
+                              expand_factor <- .z_scale_cache$expand[1]
+                        } else {
+                              expand_factor <- 0.05  # Default
+                        }
+
+                        if (expand_factor == 0) {
+                              # No expansion
+                              expanded_range <- original_z_range
+                        } else {
+                              # Apply expansion
+                              range_width <- diff(original_z_range)
+                              if (range_width > 0) {
+                                    expanded_range <- c(original_z_range[1] - range_width * expand_factor,
+                                                        original_z_range[2] + range_width * expand_factor)
+                              } else {
+                                    expanded_range <- original_z_range[1] + c(-0.1, 0.1)
+                              }
+                        }
+
+                        # Generate nice breaks for the expanded range
+                        z_breaks <- scales::extended_breaks(n = 5)(expanded_range)
+
+                        # Final limits encompass all breaks (like ggplot2)
+                        final_limits <- range(c(z_breaks, expanded_range))
+
+                        # Process labels for ALL breaks
+                        if (is.null(z_labels_param) || inherits(z_labels_param, "waiver")) {
+                              z_labels <- as.character(z_breaks)
+                        } else if (is.function(z_labels_param)) {
+                              # Apply label function to all breaks
+                              z_labels <- z_labels_param(z_breaks)
+                        } else {
+                              # Use provided labels directly
+                              z_labels <- as.character(z_labels_param)
+                              if (length(z_labels) != length(z_breaks)) {
+                                    warning("Length of labels (", length(z_labels), ") does not match length of breaks (", length(z_breaks), ")")
+                                    z_labels <- rep_len(z_labels, length(z_breaks))
+                              }
+                        }
+
+                        return(list(
+                              limits = final_limits,           # Expanded range for coordinate system
+                              breaks = z_breaks,
+                              labels = z_labels,
+                              original_range = original_z_range  # Store original data range for transform
+                        ))
+
+                  } else {
+                        return(list(limits = c(0, 1), breaks = scales::extended_breaks()(c(0, 1))))
+                  }
+            }
+      }
 }

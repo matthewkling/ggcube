@@ -19,89 +19,57 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 <!-- badges: end -->
 
-The `ggcube` library is an extension of ggplot2 for 3D plotting.
+The `ggcube` R library is an extension of ggplot2 for 3D plotting. This package is under development, and a stable version has not yet been released. 
 
-This package is under development, and a stable version has not yet been released. 
+The package's core function is `coord_3d()`, which provides a 3D coordinate system for use in combination with `aes(x, y, z)`. The library also offers a number of 3D stats and geoms to plot objects like surfaces and volumes. 
 
 
 ## Example
 
-To use ggcube, you define a `projection()` and then use standard ggplot code along with one or more `proj_*()` layer functions.
-
-Let's make a 3D scatterplot of the `mpg` dataset. We'll use `proj_data(geom = "point")` to add our main data, and `proj_margin()` to add some marginal scatter plots as well. In addition to adding our data, we also have to explicitly build up the reference layers like the panel background, gridlines, and labels. 
+Let's make a 3D scatter plot of the `mpg` dataset. Compared to a standard 2D ggplot, we simply expand the aesthetic mapping to include our third variable, and then `add coord_3d()`:
 
 ```{r example, warning = FALSE, message = FALSE}
 library(ggcube)
-
-# data
-d <- select(mpg, displ, hwy, cty, cyl)
-
-# projection
-prj <- projection(pitch = -20, roll = 160, 
-                  persp = TRUE, dist = 2, data = d)
-
-# plot
-d %>%
-      ggplot(aes(displ, hwy, z = cty, color = factor(cyl))) +
-      proj_panel(prj = prj) +
-      proj_gridlines(prj = prj, color = "white") +
-      proj_margin(prj = prj, geom = "point", 
-                  color = "gray40", size = 1, alpha = .5) +
-      proj_data(prj = prj, geom = "point", size = 3) +
-      proj_label(prj = prj, axis = "x", title = "displacement",
-                 edge = c("ymin", "zmin")) +
-      proj_label(prj = prj, axis = "y", title = "highway MPG",
-                 edge = c("zmax", "xmax")) +
-      proj_label(prj = prj, axis = "z", title = "city MPG",
-                 edge = c("xmin", "ymax")) +
-      coord_fixed() +
-      theme_cube()
+ggplot(mpg, aes(displ, hwy, cty)) +
+      geom_point() +
+      coord_3d()
 ```
 
-As another example, let's use `proj_surface()` to plot a projection of a 3D function:
+A key 3D stat is `stat_surface()`, which can be used to plot grid-like data that has a z-value for every x-y combination, such as function predictions or terrain layers. The example below uses this stat to visualize a wave function; in addition to projecting the surface, it uses some 3D `lighting()` to highlight the surface shape. It also hints at how you can adjust the rotation and aspect ratios of your plot via arguments to `coord_3d()`, and apply ggplot2 themes to the plot.
 
 ```{r surface, warning = FALSE, message = FALSE}
 # data
 d <- expand_grid(x = seq(-10, 10, .25),
                  y = seq(-10, 10, .25)) %>%
-      mutate(z = cos(sqrt(x^2 + y^2)))
+      mutate(z = cos(sqrt(x^2 + y^2)) * 3)
 
-# projection
-prj <- projection(data = d, pitch = 35, yaw = 55,
-                  persp = T, dist = 1, zlim = c(-3, 3))
-
-# plot, highlighting terrain attributes with after_stat
-ggplot(d, aes(x, y, z = z, fill = after_stat(dzdy))) +
-      proj_surface(prj = prj) +
-      scale_fill_viridis_c(option = "B") +
-      theme_cube()
+# plot
+ggplot(d, aes(x, y, z)) +
+      coord_3d(pitch = 0, roll = 130, yaw = 30, scales = "fixed") +
+      stat_surface(fill = "orangered", color = "orangered", linewidth = .1,
+                   light = lighting(blend = "both", blend_mode = "hsl")) +
+      theme_dark()
 ```
-We can also create an arbitrary third axis along which to array a set of data. Here's an example using a map of the US:
+
+You can also create an arbitrary third axis along which to array a set of data. Here's an example using a map of the US:
 
 ```{r layers, warning = FALSE, message = FALSE}
 # data
-country <- map_data("usa") %>% mutate(z = 0)
+country <- map_data("usa") %>% mutate(z = 2)
 state <- map_data("state") %>% mutate(z = 1)
-county <- map_data("county") %>% mutate(z = 2)
+county <- map_data("county") %>% mutate(z = 0)
 d <- bind_rows(country, state, county)
-
-# projection
-prj <- projection(pitch = 75, yaw = 30,
-                  persp = T, dist = 3,
-                  zlim = c(-1, 5),
-                  data = d %>% select(long, lat, z))
 
 # plot
 d %>%
-      ggplot(aes(long, lat, z = z, fill = z,
-                 group = paste(z, group), order = order)) +
-      proj_panel(prj = prj, faces = "zmin") +
-      proj_gridlines(prj = prj, faces = "zmin", color = "white") +
-      proj_data(prj = prj, geom = "polygon", 
-                color = "black", linewidth = .05) +
+      ggplot(aes(long, lat, z, fill = z, 
+                 group = paste(letters[3-z], group))) +
+      geom_polygon(color = "black", linewidth = .05) +
       scale_fill_gradient(high = "red", low = "gold") +
-      theme_cube(legend.position = "none") +
-      coord_fixed()
+      coord_3d(scales = "fixed", ratio = c(1, 1.3, 5),
+               pitch = 0, roll = -60, yaw = 30) +
+      scale_z_continuous(breaks = 1:3, labels = c("county", "state", "country")) +
+      theme(legend.position = "none")
 ```
 
 

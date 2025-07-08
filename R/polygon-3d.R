@@ -246,39 +246,67 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                                      coords <- coords[, !names(coords) %in% c("blend_enabled", "blend_strength", "blend_mode", "lighting_method")]
                                }
 
-                               # Set up hierarchical object IDs for pillars/voxels
-                               if("pillar_id" %in% names(coords)){
-                                     coords$object_id <- coords$pillar_id
-                               } else if("voxel_id" %in% names(coords)){
-                                     coords$object_id <- coords$voxel_id
-                               } else {
-                                     # For surfaces and other geoms, treat each face as its own object
-                                     coords$object_id <- coords$group %||% 1:nrow(coords)
-                               }
+                               # Handle different data sources: stats vs regular polygons
+                               if ("face_id" %in% names(coords)) {
+                                     # Data from stats (stat_surface, stat_voxel, etc.) - has face_id
+                                     polygon_id_col <- "face_id"
 
-                               # Calculate depths and sort hierarchically using viewpoint distance
-                               coords <- coords %>%
-                                     group_by(object_id) %>%
-                                     mutate(object_depth = max(depth)) %>%  # Farther objects first
-                                     group_by(face_id) %>%
-                                     mutate(face_depth = mean(depth)) %>%   # Face center depth
-                                     ungroup()
+                                     # Set up hierarchical object IDs for pillars/voxels
+                                     if("pillar_id" %in% names(coords)){
+                                           coords$object_id <- coords$pillar_id
+                                     } else if("voxel_id" %in% names(coords)){
+                                           coords$object_id <- coords$voxel_id
+                                     } else {
+                                           # For surfaces and other geoms, treat each face as its own object
+                                           coords$object_id <- coords$face_id
+                                     }
 
-                               # Sort by depths, and optionally by order if it exists
-                               if ("order" %in% names(coords)) {
+                                     # Calculate depths and sort hierarchically using viewpoint distance
                                      coords <- coords %>%
-                                           arrange(desc(object_depth), desc(face_depth), order)
+                                           group_by(object_id) %>%
+                                           mutate(object_depth = max(depth)) %>%  # Farther objects first
+                                           group_by(face_id) %>%
+                                           mutate(face_depth = mean(depth)) %>%   # Face center depth
+                                           ungroup()
+
+                                     # Sort by depths, and optionally by order if it exists
+                                     if ("order" %in% names(coords)) {
+                                           coords <- coords %>%
+                                                 arrange(desc(object_depth), desc(face_depth), order)
+                                     } else {
+                                           coords <- coords %>%
+                                                 arrange(desc(object_depth), desc(face_depth))
+                                     }
+
                                } else {
+                                     # Regular polygon data (like maps) - use group column
+                                     polygon_id_col <- "group"
+
+                                     # For regular polygons, each group is its own object
+                                     coords$object_id <- coords$group
+
+                                     # Calculate representative depth for each polygon group
                                      coords <- coords %>%
-                                           arrange(desc(object_depth), desc(face_depth))
+                                           group_by(group) %>%
+                                           mutate(group_depth = mean(depth)) %>%
+                                           ungroup()
+
+                                     # Sort groups by depth, but preserve order within groups
+                                     if ("order" %in% names(coords)) {
+                                           coords <- coords %>%
+                                                 arrange(desc(group_depth), group, order)
+                                     } else {
+                                           coords <- coords %>%
+                                                 arrange(desc(group_depth), group)
+                                     }
                                }
 
                                # Create polygon grobs
                                polygon_grobs <- list()
-                               faces <- unique(coords$face_id)
+                               polygon_ids <- unique(coords[[polygon_id_col]])
 
-                               for(i in seq_along(faces)){
-                                     poly_data <- filter(coords, face_id == faces[i])
+                               for(i in seq_along(polygon_ids)){
+                                     poly_data <- filter(coords, .data[[polygon_id_col]] == polygon_ids[i])
 
                                      # Draw this polygon
                                      polygon_grobs[[i]] <- grid::polygonGrob(
@@ -307,7 +335,7 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
 #'
 #' `geom_polygon_3d()` renders 3D polygons with proper depth sorting for realistic
 #' 3D surface visualization. It's designed to work with surface data
-#' from [stat_hull()] and [stat_surface()], as well as other data.
+#' from [stat_hull()] and [stat_surface()], as well as regular polygon data like maps.
 #'
 #' @param mapping Set of aesthetic mappings created by [aes()].
 #' @param data The data to be displayed in this layer.
@@ -331,6 +359,7 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
 #' - `linewidth`: Border line width
 #' - `linetype`: Border line type
 #' - `alpha`: Transparency
+#' - `order`: Vertex order within polygons (for proper polygon construction)
 #'
 #' @examples
 #' # Typically used via stat_surface() or stat_terrain()
@@ -341,6 +370,11 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
 #' # Can be used directly with pre-triangulated data
 #' ggplot(triangle_data, aes(x, y, z, group = triangle_id)) +
 #'   geom_polygon_3d(fill = "lightblue") +
+#'   coord_3d()
+#'
+#' # Works with map data and proper depth sorting
+#' ggplot(map_data, aes(long, lat, z, group = group, order = order)) +
+#'   geom_polygon_3d(aes(fill = layer)) +
 #'   coord_3d()
 #'
 #' @seealso [stat_hull()] and [stat_surface()].

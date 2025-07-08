@@ -1,7 +1,7 @@
 StatVoxel <- ggproto("StatVoxel", Stat,
                      required_aes = c("x", "y", "z"),
 
-                     compute_group = function(data, scales, na.rm = FALSE,
+                     compute_panel = function(data, scales, na.rm = FALSE,
                                               width = 1.0, faces = "all",
                                               light = lighting()) {
 
@@ -13,6 +13,17 @@ StatVoxel <- ggproto("StatVoxel", Stat,
                            # Check we have enough data
                            if (nrow(data) < 1) {
                                  stop("stat_voxel requires at least 1 point")
+                           }
+
+                           # Convert categorical data to numeric positions before calculating spacing
+                           if (is.factor(data$x) || is.character(data$x)) {
+                                 data$x <- as.numeric(as.factor(data$x))
+                           }
+                           if (is.factor(data$y) || is.character(data$y)) {
+                                 data$y <- as.numeric(as.factor(data$y))
+                           }
+                           if (is.factor(data$z) || is.character(data$z)) {
+                                 data$z <- as.numeric(as.factor(data$z))
                            }
 
                            # Calculate voxel spacing using resolution (works for sparse 3D grids)
