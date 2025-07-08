@@ -9,7 +9,7 @@ stat_hull(
   data = NULL,
   geom = GeomPolygon3D,
   position = "identity",
-  method = "alpha",
+  method = "convex",
   alpha = 1,
   light = lighting(),
   inherit.aes = TRUE,
@@ -30,7 +30,7 @@ variables with \code{\link[=after_stat]{after_stat()}}.}
 
 \item{method}{Triangulation method. Either:
 \itemize{
-\item \code{"hull"}: Convex hull triangulation (works well for convex shapes like spheres)
+\item \code{"convex"}: Convex hull triangulation (works well for convex shapes like spheres, default)
 \item \code{"alpha"}: Alpha shape triangulation (can capture non-convex topologies like toruses)
 }}
 
@@ -48,6 +48,13 @@ are extremely sensitive to the coordinate scales of your data. See Details secti
 using either convex hull or alpha shape algorithms. It computes surface normals and applies
 various lighting models to create realistic 3D surface visualizations.
 }
+\section{Grouping}{
+
+\code{stat_hull()} respects ggplot2 grouping aesthetics. To create separate hulls for different
+subsets of your data, use \code{aes(group = category_variable)} or similar grouping aesthetics.
+Each group will get its own independent hull calculation.
+}
+
 \section{Alpha scale sensitivity}{
 
 \strong{Alpha shape method is highly sensitive to coordinate scales.} The \code{alpha} parameter
@@ -115,9 +122,9 @@ sphere_df <- data.frame(
   z = cos(phi)
 )
 
-# Convex hull (no scale sensitivity)
+# Convex hull (reliable default, no scale sensitivity)
 ggplot(sphere_df, aes(x, y, z = z)) +
-  stat_hull(aes(fill = after_stat(light)), method = "hull") +
+  stat_hull(aes(fill = after_stat(light)), method = "convex") +
   scale_fill_gradient(low = "black", high = "white") +
   coord_3d()
 
@@ -125,6 +132,11 @@ ggplot(sphere_df, aes(x, y, z = z)) +
 ggplot(sphere_df, aes(x, y, z = z)) +
   stat_hull(aes(fill = after_stat(light)), method = "alpha", alpha = 1.0) +
   scale_fill_gradient(low = "black", high = "white") +
+  coord_3d()
+
+# Grouped hulls - separate hull for each species
+ggplot(grouped_data, aes(x, y, z, group = species)) +
+  stat_hull(aes(fill = species), alpha = 0.7) +
   coord_3d()
 
 # For larger coordinate scales, increase alpha proportionally:

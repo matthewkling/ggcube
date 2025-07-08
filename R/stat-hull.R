@@ -1,7 +1,7 @@
 StatHull <- ggproto("StatHull", Stat,
                     required_aes = c("x", "y", "z"),
 
-                    compute_group = function(data, scales, method = "alpha", alpha = 1.0,
+                    compute_group = function(data, scales, method = "convex", alpha = 1.0,
                                              light = lighting()) {
                           coords <- as.matrix(data[, c("x", "y", "z")])
 
@@ -20,7 +20,7 @@ StatHull <- ggproto("StatHull", Stat,
                                                     triangles[, 1:3]
                                               }
                                         },
-                                        hull = {
+                                        convex = {
                                               tryCatch({
                                                     hull_result <- geometry::convhulln(coords)
                                                     if (is.matrix(hull_result) && ncol(hull_result) == 3) {
@@ -32,7 +32,7 @@ StatHull <- ggproto("StatHull", Stat,
                                                     stop("Convex hull computation failed: ", e$message)
                                               })
                                         },
-                                        stop("Unknown method: use 'alpha' or 'hull'")
+                                        stop("Unknown method: use 'alpha' or 'convex'")
                           )
 
                           # Check that we got valid triangulation
@@ -68,20 +68,17 @@ StatHull <- ggproto("StatHull", Stat,
                                 }
                           }
 
-                          # For convex hulls: ensure normals point outward from centroid
-                          if (method == "hull") {
-                                data_center <- colMeans(coords)
-                                for(i in 1:nrow(tri)) {
-                                      triangle_center <- (A[i,] + B[i,] + C[i,]) / 3
-                                      outward_direction <- triangle_center - data_center
+                          # Ensure normals point outward from centroid for both methods
+                          data_center <- colMeans(coords)
+                          for(i in 1:nrow(tri)) {
+                                triangle_center <- (A[i,] + B[i,] + C[i,]) / 3
+                                outward_direction <- triangle_center - data_center
 
-                                      # If normal points inward (negative dot product), flip it
-                                      if (sum(normals[i,] * outward_direction) < 0) {
-                                            normals[i,] <- -normals[i,]
-                                      }
+                                # If normal points inward (negative dot product), flip it
+                                if (sum(normals[i,] * outward_direction) < 0) {
+                                      normals[i,] <- -normals[i,]
                                 }
                           }
-                          # For alpha shapes: keep original normals (no orientation fix yet)
 
                           # Calculate face centers for positional lighting
                           face_centers <- matrix(0, nrow = nrow(tri), ncol = 3)
@@ -93,7 +90,11 @@ StatHull <- ggproto("StatHull", Stat,
 
                           # Flatten triangle data with all computed variables
                           verts <- coords[as.vector(t(tri)), ]
-                          face_id <- rep(paste0("tri_", 1:nrow(tri)), each = 3)
+
+                          # Create unique face IDs that won't collide across groups
+                          # Use a random suffix to ensure uniqueness across compute_group calls
+                          group_suffix <- sample(10000:99999, 1)
+                          face_id <- rep(paste0("tri_", group_suffix, "_", 1:nrow(tri)), each = 3)
                           normal_x <- rep(normals[,1], each = 3)
                           normal_y <- rep(normals[,2], each = 3)
                           normal_z <- rep(normals[,3], each = 3)
@@ -133,6 +134,10 @@ StatHull <- ggproto("StatHull", Stat,
                                 result[[col_name]] <- data[[col_name]][vertex_indices]
                           }
 
+                          # Set group to face_id for proper polygon rendering
+                          # This ensures each triangle is rendered as a separate polygon
+                          result$group <- result$face_id
+
                           return(result)
                     }
 )
@@ -153,12 +158,17 @@ StatHull <- ggproto("StatHull", Stat,
 #' @param position Position adjustment, defaults to "identity".
 #' @param ... Other arguments passed on to [layer()].
 #' @param method Triangulation method. Either:
-#'   - `"hull"`: Convex hull triangulation (works well for convex shapes like spheres)
+#'   - `"convex"`: Convex hull triangulation (works well for convex shapes like spheres, default)
 #'   - `"alpha"`: Alpha shape triangulation (can capture non-convex topologies like toruses)
 #' @param alpha Alpha parameter for alpha shape triangulation. **IMPORTANT:** Alpha shapes
 #'   are extremely sensitive to the coordinate scales of your data. See Details section.
 #' @param light A lighting specification object created by \code{lighting()}
 #' @param inherit.aes If `FALSE`, overrides the default aesthetics.
+#'
+#' @section Grouping:
+#' `stat_hull()` respects ggplot2 grouping aesthetics. To create separate hulls for different
+#' subsets of your data, use `aes(group = category_variable)` or similar grouping aesthetics.
+#' Each group will get its own independent hull calculation.
 #'
 #' @section Alpha scale sensitivity:
 #' **Alpha shape method is highly sensitive to coordinate scales.** The `alpha` parameter
@@ -213,9 +223,9 @@ StatHull <- ggproto("StatHull", Stat,
 #'   z = cos(phi)
 #' )
 #'
-#' # Convex hull (no scale sensitivity)
+#' # Convex hull (reliable default, no scale sensitivity)
 #' ggplot(sphere_df, aes(x, y, z = z)) +
-#'   stat_hull(aes(fill = after_stat(light)), method = "hull") +
+#'   stat_hull(aes(fill = after_stat(light)), method = "convex") +
 #'   scale_fill_gradient(low = "black", high = "white") +
 #'   coord_3d()
 #'
@@ -223,6 +233,11 @@ StatHull <- ggproto("StatHull", Stat,
 #' ggplot(sphere_df, aes(x, y, z = z)) +
 #'   stat_hull(aes(fill = after_stat(light)), method = "alpha", alpha = 1.0) +
 #'   scale_fill_gradient(low = "black", high = "white") +
+#'   coord_3d()
+#'
+#' # Grouped hulls - separate hull for each species
+#' ggplot(grouped_data, aes(x, y, z, group = species)) +
+#'   stat_hull(aes(fill = species), alpha = 0.7) +
 #'   coord_3d()
 #'
 #' # For larger coordinate scales, increase alpha proportionally:
@@ -238,24 +253,12 @@ StatHull <- ggproto("StatHull", Stat,
 #'
 #' @export
 stat_hull <- function(mapping = NULL, data = NULL,
-                      geom = GeomPolygon3D, # nonstandard syntax, but `"polygon_3d"` failed
+                      geom = GeomPolygon3D,
                       position = "identity",
-                      method = "alpha", alpha = 1.0,
+                      method = "convex", alpha = 1.0,
                       light = lighting(),
                       inherit.aes = TRUE,
                       ...) {
-
-      default_mapping <- aes(group = after_stat(face_id))
-
-      # If mapping is provided, combine it with the default only if group isn't set
-      if (!is.null(mapping)) {
-            mapping_names <- names(mapping)
-            if (!"group" %in% mapping_names) {
-                  mapping <- modifyList(default_mapping, mapping)
-            }
-      } else {
-            mapping <- default_mapping
-      }
 
       layer(
             stat = StatHull, data = data, mapping = mapping, geom = geom,
