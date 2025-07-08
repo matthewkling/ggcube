@@ -11,7 +11,7 @@ stat_hull(
   position = "identity",
   method = "alpha",
   alpha = 1,
-  light = lighting("lambert"),
+  light = lighting(),
   inherit.aes = TRUE,
   ...
 )

@@ -1,18 +1,18 @@
-#' Create lighting specification for 3D surface rendering with positional light support
+#' Create lighting specification for 3D surface rendering
 #'
 #' Creates a lighting specification object that supports both directional lighting
 #' (parallel rays like sunlight) and positional lighting (point light sources with
-#' per-face light directions and optional distance falloff).
+#' per-face light directions and optional distance falloff), for use with 3D polygon geoms.
 #'
 #' @param method Character string specifying lighting model:
 #'   \itemize{
-#'     \item \code{"lambert"}: Standard diffuse lighting (surfaces facing away are dark)
-#'     \item \code{"signed"}: Continuous lighting gradient including negative values
-#'     \item \code{"ambient"}: Uniform lighting with no directional component
-#'     \item \code{"quantize"}: Quantized lighting with discrete levels
+#'     \item \code{"diffuse"}: Atmospheric lighting with soft shadows (includes negative values for subsurface scattering effect)
+#'     \item \code{"direct"}: Direct lighting with hard shadows (surfaces facing away are completely dark)
 #'     \item \code{"normal_rgb"}: Map surface normals to RGB colors
-#'     \item \code{"normal_x"}, \code{"normal_y"}, \code{"normal_z"}: Individual normal components
+#'     \item \code{"normal_x"}, \code{"normal_y"}, \code{"normal_z"}: Individual surface normal components (with higher positive values indicating a surface
+#'     faces more directly toward the positive end of a given dimension)
 #'   }
+#'   Default is "diffuse".
 #' @param direction Numeric vector of length 3 specifying light direction in 3D space
 #'   for directional lighting. Only used if \code{position} is NULL. Default is \code{c(1, 1, 1)}.
 #' @param position Numeric vector of length 3 specifying light source position in
@@ -23,15 +23,18 @@
 #'   intensity falloff for positional lighting using inverse square law
 #'   (intensity ∝ 1/distance²). Only used when \code{position} is specified.
 #'   Default is FALSE.
-#' @param levels Integer number of discrete levels for \code{method = "quantize"}.
-#'   Default is 3.
-#' @param clamp_negative Logical indicating whether to clamp negative lighting values
-#'   to the lowest level when using \code{method = "quantize"}. Default is TRUE.
+#' @param quanta Integer number of discrete quantization levels, or NULL for continuous lighting.
+#'   When specified, continuous lighting values are binned into this many discrete levels:
+#'   \itemize{
+#'     \item For \code{"diffuse"}: Creates equal-width bins across [-1, 1] range
+#'     \item For \code{"direct"}: Creates one bin for negative values, and (quanta-1) bins across [0, 1] range
+#'   }
+#'   Default is NULL (continuous lighting).
 #' @param blend Character string specifying which color aesthetics to blend with lighting.
 #'   Options: "neither" (no blending), "fill" (blend fill colors only),
 #'   "color"/"colour" (blend border colors only), or "both" (blend both fill and border).
 #'   Default is "neither".
-#' @param blend_strength Numeric value controlling the intensity of lighting blending.
+#' @param blend_strength Numeric value in the range 0--1 controlling the intensity of lighting blending.
 #'   1.0 gives full black-to-white range, 0.5 gives subtle lighting effects.
 #'   Only used when \code{blend} is not "neither". Default is 1.0.
 #' @param blend_mode Character string specifying color blending mode when \code{blend} is not "neither":
@@ -41,36 +44,65 @@
 #'   }
 #'   Default is "hsv".
 #'
+#' @details
+#' There are two approaches for adding lighting to a plot. The first is to use blending. This lets you
+#' add light and shadow effects while also specifying fill/color arguments or aesthatics through
+#' standard ggplot2 methods. Blending alters these colors by brightening and darkening them.
+#'
+#' The second approach is to use the computed light variable directly in your aesthetic mapping, such as
+#' \code{aes(fill = after_stat(light))}. This gives more control over you map lighting values onto color
+#' scales, but can't be mixed with other sources of color info.
+#'
+#' It is also possible to combine these two approaches.
+#'
 #' @return A \code{lighting} object that can be passed to 3D surface stats.
 #'
 #' @examples
 #' library(ggplot2)
 #' data(mountain)
 #'
-#' # Directional lighting (classic hillshading)
+#' # Direct lighting (harsh sunlight with hard shadows)
 #' ggplot(mountain, aes(x, y, z = z)) +
 #'   stat_surface(aes(fill = after_stat(light)),
-#'                light = lighting("lambert", direction = c(1, 1, 1))) +
+#'                light = lighting("direct", direction = c(1, 1, 1))) +
+#'   coord_3d()
+#'
+#' # Diffuse lighting (atmospheric lighting with soft shadows)
+#' ggplot(mountain, aes(x, y, z = z)) +
+#'   stat_surface(aes(fill = after_stat(light)),
+#'                light = lighting("diffuse", direction = c(1, 1, 1))) +
+#'   coord_3d()
+#'
+#' # Quantized direct lighting (3 discrete levels with negative clamping)
+#' ggplot(mountain, aes(x, y, z = z)) +
+#'   stat_surface(aes(fill = after_stat(light)),
+#'                light = lighting("direct", quanta = 3)) +
+#'   coord_3d()
+#'
+#' # Quantized diffuse lighting (5 discrete levels across full range)
+#' ggplot(mountain, aes(x, y, z = z)) +
+#'   stat_surface(aes(fill = after_stat(light)),
+#'                light = lighting("diffuse", quanta = 5)) +
 #'   coord_3d()
 #'
 #' # Blended lighting with material colors using HSV
 #' ggplot(mountain, aes(x, y, z = z)) +
 #'   stat_surface(aes(fill = z),
-#'                light = lighting("lambert", blend = "fill", blend_mode = "hsv")) +
+#'                light = lighting("diffuse", blend = "fill", blend_mode = "hsv")) +
 #'   scale_fill_viridis_c() +
 #'   coord_3d()
 #'
 #' # Blended lighting with HSL mode (preserves saturation better)
 #' ggplot(mountain, aes(x, y, z = z)) +
 #'   stat_surface(aes(fill = z),
-#'                light = lighting("lambert", blend = "fill", blend_mode = "hsl")) +
+#'                light = lighting("diffuse", blend = "fill", blend_mode = "hsl")) +
 #'   scale_fill_viridis_c() +
 #'   coord_3d()
 #'
 #' # Blend both fill and border colors to eliminate gaps
 #' ggplot(mountain, aes(x, y, z = z)) +
 #'   stat_surface(aes(fill = z, colour = z),
-#'                light = lighting("lambert", blend = "both")) +
+#'                light = lighting("diffuse", blend = "both")) +
 #'   scale_fill_viridis_c() +
 #'   scale_colour_viridis_c() +
 #'   coord_3d()
@@ -78,13 +110,13 @@
 #' # Positional lighting (point light source)
 #' ggplot(mountain, aes(x, y, z = z)) +
 #'   stat_surface(aes(fill = after_stat(light)),
-#'                light = lighting("lambert", position = c(50, 30, 200))) +
+#'                light = lighting("diffuse", position = c(50, 30, 200))) +
 #'   coord_3d()
 #'
 #' # Positional lighting with distance falloff
 #' ggplot(mountain, aes(x, y, z = z)) +
 #'   stat_surface(aes(fill = after_stat(light)),
-#'                light = lighting("lambert", position = c(50, 30, 200),
+#'                light = lighting("diffuse", position = c(50, 30, 200),
 #'                                distance_falloff = TRUE)) +
 #'   coord_3d()
 #'
@@ -96,24 +128,22 @@
 #' )
 #' ggplot(voxel_data, aes(x, y, z)) +
 #'   stat_voxel(aes(fill = after_stat(light)),
-#'              light = lighting("lambert", position = c(2, 2, 5))) +
+#'              light = lighting("diffuse", position = c(2, 2, 5))) +
 #'   coord_3d()
 #'
 #' @seealso \code{\link{stat_surface}}, \code{\link{stat_voxel}}, \code{\link{stat_pillar}}
 #' @export
-lighting <- function(method = "lambert",
+lighting <- function(method = "diffuse",
                      direction = c(1, 1, 1),
                      position = NULL,
                      distance_falloff = FALSE,
-                     levels = 3,
-                     clamp_negative = TRUE,
+                     quanta = NULL,
                      blend = "neither",
                      blend_strength = 1.0,
                      blend_mode = "hsv") {
 
       # Validate method
-      valid_methods <- c("lambert", "signed", "ambient", "quantize",
-                         "normal_rgb", "normal_x", "normal_y", "normal_z")
+      valid_methods <- c("direct", "diffuse", "normal_rgb", "normal_x", "normal_y", "normal_z")
       if (!method %in% valid_methods) {
             stop("method must be one of: ", paste(valid_methods, collapse = ", "))
       }
@@ -140,14 +170,11 @@ lighting <- function(method = "lambert",
             stop("distance_falloff must be a single logical value")
       }
 
-      # Validate levels
-      if (!is.numeric(levels) || length(levels) != 1 || levels < 2) {
-            stop("levels must be a single integer >= 2")
-      }
-
-      # Validate clamp_negative
-      if (!is.logical(clamp_negative) || length(clamp_negative) != 1) {
-            stop("clamp_negative must be a single logical value")
+      # Validate quanta
+      if (!is.null(quanta)) {
+            if (!is.numeric(quanta) || length(quanta) != 1 || quanta < 2 || quanta != round(quanta)) {
+                  stop("quanta must be NULL or a single integer >= 2")
+            }
       }
 
       # Validate blend
@@ -179,8 +206,7 @@ lighting <- function(method = "lambert",
                   direction = direction,
                   position = position,
                   distance_falloff = distance_falloff,
-                  levels = as.integer(levels),
-                  clamp_negative = clamp_negative,
+                  quanta = if (is.null(quanta)) NULL else as.integer(quanta),
                   blend = blend,
                   blend_strength = blend_strength,
                   blend_mode = blend_mode
@@ -205,9 +231,8 @@ print.lighting <- function(x, ...) {
             cat("  Direction: [", paste(x$direction, collapse = ", "), "] (directional lighting)\n")
       }
 
-      if (x$method == "quantize") {
-            cat("  Levels:", x$levels, "\n")
-            cat("  Clamp negative:", x$clamp_negative, "\n")
+      if (!is.null(x$quanta)) {
+            cat("  Quantization:", x$quanta, "levels\n")
       }
 
       if (x$blend != "neither") {
@@ -234,7 +259,7 @@ print.lighting <- function(x, ...) {
 #' @return Vector of lighting values. For most methods, returns numeric values.
 #'   For \code{method = "normal_rgb"}, returns hex color strings with \code{I()}
 #'   class for identity scaling.
-compute_lighting <- function(normals, lighting = lighting("lambert"), face_centers = NULL) {
+compute_lighting <- function(normals, lighting = lighting(), face_centers = NULL) {
 
       # Validate inputs
       if (!is.matrix(normals) || ncol(normals) != 3) {
@@ -244,8 +269,7 @@ compute_lighting <- function(normals, lighting = lighting("lambert"), face_cente
       params <- lighting
 
       # Validate resolved parameters
-      valid_lighting <- c("lambert", "signed", "ambient", "quantize",
-                          "normal_rgb", "normal_x", "normal_y", "normal_z")
+      valid_lighting <- c("direct", "diffuse", "normal_rgb", "normal_x", "normal_y", "normal_z")
       if (!params$method %in% valid_lighting) {
             stop("lighting method must be one of: ", paste(valid_lighting, collapse = ", "))
       }
@@ -278,13 +302,13 @@ compute_lighting <- function(normals, lighting = lighting("lambert"), face_cente
                   # Normalize falloff to prevent extreme values
                   falloff_factor <- falloff_factor / max(falloff_factor)
 
-                  # For signed lighting, interpolate between -1 (dark) and full lighting value
-                  if (params$method == "signed") {
+                  # For diffuse lighting, interpolate between -1 (dark) and full lighting value
+                  if (params$method == "diffuse") {
                         dot_products <- -1 + falloff_factor * (dot_products + 1)
                   } else {
                         # For other methods, scale toward appropriate dark value
-                        if (params$method == "lambert") {
-                              # Lambert: interpolate between 0 (dark) and full value
+                        if (params$method == "direct") {
+                              # Direct: interpolate between 0 (dark) and full value
                               dot_products <- dot_products * falloff_factor
                         } else {
                               # General case: scale the lighting values
@@ -308,38 +332,9 @@ compute_lighting <- function(normals, lighting = lighting("lambert"), face_cente
 
       # Apply lighting model (same for both directional and positional)
       light <- switch(params$method,
-                      lambert = pmax(0, dot_products),          # Standard diffuse lighting
-                      signed = dot_products,                    # Unclamped: full -1 to +1 range
-                      ambient = rep(0.5, length(dot_products)), # Uniform lighting
-                      quantize = {                              # Quantized lighting with parameters
-                            if(params$clamp_negative) {
-                                  # Negative values → lowest level (0)
-                                  # Positive values → quantized across remaining levels
-                                  result <- numeric(length(dot_products))
-
-                                  # All negative values get level 0
-                                  negative_mask <- dot_products <= 0
-                                  result[negative_mask] <- 0
-
-                                  # Positive values get quantized across levels 1 to n_levels
-                                  positive_mask <- dot_products > 0
-                                  if(any(positive_mask)) {
-                                        pos_vals <- dot_products[positive_mask]
-                                        # Quantize positive values into (n_levels - 1) bins
-                                        breaks <- seq(0, 1, length.out = params$levels)  # n_levels-1 intervals
-                                        quantized <- cut(pos_vals, breaks = breaks, labels = FALSE, include.lowest = TRUE)
-                                        # Map to levels 1/(n_levels-1), 2/(n_levels-1), ..., 1
-                                        result[positive_mask] <- quantized / (params$levels - 1)
-                                  }
-                                  result
-                            } else {
-                                  # Quantize full range [-1, 1]
-                                  breaks <- seq(-1, 1, length.out = params$levels + 1)
-                                  quantized <- cut(dot_products, breaks = breaks, labels = FALSE, include.lowest = TRUE)
-                                  (quantized - 1) / (params$levels - 1)
-                            }
-                      },
-                      normal_rgb = {                            # Map normals to RGB hex colors
+                      direct = pmax(0, dot_products),             # Direct lighting with hard shadows
+                      diffuse = dot_products,                     # Atmospheric lighting: full -1 to +1 range
+                      normal_rgb = {                              # Map normals to RGB hex colors
                             if (use_positional) {
                                   # For positional lighting, use average light direction for RGB mapping
                                   avg_light_dir <- colMeans(light_directions)
@@ -349,11 +344,16 @@ compute_lighting <- function(normals, lighting = lighting("lambert"), face_cente
                                   compute_normal_rgb_lighting(normals, light_dir_norm)
                             }
                       },
-                      normal_x = (normals[,1] + 1) / 2,         # X-normal as color (0-1 range)
-                      normal_y = (normals[,2] + 1) / 2,         # Y-normal as color (0-1 range)
-                      normal_z = (normals[,3] + 1) / 2,         # Z-normal as color (0-1 range)
+                      normal_x = (normals[,1] + 1) / 2,           # X-normal as color (0-1 range)
+                      normal_y = (normals[,2] + 1) / 2,           # Y-normal as color (0-1 range)
+                      normal_z = (normals[,3] + 1) / 2,           # Z-normal as color (0-1 range)
                       stop("Unknown lighting method")
       )
+
+      # Apply quantization if requested
+      if (!is.null(params$quanta) && !params$method %in% c("normal_rgb", "normal_x", "normal_y", "normal_z")) {
+            light <- apply_quantization(light, params$method, params$quanta)
+      }
 
       # Auto-wrap RGB colors with I() for identity scaling
       if (params$method == "normal_rgb") {
@@ -457,4 +457,43 @@ compute_normal_rgb_lighting <- function(normals, light_dir_norm) {
 
       # Convert to hex colors
       rgb(r, g, b)
+}
+
+#' Apply quantization to continuous lighting values
+#'
+#' @param light_values Numeric vector of continuous lighting values
+#' @param method Character string: "direct" or "diffuse"
+#' @param quanta Integer number of quantization levels
+#' @return Quantized lighting values mapped to [0, 1] range
+apply_quantization <- function(light_values, method, quanta) {
+      if (method == "diffuse") {
+            # Create n equal bins across [-1, 1]
+            breaks <- seq(-1, 1, length.out = quanta + 1)
+            quantized <- cut(light_values, breaks = breaks, labels = FALSE, include.lowest = TRUE)
+            # Map back to [-1, 1] range (preserve original range for blending)
+            -1 + 2 * (quantized - 1) / (quanta - 1)
+      } else if (method == "direct") {
+            # One bin for negatives, (quanta-1) bins for [0, 1]
+            result <- numeric(length(light_values))
+
+            # All negative values get level 0
+            negative_mask <- light_values <= 0
+            result[negative_mask] <- 0
+
+            # Positive values get quantized into (quanta-1) bins
+            positive_mask <- light_values > 0
+            if (any(positive_mask)) {
+                  pos_vals <- light_values[positive_mask]
+                  # Create (quanta-1) bins across [0, 1]
+                  breaks <- seq(0, 1, length.out = quanta)
+                  quantized <- cut(pos_vals, breaks = breaks, labels = FALSE, include.lowest = TRUE)
+                  # Map to levels 1/(quanta-1), 2/(quanta-1), ..., 1
+                  result[positive_mask] <- quantized / (quanta - 1)
+            }
+
+            result
+      } else {
+            # Should not reach here for valid methods
+            light_values
+      }
 }

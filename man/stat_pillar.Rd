@@ -11,7 +11,7 @@ stat_pillar(
   position = "identity",
   width = 1,
   faces = "all",
-  light = lighting("lambert"),
+  light = lighting(),
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE,
@@ -117,7 +117,7 @@ ggplot(sparse_data, aes(x, y, z)) +
 # Architectural visualization with gaps between pillars
 ggplot(sparse_data, aes(x, y, z)) +
   stat_pillar(aes(fill = after_stat(normal_z)),
-              width = 0.9, light = lighting("ambient")) +
+              width = 0.9, light = lighting("direct")) +
   scale_fill_viridis_c() +
   coord_3d()
 

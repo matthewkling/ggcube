@@ -3,7 +3,7 @@ StatVoxel <- ggproto("StatVoxel", Stat,
 
                      compute_group = function(data, scales, na.rm = FALSE,
                                               width = 1.0, faces = "all",
-                                              light = lighting("lambert")) {
+                                              light = lighting()) {
 
                            # Remove missing values if requested
                            if (na.rm) {
@@ -341,21 +341,21 @@ calculate_voxel_face_centers <- function(voxel_faces) {
 #' # Directional lighting (like sunlight)
 #' ggplot(voxel_data, aes(x, y, z)) +
 #'   stat_voxel(aes(fill = after_stat(light)),
-#'              light = lighting("lambert", direction = c(1, 1, 1))) +
+#'              light = lighting("direct", direction = c(1, 1, 1))) +
 #'   scale_fill_gradient(low = "darkgreen", high = "lightgreen") +
 #'   coord_3d()
 #'
 #' # Positional lighting (point light source)
 #' ggplot(voxel_data, aes(x, y, z)) +
 #'   stat_voxel(aes(fill = after_stat(light)),
-#'              light = lighting("lambert", position = c(5, 5, 4))) +
+#'              light = lighting("diffuse", position = c(5, 5, 4))) +
 #'   scale_fill_gradient(low = "darkblue", high = "white") +
 #'   coord_3d()
 #'
 #' # Positional lighting with distance falloff
 #' ggplot(voxel_data, aes(x, y, z)) +
 #'   stat_voxel(aes(fill = after_stat(light)),
-#'              light = lighting("lambert", position = c(2, 2, 5),
+#'              light = lighting("diffuse", position = c(2, 2, 5),
 #'                              distance_falloff = TRUE)) +
 #'   scale_fill_gradient(low = "black", high = "yellow") +
 #'   coord_3d()
@@ -370,7 +370,7 @@ calculate_voxel_face_centers <- function(voxel_faces) {
 #' ggplot(voxel_data, aes(x, y, z)) +
 #'   stat_voxel(aes(fill = after_stat(light)),
 #'              width = 0.8,
-#'              light = lighting("signed", position = c(2, 2, 4))) +
+#'              light = lighting("diffuse", position = c(2, 2, 4))) +
 #'   scale_fill_gradient2(low = "blue", mid = "white", high = "red") +
 #'   coord_3d()
 #'
@@ -382,7 +382,7 @@ calculate_voxel_face_centers <- function(voxel_faces) {
 #'
 #' ggplot(field_data, aes(x, y, z)) +
 #'   stat_voxel(aes(fill = field_strength, alpha = abs(field_strength)),
-#'              light = lighting("lambert", position = c(3, 3, 5),
+#'              light = lighting("diffuse", position = c(3, 3, 5),
 #'                              distance_falloff = TRUE)) +
 #'   scale_fill_gradient2() +
 #'   coord_3d()
@@ -396,7 +396,7 @@ stat_voxel <- function(mapping = NULL, data = NULL,
                        position = "identity",
                        width = 1.0,
                        faces = "all",
-                       light = lighting("lambert"),
+                       light = lighting(),
                        na.rm = FALSE, show.legend = NA, inherit.aes = TRUE,
                        ...) {
 

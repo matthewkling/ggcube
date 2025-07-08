@@ -3,7 +3,7 @@ StatPillar <- ggproto("StatPillar", Stat,
 
                       compute_group = function(data, scales, na.rm = FALSE,
                                                width = 1.0, faces = "all",
-                                               light = lighting("lambert")) {
+                                               light = lighting()) {
 
                             # Remove missing values if requested
                             if (na.rm) {
@@ -316,7 +316,7 @@ calculate_pillar_face_normals <- function(pillar_faces) {
 #' # Architectural visualization with gaps between pillars
 #' ggplot(sparse_data, aes(x, y, z)) +
 #'   stat_pillar(aes(fill = after_stat(normal_z)),
-#'               width = 0.9, light = lighting("ambient")) +
+#'               width = 0.9, light = lighting("direct")) +
 #'   scale_fill_viridis_c() +
 #'   coord_3d()
 #'
@@ -328,7 +328,7 @@ stat_pillar <- function(mapping = NULL, data = NULL,
                         position = "identity",
                         width = 1.0,
                         faces = "all",
-                        light = lighting("lambert"),
+                        light = lighting(),
                         na.rm = FALSE, show.legend = NA, inherit.aes = TRUE,
                         ...) {
 

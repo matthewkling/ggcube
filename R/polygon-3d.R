@@ -128,7 +128,7 @@ blend_lighting_with_colors <- function(base_colors, light_values, lighting) {
       valid_light <- light_values[valid_mask]
 
       # Normalize lighting values to [0, 1] if needed
-      if (lighting$method == "signed") {
+      if (lighting$method == "diffuse") {
             valid_light <- (valid_light + 1) / 2
       }
       valid_light <- pmax(0, pmin(1, valid_light))

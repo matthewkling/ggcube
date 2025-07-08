@@ -2,15 +2,14 @@
 % Please edit documentation in R/lighting.R
 \name{lighting}
 \alias{lighting}
-\title{Create lighting specification for 3D surface rendering with positional light support}
+\title{Create lighting specification for 3D surface rendering}
 \usage{
 lighting(
-  method = "lambert",
+  method = "diffuse",
   direction = c(1, 1, 1),
   position = NULL,
   distance_falloff = FALSE,
-  levels = 3,
-  clamp_negative = TRUE,
+  quanta = NULL,
   blend = "neither",
   blend_strength = 1,
   blend_mode = "hsv"
@@ -19,13 +18,13 @@ lighting(
 \arguments{
 \item{method}{Character string specifying lighting model:
 \itemize{
-\item \code{"lambert"}: Standard diffuse lighting (surfaces facing away are dark)
-\item \code{"signed"}: Continuous lighting gradient including negative values
-\item \code{"ambient"}: Uniform lighting with no directional component
-\item \code{"quantize"}: Quantized lighting with discrete levels
+\item \code{"diffuse"}: Atmospheric lighting with soft shadows (includes negative values for subsurface scattering effect)
+\item \code{"direct"}: Direct lighting with hard shadows (surfaces facing away are completely dark)
 \item \code{"normal_rgb"}: Map surface normals to RGB colors
-\item \code{"normal_x"}, \code{"normal_y"}, \code{"normal_z"}: Individual normal components
-}}
+\item \code{"normal_x"}, \code{"normal_y"}, \code{"normal_z"}: Individual surface normal components (with higher positive values indicating a surface
+faces more directly toward the positive end of a given dimension)
+}
+Default is "diffuse".}
 
 \item{direction}{Numeric vector of length 3 specifying light direction in 3D space
 for directional lighting. Only used if \code{position} is NULL. Default is \code{c(1, 1, 1)}.}
@@ -40,18 +39,20 @@ intensity falloff for positional lighting using inverse square law
 (intensity ∝ 1/distance²). Only used when \code{position} is specified.
 Default is FALSE.}
 
-\item{levels}{Integer number of discrete levels for \code{method = "quantize"}.
-Default is 3.}
-
-\item{clamp_negative}{Logical indicating whether to clamp negative lighting values
-to the lowest level when using \code{method = "quantize"}. Default is TRUE.}
+\item{quanta}{Integer number of discrete quantization levels, or NULL for continuous lighting.
+When specified, continuous lighting values are binned into this many discrete levels:
+\itemize{
+\item For \code{"diffuse"}: Creates equal-width bins across \link{-1, 1} range
+\item For \code{"direct"}: Creates one bin for negative values, and (quanta-1) bins across \link{0, 1} range
+}
+Default is NULL (continuous lighting).}
 
 \item{blend}{Character string specifying which color aesthetics to blend with lighting.
 Options: "neither" (no blending), "fill" (blend fill colors only),
 "color"/"colour" (blend border colors only), or "both" (blend both fill and border).
 Default is "neither".}
 
-\item{blend_strength}{Numeric value controlling the intensity of lighting blending.
+\item{blend_strength}{Numeric value in the range 0--1 controlling the intensity of lighting blending.
 1.0 gives full black-to-white range, 0.5 gives subtle lighting effects.
 Only used when \code{blend} is not "neither". Default is 1.0.}
 
@@ -68,36 +69,65 @@ A \code{lighting} object that can be passed to 3D surface stats.
 \description{
 Creates a lighting specification object that supports both directional lighting
 (parallel rays like sunlight) and positional lighting (point light sources with
-per-face light directions and optional distance falloff).
+per-face light directions and optional distance falloff), for use with 3D polygon geoms.
+}
+\details{
+There are two approaches for adding lighting to a plot. The first is to use blending. This lets you
+add light and shadow effects while also specifying fill/color arguments or aesthatics through
+standard ggplot2 methods. Blending alters these colors by brightening and darkening them.
+
+The second approach is to use the computed light variable directly in your aesthetic mapping, such as
+\code{aes(fill = after_stat(light))}. This gives more control over you map lighting values onto color
+scales, but can't be mixed with other sources of color info.
+
+It is also possible to combine these two approaches.
 }
 \examples{
 library(ggplot2)
 data(mountain)
 
-# Directional lighting (classic hillshading)
+# Direct lighting (harsh sunlight with hard shadows)
 ggplot(mountain, aes(x, y, z = z)) +
   stat_surface(aes(fill = after_stat(light)),
-               light = lighting("lambert", direction = c(1, 1, 1))) +
+               light = lighting("direct", direction = c(1, 1, 1))) +
+  coord_3d()
+
+# Diffuse lighting (atmospheric lighting with soft shadows)
+ggplot(mountain, aes(x, y, z = z)) +
+  stat_surface(aes(fill = after_stat(light)),
+               light = lighting("diffuse", direction = c(1, 1, 1))) +
+  coord_3d()
+
+# Quantized direct lighting (3 discrete levels with negative clamping)
+ggplot(mountain, aes(x, y, z = z)) +
+  stat_surface(aes(fill = after_stat(light)),
+               light = lighting("direct", quanta = 3)) +
+  coord_3d()
+
+# Quantized diffuse lighting (5 discrete levels across full range)
+ggplot(mountain, aes(x, y, z = z)) +
+  stat_surface(aes(fill = after_stat(light)),
+               light = lighting("diffuse", quanta = 5)) +
   coord_3d()
 
 # Blended lighting with material colors using HSV
 ggplot(mountain, aes(x, y, z = z)) +
   stat_surface(aes(fill = z),
-               light = lighting("lambert", blend = "fill", blend_mode = "hsv")) +
+               light = lighting("diffuse", blend = "fill", blend_mode = "hsv")) +
   scale_fill_viridis_c() +
   coord_3d()
 
 # Blended lighting with HSL mode (preserves saturation better)
 ggplot(mountain, aes(x, y, z = z)) +
   stat_surface(aes(fill = z),
-               light = lighting("lambert", blend = "fill", blend_mode = "hsl")) +
+               light = lighting("diffuse", blend = "fill", blend_mode = "hsl")) +
   scale_fill_viridis_c() +
   coord_3d()
 
 # Blend both fill and border colors to eliminate gaps
 ggplot(mountain, aes(x, y, z = z)) +
   stat_surface(aes(fill = z, colour = z),
-               light = lighting("lambert", blend = "both")) +
+               light = lighting("diffuse", blend = "both")) +
   scale_fill_viridis_c() +
   scale_colour_viridis_c() +
   coord_3d()
@@ -105,13 +135,13 @@ ggplot(mountain, aes(x, y, z = z)) +
 # Positional lighting (point light source)
 ggplot(mountain, aes(x, y, z = z)) +
   stat_surface(aes(fill = after_stat(light)),
-               light = lighting("lambert", position = c(50, 30, 200))) +
+               light = lighting("diffuse", position = c(50, 30, 200))) +
   coord_3d()
 
 # Positional lighting with distance falloff
 ggplot(mountain, aes(x, y, z = z)) +
   stat_surface(aes(fill = after_stat(light)),
-               light = lighting("lambert", position = c(50, 30, 200),
+               light = lighting("diffuse", position = c(50, 30, 200),
                                distance_falloff = TRUE)) +
   coord_3d()
 
@@ -123,7 +153,7 @@ voxel_data <- data.frame(
 )
 ggplot(voxel_data, aes(x, y, z)) +
   stat_voxel(aes(fill = after_stat(light)),
-             light = lighting("lambert", position = c(2, 2, 5))) +
+             light = lighting("diffuse", position = c(2, 2, 5))) +
   coord_3d()
 
 }

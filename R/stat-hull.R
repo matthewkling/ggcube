@@ -2,7 +2,7 @@ StatHull <- ggproto("StatHull", Stat,
                     required_aes = c("x", "y", "z"),
 
                     compute_group = function(data, scales, method = "alpha", alpha = 1.0,
-                                             light = lighting("lambert")) {
+                                             light = lighting()) {
                           coords <- as.matrix(data[, c("x", "y", "z")])
 
                           # Get triangle indices
@@ -241,7 +241,7 @@ stat_hull <- function(mapping = NULL, data = NULL,
                       geom = GeomPolygon3D, # nonstandard syntax, but `"polygon_3d"` failed
                       position = "identity",
                       method = "alpha", alpha = 1.0,
-                      light = lighting("lambert"),
+                      light = lighting(),
                       inherit.aes = TRUE,
                       ...) {
 

@@ -2,7 +2,7 @@ StatSurface <- ggproto("StatSurface", Stat,
                        required_aes = c("x", "y", "z"),
 
                        compute_group = function(data, scales, na.rm = FALSE,
-                                                light = lighting("lambert")) {
+                                                light = lighting()) {
 
                              # Remove missing values if requested
                              if (na.rm) {
@@ -131,7 +131,7 @@ StatSurface <- ggproto("StatSurface", Stat,
 stat_surface <- function(mapping = NULL, data = NULL,
                          geom = GeomPolygon3D,
                          position = "identity",
-                         light = lighting("lambert"),
+                         light = lighting(),
                          na.rm = FALSE, show.legend = NA, inherit.aes = TRUE,
                          ...) {
 

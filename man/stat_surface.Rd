@@ -9,7 +9,7 @@ stat_surface(
   data = NULL,
   geom = GeomPolygon3D,
   position = "identity",
-  light = lighting("lambert"),
+  light = lighting(),
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE,

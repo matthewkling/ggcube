@@ -4,7 +4,7 @@
 \alias{compute_lighting}
 \title{Apply lighting models to surface normals with positional light support}
 \usage{
-compute_lighting(normals, lighting = lighting("lambert"), face_centers = NULL)
+compute_lighting(normals, lighting = lighting(), face_centers = NULL)
 }
 \arguments{
 \item{normals}{Matrix with 3 columns (x, y, z normal components), where each
