@@ -26,8 +26,14 @@ faces more directly toward the positive end of a given dimension)
 }
 Default is "diffuse".}
 
-\item{direction}{Numeric vector of length 3 specifying light direction in 3D space
-for directional lighting. Only used if \code{position} is NULL. Default is \code{c(1, 1, 1)}.}
+\item{direction}{Numeric vector of length 3 specifying direction in 3D space that
+light comes from for directional lighting. The default is \code{c(1, 1, 1)}, giving
+diagonal lighting from the positive corner. Common examples: \code{c(0, 0, 1)} gives
+overhead lighting, \code{c(1, 0, 0)} lights surfaces facing the positive x
+direction, and \code{c(-1, -1, 0)} lights surfaces facing negative x-y edge. At least
+one value must be non-zero. Values are automatically normalized, so magnitude doesn't
+matter, only sign and relative magnitude.
+This argument is ignored if \code{position} is provided.}
 
 \item{position}{Numeric vector of length 3 specifying light source position in
 data coordinate space for positional lighting. When specified, each face gets
@@ -58,8 +64,8 @@ Only used when \code{blend} is not "neither". Default is 1.0.}
 
 \item{blend_mode}{Character string specifying color blending mode when \code{blend} is not "neither":
 \itemize{
-\item \code{"hsv"}: Modifies HSV brightness/value component (can affect color vibrancy)
-\item \code{"hsl"}: Modifies HSL lightness component (preserves saturation better)
+\item \code{"hsv"}: Modifies HSV value component (fades to bright colors at high end, black at low end)
+\item \code{"hsl"}: Modifies HSL lightness component (fades to white at high end, black at low end)
 }
 Default is "hsv".}
 }
@@ -80,7 +86,9 @@ The second approach is to use the computed light variable directly in your aesth
 \code{aes(fill = after_stat(light))}. This gives more control over you map lighting values onto color
 scales, but can't be mixed with other sources of color info.
 
-It is also possible to combine these two approaches.
+It is also possible to combine these two approaches. For example, using \code{blend = "fill"},
+\code{after_stat(light)}, and \code{scale_fill_viridis_c()} will produce a higher-contrast version of
+the viridis palette (though the guide will not reflect the blending component).
 }
 \examples{
 library(ggplot2)
