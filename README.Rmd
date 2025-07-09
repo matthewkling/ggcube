@@ -74,23 +74,6 @@ d %>%
 
 
 
-As a final example, let's plot the `mountain` data set that comes with the package, using the
-`proj_ridgeline()` function to visualize a 3D landscape:
-
-```{r ridgeline, warning = FALSE, message = FALSE}
-# projection
-prj <- projection(pitch = 75, yaw = 55,
-                  persp = T, dist = 1,
-                  data = mountain)
-
-# plot
-mountain %>%
-      ggplot(aes(x, y, z = z)) +
-      proj_ridgeline(prj = prj, geom = "polygon", piece = "y",
-                     fill = "black", color = "white", linewidth = .15) +
-      theme_cube()
-```
-
 
 
 ## Installation

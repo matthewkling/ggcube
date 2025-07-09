@@ -546,6 +546,7 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
 
                    # Force 1:1 aspect ratio
                    aspect = function(self, ranges) {
+                         cat("aspect called\n")
                          if (exists("bounds_aspect")) {
                                return(bounds_aspect)
                          }
@@ -558,10 +559,12 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                    },
 
                    render_bg = function(self, panel_params, theme) {
+                         cat("render_bg called\n")
                          render_cube(self, panel_params, theme, layer = "background")
                    },
 
                    transform = function(self, data, panel_params) {
+
                          # Add z column if missing
                          if (!"z" %in% names(data)) {
                                data$z <- 0
@@ -678,6 +681,7 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                    },
 
                    render_fg = function(self, panel_params, theme) {
+                         cat("render_fg called\n")
                          # Return empty grob to disable standard panel border
                          # This prevents theme_bw(), theme_light(), etc. from drawing rectangular borders
                          # grid::nullGrob() # original disabling version
@@ -686,6 +690,7 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
 
                    # Disable standard grids
                    render_grid = function(self, panel_params, theme) {
+                         cat("render_grid called\n")
                          grid::nullGrob()
                    },
 

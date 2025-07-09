@@ -166,7 +166,8 @@ scale_z_continuous <- function(name = waiver(), breaks = waiver(), n.breaks = NU
 #' @export
 scale_z_discrete <- function(name = waiver(), breaks = waiver(), labels = waiver(),
                              limits = NULL, expand = waiver(), guide = "none",
-                             na.translate = TRUE, na.value = NA_real_, drop = TRUE, ...) {
+                             na.translate = TRUE, na.value = NA_real_, drop = TRUE,
+                             continuous.limits = NULL, ...) {
 
       # Store scale parameters for later access by coord_3d
       .z_scale_cache$type <- "discrete"
@@ -177,9 +178,10 @@ scale_z_discrete <- function(name = waiver(), breaks = waiver(), labels = waiver
       .z_scale_cache$expand <- expand
       .z_scale_cache$drop <- drop
 
-      discrete_scale(
+      # Create the scale object like ggplot2's scale_x_discrete
+      sc <- discrete_scale(
             aesthetics = "z",
-            palette = function(n) seq_len(n),  # Return integer positions 1, 2, 3, ...
+            palette = seq_len,  # Use seq_len like ggplot2
             name = name,
             breaks = breaks,
             labels = labels,
@@ -192,6 +194,14 @@ scale_z_discrete <- function(name = waiver(), breaks = waiver(), labels = waiver
             super = ScaleDiscretePosition,
             ...
       )
+
+      # Add the missing range_c component (this is the key fix!)
+      # Get a template scale to copy the range_c structure
+      template_scale <- scale_x_discrete()
+      sc$range_c <- template_scale$range_c$clone()
+      sc$continuous_limits <- continuous.limits
+
+      return(sc)
 }
 
 #' Set z-axis limits

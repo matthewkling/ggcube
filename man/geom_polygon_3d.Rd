@@ -35,7 +35,7 @@ geom_polygon_3d(
 \description{
 \code{geom_polygon_3d()} renders 3D polygons with proper depth sorting for realistic
 3D surface visualization. It's designed to work with surface data
-from \code{\link[=stat_hull]{stat_hull()}} and \code{\link[=stat_surface]{stat_surface()}}, as well as other data.
+from \code{\link[=stat_hull]{stat_hull()}} and \code{\link[=stat_surface]{stat_surface()}}, as well as regular polygon data like maps.
 }
 \section{Aesthetics}{
 
@@ -54,6 +54,7 @@ And understands these additional aesthetics:
 \item \code{linewidth}: Border line width
 \item \code{linetype}: Border line type
 \item \code{alpha}: Transparency
+\item \code{order}: Vertex order within polygons (for proper polygon construction)
 }
 }
 
@@ -66,6 +67,11 @@ ggplot(sphere_data, aes(x, y, z)) +
 # Can be used directly with pre-triangulated data
 ggplot(triangle_data, aes(x, y, z, group = triangle_id)) +
   geom_polygon_3d(fill = "lightblue") +
+  coord_3d()
+
+# Works with map data and proper depth sorting
+ggplot(map_data, aes(long, lat, z, group = group, order = order)) +
+  geom_polygon_3d(aes(fill = layer)) +
   coord_3d()
 
 }

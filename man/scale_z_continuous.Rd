@@ -90,6 +90,7 @@ ggplot(mtcars, aes(mpg, wt, z = qsec)) +
 \code{\link{coord_3d}} for the 3D coordinate system
 
 Other 3D scale functions: 
+\code{\link{scale_z_discrete}()},
 \code{\link{zlim}()}
 }
 \concept{3D scale functions}

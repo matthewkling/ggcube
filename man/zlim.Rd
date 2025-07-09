@@ -40,6 +40,7 @@ ggplot(mtcars, aes(mpg, wt, z = qsec)) +
 \code{\link{xlim}}, \code{\link{ylim}} for x and y axis limits
 
 Other 3D scale functions: 
-\code{\link{scale_z_continuous}()}
+\code{\link{scale_z_continuous}()},
+\code{\link{scale_z_discrete}()}
 }
 \concept{3D scale functions}
