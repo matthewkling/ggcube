@@ -2,7 +2,7 @@
 % Please edit documentation in R/coord-3d.R
 \name{extract_aesthetic_vars}
 \alias{extract_aesthetic_vars}
-\title{Extract variable names from aesthetic mappings}
+\title{Extract variable names from aesthetic mappings (NOT CURRENTLY USED)}
 \usage{
 extract_aesthetic_vars(plot_obj)
 }
@@ -13,5 +13,5 @@ extract_aesthetic_vars(plot_obj)
 A list with x, y, z character vectors of variable names
 }
 \description{
-Extract variable names from aesthetic mappings
+Extract variable names from aesthetic mappings (NOT CURRENTLY USED)
 }

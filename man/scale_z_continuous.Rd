@@ -7,10 +7,13 @@
 scale_z_continuous(
   name = waiver(),
   breaks = waiver(),
+  minor_breaks = waiver(),
   n.breaks = NULL,
   labels = waiver(),
   limits = NULL,
   expand = waiver(),
+  oob = scales::censor,
+  na.value = NA_real_,
   transform = "identity",
   guide = "none",
   ...
@@ -26,6 +29,14 @@ the default, or \code{NULL} to omit the title.}
 \item \code{waiver()} for the default breaks
 \item A numeric vector of positions
 \item A function that takes the limits as input and returns breaks as output
+}}
+
+\item{minor_breaks}{One of:
+\itemize{
+\item \code{NULL} for no minor breaks
+\item \code{waiver()} for the default minor breaks
+\item A numeric vector of positions
+\item A function that takes the limits as input and returns minor breaks as output
 }}
 
 \item{n.breaks}{An integer guiding the number of major breaks. The algorithm
@@ -44,6 +55,15 @@ Use \code{NA} to refer to the existing minimum or maximum.}
 
 \item{expand}{For position scales, a vector of range expansion constants used to add some
 padding around the data to ensure that they are placed some distance away from the axes.}
+
+\item{oob}{One of:
+\itemize{
+\item Function that handles limits outside the scale limits (out of bounds).
+\item \code{scales::censor} for replacing out of bounds values with \code{NA}
+\item \code{scales::squish} for squishing out of bounds values into range
+}}
+
+\item{na.value}{Missing values will be replaced with this value.}
 
 \item{transform}{For continuous scales, the name of a transformation object or the object itself.}
 

@@ -13,6 +13,13 @@
 #'     \item A numeric vector of positions
 #'     \item A function that takes the limits as input and returns breaks as output
 #'   }
+#' @param minor_breaks One of:
+#'   \itemize{
+#'     \item \code{NULL} for no minor breaks
+#'     \item \code{waiver()} for the default minor breaks
+#'     \item A numeric vector of positions
+#'     \item A function that takes the limits as input and returns minor breaks as output
+#'   }
 #' @param n.breaks An integer guiding the number of major breaks. The algorithm
 #'   may choose a slightly different number to ensure nice break labels.
 #' @param labels One of:
@@ -26,6 +33,13 @@
 #'   Use \code{NA} to refer to the existing minimum or maximum.
 #' @param expand For position scales, a vector of range expansion constants used to add some
 #'   padding around the data to ensure that they are placed some distance away from the axes.
+#' @param oob One of:
+#'   \itemize{
+#'     \item Function that handles limits outside the scale limits (out of bounds).
+#'     \item \code{scales::censor} for replacing out of bounds values with \code{NA}
+#'     \item \code{scales::squish} for squishing out of bounds values into range
+#'   }
+#' @param na.value Missing values will be replaced with this value.
 #' @param transform For continuous scales, the name of a transformation object or the object itself.
 #' @param guide A function used to create a guide or its name. Since z-axis guides are not
 #'   yet supported, this defaults to \code{"none"}.
@@ -61,33 +75,32 @@
 #'   \code{\link{coord_3d}} for the 3D coordinate system
 #' @family 3D scale functions
 #' @export
-scale_z_continuous <- function(name = waiver(), breaks = waiver(), n.breaks = NULL,
-                               labels = waiver(), limits = NULL, expand = waiver(),
+scale_z_continuous <- function(name = waiver(), breaks = waiver(), minor_breaks = waiver(),
+                               n.breaks = NULL, labels = waiver(), limits = NULL,
+                               expand = waiver(), oob = scales::censor, na.value = NA_real_,
                                transform = "identity", guide = "none", ...) {
 
-      # Store scale parameters for later access by coord_3d
-      .z_scale_cache$type <- "continuous"
-      .z_scale_cache$limits <- limits
-      .z_scale_cache$breaks <- breaks
-      .z_scale_cache$n.breaks <- n.breaks
-      .z_scale_cache$name <- name
-      .z_scale_cache$labels <- labels
-      .z_scale_cache$expand <- expand
+      cat("scale_z_continuous() running\n")
 
-      continuous_scale(
+      scale_obj <- continuous_scale(
             aesthetics = "z",
             palette = identity,
             name = name,
             breaks = breaks,
+            minor_breaks = minor_breaks,
             n.breaks = n.breaks,
             labels = labels,
             limits = limits,
             expand = expand,
+            oob = oob,
+            na.value = na.value,
             transform = transform,
             guide = guide,
-            super = ScaleContinuous,
+            super = ScaleContinuousPosition,
             ...
       )
+      .z_scale_cache$scale <- scale_obj
+      return(scale_obj)
 }
 
 #' Discrete z-axis scale for 3D plots
@@ -169,14 +182,7 @@ scale_z_discrete <- function(name = waiver(), breaks = waiver(), labels = waiver
                              na.translate = TRUE, na.value = NA_real_, drop = TRUE,
                              continuous.limits = NULL, ...) {
 
-      # Store scale parameters for later access by coord_3d
-      .z_scale_cache$type <- "discrete"
-      .z_scale_cache$limits <- limits
-      .z_scale_cache$breaks <- breaks
-      .z_scale_cache$name <- name
-      .z_scale_cache$labels <- labels
-      .z_scale_cache$expand <- expand
-      .z_scale_cache$drop <- drop
+      cat("scale_z_discrete() running\n")
 
       # Create the scale object like ggplot2's scale_x_discrete
       sc <- discrete_scale(
@@ -195,12 +201,12 @@ scale_z_discrete <- function(name = waiver(), breaks = waiver(), labels = waiver
             ...
       )
 
-      # Add the missing range_c component (this is the key fix!)
-      # Get a template scale to copy the range_c structure
+      # Add the missing range_c component, using a template scale to copy the range_c structure
       template_scale <- scale_x_discrete()
       sc$range_c <- template_scale$range_c$clone()
       sc$continuous_limits <- continuous.limits
 
+      .z_scale_cache$scale <- sc
       return(sc)
 }
 

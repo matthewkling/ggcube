@@ -5,6 +5,8 @@ StatVoxel <- ggproto("StatVoxel", Stat,
                                               width = 1.0, faces = "all",
                                               light = lighting()) {
 
+                           cat("StatVoxel compute_panel() running\n")
+
                            # Remove missing values if requested
                            if (na.rm) {
                                  data <- data[complete.cases(data[c("x", "y", "z")]), ]
@@ -16,6 +18,7 @@ StatVoxel <- ggproto("StatVoxel", Stat,
                            }
 
                            # Convert categorical data to numeric positions before calculating spacing
+                           data$z_raw <- data$z # (stash a copy of original z values first)
                            if (is.factor(data$x) || is.character(data$x)) {
                                  data$x <- as.numeric(as.factor(data$x))
                            }
@@ -118,7 +121,6 @@ StatVoxel <- ggproto("StatVoxel", Stat,
 #' @return Data frame with voxel face vertices
 create_voxels <- function(data, x_spacing, y_spacing, z_spacing, width, selected_faces) {
 
-      # Calculate actual voxel dimensions
       voxel_width_x <- x_spacing * width
       voxel_width_y <- y_spacing * width
       voxel_width_z <- z_spacing * width
@@ -179,6 +181,7 @@ create_voxels <- function(data, x_spacing, y_spacing, z_spacing, width, selected
                               x = sapply(corner_indices, function(idx) corners[[idx]][1]),
                               y = sapply(corner_indices, function(idx) corners[[idx]][2]),
                               z = sapply(corner_indices, function(idx) corners[[idx]][3]),
+                              z_raw = point$z_raw,
                               face_id = sprintf("voxel_%04d_%s", i, face_name),  # Zero-padded for proper sorting
                               voxel_id = i,
                               face_type = face_name,

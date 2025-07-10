@@ -21,6 +21,7 @@ StatPillar <- ggproto("StatPillar", Stat,
                             }
 
                             # Convert categorical data to numeric positions before calculating spacing
+                            data$z_raw <- data$z # (stash a copy of original z values first)
                             if (is.factor(data$x) || is.character(data$x)) {
                                   data$x <- as.numeric(as.factor(data$x))
                             }
@@ -43,7 +44,7 @@ StatPillar <- ggproto("StatPillar", Stat,
                                   y_spacing <- 1.0
                             }
 
-                            # Validate and process faces parameter
+                            # Validate and process faces parameter (these are pillar faces, not cube faces)
                             valid_faces <- c("xmin", "xmax", "ymin", "ymax", "zmin", "zmax")
                             if (length(faces) == 1 && faces == "all") {
                                   selected_faces <- valid_faces
@@ -98,8 +99,6 @@ StatPillar <- ggproto("StatPillar", Stat,
                             pillar_faces$blend_strength <- light$blend_strength
                             pillar_faces$blend_mode <- light$blend_mode
                             pillar_faces$lighting_method <- light$method
-
-                            # Note: RGB colors are already wrapped with I() in compute_lighting()
 
                             return(pillar_faces)
                       }
@@ -175,6 +174,7 @@ create_pillars <- function(data, x_spacing, y_spacing, width, selected_faces) {
                               x = sapply(corner_indices, function(idx) corners[[idx]][1]),
                               y = sapply(corner_indices, function(idx) corners[[idx]][2]),
                               z = sapply(corner_indices, function(idx) corners[[idx]][3]),
+                              z_raw = point$z_raw,
                               face_id = sprintf("pillar_%04d_%s", i, face_name),  # Zero-padded for proper sorting
                               pillar_id = i,
                               face_type = face_name,

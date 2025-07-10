@@ -88,12 +88,7 @@ measure_axis_text_dimensions <- function(edge_gridlines, theme_elements, axis_la
 
       tryCatch({
             # Calculate text fontsize
-            text_fontsize <- tryCatch({
-                  size_val <- theme_elements$axis_text$size %||% 8.5
-                  if (inherits(size_val, "unit")) as.numeric(size_val) else as.numeric(size_val)
-            }, error = function(e) 8.5)
-
-            # Ensure valid fontsize
+            text_fontsize <- as.numeric(theme_elements$axis_text$size %||% 8.5)
             if (!is.finite(text_fontsize) || text_fontsize <= 0) {
                   text_fontsize <- 8.5
             }
@@ -110,11 +105,14 @@ measure_axis_text_dimensions <- function(edge_gridlines, theme_elements, axis_la
             for (group_id in unique_groups) {
                   gridline_data <- edge_gridlines[edge_gridlines$group == group_id, ]
                   if (nrow(gridline_data) >= 1) {
+
                         # NEW: Use custom labels if available
                         if (!is.null(axis_labels) && !is.null(axis_breaks)) {
                               # Find which break this gridline corresponds to
                               break_value <- gridline_data$break_value[1]
-                              break_index <- which.min(abs(axis_breaks - break_value))
+
+                              #break_index <- which.min(abs(axis_breaks - break_value))
+                              break_index <- match(break_value, axis_breaks)
 
                               if (length(break_index) > 0 && break_index <= length(axis_labels)) {
                                     label_text <- as.character(axis_labels[break_index])
@@ -255,8 +253,6 @@ calculate_trigonometric_components <- function(theta, offsets, text_dimensions, 
       ))
 }
 
-# NEW HELPER FUNCTIONS
-
 # Helper function to calculate gridline position
 calculate_gridline_position <- function(gridline_data, axis_uses_start) {
       if (axis_uses_start) {
@@ -336,7 +332,8 @@ calculate_text_rotation_and_justification <- function(gridline_data, rotate_labe
 # Helper function to resolve label text
 resolve_label_text <- function(break_value, axis_labels, axis_breaks) {
       if (!is.null(axis_labels) && !is.null(axis_breaks)) {
-            break_index <- which.min(abs(axis_breaks - break_value))
+            # break_index <- which.min(abs(axis_breaks - break_value))
+            break_index <- match(break_value, axis_breaks)
             if (length(break_index) > 0 && break_index <= length(axis_labels)) {
                   return(as.character(axis_labels[break_index]))
             }
@@ -432,6 +429,7 @@ create_axis_labels <- function(axis, edge_gridlines, theme_elements, offsets, te
             gridline_data <- edge_gridlines[edge_gridlines$group == group_id, ]
 
             if (nrow(gridline_data) >= 2) {
+
                   # Calculate theta using helper function
                   theta <- calculate_theta(axis_angle, gridline_data)
 
@@ -500,10 +498,11 @@ create_axis_title <- function(axis, edge_gridlines, theme_elements, offsets, tex
 
       # Find the gridline closest to the center of the axis range
       axis_breaks <- panel_params$scale_info[[axis]]$breaks
+      if(!is.numeric(axis_breaks)) axis_breaks <- attr(axis_breaks, "pos")
       axis_center_value <- mean(range(axis_breaks))
 
       # Find which gridline is closest to the center value
-      center_distances <- abs(axis_gridlines$break_value - axis_center_value)
+      center_distances <- abs(axis_gridlines$break_pos - axis_center_value)
       center_group <- axis_gridlines$group[which.min(center_distances)]
       center_gridline <- axis_gridlines[axis_gridlines$group == center_group, ]
 

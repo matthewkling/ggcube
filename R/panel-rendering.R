@@ -14,163 +14,58 @@ make_scale_grid <- function(visible_faces, scale_info, scales = "free", ratio = 
             y = scale_info$y$limits,
             z = scale_info$z$limits
       )
-
       effective_ratios <- compute_effective_ratios(scale_ranges, scales, ratio)
 
-      # Transform real-world breaks to standard domain with aspect
-      x_breaks_std <- scale_to_standard(scale_info$x$breaks, scale_info$x$limits) * effective_ratios[1]
-      y_breaks_std <- scale_to_standard(scale_info$y$breaks, scale_info$y$limits) * effective_ratios[2]
-      z_breaks_std <- scale_to_standard(scale_info$z$breaks, scale_info$z$limits) * effective_ratios[3]
+      # Breaks and extents in standard domain
+      vars <- c("x", "y", "z") %>% setNames(., .)
+      breaks <- lapply(vars, function(v) breaks = scale_to_standard(scale_info[[v]]$breaks,
+                                                                    scale_info[[v]]$limits) * effective_ratios[match(v, vars)])
+      extents <- data.frame(x = c(-0.5, 0.5) * effective_ratios[1],
+                           y = c(-0.5, 0.5) * effective_ratios[2],
+                           z = c(-0.5, 0.5) * effective_ratios[3],
+                           end = c("min", "max"))
 
-      # Full extents in standard domain with aspect
-      x_extent_std <- c(-0.5, 0.5) * effective_ratios[1]
-      y_extent_std <- c(-0.5, 0.5) * effective_ratios[2]
-      z_extent_std <- c(-0.5, 0.5) * effective_ratios[3]
+      grid_data <- map_dfr(visible_faces, function(face){
+            axis <- substr(face, 1, 1)
+            end <- substr(face, 2, 4)
+            fixed_val = extents[extents$end == end, axis]
+            vrs <- setdiff(vars, axis)
+            map_dfr(vrs, function(v){
 
-      grid_data <- list()
-      group_id <- 1
+                  brks <- scale_info[[v]]$breaks
+                  break_value <- brks
+                  if(is.numeric(break_value)){
+                        break_pos <- break_value
+                  }else{
+                        break_pos <- attr(break_value, "pos")
+                  }
 
-      # Helper function to create a grid line with boundary information
-      create_line <- function(x, y, z, group_id, face, break_value, break_axis, start_bounds, end_bounds) {
-            data.frame(
-                  x = x, y = y, z = z,
-                  group = group_id,
-                  face = face,
-                  break_value = break_value,
-                  break_axis = break_axis,
-                  endpoint_index = 1:length(x),
-                  start_boundaries = rep(paste(sort(start_bounds), collapse = "_"), length(x)),
-                  end_boundaries = rep(paste(sort(end_bounds), collapse = "_"), length(x))
-            )
-      }
+                  b <- breaks[[v]]
+                  brks <- data.frame(b = b,
+                                     break_value = as.character(break_value),
+                                     break_pos = break_pos)
 
-      # Generate grid lines for each visible face using actual breaks
-      if ("xmin" %in% visible_faces) {
-            x_val <- x_extent_std[1]
-            for (i in seq_along(y_breaks_std)) {
-                  y_val <- y_breaks_std[i]
-                  y_break <- scale_info$y$breaks[i]
-                  grid_data[[length(grid_data) + 1]] <-
-                        create_line(rep(x_val, 2), rep(y_val, 2), z_extent_std, group_id, "xmin", y_break, "y",
-                                    start_bounds = c("xmin", "zmin"), end_bounds = c("xmin", "zmax"))
-                  group_id <- group_id + 1
-            }
-            for (i in seq_along(z_breaks_std)) {
-                  z_val <- z_breaks_std[i]
-                  z_break <- scale_info$z$breaks[i]
-                  grid_data[[length(grid_data) + 1]] <-
-                        create_line(rep(x_val, 2), y_extent_std, rep(z_val, 2), group_id, "xmin", z_break, "z",
-                                    start_bounds = c("xmin", "ymin"), end_bounds = c("xmin", "ymax"))
-                  group_id <- group_id + 1
-            }
-      }
+                  vr <- setdiff(vrs, v)
+                  expand_grid(f = fixed_val,
+                              b = b,
+                              e = extents[[vr]]) %>%
+                        left_join(brks, by = join_by(b)) %>%
+                        mutate(endpoint_index = as.integer(factor(e))) %>%
+                        setNames(c(axis, v, vr, names(.)[4:ncol(.)])) %>%
+                        mutate(face = face,
+                               break_axis = v,
+                               free_axis = vr)
+            })
+      }) %>%
+            mutate(group = rep(1:(nrow(.)/2), each = 2)) %>%
+            group_by(group) %>%
+            mutate(start_boundaries = paste0(pmin(face, paste0(free_axis, "min")), "_",
+                                             pmax(face, paste0(free_axis, "min"))),
+                   end_boundaries = paste0(pmin(face, paste0(free_axis, "max")), "_",
+                                           pmax(face, paste0(free_axis, "max")))) %>%
+            ungroup()
 
-      if ("xmax" %in% visible_faces) {
-            x_val <- x_extent_std[2]
-            for (i in seq_along(y_breaks_std)) {
-                  y_val <- y_breaks_std[i]
-                  y_break <- scale_info$y$breaks[i]
-                  grid_data[[length(grid_data) + 1]] <-
-                        create_line(rep(x_val, 2), rep(y_val, 2), z_extent_std, group_id, "xmax", y_break, "y",
-                                    start_bounds = c("xmax", "zmin"), end_bounds = c("xmax", "zmax"))
-                  group_id <- group_id + 1
-            }
-            for (i in seq_along(z_breaks_std)) {
-                  z_val <- z_breaks_std[i]
-                  z_break <- scale_info$z$breaks[i]
-                  grid_data[[length(grid_data) + 1]] <-
-                        create_line(rep(x_val, 2), y_extent_std, rep(z_val, 2), group_id, "xmax", z_break, "z",
-                                    start_bounds = c("xmax", "ymin"), end_bounds = c("xmax", "ymax"))
-                  group_id <- group_id + 1
-            }
-      }
-
-      if ("ymin" %in% visible_faces) {
-            y_val <- y_extent_std[1]
-            for (i in seq_along(x_breaks_std)) {
-                  x_val <- x_breaks_std[i]
-                  x_break <- scale_info$x$breaks[i]
-                  grid_data[[length(grid_data) + 1]] <-
-                        create_line(rep(x_val, 2), rep(y_val, 2), z_extent_std, group_id, "ymin", x_break, "x",
-                                    start_bounds = c("ymin", "zmin"), end_bounds = c("ymin", "zmax"))
-                  group_id <- group_id + 1
-            }
-            for (i in seq_along(z_breaks_std)) {
-                  z_val <- z_breaks_std[i]
-                  z_break <- scale_info$z$breaks[i]
-                  grid_data[[length(grid_data) + 1]] <-
-                        create_line(x_extent_std, rep(y_val, 2), rep(z_val, 2), group_id, "ymin", z_break, "z",
-                                    start_bounds = c("ymin", "xmin"), end_bounds = c("ymin", "xmax"))
-                  group_id <- group_id + 1
-            }
-      }
-
-      if ("ymax" %in% visible_faces) {
-            y_val <- y_extent_std[2]
-            for (i in seq_along(x_breaks_std)) {
-                  x_val <- x_breaks_std[i]
-                  x_break <- scale_info$x$breaks[i]
-                  grid_data[[length(grid_data) + 1]] <-
-                        create_line(rep(x_val, 2), rep(y_val, 2), z_extent_std, group_id, "ymax", x_break, "x",
-                                    start_bounds = c("ymax", "zmin"), end_bounds = c("ymax", "zmax"))
-                  group_id <- group_id + 1
-            }
-            for (i in seq_along(z_breaks_std)) {
-                  z_val <- z_breaks_std[i]
-                  z_break <- scale_info$z$breaks[i]
-                  grid_data[[length(grid_data) + 1]] <-
-                        create_line(x_extent_std, rep(y_val, 2), rep(z_val, 2), group_id, "ymax", z_break, "z",
-                                    start_bounds = c("ymax", "xmin"), end_bounds = c("ymax", "xmax"))
-                  group_id <- group_id + 1
-            }
-      }
-
-      if ("zmin" %in% visible_faces) {
-            z_val <- z_extent_std[1]
-            for (i in seq_along(x_breaks_std)) {
-                  x_val <- x_breaks_std[i]
-                  x_break <- scale_info$x$breaks[i]
-                  grid_data[[length(grid_data) + 1]] <-
-                        create_line(rep(x_val, 2), y_extent_std, rep(z_val, 2), group_id, "zmin", x_break, "x",
-                                    start_bounds = c("zmin", "ymin"), end_bounds = c("zmin", "ymax"))
-                  group_id <- group_id + 1
-            }
-            for (i in seq_along(y_breaks_std)) {
-                  y_val <- y_breaks_std[i]
-                  y_break <- scale_info$y$breaks[i]
-                  grid_data[[length(grid_data) + 1]] <-
-                        create_line(x_extent_std, rep(y_val, 2), rep(z_val, 2), group_id, "zmin", y_break, "y",
-                                    start_bounds = c("zmin", "xmin"), end_bounds = c("zmin", "xmax"))
-                  group_id <- group_id + 1
-            }
-      }
-
-      if ("zmax" %in% visible_faces) {
-            z_val <- z_extent_std[2]
-            for (i in seq_along(x_breaks_std)) {
-                  x_val <- x_breaks_std[i]
-                  x_break <- scale_info$x$breaks[i]
-                  grid_data[[length(grid_data) + 1]] <-
-                        create_line(rep(x_val, 2), y_extent_std, rep(z_val, 2), group_id, "zmax", x_break, "x",
-                                    start_bounds = c("zmax", "ymin"), end_bounds = c("zmax", "ymax"))
-                  group_id <- group_id + 1
-            }
-            for (i in seq_along(y_breaks_std)) {
-                  y_val <- y_breaks_std[i]
-                  y_break <- scale_info$y$breaks[i]
-                  grid_data[[length(grid_data) + 1]] <-
-                        create_line(x_extent_std, rep(y_val, 2), rep(z_val, 2), group_id, "zmax", y_break, "y",
-                                    start_bounds = c("zmax", "xmin"), end_bounds = c("zmax", "xmax"))
-                  group_id <- group_id + 1
-            }
-      }
-
-      # Combine all grid lines
-      if (length(grid_data) == 0) {
-            return(NULL)
-      }
-
-      do.call(rbind, grid_data)
+      return(grid_data)
 }
 
 # Helper function to determine endpoint preference using boundary information
@@ -385,6 +280,8 @@ create_panel_polygons = function(face_corners_transformed, panel_params, theme, 
 
 
 render_cube <- function(self, panel_params, theme, layer = "background"){
+
+      cat("Coord3D render_cube() running\n")
 
       # Transparent base
       bg <- grid::rectGrob(

@@ -96,8 +96,8 @@ transform_3d_standard <- function(data, proj = list(pitch = 0, roll = 0, yaw = 0
 #' @return Scaled values in [-0.5, 0.5] domain (single axis) OR data frame with scaled coordinates (multi-axis)
 scale_to_standard <- function(values, data_range, scales = "free", ratio = c(1, 1, 1)) {
 
-      # Handle single-axis case (original functionality)
-      if (is.numeric(values) && (is.numeric(data_range) && length(data_range) == 2)) {
+      # Handle single-axis case
+      if (is.numeric(data_range) && length(data_range) == 2) {
             # Handle case where data has zero range (single point or constant values)
             range_width <- diff(data_range)
             if (range_width == 0 || is.na(range_width)) {
@@ -105,11 +105,14 @@ scale_to_standard <- function(values, data_range, scales = "free", ratio = c(1, 
                   return(rep(0, length(values)))
             }
 
+            # for discrete scales, get the position rather than the raw value
+            if(!is.numeric(values)) values <- attr(values, "pos")
+
             # Scale to [0, 1] then shift to [-0.5, 0.5]
             return((values - data_range[1]) / range_width - 0.5)
       }
 
-      # Handle multi-axis case (new functionality)
+      # Handle multi-axis case
       data <- values
       scale_ranges <- data_range  # This is actually scale limits, not raw data ranges
 
@@ -117,11 +120,9 @@ scale_to_standard <- function(values, data_range, scales = "free", ratio = c(1, 
       effective_ratios <- compute_effective_ratios(scale_ranges, scales, ratio)
 
       # Apply standard scaling for each axis
-      x_scaled <- scale_to_standard(data$x, scale_ranges$x) * effective_ratios[1]
-      y_scaled <- scale_to_standard(data$y, scale_ranges$y) * effective_ratios[2]
-      z_scaled <- scale_to_standard(data$z, scale_ranges$z) * effective_ratios[3]
-
-      return(data.frame(x = x_scaled, y = y_scaled, z = z_scaled))
+      return(data.frame(x = scale_to_standard(data$x, scale_ranges$x) * effective_ratios[1],
+                        y = scale_to_standard(data$y, scale_ranges$y) * effective_ratios[2],
+                        z = scale_to_standard(data$z, scale_ranges$z) * effective_ratios[3]))
 }
 
 # Helper function to compute effective ratios
