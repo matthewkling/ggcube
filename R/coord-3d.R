@@ -64,7 +64,7 @@
 #'
 #'
 #' @export
-coord_3d <- function(pitch = 0, roll = 120, yaw = 40,
+coord_3d <- function(pitch = 0, roll = 120, yaw = 30,
                      persp = TRUE, dist = 3,
                      expand = TRUE, clip = "off",
                      faces = "background",
@@ -173,8 +173,6 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                    plot_bounds = c(0, 1, 0, 1),  # [xmin, xmax, ymin, ymax]
 
                    setup_panel_params = function(self, scale_x, scale_y, params = list()) {
-
-                         cat("Coord3D setup_panel_params() running ...")
 
                          # Get standard panel params from parent
                          panel_params <- ggproto_parent(CoordCartesian, self)$setup_panel_params(scale_x, scale_y, params)
@@ -322,8 +320,6 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                                panel_params$grid_transformed <- NULL
                          }
 
-                         cat(" done\n")
-
                          return(panel_params)
                    },
 
@@ -345,8 +341,6 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                    },
 
                    transform = function(self, data, panel_params) {
-
-                         cat("Coord3D transform() running\n")
 
                          # Scale data to standard domain with aspect ratio
                          scale_ranges <- list(
@@ -409,7 +403,6 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
 
                    # Disable standard grids
                    render_grid = function(self, panel_params, theme) {
-                         cat("render_grid called\n")
                          grid::nullGrob()
                    },
 

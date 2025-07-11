@@ -281,8 +281,6 @@ create_panel_polygons = function(face_corners_transformed, panel_params, theme, 
 
 render_cube <- function(self, panel_params, theme, layer = "background"){
 
-      cat("Coord3D render_cube() running\n")
-
       # Transparent base
       bg <- grid::rectGrob(
             x = 0.5, y = 0.5, width = 1, height = 1,

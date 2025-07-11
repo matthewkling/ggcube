@@ -5,8 +5,6 @@ StatVoxel <- ggproto("StatVoxel", Stat,
                                               width = 1.0, faces = "all",
                                               light = lighting()) {
 
-                           cat("StatVoxel compute_panel() running\n")
-
                            # Remove missing values if requested
                            if (na.rm) {
                                  data <- data[complete.cases(data[c("x", "y", "z")]), ]

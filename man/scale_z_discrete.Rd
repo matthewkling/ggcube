@@ -70,33 +70,14 @@ It works with categorical/factor data, positioning each level at integer coordin
 \examples{
 library(ggplot2)
 
-# Create layered data with categorical Z
-layer_data <- data.frame(
-  x = rep(1:3, 3),
-  y = rep(1:3, each = 3),
-  layer = factor(rep(c("base", "middle", "top"), each = 3))
-)
-
-# Basic discrete z-axis
-ggplot(layer_data, aes(x, y, z = layer)) +
-  geom_point() +
-  scale_z_discrete() +
-  coord_3d()
-
-# Custom breaks and labels
-ggplot(layer_data, aes(x, y, z = layer)) +
-  geom_point() +
-  scale_z_discrete(
-    name = "Elevation Level",
-    labels = c("Ground", "Floor 1", "Floor 2")
-  ) +
-  coord_3d()
-
-# Set explicit order with limits
-ggplot(layer_data, aes(x, y, z = layer)) +
-  geom_point() +
-  scale_z_discrete(limits = c("base", "top", "middle")) +  # Custom order
-  coord_3d()
+# Basic usage to control order, breaks, labels, expansion, etc.
+ggplot(mpg, aes(displ, cty, drv, color = drv)) +
+      geom_point() +
+      scale_z_discrete(limits = c("f", "r", "4"), # change default order
+                       breaks = c("f", "r", "4"),
+                       labels = c("front", "rear", "4-wheel"),
+                       expand = expansion(.5)) +
+      coord_3d()
 
 }
 \seealso{

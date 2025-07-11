@@ -48,8 +48,6 @@
 #' @return A ggplot2 scale object for the z aesthetic.
 #'
 #' @examples
-#' library(ggplot2)
-#'
 #' # Custom breaks, labels, and limits
 #' ggplot(mtcars, aes(mpg, wt, z = qsec)) +
 #'   geom_point() +
@@ -67,8 +65,6 @@ scale_z_continuous <- function(name = waiver(), breaks = waiver(), minor_breaks 
                                n.breaks = NULL, labels = waiver(), limits = NULL,
                                expand = waiver(), oob = scales::censor, na.value = NA_real_,
                                transform = "identity", guide = "none", ...) {
-
-      cat("scale_z_continuous() running\n")
 
       scale_obj <- continuous_scale(
             aesthetics = "z",
@@ -133,33 +129,14 @@ scale_z_continuous <- function(name = waiver(), breaks = waiver(), minor_breaks 
 #' @examples
 #' library(ggplot2)
 #'
-#' # Create layered data with categorical Z
-#' layer_data <- data.frame(
-#'   x = rep(1:3, 3),
-#'   y = rep(1:3, each = 3),
-#'   layer = factor(rep(c("base", "middle", "top"), each = 3))
-#' )
-#'
-#' # Basic discrete z-axis
-#' ggplot(layer_data, aes(x, y, z = layer)) +
-#'   geom_point() +
-#'   scale_z_discrete() +
-#'   coord_3d()
-#'
-#' # Custom breaks and labels
-#' ggplot(layer_data, aes(x, y, z = layer)) +
-#'   geom_point() +
-#'   scale_z_discrete(
-#'     name = "Elevation Level",
-#'     labels = c("Ground", "Floor 1", "Floor 2")
-#'   ) +
-#'   coord_3d()
-#'
-#' # Set explicit order with limits
-#' ggplot(layer_data, aes(x, y, z = layer)) +
-#'   geom_point() +
-#'   scale_z_discrete(limits = c("base", "top", "middle")) +  # Custom order
-#'   coord_3d()
+#' # Basic usage to control order, breaks, labels, expansion, etc.
+#' ggplot(mpg, aes(displ, cty, drv, color = drv)) +
+#'       geom_point() +
+#'       scale_z_discrete(limits = c("f", "r", "4"), # change default order
+#'                        breaks = c("f", "r", "4"),
+#'                        labels = c("front", "rear", "4-wheel"),
+#'                        expand = expansion(.5)) +
+#'       coord_3d()
 #'
 #' @seealso \code{\link{scale_z_continuous}} for continuous z-axis scaling,
 #'   \code{\link{coord_3d}} for the 3D coordinate system
@@ -169,8 +146,6 @@ scale_z_discrete <- function(name = waiver(), breaks = waiver(), labels = waiver
                              limits = NULL, expand = waiver(), guide = "none",
                              na.translate = TRUE, na.value = NA_real_, drop = TRUE,
                              continuous.limits = NULL, ...) {
-
-      cat("scale_z_discrete() running\n")
 
       # Create the scale object like ggplot2's scale_x_discrete
       sc <- discrete_scale(

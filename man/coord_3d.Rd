@@ -7,7 +7,7 @@
 coord_3d(
   pitch = 0,
   roll = 120,
-  yaw = 40,
+  yaw = 30,
   persp = TRUE,
   dist = 3,
   expand = TRUE,

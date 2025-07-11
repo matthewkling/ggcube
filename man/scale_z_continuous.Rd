@@ -81,8 +81,6 @@ It works similarly to \code{scale_x_continuous} and \code{scale_y_continuous}, p
 control over axis breaks, labels, limits, and transformations for the z dimension.
 }
 \examples{
-library(ggplot2)
-
 # Custom breaks, labels, and limits
 ggplot(mtcars, aes(mpg, wt, z = qsec)) +
   geom_point() +
