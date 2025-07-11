@@ -119,13 +119,32 @@ StatSurface <- ggproto("StatSurface", Stat,
 #'
 #' @examples
 #' # Generate and visualize a basic surface
-#' d <- mutate(expand_grid(x = -20:20, y = -20:20),
+#' d <- dplyr::mutate(tidyr::expand_grid(x = -20:20, y = -20:20),
 #'       z = sqrt(x^2 + y^2) / 1.5,
 #'       z = cos(z) - z)
-#' ggplot(d, aes(x, y, z)) +
-#'   stat_surface(aes(fill = after_stat(normal_x))) +
-#'   scale_fill_viridis_c() +
-#'   coord_3d(pitch = 0, roll = 130, yaw = 30)
+#'
+#' p <- ggplot(d, aes(x, y, z)) + coord_3d()
+#'
+#' # basic surface
+#' p + stat_surface(fill = "dodgerblue", color = "darkblue", linewidth = .2)
+#'
+#' # with 3d lighting
+#' p + stat_surface(fill = "darkgreen", color = "darkgreen", linewidth = .2,
+#'       light = lighting(blend = "both"))
+#'
+#' # mesh wireframe, without fill, with aes line color
+#' p + stat_surface(aes(color = z), fill = NA) +
+#'   scale_color_viridis_c()
+#'
+#' ggplot(mountain, aes(x, y, z, fill = z, color = z)) +
+#'   stat_surface(light = lighting(method = "diffuse", direction = c(1, 0, .5),
+#'                            blend = "both", blend_mode = "hsv", blend_strength = .9),
+#'                linewidth = .2) +
+#'   coord_3d(roll = 125, pitch = 0, yaw = 150,
+#'            ratio = c(1, 1.5, .5)) +
+#'   theme_light() +
+#'   scale_fill_gradientn(colors = c("darkgreen", "rosybrown4", "gray60")) +
+#'   scale_color_gradientn(colors = c("darkgreen", "rosybrown4", "gray60"))
 #'
 #' @export
 stat_surface <- function(mapping = NULL, data = NULL,

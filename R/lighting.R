@@ -67,77 +67,14 @@
 #'
 #' @examples
 #' library(ggplot2)
-#' data(mountain)
 #'
-#' # Direct lighting (harsh sunlight with hard shadows)
-#' ggplot(mountain, aes(x, y, z = z)) +
-#'   stat_surface(aes(fill = after_stat(light)),
-#'                light = lighting("direct", direction = c(1, 1, 1))) +
-#'   coord_3d()
+#' p <- ggplot(mountain, aes(x, y, z)) +
+#'   coord_3d(pitch = 0, roll = 120, yaw = 200,
+#'            scales = "fixed", ratio = c(1, 1.5, .01)) +
+#'   scale_fill_viridis_c() + scale_color_viridis_c()
 #'
-#' # Diffuse lighting (atmospheric lighting with soft shadows)
-#' ggplot(mountain, aes(x, y, z = z)) +
-#'   stat_surface(aes(fill = after_stat(light)),
-#'                light = lighting("diffuse", direction = c(1, 1, 1))) +
-#'   coord_3d()
-#'
-#' # Quantized direct lighting (3 discrete levels with negative clamping)
-#' ggplot(mountain, aes(x, y, z = z)) +
-#'   stat_surface(aes(fill = after_stat(light)),
-#'                light = lighting("direct", quanta = 3)) +
-#'   coord_3d()
-#'
-#' # Quantized diffuse lighting (5 discrete levels across full range)
-#' ggplot(mountain, aes(x, y, z = z)) +
-#'   stat_surface(aes(fill = after_stat(light)),
-#'                light = lighting("diffuse", quanta = 5)) +
-#'   coord_3d()
-#'
-#' # Blended lighting with material colors using HSV
-#' ggplot(mountain, aes(x, y, z = z)) +
-#'   stat_surface(aes(fill = z),
-#'                light = lighting("diffuse", blend = "fill", blend_mode = "hsv")) +
-#'   scale_fill_viridis_c() +
-#'   coord_3d()
-#'
-#' # Blended lighting with HSL mode (preserves saturation better)
-#' ggplot(mountain, aes(x, y, z = z)) +
-#'   stat_surface(aes(fill = z),
-#'                light = lighting("diffuse", blend = "fill", blend_mode = "hsl")) +
-#'   scale_fill_viridis_c() +
-#'   coord_3d()
-#'
-#' # Blend both fill and border colors to eliminate gaps
-#' ggplot(mountain, aes(x, y, z = z)) +
-#'   stat_surface(aes(fill = z, colour = z),
-#'                light = lighting("diffuse", blend = "both")) +
-#'   scale_fill_viridis_c() +
-#'   scale_colour_viridis_c() +
-#'   coord_3d()
-#'
-#' # Positional lighting (point light source)
-#' ggplot(mountain, aes(x, y, z = z)) +
-#'   stat_surface(aes(fill = after_stat(light)),
-#'                light = lighting("diffuse", position = c(50, 30, 200))) +
-#'   coord_3d()
-#'
-#' # Positional lighting with distance falloff
-#' ggplot(mountain, aes(x, y, z = z)) +
-#'   stat_surface(aes(fill = after_stat(light)),
-#'                light = lighting("diffuse", position = c(50, 30, 200),
-#'                                distance_falloff = TRUE)) +
-#'   coord_3d()
-#'
-#' # Voxel scene with positional lighting
-#' voxel_data <- data.frame(
-#'   x = c(1, 2, 3, 2, 1),
-#'   y = c(1, 1, 2, 3, 2),
-#'   z = c(1, 2, 1, 1, 3)
-#' )
-#' ggplot(voxel_data, aes(x, y, z)) +
-#'   stat_voxel(aes(fill = after_stat(light)),
-#'              light = lighting("diffuse", position = c(2, 2, 5))) +
-#'   coord_3d()
+#' p + stat_surface(aes(fill = after_stat(light)),
+#'   light = lighting("diffuse", direction = c(-1, 0, 1)))
 #'
 #' @seealso \code{\link{stat_surface}}, \code{\link{stat_voxel}}, \code{\link{stat_pillar}}
 #' @export

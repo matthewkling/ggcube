@@ -54,28 +54,17 @@
 #' @examples
 #' library(ggplot2)
 #'
-#' # Default free scales (current behavior - maximum visual range)
-#' ggplot(mtcars, aes(mpg, wt, z = qsec)) +
-#'   geom_point() +
-#'   coord_3d()
+#' # Use `scales` and `ratio` to modify aspect ratio
+#' p <- ggplot(mtcars, aes(mpg, wt, qsec)) +
+#'   geom_point()
+#' p + coord_3d() # Default free scales (maximum visual range)
+#' p + coord_3d(scales = "fixed") # Fixed scales (proportions match data scales, like coord_fixed)
+#' p + coord_3d(scales = "free", ratio = c(1, 2, 1)) # Custom cube ratios (make z twice as tall visually)
+#' p + coord_3d(scales = "fixed", ratio = c(1, 2, 1)) # Custom scale ratios (y gets twice the visual space relative to its scale range)
 #'
-#' # Fixed scales - visual proportions match coordinate system (like coord_fixed)
-#' ggplot(mtcars, aes(mpg, wt, z = qsec)) +
-#'   geom_point() +
-#'   coord_3d(scales = "fixed")
-#'
-#' # Custom cube ratios (make z twice as tall visually)
-#' ggplot(mtcars, aes(mpg, wt, z = qsec)) +
-#'   geom_point() +
-#'   coord_3d(scales = "free", ratio = c(1, 1, 2))
-#'
-#' # Custom scale ratios (z gets twice the visual space relative to its scale range)
-#' ggplot(mtcars, aes(mpg, wt, z = qsec)) +
-#'   geom_point() +
-#'   coord_3d(scales = "fixed", ratio = c(1, 1, 2))
 #'
 #' @export
-coord_3d <- function(pitch = -30, roll = 30, yaw = 0,
+coord_3d <- function(pitch = 0, roll = 120, yaw = 40,
                      persp = TRUE, dist = 3,
                      expand = TRUE, clip = "off",
                      faces = "background",

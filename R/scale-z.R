@@ -50,25 +50,13 @@
 #' @examples
 #' library(ggplot2)
 #'
-#' # Basic z-axis scaling
-#' ggplot(mtcars, aes(mpg, wt, z = qsec)) +
-#'   geom_point() +
-#'   scale_z_continuous(name = "Quarter Mile Time") +
-#'   coord_3d()
-#'
-#' # Custom breaks and labels
+#' # Custom breaks, labels, and limits
 #' ggplot(mtcars, aes(mpg, wt, z = qsec)) +
 #'   geom_point() +
 #'   scale_z_continuous(
 #'     breaks = c(15, 17, 19, 21),
-#'     labels = c("Fast", "Medium", "Slow", "Very Slow")
-#'   ) +
-#'   coord_3d()
-#'
-#' # Set explicit limits
-#' ggplot(mtcars, aes(mpg, wt, z = qsec)) +
-#'   geom_point() +
-#'   scale_z_continuous(limits = c(10, 25)) +
+#'     labels = c("Fast", "Medium", "Slow", "Very Slow"),
+#'     limits = c(10, NA)) +
 #'   coord_3d()
 #'
 #' @seealso \code{\link{zlim}} for a shorthand way to set z-axis limits,

@@ -36,23 +36,15 @@ This function is a lightweight wrapper around \code{ggplot2::aes()} that:
 \examples{
 library(ggplot2)
 
-# 2D plots work exactly as before
+# 2D plots work like regular ggplot2
 ggplot(mtcars, aes(mpg, wt)) + geom_point()
 
-# 3D plots can now use positional syntax
+# 3D plots can use positional syntax, or explicitly map to z
+# same as: ggplot(mtcars, aes(mpg, wt, z = qsec)) + geom_point() + coord_3d()
 ggplot(mtcars, aes(mpg, wt, qsec)) + geom_point() + coord_3d()
 
-# Works with existing z-aesthetic geoms
-volcano_df <- expand.grid(x = 1:nrow(volcano), y = 1:ncol(volcano))
-volcano_df$z <- as.vector(volcano)
-ggplot(volcano_df, aes(x, y, z)) + geom_contour()
-
-# Still supports all other aesthetics
-ggplot(mtcars, aes(mpg, wt, qsec, color = cyl, size = hp)) +
-  geom_point() + coord_3d()
-
-# Named aesthetics still work
-ggplot(mtcars, aes(x = mpg, y = wt, z = qsec)) + geom_point() + coord_3d()
+# Also works with non-ggcube z-aesthetic geoms
+ggplot(mountain, aes(x, y, z)) + geom_contour()
 
 }
 \seealso{

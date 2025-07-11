@@ -89,64 +89,22 @@ And understands these additional aesthetics:
 voxel_data <- data.frame(
   x = c(1, 2, 3, 2, 1, 3, 4),
   y = c(1, 1, 2, 3, 2, 1, 2),
-  z = c(1, 2, 1, 1, 3, 3, 2),
-  density = c(0.8, 0.6, 0.9, 0.7, 0.5, 0.4, 0.3)
+  z = c(1, 2, 1, 1, 3, 3, 2)
 )
 
+p <- ggplot(voxel_data, aes(x, y, z)) + coord_3d()
+
 # Basic 3D voxel plot
-ggplot(voxel_data, aes(x, y, z)) +
-  stat_voxel(aes(fill = density)) +
-  scale_fill_viridis_c() +
-  coord_3d()
+p + stat_voxel(aes(fill = z), color = "black") +
+  scale_fill_viridis_c()
 
 # Directional lighting (like sunlight)
-ggplot(voxel_data, aes(x, y, z)) +
-  stat_voxel(aes(fill = after_stat(light)),
-             light = lighting("direct", direction = c(1, 1, 1))) +
-  scale_fill_gradient(low = "darkgreen", high = "lightgreen") +
-  coord_3d()
-
-# Positional lighting (point light source)
-ggplot(voxel_data, aes(x, y, z)) +
-  stat_voxel(aes(fill = after_stat(light)),
-             light = lighting("diffuse", position = c(5, 5, 4))) +
-  scale_fill_gradient(low = "darkblue", high = "white") +
-  coord_3d()
-
-# Positional lighting with distance falloff
-ggplot(voxel_data, aes(x, y, z)) +
-  stat_voxel(aes(fill = after_stat(light)),
-             light = lighting("diffuse", position = c(2, 2, 5),
-                             distance_falloff = TRUE)) +
-  scale_fill_gradient(low = "black", high = "yellow") +
-  coord_3d()
+p + stat_voxel(aes(fill = after_stat(light)),
+             light = lighting(direction = c(1, 0, .5))) +
+  scale_fill_gradient(low = "darkgreen", high = "lightgreen")
 
 # Show only visible faces for performance
-ggplot(voxel_data, aes(x, y, z)) +
-  stat_voxel(aes(fill = density, alpha = density),
-             faces = c("zmax", "ymax", "xmax")) +
-  coord_3d()
-
-# Molecular visualization with gaps and positional lighting
-ggplot(voxel_data, aes(x, y, z)) +
-  stat_voxel(aes(fill = after_stat(light)),
-             width = 0.8,
-             light = lighting("diffuse", position = c(2, 2, 4))) +
-  scale_fill_gradient2(low = "blue", mid = "white", high = "red") +
-  coord_3d()
-
-# Scientific simulation results
-# Generate 3D field data
-field_data <- expand.grid(x = 1:5, y = 1:5, z = 1:3) \%>\%
-  mutate(field_strength = sin(x) * cos(y) * exp(-z/2)) \%>\%
-  filter(abs(field_strength) > 0.3)  # Only show significant values
-
-ggplot(field_data, aes(x, y, z)) +
-  stat_voxel(aes(fill = field_strength, alpha = abs(field_strength)),
-             light = lighting("diffuse", position = c(3, 3, 5),
-                             distance_falloff = TRUE)) +
-  scale_fill_gradient2() +
-  coord_3d()
+p + stat_voxel(faces = c("zmax", "ymax", "xmin"), color = "black")
 
 }
 \seealso{

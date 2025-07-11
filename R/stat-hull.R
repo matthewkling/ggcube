@@ -213,39 +213,30 @@ StatHull <- ggproto("StatHull", Stat,
 #' @examples
 #' library(ggplot2)
 #'
-#' # Generate sphere points (coordinates roughly 0-1 scale)
-#' set.seed(123)
-#' theta <- runif(200, 0, 2*pi)
-#' phi <- acos(runif(200, -1, 1))
-#' sphere_df <- data.frame(
-#'   x = sin(phi) * cos(theta),
-#'   y = sin(phi) * sin(theta),
-#'   z = cos(phi)
-#' )
-#'
 #' # Convex hull (reliable default, no scale sensitivity)
-#' ggplot(sphere_df, aes(x, y, z = z)) +
+#' ggplot(sphere_points, aes(x, y, z = z)) +
 #'   stat_hull(aes(fill = after_stat(light)), method = "convex") +
 #'   scale_fill_gradient(low = "black", high = "white") +
 #'   coord_3d()
 #'
 #' # Alpha shape (scale-sensitive - alpha ~1 works for unit sphere)
-#' ggplot(sphere_df, aes(x, y, z = z)) +
+#' ggplot(sphere_points, aes(x, y, z = z)) +
 #'   stat_hull(aes(fill = after_stat(light)), method = "alpha", alpha = 1.0) +
 #'   scale_fill_gradient(low = "black", high = "white") +
 #'   coord_3d()
 #'
 #' # Grouped hulls - separate hull for each species
-#' ggplot(grouped_data, aes(x, y, z, group = species)) +
-#'   stat_hull(aes(fill = species), alpha = 0.7) +
-#'   coord_3d()
+#' spheres <- rbind(dplyr::mutate(sphere_points, group = "a"),
+#'                  dplyr::mutate(sphere_points, group = "b", x = x + 3))
+#' ggplot(spheres, aes(x, y, z, group = group)) +
+#'   stat_hull(aes(fill = group), light = lighting(blend = "fill")) +
+#'   coord_3d(scales = "fixed")
 #'
 #' # For larger coordinate scales, increase alpha proportionally:
-#' sphere_large <- sphere_df * 100  # Scale up by 100x
+#' sphere_large <- sphere_points * 100  # Scale up by 100x
 #' ggplot(sphere_large, aes(x, y, z = z)) +
-#'   stat_hull(aes(fill = after_stat(light)),
-#'             method = "alpha", alpha = 100) +  # Increase alpha ~100x
-#'   scale_fill_gradient(low = "black", high = "white") +
+#'   stat_hull(method = "alpha", alpha = 100, # Increase alpha ~100x
+#'             fill = "darkgreen", light = lighting(blend = "fill")) +
 #'   coord_3d()
 #'
 #' @seealso [coord_3d()] for 3D coordinate systems, [geom_polygon_3d] for the

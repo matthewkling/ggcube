@@ -59,19 +59,19 @@ And understands these additional aesthetics:
 }
 
 \examples{
-# Typically used via stat_surface() or stat_terrain()
-ggplot(sphere_data, aes(x, y, z)) +
-  stat_surface(method = "hull") +
+# Typically used via stat_surface() or stat_hull()
+ggplot(sphere_points, aes(x, y, z)) +
+  stat_hull(method = "convex", fill = "dodgerblue",
+            light = lighting(blend = "fill", blend_mode = "hsl")) +
   coord_3d()
 
-# Can be used directly with pre-triangulated data
-ggplot(triangle_data, aes(x, y, z, group = triangle_id)) +
-  geom_polygon_3d(fill = "lightblue") +
-  coord_3d()
-
-# Works with map data and proper depth sorting
-ggplot(map_data, aes(long, lat, z, group = group, order = order)) +
-  geom_polygon_3d(aes(fill = layer)) +
+# Can be used directly with properly structured data
+triangles <- data.frame(x = rep(c(1, 2, 3), 3),
+                            y = rep(c(1, 3, 1), 3),
+                            z = rep(1:3, each = 3),
+                            shape = rep(letters[1:3], each = 3))
+ggplot(triangles, aes(x, y, z, fill = shape)) +
+  geom_polygon_3d(color = "black") +
   coord_3d()
 
 }

@@ -26,19 +26,23 @@ The package's core function is `coord_3d()`, which provides a 3D coordinate syst
 
 ## Example
 
-Let's make a 3D scatter plot of the `mpg` dataset. Compared to a standard 2D ggplot, we simply expand the aesthetic mapping to include our third variable, and then `add coord_3d()`:
+Let's make a 3D scatter plot of the `mpg` dataset. Compared to a standard 2D ggplot, we simply expand the aesthetic mapping to include our third variable, and then add `coord_3d()`:
 
 ```{r example, warning = FALSE, message = FALSE}
+library(ggplot2)
 library(ggcube)
-ggplot(mpg, aes(displ, hwy, cty)) +
-      geom_point() +
-      coord_3d()
+
+ggplot(mpg, aes(displ, hwy, cty)) +  # Enhanced aes() from ggcube
+  geom_point() +                     # From ggplot2  
+  coord_3d()                         # From ggcube
 ```
 
 A key 3D stat is `stat_surface()`, which can be used to plot grid-like data that has a z-value for every x-y combination, such as function predictions or terrain layers. The example below uses this stat to visualize a wave function; in addition to projecting the surface, it uses some 3D `lighting()` to highlight the surface shape. It also hints at how you can adjust the rotation and aspect ratios of your plot via arguments to `coord_3d()`, and apply ggplot2 themes to the plot.
 
 ```{r surface, warning = FALSE, message = FALSE}
 # data
+library(dplyr)
+library(tidyr)
 d <- expand_grid(x = seq(-10, 10, .25),
                  y = seq(-10, 10, .25)) %>%
       mutate(z = cos(sqrt(x^2 + y^2)) * 3)
