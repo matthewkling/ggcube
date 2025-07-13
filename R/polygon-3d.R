@@ -212,11 +212,11 @@ blend_lighting_with_colors <- function(base_colors, light_values, lighting) {
 GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                          required_aes = c("x", "y", "z", "group"),
                          default_aes = aes(
-                               fill = "grey80", colour = NA, linewidth = 0.5, linetype = 1, alpha = 1
+                               fill = "grey80", colour = NA, linewidth = 0.1, linetype = 1, alpha = 1
                          ),
 
                          draw_panel = function(data, panel_params, coord) {
-                               # Transform ALL data at once
+                               # Transform ALL data at once (includes hierarchical depth sorting)
                                coords <- coord$transform(data, panel_params)
 
                                # Extract lighting parameters from special columns
@@ -246,67 +246,21 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                                      coords <- coords[, !names(coords) %in% c("blend_enabled", "blend_strength", "blend_mode", "lighting_method")]
                                }
 
-                               # Handle different data sources: stats vs regular polygons
-                               if ("face_id" %in% names(coords)) {
-                                     # Data from stats (stat_surface, stat_voxel, etc.) - has face_id
-                                     polygon_id_col <- "face_id"
+                               # Data is already hierarchically sorted by coord$transform()
+                               # Just need to create polygon grobs using the group column
 
-                                     # Set up hierarchical object IDs for pillars/voxels
-                                     if("pillar_id" %in% names(coords)){
-                                           coords$object_id <- coords$pillar_id
-                                     } else if("voxel_id" %in% names(coords)){
-                                           coords$object_id <- coords$voxel_id
-                                     } else {
-                                           # For surfaces and other geoms, treat each face as its own object
-                                           coords$object_id <- coords$face_id
-                                     }
-
-                                     # Calculate depths and sort hierarchically using viewpoint distance
-                                     coords <- coords %>%
-                                           group_by(object_id) %>%
-                                           mutate(object_depth = max(depth)) %>%  # Farther objects first
-                                           group_by(face_id) %>%
-                                           mutate(face_depth = mean(depth)) %>%   # Face center depth
-                                           ungroup()
-
-                                     # Sort by depths, and optionally by order if it exists
-                                     if ("order" %in% names(coords)) {
-                                           coords <- coords %>%
-                                                 arrange(desc(object_depth), desc(face_depth), order)
-                                     } else {
-                                           coords <- coords %>%
-                                                 arrange(desc(object_depth), desc(face_depth))
-                                     }
-
-                               } else {
-                                     # Regular polygon data (like maps) - use group column
-                                     polygon_id_col <- "group"
-
-                                     # For regular polygons, each group is its own object
-                                     coords$object_id <- coords$group
-
-                                     # Calculate representative depth for each polygon group
-                                     coords <- coords %>%
-                                           group_by(group) %>%
-                                           mutate(group_depth = mean(depth)) %>%
-                                           ungroup()
-
-                                     # Sort groups by depth, but preserve order within groups
-                                     if ("order" %in% names(coords)) {
-                                           coords <- coords %>%
-                                                 arrange(desc(group_depth), group, order)
-                                     } else {
-                                           coords <- coords %>%
-                                                 arrange(desc(group_depth), group)
-                                     }
+                               if (!"group" %in% names(coords)) {
+                                     # Fallback for data without groups
+                                     warning("No group column found in polygon data")
+                                     return(grid::nullGrob())
                                }
 
                                # Create polygon grobs
                                polygon_grobs <- list()
-                               polygon_ids <- unique(coords[[polygon_id_col]])
+                               polygon_ids <- unique(coords$group)
 
                                for(i in seq_along(polygon_ids)){
-                                     poly_data <- filter(coords, .data[[polygon_id_col]] == polygon_ids[i])
+                                     poly_data <- coords[coords$group == polygon_ids[i], ]
 
                                      # Draw this polygon
                                      polygon_grobs[[i]] <- grid::polygonGrob(

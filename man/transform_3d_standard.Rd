@@ -15,7 +15,7 @@ transform_3d_standard(
 \item{proj}{A list of projection parameters}
 }
 \value{
-Data frame with transformed coordinates and depth for sorting
+Data frame with transformed coordinates, depth for sorting, and depth_scale for size scaling
 }
 \description{
 Transform 3D points using rotation and optional perspective with viewpoint distance

@@ -110,12 +110,13 @@ StatHull <- ggproto("StatHull", Stat,
                                 x = verts[,1],
                                 y = verts[,2],
                                 z = verts[,3],
-                                face_id = face_id,
+                                group = paste0("hull__", face_id),
                                 triangle_index = triangle_index,
                                 normal_x = normal_x,
                                 normal_y = normal_y,
                                 normal_z = normal_z,
                                 light = light_val_expanded,
+
                                 # Add lighting parameters for blend processing
                                 blend_enabled = light$blend,
                                 blend_strength = light$blend_strength,
@@ -128,15 +129,8 @@ StatHull <- ggproto("StatHull", Stat,
                           # Get original indices for each vertex
                           vertex_indices <- as.vector(t(tri))
 
-                          # Preserve all non-coordinate columns from original data
-                          non_coord_cols <- setdiff(names(data), c("x", "y", "z"))
-                          for (col_name in non_coord_cols) {
-                                result[[col_name]] <- data[[col_name]][vertex_indices]
-                          }
-
-                          # Set group to face_id for proper polygon rendering
-                          # This ensures each triangle is rendered as a separate polygon
-                          result$group <- result$face_id
+                          # Preserve additional columns from original data
+                          result <- bind_cols(result, data[vertex_indices, setdiff(names(data), names(result)), drop = FALSE])
 
                           return(result)
                     }

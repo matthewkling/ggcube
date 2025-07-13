@@ -18,19 +18,16 @@ StatPillar <- ggproto("StatPillar", Stat,
                             # Handle zmin aesthetic (base level for pillars)
                             if (!"zmin" %in% names(data)) {
                                   data$zmin <- min(data$z, na.rm = TRUE)
+                            } else {
+                                  # Ensure z is never less than zmin
+                                  zmin <- pmin(data$zmin, data$z)
+                                  zmax <- pmax(data$zmin, data$z)
+                                  data$zmin <- zmin
+                                  data$z <- zmax
                             }
 
-                            # Convert categorical data to numeric positions before calculating spacing
-                            data$z_raw <- data$z # (stash a copy of original z values first)
-                            if (is.factor(data$x) || is.character(data$x)) {
-                                  data$x <- as.numeric(as.factor(data$x))
-                            }
-                            if (is.factor(data$y) || is.character(data$y)) {
-                                  data$y <- as.numeric(as.factor(data$y))
-                            }
-                            if (is.factor(data$z) || is.character(data$z)) {
-                                  data$z <- as.numeric(as.factor(data$z))
-                            }
+                            # Generate numeric positions before calculating spacing
+                            data <- convert_to_numeric(data)
 
                             # Calculate grid spacing using resolution (works for both regular and sparse grids)
                             x_spacing <- resolution(data$x, zero = FALSE)
@@ -44,27 +41,15 @@ StatPillar <- ggproto("StatPillar", Stat,
                                   y_spacing <- 1.0
                             }
 
-                            # Validate and process faces parameter (these are pillar faces, not cube faces)
-                            valid_faces <- c("xmin", "xmax", "ymin", "ymax", "zmin", "zmax")
-                            if (length(faces) == 1 && faces == "all") {
-                                  selected_faces <- valid_faces
-                            } else if (length(faces) == 1 && faces == "none") {
-                                  selected_faces <- character(0)
-                            } else {
-                                  invalid_faces <- setdiff(faces, valid_faces)
-                                  if (length(invalid_faces) > 0) {
-                                        stop("Invalid face names: ", paste(invalid_faces, collapse = ", "),
-                                             ". Valid faces are: ", paste(valid_faces, collapse = ", "))
-                                  }
-                                  selected_faces <- faces
-                            }
+                            # Validate and process faces parameter
+                            selected_faces <- select_faces(faces)
 
                             if (length(selected_faces) == 0) {
                                   # Return empty data frame with required columns for consistency
                                   return(data.frame(
                                         x = numeric(0), y = numeric(0), z = numeric(0),
-                                        face_id = character(0), voxel_id = integer(0), face_type = character(0),
-                                        order = integer(0), light = numeric(0),
+                                        group = character(0), pillar_id = integer(0), face_type = character(0),
+                                        light = numeric(0),
                                         normal_x = numeric(0), normal_y = numeric(0), normal_z = numeric(0)
                                   ))
                             }
@@ -76,8 +61,8 @@ StatPillar <- ggproto("StatPillar", Stat,
                                   # Return empty data frame with required columns for consistency
                                   return(data.frame(
                                         x = numeric(0), y = numeric(0), z = numeric(0),
-                                        face_id = character(0), pillar_id = integer(0), face_type = character(0),
-                                        order = integer(0), light = numeric(0),
+                                        group = character(0), pillar_id = integer(0), face_type = character(0),
+                                        light = numeric(0),
                                         normal_x = numeric(0), normal_y = numeric(0), normal_z = numeric(0)
                                   ))
                             }
@@ -169,20 +154,22 @@ create_pillars <- function(data, x_spacing, y_spacing, width, selected_faces) {
                   if (face_name %in% names(face_definitions)) {
                         corner_indices <- face_definitions[[face_name]]
 
-                        # Create face vertices with pillar-grouped face_id
+                        # Create 2-level hierarchical group ID: pillar_id__face_type
+                        hierarchical_group <- paste0("pillar", i, "__", face_name)
+
+                        # Create face vertices with hierarchical grouping
                         face_vertices <- data.frame(
                               x = sapply(corner_indices, function(idx) corners[[idx]][1]),
                               y = sapply(corner_indices, function(idx) corners[[idx]][2]),
                               z = sapply(corner_indices, function(idx) corners[[idx]][3]),
                               z_raw = point$z_raw,
-                              face_id = sprintf("pillar_%04d_%s", i, face_name),  # Zero-padded for proper sorting
+                              group = hierarchical_group,
                               pillar_id = i,
-                              face_type = face_name,
-                              order = 1:4
+                              face_type = face_name
                         )
 
                         # Preserve all non-coordinate columns
-                        non_coord_cols <- setdiff(names(point), c("x", "y", "z", "zmin"))
+                        non_coord_cols <- setdiff(names(point), names(face_vertices))
                         for (col_name in non_coord_cols) {
                               face_vertices[[col_name]] <- rep(point[[col_name]], 4)
                         }
@@ -213,12 +200,12 @@ calculate_pillar_face_normals <- function(pillar_faces) {
             return(matrix(nrow = 0, ncol = 3))
       }
 
-      # Get unique faces
-      unique_faces <- unique(pillar_faces$face_id)
+      # Get unique faces using the new group column
+      unique_faces <- unique(pillar_faces$group)
       normals <- matrix(0, nrow = length(unique_faces), ncol = 3)
 
       for (i in seq_along(unique_faces)) {
-            face_data <- pillar_faces[pillar_faces$face_id == unique_faces[i], ]
+            face_data <- pillar_faces[pillar_faces$group == unique_faces[i], ]
             face_type <- face_data$face_type[1]
 
             # Use predefined normals for axis-aligned rectangular faces
@@ -238,7 +225,7 @@ calculate_pillar_face_normals <- function(pillar_faces) {
       # Expand normals to match number of vertices (4 per face)
       vertex_normals <- matrix(0, nrow = nrow(pillar_faces), ncol = 3)
       for (i in seq_along(unique_faces)) {
-            face_indices <- which(pillar_faces$face_id == unique_faces[i])
+            face_indices <- which(pillar_faces$group == unique_faces[i])
             # Assign the same normal to all vertices of this face
             for (idx in face_indices) {
                   vertex_normals[idx, ] <- normals[i, ]
@@ -288,7 +275,7 @@ calculate_pillar_face_normals <- function(pillar_faces) {
 #' @section Computed variables:
 #' - `light`: Computed lighting value (numeric for most methods, hex color for `normal_rgb`)
 #' - `normal_x`, `normal_y`, `normal_z`: Face normal components
-#' - `face_id`: Unique identifier for each face
+#' - `group`: Hierarchical group identifier with format "pillarX__face_type" for proper depth sorting
 #' - `pillar_id`: Sequential pillar number
 #' - `face_type`: Face name ("zmax", "xmin", etc.)
 #'
@@ -343,8 +330,8 @@ stat_pillar <- function(mapping = NULL, data = NULL,
                         na.rm = FALSE, show.legend = NA, inherit.aes = TRUE,
                         ...) {
 
-      # Set default group mapping
-      default_mapping <- aes(group = after_stat(face_id))
+      # Set default group mapping using the new hierarchical group
+      default_mapping <- aes(group = after_stat(group))
 
       if (!is.null(mapping)) {
             mapping_names <- names(mapping)

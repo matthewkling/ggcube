@@ -1,4 +1,3 @@
-
 #' Rotate points in 3D space
 #'
 #' @param xyz Matrix of x, y, z coordinates
@@ -50,7 +49,7 @@ apply_perspective <- function(rotated, dist) {
 #'
 #' @param data Data frame with x, y, z columns (in standard [-0.5, 0.5] domain)
 #' @param proj A list of projection parameters
-#' @return Data frame with transformed coordinates and depth for sorting
+#' @return Data frame with transformed coordinates, depth for sorting, and depth_scale for size scaling
 transform_3d_standard <- function(data, proj = list(pitch = 0, roll = 0, yaw = 0, persp = TRUE, dist = 2)) {
 
       pitch <- proj$pitch
@@ -59,35 +58,48 @@ transform_3d_standard <- function(data, proj = list(pitch = 0, roll = 0, yaw = 0
       persp <- proj$persp
       dist <- proj$dist
 
-      # Apply rotation
+      # Apply rotation to data points
       rotated <- rotate_3d(as.matrix(data[, c("x", "y", "z")]), pitch, roll, yaw)
+
+      # Calculate reference depth for point (0,0,0) - the center of the cube
+      reference_point <- matrix(c(0, 0, 0), nrow = 1)
+      rotated_ref <- rotate_3d(reference_point, pitch, roll, yaw)
 
       if (persp) {
             # Calculate true distance from viewpoint (camera at 0,0,-dist in rotated space)
             depth <- sqrt(rotated[, 1]^2 + rotated[, 2]^2 + (rotated[, 3] + dist)^2)
 
+            # Calculate reference depth for center point (0,0,0)
+            reference_depth <- sqrt(rotated_ref[1, 1]^2 + rotated_ref[1, 2]^2 + (rotated_ref[1, 3] + dist)^2)
+
             # Apply perspective transformation
             transformed <- apply_perspective(rotated, dist)
 
-            # Return transformed coordinates with viewpoint depth
+            # Return transformed coordinates with viewpoint depth and depth scaling
             return(data.frame(
                   x = transformed[, 1],
                   y = transformed[, 2],
                   z = transformed[, 3],  # Keep z for face visibility calculations
-                  depth = depth          # True viewpoint distance for sorting
+                  depth = depth,         # True viewpoint distance for sorting
+                  depth_scale = reference_depth / depth  # Scaling factor for size/linewidth
             ))
       } else {
             # Orthographic: depth is just negative z (farther = larger depth)
+            # For depth scaling, we still want to use distance-like relationship
+            reference_depth <- abs(rotated_ref[1, 3]) + 1  # Add 1 to avoid division by zero
+            point_depths <- abs(rotated[, 3]) + 1
+
             return(data.frame(
                   x = rotated[, 1],
                   y = rotated[, 2],
                   z = rotated[, 3],      # Keep z for face visibility
-                  depth = -rotated[, 3]  # Use for sorting
+                  depth = -rotated[, 3], # Use for sorting (farther = larger depth)
+                  depth_scale = reference_depth / point_depths  # Scaling factor
             ))
       }
 }
 
-' Scale data to standard domain with aspect ratio control
+#' Scale data to standard domain with aspect ratio control
 #'
 #' @param values Vector of values to scale (for single axis) OR data frame with x,y,z columns (for multi-axis)
 #' @param data_range Original range of the data [min, max] (for single axis) OR list with x,y,z scale ranges (for multi-axis)

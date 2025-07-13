@@ -356,7 +356,7 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                                panel_params$ratio
                          )
 
-                         # Apply 3D transformation (returns x, y, z, depth)
+                         # Apply 3D transformation (returns x, y, z, depth, depth_scale)
                          transformed <- transform_3d_standard(data_std, panel_params$proj)
 
                          # Store transformed coordinates
@@ -364,30 +364,69 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                          data$y <- transformed$y
                          data$z <- transformed$z      # Keep for face visibility calculations
                          data$depth <- transformed$depth  # Use for depth sorting
+                         data$depth_scale <- transformed$depth_scale  # Use for size scaling
 
                          # Apply final coordinate transformation to fit plot bounds [0, 1]
                          result <- data
                          result$x <- (data$x - panel_params$plot_bounds[1]) / (panel_params$plot_bounds[2] - panel_params$plot_bounds[1])
                          result$y <- (data$y - panel_params$plot_bounds[3]) / (panel_params$plot_bounds[4] - panel_params$plot_bounds[3])
 
-                         # Order by depth (farther objects first for back-to-front rendering)
-                         # but preserve vertex order within groups for proper polygon construction
-                         if ("group" %in% names(result)) {
-                               # Calculate representative depth for each group
-                               group_depths <- aggregate(result$depth, by = list(group = result$group), FUN = mean)
-                               names(group_depths) <- c("group", "group_depth")
-                               result <- merge(result, group_depths, by = "group")
+                         # Depth sorting with hierarchical support
+                         if ("group" %in% names(result) && grepl("__", result$group[1], fixed = TRUE)) {
+                               # Hierarchical depth sorting
+                               # Split groups into hierarchy levels
+                               group_parts <- strsplit(result$group, "__", fixed = TRUE)
+                               n_levels <- max(lengths(group_parts))
 
-                               # Sort by group depth, then by group, then preserve order within group
-                               if ("order" %in% names(result)) {
-                                     result <- result[order(-result$group_depth, result$group, result$order), ]
-                               } else {
-                                     result <- result[order(-result$group_depth, result$group), ]
+                               # Create temporary data frame for sorting calculations
+                               sort_df <- data.frame(
+                                     row_id = 1:nrow(result),
+                                     depth = result$depth,
+                                     stringsAsFactors = FALSE
+                               )
+
+                               # Add hierarchy level columns
+                               for (i in 1:n_levels) {
+                                     level_col <- paste0("level_", i)
+                                     sort_df[[level_col]] <- sapply(group_parts, function(x) {
+                                           if(length(x) >= i) x[i] else NA_character_
+                                     })
                                }
 
-                               # Clean up temporary column
-                               result$group_depth <- NULL
+                               # Calculate summary depth for each hierarchy level
+                               for (i in 1:n_levels) {
+                                     level_col <- paste0("level_", i)
+                                     depth_col <- paste0("depth_", i)
+
+                                     fun <- switch(i, "1" = max, "2" = mean, mean)
+
+                                     # Calculate depth for each unique value at this level
+                                     level_values <- sort_df[[level_col]]
+                                     unique_values <- unique(level_values[!is.na(level_values)])
+                                     sort_df[[depth_col]] <- NA_real_
+                                     for (level_val in unique_values) {
+                                           mask <- !is.na(level_values) & level_values == level_val
+                                           sort_df[[depth_col]][mask] <- fun(sort_df$depth[mask])
+                                     }
+                               }
+
+                               # Build sorting arguments (deeper = farther = sort first)
+                               depth_cols <- paste0("depth_", 1:n_levels)
+                               sort_args <- list()
+                               for (col in depth_cols) {
+                                     if (col %in% names(sort_df)) {
+                                           sort_args[[length(sort_args) + 1]] <- -sort_df[[col]]  # Negative for back-to-front
+                                     }
+                               }
+
+                               # Sort hierarchically, preserving row order within groups
+                               if (length(sort_args) > 0) {
+                                     sort_order <- do.call(order, sort_args)
+                                     result <- result[sort_order, ]
+                               }
+
                          } else {
+                               # Individual vertex sorting (ignore groups)
                                result <- result[order(-result$depth), ]
                          }
 
@@ -511,6 +550,6 @@ get_scale_info <- function(scale_obj, expand = TRUE) {
       expanded_range <- ggplot2:::expand_limits_scale(scale_obj, expansion, limits, coord_limits = NULL)
 
       list(limits = expanded_range,
-            breaks = scale_obj$get_breaks(),
-            labels = scale_obj$get_labels())
+           breaks = scale_obj$get_breaks(),
+           labels = scale_obj$get_labels())
 }

@@ -1,8 +1,7 @@
 StatSurface <- ggproto("StatSurface", Stat,
                        required_aes = c("x", "y", "z"),
 
-                       compute_group = function(data, scales, na.rm = FALSE,
-                                                light = lighting()) {
+                       compute_group = function(data, scales, na.rm = FALSE, light = lighting()) {
 
                              # Remove missing values if requested
                              if (na.rm) {
@@ -16,7 +15,6 @@ StatSurface <- ggproto("StatSurface", Stat,
 
                              # Detect grid structure
                              grid_info <- detect_grid_structure(data)
-
                              if (!grid_info$is_regular || !grid_info$is_complete) {
                                    stop("Data must be on a regular, complete grid. Each x,y combination should appear exactly once.")
                              }
@@ -55,33 +53,24 @@ StatSurface <- ggproto("StatSurface", Stat,
                              # Apply lighting models to the normals
                              light_vals <- compute_lighting(normals, light, face_centers)
 
-                             # Expand lighting values to match vertices (4 per face)
-                             light_expanded <- rep(light_vals, each = 4)
+                             face_data <- select(face_data, group) %>%
+                                   mutate(light = light_vals,
+                                          normal_x = normals[, 1],
+                                          normal_y = normals[, 2],
+                                          normal_z = normals[, 3])
 
-                             # Re-apply identity scaling for RGB colors after rep()
+                             # merge face-level vars back into vertex-level data set
+                             faces <- left_join(faces, face_data,
+                                                by = join_by(group))
                              if (light$method == "normal_rgb") {
-                                   light_expanded <- I(light_expanded)
+                                   faces$light <- I(faces$light)
                              }
-
-                             # Add lighting and normal components to faces data
-                             faces$light <- light_expanded
-                             faces$normal_x <- rep(normals[, 1], each = 4)
-                             faces$normal_y <- rep(normals[, 2], each = 4)
-                             faces$normal_z <- rep(normals[, 3], each = 4)
 
                              # Add lighting parameters for blend processing
                              faces$blend_enabled <- light$blend
                              faces$blend_strength <- light$blend_strength
                              faces$blend_mode <- light$blend_mode
                              faces$lighting_method <- light$method
-
-                             # Ensure faces are sorted by group then order for proper rendering
-                             if ("order" %in% names(faces)) {
-                                   faces <- faces[order(faces$group, faces$order), ]
-                             }
-
-                             # Add computed variables (keep your group naming)
-                             faces$face_id <- faces$group
 
                              return(faces)
                        }
@@ -115,7 +104,6 @@ StatSurface <- ggproto("StatSurface", Stat,
 #' - `slope`: Gradient magnitude from original surface calculations
 #' - `aspect`: Direction of steepest slope from original surface calculations
 #' - `dzdx`, `dzdy`: Partial derivatives from original surface calculations
-#' - `face_id`: Quad group identifier
 #'
 #' @examples
 #' # Generate and visualize a basic surface
@@ -155,7 +143,7 @@ stat_surface <- function(mapping = NULL, data = NULL,
                          ...) {
 
       # Set default group mapping like stat_surface does
-      default_mapping <- aes(group = after_stat(face_id))
+      default_mapping <- aes(group = after_stat(group))
 
       if (!is.null(mapping)) {
             mapping_names <- names(mapping)
@@ -218,7 +206,7 @@ detect_grid_structure <- function(data) {
 create_grid_quads <- function(data) {
       data <- data %>%
             ungroup() %>%
-            mutate(group = 1:nrow(.))
+            mutate(quad_id = 1:nrow(.))
 
       dy <- data %>%
             group_by(x) %>%
@@ -235,14 +223,14 @@ create_grid_quads <- function(data) {
       dxy <- data.frame(x = dx$x,
                         y = dy$y) %>%
             left_join(data, by = join_by(x, y)) %>%
-            mutate(group = dx$group)
+            mutate(quad_id = dx$quad_id)
 
       d <- bind_rows(data, dx, dxy, dy) %>%
             na.omit() %>%
-            group_by(group) %>%
+            group_by(quad_id) %>%
             filter(n() == 4) %>%
             arrange(x, y) %>%
-            mutate(order = c(1, 2, 4, 3)) %>%
+            mutate(vertex_order = c(1, 2, 4, 3)) %>%
             arrange(x) %>%
             mutate(dzdx = (mean(z[3:4]) - mean(z[1:2])) / (mean(x[3:4]) - mean(x[1:2]))) %>%
             arrange(y) %>%
@@ -250,7 +238,8 @@ create_grid_quads <- function(data) {
                    slope = sqrt(dzdy^2 + dzdx^2),
                    aspect = atan2(dzdy, dzdx)) %>%
             ungroup() %>%
-            arrange(group, order) %>%
+            arrange(quad_id, vertex_order) %>%
+            mutate(group = paste0("surface__quad", quad_id, "::", group)) %>%
             as.data.frame()
 
       return(d)
