@@ -97,7 +97,7 @@ coord_3d <- function(pitch = 0, roll = 120, yaw = 30,
       )
 }
 
-#' Extract variable names from aesthetic mappings (NOT CURRENTLY USED)
+#' Extract variable names from aesthetic mappings
 #'
 #' @param plot_obj A ggplot object
 #' @return A list with x, y, z character vectors of variable names
@@ -155,6 +155,61 @@ extract_aesthetic_vars <- function(plot_obj) {
 }
 
 
+#' Get axis name for a single scale with proper fallback hierarchy
+#'
+#' @param scale_obj Scale object (can be NULL for z-axis)
+#' @param axis_name Axis name ("x", "y", or "z")
+#' @return Single axis name string
+get_scale_names <- function(scale_obj, axis_name) {
+
+      # CAPTURE SCALE NAME BEFORE BLANKING IT OUT
+      scale_name <- if (!is.null(scale_obj)) scale_obj$name %||% waiver() else waiver()
+
+      # TRY TO FIND PLOT OBJECT AND EXTRACT BOTH LABELS AND AESTHETIC VARS
+      plot_obj <- NULL
+      plot_labels <- NULL
+      aesthetic_vars <- NULL
+
+      tryCatch({
+            for (i in 1:25) {
+                  env <- parent.frame(i)
+                  if (exists("plot", envir = env)) {
+                        potential_plot <- get("plot", envir = env)
+                        if (inherits(potential_plot, "ggplot")) {
+                              plot_obj <- potential_plot
+                              plot_labels <- potential_plot$labels
+                              aesthetic_vars <- extract_aesthetic_vars(potential_plot)
+                              break
+                        }
+                  }
+            }
+      }, error = function(e) {
+            # Ignore errors - will use defaults
+      })
+
+      # RESOLVE FINAL NAME WITH FALLBACK HIERARCHY:
+      # 1. Explicit scale name (from scale constructors like scale_x_continuous(name = "..."))
+      # 2. Plot labels (automatic from aes() expressions OR user-set from labs())
+      # 3. Simple aesthetic variable names (fallback if plot labels missing)
+      # 4. Default name (axis_name)
+
+      final_name <- axis_name  # default
+
+      if (!inherits(scale_name, "waiver") && !is.null(scale_name) && scale_name != "") {
+            # Priority 1: Explicit scale name
+            final_name <- scale_name
+      } else if (!is.null(plot_labels) && !is.null(plot_labels[[axis_name]]) && !inherits(plot_labels[[axis_name]], "waiver")) {
+            # Priority 2: Plot labels (from aes expressions or labs())
+            final_name <- plot_labels[[axis_name]]
+      } else if (!is.null(aesthetic_vars) && length(aesthetic_vars[[axis_name]]) > 0) {
+            # Priority 3: Aesthetic variable names
+            final_name <- aesthetic_vars[[axis_name]][1]
+      }
+
+      return(final_name)
+}
+
+
 Coord3D <- ggproto("Coord3D", CoordCartesian,
                    # Parameters
                    pitch = 0,
@@ -181,15 +236,15 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                          train_z_scale()
                          scale_z <- .z_scale_cache$scale
 
-                         # Scale info
+                         # Scale info (including axis names)
                          panel_params$scales <- self$scales
                          panel_params$scale_info <- list(
-                               x = get_scale_info(scale_x, expand = self$expand),
-                               y = get_scale_info(scale_y, expand = self$expand),
-                               z = get_scale_info(scale_z, expand = self$expand)
+                               x = get_scale_info(scale_x, expand = self$expand, axis_name = "x"),
+                               y = get_scale_info(scale_y, expand = self$expand, axis_name = "y"),
+                               z = get_scale_info(scale_z, expand = self$expand, axis_name = "z")
                          )
 
-                         # Blank out native scale names
+                         # Blank out native scale names (prevents them from showing in standard ggplot2 rendering)
                          scale_x$name <- ""
                          scale_y$name <- ""
 
@@ -233,7 +288,7 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                                            for (axis in c("x", "y", "z")) {
 
                                                  # Use same edge selection logic as the rendering
-                                                 axis_selection <- select_axis_edge_and_face(axis, visible_faces, panel_params$proj)
+                                                 axis_selection <- select_axis_edge_and_face(axis, visible_faces, panel_params$proj, effective_ratios)
 
                                                  if (!is.null(axis_selection)) {
                                                        # Use the selected edge center for title position in bounds calculation
@@ -542,14 +597,24 @@ train_z_scale <- function(){
       }
 }
 
-get_scale_info <- function(scale_obj, expand = TRUE) {
+get_scale_info <- function(scale_obj, expand = TRUE, axis_name = NULL) {
       expansion <- ggplot2:::default_expansion(scale_obj, expand = expand)
       limits <- scale_obj$get_limits()
 
       # Pass NULL for coord_limits since coord_3d doesn't support them yet
       expanded_range <- ggplot2:::expand_limits_scale(scale_obj, expansion, limits, coord_limits = NULL)
 
-      list(limits = expanded_range,
-           breaks = scale_obj$get_breaks(),
-           labels = scale_obj$get_labels())
+      # Get the scale name if axis_name is provided
+      scale_name <- if (!is.null(axis_name)) get_scale_names(scale_obj, axis_name) else NULL
+
+      result <- list(limits = expanded_range,
+                     breaks = scale_obj$get_breaks(),
+                     labels = scale_obj$get_labels())
+
+      # Add name if provided
+      if (!is.null(scale_name)) {
+            result$name <- scale_name
+      }
+
+      return(result)
 }
