@@ -339,7 +339,9 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                                            }
                                      }
 
-                                     panel_params$plot_bounds <- calculate_plot_bounds(all_bounds_x, all_bounds_y)
+                                     bounds_info <- calculate_plot_bounds(all_bounds_x, all_bounds_y)
+                                     panel_params$plot_bounds <- bounds_info$bounds
+                                     self$bounds_aspect <- bounds_info$aspect
                                } else {
                                      panel_params$plot_bounds <- c(-1, 1, -1, 1)
                                }
@@ -371,7 +373,9 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                                )
                                cube_transformed <- transform_3d_standard(aspect_cube, panel_params$proj)
 
-                               panel_params$plot_bounds <- calculate_plot_bounds(all_bounds_x, all_bounds_y)
+                               bounds_info <- calculate_plot_bounds(cube_transformed$x, cube_transformed$y)
+                               panel_params$plot_bounds <- bounds_info$bounds
+                               self$bounds_aspect <- bounds_info$aspect
                                panel_params$grid_transformed <- NULL
                          }
 
@@ -380,8 +384,8 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
 
                    # Force 1:1 aspect ratio
                    aspect = function(self, ranges) {
-                         if (exists("bounds_aspect")) {
-                               return(bounds_aspect)
+                         if (!is.null(self$bounds_aspect)) {
+                               return(self$bounds_aspect)
                          }
                          return(1)
                    },
@@ -533,7 +537,7 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                    }
 )
 
-# Helper function to compute plot bounds
+# Helper function to compute plot bounds and aspect ratio
 calculate_plot_bounds <- function(all_bounds_x, all_bounds_y){
       x_bounds <- range(all_bounds_x, na.rm = TRUE)
       y_bounds <- range(all_bounds_y, na.rm = TRUE)
@@ -544,11 +548,14 @@ calculate_plot_bounds <- function(all_bounds_x, all_bounds_y){
       x_bounds <- c(x_bounds[1] - x_padding, x_bounds[2] + x_padding)
       y_bounds <- c(y_bounds[1] - y_padding, y_bounds[2] + y_padding)
 
-      # Store the natural aspect ratio for later use
-      bounds_aspect <<- diff(y_bounds) / diff(x_bounds)
+      # Calculate aspect ratio
+      bounds_aspect <- diff(y_bounds) / diff(x_bounds)
 
-      # Use proportional bounds
-      c(x_bounds[1], x_bounds[2], y_bounds[1], y_bounds[2])
+      # Return both bounds and aspect ratio
+      list(
+            bounds = c(x_bounds[1], x_bounds[2], y_bounds[1], y_bounds[2]),
+            aspect = bounds_aspect
+      )
 }
 
 train_z_scale <- function(){
