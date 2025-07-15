@@ -3,7 +3,7 @@ StatPillar <- ggproto("StatPillar", Stat,
 
                       compute_panel = function(data, scales, na.rm = FALSE,
                                                width = 1.0, faces = "all",
-                                               light = lighting()) {
+                                               light = lighting(), zmin = NULL) {
 
                             # Remove missing values if requested
                             if (na.rm) {
@@ -15,16 +15,25 @@ StatPillar <- ggproto("StatPillar", Stat,
                                   stop("stat_pillar requires at least 1 point")
                             }
 
-                            # Handle zmin aesthetic (base level for pillars)
-                            if (!"zmin" %in% names(data)) {
-                                  data$zmin <- min(data$z, na.rm = TRUE)
-                            } else {
-                                  # Ensure z is never less than zmin
-                                  zmin <- pmin(data$zmin, data$z)
-                                  zmax <- pmax(data$zmin, data$z)
+                            # Handle zmin with proper precedence:
+                            # 1. Parameter (if provided) - overrides aesthetic
+                            # 2. Aesthetic (if mapped) - used if no parameter
+                            # 3. Default (min of data) - if neither provided
+
+                            if (!is.null(zmin)) {
+                                  # Parameter provided - use for all pillars (overrides aesthetic)
                                   data$zmin <- zmin
-                                  data$z <- zmax
+                            } else if (!"zmin" %in% names(data)) {
+                                  # No aesthetic mapped and no parameter - use default
+                                  data$zmin <- min(data$z, na.rm = TRUE)
                             }
+                            # If aesthetic exists and no parameter, keep the aesthetic values (no action needed)
+
+                            # Ensure z is never less than zmin
+                            zmin_vals <- pmin(data$zmin, data$z)
+                            zmax_vals <- pmax(data$zmin, data$z)
+                            data$zmin <- zmin_vals
+                            data$z <- zmax_vals
 
                             # Generate numeric positions before calculating spacing
                             data <- convert_to_numeric(data)
@@ -261,6 +270,9 @@ calculate_pillar_face_normals <- function(pillar_faces) {
 #'   }
 #'   Valid face names: "xmin", "xmax", "ymin", "ymax", "zmin", "zmax".
 #' @param light A lighting specification object created by \code{lighting()}
+#' @param zmin Base level for all pillars. When provided as a parameter, overrides any
+#'   \code{zmin} aesthetic mapping. If \code{NULL} (default), uses the \code{zmin} aesthetic
+#'   if mapped, otherwise defaults to the minimum \code{z} value in the data.
 #' @param ... Other arguments passed on to [layer()].
 #'
 #' @section Aesthetics:
@@ -270,7 +282,7 @@ calculate_pillar_face_normals <- function(pillar_faces) {
 #' - **z**: Z coordinate (pillar top height)
 #'
 #' And optionally understands:
-#' - **zmin**: Base level for each pillar (defaults to global minimum z)
+#' - **zmin**: Base level for each pillar (can be overridden by the \code{zmin} parameter)
 #'
 #' @section Computed variables:
 #' - `light`: Computed lighting value (numeric for most methods, hex color for `normal_rgb`)
@@ -299,10 +311,20 @@ calculate_pillar_face_normals <- function(pillar_faces) {
 #'   stat_pillar(aes(fill = z)) +
 #'   coord_3d()
 #'
-#' # Stacked pillars with custom base levels
-#' d$z2 <- d$z + 2
-#' ggplot(d, aes(x, y, z = z2, zmin = z)) +
+#' # Set base level for all pillars using parameter
+#' ggplot(sparse_data, aes(x, y, z)) +
+#'   stat_pillar(aes(fill = z), zmin = 0) +
+#'   coord_3d()
+#'
+#' # Variable base levels using aesthetic
+#' d$base_level <- runif(nrow(d), -1, 1)
+#' ggplot(d, aes(x, y, z = z, zmin = base_level)) +
 #'   stat_pillar(aes(fill = after_stat(light))) +
+#'   coord_3d()
+#'
+#' # Parameter overrides aesthetic
+#' ggplot(d, aes(x, y, z = z, zmin = base_level)) +
+#'   stat_pillar(aes(fill = after_stat(light)), zmin = -2) +  # All pillars use zmin = -2
 #'   coord_3d()
 #'
 #' # Show only top and front faces for performance
@@ -327,6 +349,7 @@ stat_pillar <- function(mapping = NULL, data = NULL,
                         width = 1.0,
                         faces = "all",
                         light = lighting(),
+                        zmin = NULL,
                         na.rm = FALSE, show.legend = NA, inherit.aes = TRUE,
                         ...) {
 
@@ -345,6 +368,6 @@ stat_pillar <- function(mapping = NULL, data = NULL,
       layer(
             stat = StatPillar, data = data, mapping = mapping, geom = geom,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
-            params = list(na.rm = na.rm, width = width, faces = faces, light = light, ...)
+            params = list(na.rm = na.rm, width = width, faces = faces, light = light, zmin = zmin, ...)
       )
 }
