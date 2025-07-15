@@ -5,7 +5,6 @@
 #' @param scales Aspect ratio behavior ("free" or "fixed")
 #' @param ratio Length-3 numeric vector of axis ratios
 #' @return Data frame with grid lines in standard domain, including break values
-# Updated make_scale_grid function with edge boundary information
 make_scale_grid <- function(visible_faces, scale_info, scales = "free", ratio = c(1, 1, 1)) {
 
       # Calculate effective ratios using scale ranges (includes expansion)
@@ -24,7 +23,7 @@ make_scale_grid <- function(visible_faces, scale_info, scales = "free", ratio = 
                            y = c(-0.5, 0.5) * effective_ratios[2],
                            z = c(-0.5, 0.5) * effective_ratios[3],
                            end = c("min", "max"))
-
+# if(length(visible_faces) == 0) browser()
       grid_data <- map_dfr(visible_faces, function(face){
             axis <- substr(face, 1, 1)
             end <- substr(face, 2, 4)

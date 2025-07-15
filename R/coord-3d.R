@@ -15,8 +15,10 @@
 #'   similar to standard ggplot2 behavior.
 #' @param clip Character string indicating clipping behavior. Use \code{"off"} to allow
 #'   drawing outside the plot panel (recommended for 3D plots).
-#' @param faces Character string specifying which cube faces to render. Options include
-#'   \code{"all"}, \code{"background"}, \code{"foreground"}, or specific face names like
+#' @param panels Character string specifying which panels to render. Panels are the rectangular faces of
+#' the box that contains the visualized data; grid lines, axis labels, and axis titles can only placed on rendered panels.
+#' Options include
+#'   \code{"all"}, \code{"background"} (the default), \code{"foreground"}, \code{"none"}, or specific panel names like
 #'   \code{"xmin"}, \code{"ymax"}, etc.
 #' @param xlabels,ylabels,zlabels Character strings or length-2 character vectors specifying
 #'   axis label (text and title) placement. Each parameter accepts:
@@ -67,7 +69,7 @@
 coord_3d <- function(pitch = 0, roll = 120, yaw = 30,
                      persp = TRUE, dist = 3,
                      expand = TRUE, clip = "off",
-                     faces = "background",
+                     panels = "background",
                      xlabels = "auto", ylabels = "auto", zlabels = "auto",
                      rotate_labels = TRUE,
                      scales = "free",
@@ -87,7 +89,7 @@ coord_3d <- function(pitch = 0, roll = 120, yaw = 30,
                     pitch = pitch, roll = roll, yaw = yaw,
                     persp = persp, dist = dist,
                     expand = expand, clip = clip,
-                    faces = faces,
+                    panels = panels,
                     rotate_labels = rotate_labels,
                     scales = scales,
                     ratio = ratio,
@@ -217,10 +219,9 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                    yaw = 0,
                    persp = FALSE,
                    dist = 3,
-                   grid = TRUE,
                    expand = TRUE,
                    clip = "off",
-                   faces = "background",
+                   panels = "background",
                    rotate_labels = TRUE,
                    scales = "free",
                    ratio = c(1, 1, 1),
@@ -263,14 +264,14 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                          )
 
                          # Visible faces
-                         visible_faces_fgbg <- select_visible_faces(self$faces, panel_params$proj, effective_ratios)
+                         visible_faces_fgbg <- select_visible_faces(self$panels, panel_params$proj, effective_ratios)
                          visible_faces <- do.call("c", visible_faces_fgbg)
                          panel_params$visible_faces <- visible_faces
                          panel_params$visible_faces_fg <- visible_faces_fgbg$fg
                          panel_params$visible_faces_bg <- visible_faces_fgbg$bg
 
                          # Calculate plot bounds using SCALE BREAKS and TITLE POSITIONS
-                         if (self$grid) {
+                         if (length(visible_faces) > 0) {
                                all_faces <- c("xmin", "xmax", "ymin", "ymax", "zmin", "zmax")
                                full_grid <- make_scale_grid(all_faces, panel_params$scale_info,
                                                             panel_params$scales, panel_params$ratio)
@@ -347,25 +348,30 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                                }
 
                                # Generate grid for selected faces using real scale breaks
-                               selected_grid <- make_scale_grid(visible_faces, panel_params$scale_info,
-                                                                panel_params$scales, panel_params$ratio)
+                               if (length(visible_faces) > 0) {
+                                     selected_grid <- make_scale_grid(visible_faces, panel_params$scale_info,
+                                                                      panel_params$scales, panel_params$ratio)
 
-                               if (!is.null(selected_grid)) {
-                                     selected_grid_transformed <- transform_3d_standard(selected_grid, panel_params$proj)
-                                     panel_params$grid_transformed <- selected_grid_transformed
-                                     panel_params$grid_transformed$face <- selected_grid$face
-                                     panel_params$grid_transformed$group <- selected_grid$group
-                                     panel_params$grid_transformed$z_proj <- selected_grid_transformed$z
-                                     panel_params$grid_transformed$break_value <- selected_grid$break_value
-                                     panel_params$grid_transformed$break_pos <- selected_grid$break_pos
-                                     panel_params$grid_transformed$break_axis <- selected_grid$break_axis
-                                     panel_params$grid_transformed$start_boundaries <- selected_grid$start_boundaries
-                                     panel_params$grid_transformed$end_boundaries <- selected_grid$end_boundaries
+                                     if (!is.null(selected_grid)) {
+                                           selected_grid_transformed <- transform_3d_standard(selected_grid, panel_params$proj)
+                                           panel_params$grid_transformed <- selected_grid_transformed
+                                           panel_params$grid_transformed$face <- selected_grid$face
+                                           panel_params$grid_transformed$group <- selected_grid$group
+                                           panel_params$grid_transformed$z_proj <- selected_grid_transformed$z
+                                           panel_params$grid_transformed$break_value <- selected_grid$break_value
+                                           panel_params$grid_transformed$break_pos <- selected_grid$break_pos
+                                           panel_params$grid_transformed$break_axis <- selected_grid$break_axis
+                                           panel_params$grid_transformed$start_boundaries <- selected_grid$start_boundaries
+                                           panel_params$grid_transformed$end_boundaries <- selected_grid$end_boundaries
+                                     } else {
+                                           panel_params$grid_transformed <- NULL
+                                     }
                                } else {
+                                     # No visible faces - no grid to render
                                      panel_params$grid_transformed <- NULL
                                }
                          } else {
-                               # No grid - use aspect-adjusted cube bounds
+                               # No visible faces - use minimal bounds (just cube corners)
                                aspect_cube <- data.frame(
                                      x = c(-0.5, 0.5, -0.5, 0.5, -0.5, 0.5, -0.5, 0.5) * effective_ratios[1],
                                      y = c(-0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5, 0.5) * effective_ratios[2],
