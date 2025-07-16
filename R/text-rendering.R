@@ -541,11 +541,21 @@ create_axis_title <- function(axis, edge_gridlines, theme_elements, offsets, tex
       }
 }
 
-# Simplified render_axis_text function (unchanged except uses refactored functions)
+# Simplified render_axis_text function (now with theme checks)
 render_axis_text <- function(self, panel_params, theme) {
       tryCatch({
             all_labels <- list()
             all_titles <- list()
+
+            # Check theme element states
+            theme_elements <- panel_params$theme_elements %||% list()
+            should_render_axis_text <- theme_elements$show_axis_text %||% !inherits(calc_element("axis.text", theme), "element_blank")
+            should_render_axis_title <- theme_elements$show_axis_title %||% !inherits(calc_element("axis.title", theme), "element_blank")
+
+            # If neither text nor titles should be rendered, return empty lists
+            if (!should_render_axis_text && !should_render_axis_title) {
+                  return(list(labels = list(), titles = list()))
+            }
 
             # Calculate base conversion factors for points to plot units
             plot_width <- panel_params$plot_bounds[2] - panel_params$plot_bounds[1]
@@ -574,9 +584,9 @@ render_axis_text <- function(self, panel_params, theme) {
                   chosen_edge <- axis_selection$edge
                   chosen_face <- axis_selection$face
 
-                  theme_elements <- extract_axis_theme_elements(axis, theme)
+                  theme_elements_axis <- extract_axis_theme_elements(axis, theme)
 
-                  offsets <- calculate_axis_offsets(theme_elements, self$rotate_labels, pt_to_plot_factor)
+                  offsets <- calculate_axis_offsets(theme_elements_axis, self$rotate_labels, pt_to_plot_factor)
 
                   # Get gridlines for the chosen face
                   edge_gridlines <- panel_params$grid_transformed[
@@ -590,20 +600,27 @@ render_axis_text <- function(self, panel_params, theme) {
                   axis_labels <- panel_params$scale_info[[axis]]$labels %||% NULL
                   axis_breaks <- panel_params$scale_info[[axis]]$breaks %||% NULL
 
-                  text_dimensions <- measure_axis_text_dimensions(edge_gridlines, theme_elements, axis_labels, axis_breaks)
+                  text_dimensions <- measure_axis_text_dimensions(edge_gridlines, theme_elements_axis, axis_labels, axis_breaks)
 
-                  # Create axis labels using refactored function
-                  label_result <- create_axis_labels(axis, edge_gridlines, theme_elements, offsets, text_dimensions,
-                                                     panel_params, self$rotate_labels, panel_params$plot_bounds, chosen_edge)
+                  # Create axis labels if theme allows
+                  if (should_render_axis_text) {
+                        label_result <- create_axis_labels(axis, edge_gridlines, theme_elements_axis, offsets, text_dimensions,
+                                                           panel_params, self$rotate_labels, panel_params$plot_bounds, chosen_edge)
 
-                  all_labels <- c(all_labels, label_result$labels)
-                  axis_uses_start <- label_result$axis_uses_start
+                        all_labels <- c(all_labels, label_result$labels)
+                        axis_uses_start <- label_result$axis_uses_start
+                  } else {
+                        # Still need to calculate axis_uses_start for title positioning
+                        axis_uses_start <- determine_endpoint_preference_by_boundary(chosen_edge, edge_gridlines)
+                  }
 
-                  # Create axis titles using refactored function
-                  title_result <- create_axis_title(axis, edge_gridlines, theme_elements, offsets, text_dimensions,
-                                                    panel_params, self$rotate_labels, panel_params$plot_bounds, chosen_edge, axis_uses_start)
+                  # Create axis titles if theme allows
+                  if (should_render_axis_title) {
+                        title_result <- create_axis_title(axis, edge_gridlines, theme_elements_axis, offsets, text_dimensions,
+                                                          panel_params, self$rotate_labels, panel_params$plot_bounds, chosen_edge, axis_uses_start)
 
-                  all_titles <- c(all_titles, title_result)
+                        all_titles <- c(all_titles, title_result)
+                  }
             }
 
             return(list(labels = all_labels, titles = all_titles))

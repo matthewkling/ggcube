@@ -5,6 +5,7 @@
 #' @param scales Aspect ratio behavior ("free" or "fixed")
 #' @param ratio Length-3 numeric vector of axis ratios
 #' @return Data frame with grid lines in standard domain, including break values
+# Updated make_scale_grid function with edge boundary information
 make_scale_grid <- function(visible_faces, scale_info, scales = "free", ratio = c(1, 1, 1)) {
 
       # Calculate effective ratios using scale ranges (includes expansion)
@@ -20,10 +21,10 @@ make_scale_grid <- function(visible_faces, scale_info, scales = "free", ratio = 
       breaks <- lapply(vars, function(v) breaks = scale_to_standard(scale_info[[v]]$breaks,
                                                                     scale_info[[v]]$limits) * effective_ratios[match(v, vars)])
       extents <- data.frame(x = c(-0.5, 0.5) * effective_ratios[1],
-                           y = c(-0.5, 0.5) * effective_ratios[2],
-                           z = c(-0.5, 0.5) * effective_ratios[3],
-                           end = c("min", "max"))
-# if(length(visible_faces) == 0) browser()
+                            y = c(-0.5, 0.5) * effective_ratios[2],
+                            z = c(-0.5, 0.5) * effective_ratios[3],
+                            end = c("min", "max"))
+
       grid_data <- map_dfr(visible_faces, function(face){
             axis <- substr(face, 1, 1)
             end <- substr(face, 2, 4)
@@ -293,11 +294,20 @@ render_cube <- function(self, panel_params, theme, layer = "background"){
       panel_grid_major <- calc_element(switch(layer, background = "panel.grid.major", foreground = "panel.grid.major.foreground"), theme)
       panel_border <- calc_element("panel.border", theme)
 
-      # Determine if 3D panels should be rendered
-      show_panels <- !inherits(panel_bg, "element_blank")
+      # Check theme element states from panel_params
+      theme_elements <- panel_params$theme_elements %||% list()
+
+      # Determine what to render based on theme
+      show_panels <- if (layer == "background") {
+            theme_elements$show_background_panels %||% !inherits(panel_bg, "element_blank")
+      } else {
+            theme_elements$show_foreground_panels %||% !inherits(panel_bg, "element_blank")
+      }
+
       show_border <- !inherits(panel_border, "element_blank")
       grid_element <- panel_grid_major %||% panel_grid
-      show_grid <- !inherits(grid_element, "element_blank")
+      show_grid <- (theme_elements$show_grid %||% !inherits(grid_element, "element_blank"))
+
       visible_faces <- switch(layer,
                               background = panel_params$visible_faces_bg,
                               foreground = panel_params$visible_faces_fg)
@@ -408,38 +418,44 @@ render_cube <- function(self, panel_params, theme, layer = "background"){
 
       # 4. Render axis text and titles
       if(layer == "background"){
-            axis_elements <- render_axis_text(self, panel_params, theme)
+            # Check if we should render axis text/titles based on theme
+            should_render_axis_text <- theme_elements$show_axis_text %||% !inherits(calc_element("axis.text", theme), "element_blank")
+            should_render_axis_title <- theme_elements$show_axis_title %||% !inherits(calc_element("axis.title", theme), "element_blank")
 
-            # Add all labels to the plot
-            if (length(axis_elements$labels) > 0) {
-                  axis_elements$labels <- axis_elements$labels[!sapply(axis_elements$labels, is.null)]
-                  if (length(axis_elements$labels) > 0) {
-                        labels_grob <- tryCatch({
-                              do.call(grid::grobTree, c(list(name = "axis.labels.3d"), axis_elements$labels))
-                        }, error = function(e) {
-                              warning("Failed to create labels grob: ", e$message)
-                              NULL
-                        })
+            if (should_render_axis_text || should_render_axis_title) {
+                  axis_elements <- render_axis_text(self, panel_params, theme)
 
-                        if (!is.null(labels_grob)) {
-                              bg <- grid::grobTree(bg, labels_grob, name = "panel.background.with.labels")
+                  # Add labels if requested by theme
+                  if (should_render_axis_text && length(axis_elements$labels) > 0) {
+                        axis_elements$labels <- axis_elements$labels[!sapply(axis_elements$labels, is.null)]
+                        if (length(axis_elements$labels) > 0) {
+                              labels_grob <- tryCatch({
+                                    do.call(grid::grobTree, c(list(name = "axis.labels.3d"), axis_elements$labels))
+                              }, error = function(e) {
+                                    warning("Failed to create labels grob: ", e$message)
+                                    NULL
+                              })
+
+                              if (!is.null(labels_grob)) {
+                                    bg <- grid::grobTree(bg, labels_grob, name = "panel.background.with.labels")
+                              }
                         }
                   }
-            }
 
-            # Add all titles to the plot
-            if (length(axis_elements$titles) > 0) {
-                  axis_elements$titles <- axis_elements$titles[!sapply(axis_elements$titles, is.null)]
-                  if (length(axis_elements$titles) > 0) {
-                        titles_grob <- tryCatch({
-                              do.call(grid::grobTree, c(list(name = "axis.titles.3d"), axis_elements$titles))
-                        }, error = function(e) {
-                              warning("Failed to create titles grob: ", e$message)
-                              NULL
-                        })
+                  # Add titles if requested by theme
+                  if (should_render_axis_title && length(axis_elements$titles) > 0) {
+                        axis_elements$titles <- axis_elements$titles[!sapply(axis_elements$titles, is.null)]
+                        if (length(axis_elements$titles) > 0) {
+                              titles_grob <- tryCatch({
+                                    do.call(grid::grobTree, c(list(name = "axis.titles.3d"), axis_elements$titles))
+                              }, error = function(e) {
+                                    warning("Failed to create titles grob: ", e$message)
+                                    NULL
+                              })
 
-                        if (!is.null(titles_grob)) {
-                              bg <- grid::grobTree(bg, titles_grob, name = "panel.background.with.titles")
+                              if (!is.null(titles_grob)) {
+                                    bg <- grid::grobTree(bg, titles_grob, name = "panel.background.with.titles")
+                              }
                         }
                   }
             }

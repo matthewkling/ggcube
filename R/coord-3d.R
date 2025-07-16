@@ -15,10 +15,8 @@
 #'   similar to standard ggplot2 behavior.
 #' @param clip Character string indicating clipping behavior. Use \code{"off"} to allow
 #'   drawing outside the plot panel (recommended for 3D plots).
-#' @param panels Character string specifying which panels to render. Panels are the rectangular faces of
-#' the box that contains the visualized data; grid lines, axis labels, and axis titles can only placed on rendered panels.
-#' Options include
-#'   \code{"all"}, \code{"background"} (the default), \code{"foreground"}, \code{"none"}, or specific panel names like
+#' @param panels Character string specifying which background panels to render. Options include
+#'   \code{"all"}, \code{"background"}, \code{"foreground"}, \code{"none"}, or specific panel names like
 #'   \code{"xmin"}, \code{"ymax"}, etc.
 #' @param xlabels,ylabels,zlabels Character strings or length-2 character vectors specifying
 #'   axis label (text and title) placement. Each parameter accepts:
@@ -99,118 +97,6 @@ coord_3d <- function(pitch = 0, roll = 120, yaw = 30,
       )
 }
 
-#' Extract variable names from aesthetic mappings
-#'
-#' @param plot_obj A ggplot object
-#' @return A list with x, y, z character vectors of variable names
-extract_aesthetic_vars <- function(plot_obj) {
-      x_vars <- character(0)
-      y_vars <- character(0)
-      z_vars <- character(0)
-
-      # Helper function to safely extract variables from a mapping
-      extract_vars <- function(mapping) {
-            vars <- list(x = character(0), y = character(0), z = character(0))
-
-            tryCatch({
-                  if (!is.null(mapping$x)) {
-                        vars$x <- all.vars(mapping$x)
-                  }
-                  if (!is.null(mapping$y)) {
-                        vars$y <- all.vars(mapping$y)
-                  }
-                  if (!is.null(mapping$z)) {
-                        vars$z <- all.vars(mapping$z)
-                  }
-            }, error = function(e) {
-                  # If all.vars() fails, ignore this mapping
-            })
-
-            return(vars)
-      }
-
-      # Plot-level mappings
-      if (!is.null(plot_obj$mapping)) {
-            plot_vars <- extract_vars(plot_obj$mapping)
-            x_vars <- c(x_vars, plot_vars$x)
-            y_vars <- c(y_vars, plot_vars$y)
-            z_vars <- c(z_vars, plot_vars$z)
-      }
-
-      # Layer-level mappings
-      if (!is.null(plot_obj$layers)) {
-            for (layer in plot_obj$layers) {
-                  if (!is.null(layer$mapping)) {
-                        layer_vars <- extract_vars(layer$mapping)
-                        x_vars <- c(x_vars, layer_vars$x)
-                        y_vars <- c(y_vars, layer_vars$y)
-                        z_vars <- c(z_vars, layer_vars$z)
-                  }
-            }
-      }
-
-      return(list(
-            x = unique(x_vars),
-            y = unique(y_vars),
-            z = unique(z_vars)
-      ))
-}
-
-
-#' Get axis name for a single scale with proper fallback hierarchy
-#'
-#' @param scale_obj Scale object (can be NULL for z-axis)
-#' @param axis_name Axis name ("x", "y", or "z")
-#' @return Single axis name string
-get_scale_names <- function(scale_obj, axis_name) {
-
-      # CAPTURE SCALE NAME BEFORE BLANKING IT OUT
-      scale_name <- if (!is.null(scale_obj)) scale_obj$name %||% waiver() else waiver()
-
-      # TRY TO FIND PLOT OBJECT AND EXTRACT BOTH LABELS AND AESTHETIC VARS
-      plot_obj <- NULL
-      plot_labels <- NULL
-      aesthetic_vars <- NULL
-
-      tryCatch({
-            for (i in 1:25) {
-                  env <- parent.frame(i)
-                  if (exists("plot", envir = env)) {
-                        potential_plot <- get("plot", envir = env)
-                        if (inherits(potential_plot, "ggplot")) {
-                              plot_obj <- potential_plot
-                              plot_labels <- potential_plot$labels
-                              aesthetic_vars <- extract_aesthetic_vars(potential_plot)
-                              break
-                        }
-                  }
-            }
-      }, error = function(e) {
-            # Ignore errors - will use defaults
-      })
-
-      # RESOLVE FINAL NAME WITH FALLBACK HIERARCHY:
-      # 1. Explicit scale name (from scale constructors like scale_x_continuous(name = "..."))
-      # 2. Plot labels (automatic from aes() expressions OR user-set from labs())
-      # 3. Simple aesthetic variable names (fallback if plot labels missing)
-      # 4. Default name (axis_name)
-
-      final_name <- axis_name  # default
-
-      if (!inherits(scale_name, "waiver") && !is.null(scale_name) && scale_name != "") {
-            # Priority 1: Explicit scale name
-            final_name <- scale_name
-      } else if (!is.null(plot_labels) && !is.null(plot_labels[[axis_name]]) && !inherits(plot_labels[[axis_name]], "waiver")) {
-            # Priority 2: Plot labels (from aes expressions or labs())
-            final_name <- plot_labels[[axis_name]]
-      } else if (!is.null(aesthetic_vars) && length(aesthetic_vars[[axis_name]]) > 0) {
-            # Priority 3: Aesthetic variable names
-            final_name <- aesthetic_vars[[axis_name]][1]
-      }
-
-      return(final_name)
-}
-
 
 Coord3D <- ggproto("Coord3D", CoordCartesian,
                    # Parameters
@@ -229,6 +115,29 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                    plot_bounds = c(0, 1, 0, 1),  # [xmin, xmax, ymin, ymax]
 
                    setup_panel_params = function(self, scale_x, scale_y, params = list()) {
+
+                         # Check if theme is void-like and override panels if so
+                         theme_obj <- NULL
+                         tryCatch({
+                               for (i in 1:25) {
+                                     env <- parent.frame(i)
+                                     if (exists("theme", envir = env)) {
+                                           potential_theme <- get("theme", envir = env)
+                                           if (is.list(potential_theme)) {
+                                                 theme_obj <- potential_theme
+                                                 break
+                                           }
+                                     }
+                               }
+                         }, error = function(e) {
+                               # Ignore errors - theme_obj will remain NULL
+                         })
+
+                         # Override panels to "none" if theme_void-like
+                         original_panels <- self$panels
+                         if (!is.null(theme_obj) && is_theme_void_like(theme_obj)) {
+                               self$panels <- "none"
+                         }
 
                          # Get standard panel params from parent
                          panel_params <- ggproto_parent(CoordCartesian, self)$setup_panel_params(scale_x, scale_y, params)
@@ -402,6 +311,15 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                    },
 
                    render_bg = function(self, panel_params, theme) {
+                         # Store theme element states in panel_params for render_cube to use
+                         panel_params$theme_elements <- list(
+                               show_background_panels = !inherits(calc_element("panel.background", theme), "element_blank"),
+                               show_grid = !inherits(calc_element("panel.grid", theme), "element_blank") &&
+                                     !inherits(calc_element("panel.grid.major", theme), "element_blank"),
+                               show_axis_text = !inherits(calc_element("axis.text", theme), "element_blank"),
+                               show_axis_title = !inherits(calc_element("axis.title", theme), "element_blank")
+                         )
+
                          render_cube(self, panel_params, theme, layer = "background")
                    },
 
@@ -499,9 +417,9 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                    },
 
                    render_fg = function(self, panel_params, theme) {
-                         # Return empty grob to disable standard panel border
-                         # This prevents theme_bw(), theme_light(), etc. from drawing rectangular borders
-                         # grid::nullGrob() # original disabling version
+                         # Store theme element states for foreground rendering
+                         panel_params$theme_elements$show_foreground_panels = !inherits(calc_element("panel.foreground", theme), "element_blank")
+
                          render_cube(self, panel_params, theme, layer = "foreground")
                    },
 
@@ -564,6 +482,119 @@ calculate_plot_bounds <- function(all_bounds_x, all_bounds_y){
       )
 }
 
+
+#' Extract variable names from aesthetic mappings
+#'
+#' @param plot_obj A ggplot object
+#' @return A list with x, y, z character vectors of variable names
+extract_aesthetic_vars <- function(plot_obj) {
+      x_vars <- character(0)
+      y_vars <- character(0)
+      z_vars <- character(0)
+
+      # Helper function to safely extract variables from a mapping
+      extract_vars <- function(mapping) {
+            vars <- list(x = character(0), y = character(0), z = character(0))
+
+            tryCatch({
+                  if (!is.null(mapping$x)) {
+                        vars$x <- all.vars(mapping$x)
+                  }
+                  if (!is.null(mapping$y)) {
+                        vars$y <- all.vars(mapping$y)
+                  }
+                  if (!is.null(mapping$z)) {
+                        vars$z <- all.vars(mapping$z)
+                  }
+            }, error = function(e) {
+                  # If all.vars() fails, ignore this mapping
+            })
+
+            return(vars)
+      }
+
+      # Plot-level mappings
+      if (!is.null(plot_obj$mapping)) {
+            plot_vars <- extract_vars(plot_obj$mapping)
+            x_vars <- c(x_vars, plot_vars$x)
+            y_vars <- c(y_vars, plot_vars$y)
+            z_vars <- c(z_vars, plot_vars$z)
+      }
+
+      # Layer-level mappings
+      if (!is.null(plot_obj$layers)) {
+            for (layer in plot_obj$layers) {
+                  if (!is.null(layer$mapping)) {
+                        layer_vars <- extract_vars(layer$mapping)
+                        x_vars <- c(x_vars, layer_vars$x)
+                        y_vars <- c(y_vars, layer_vars$y)
+                        z_vars <- c(z_vars, layer_vars$z)
+                  }
+            }
+      }
+
+      return(list(
+            x = unique(x_vars),
+            y = unique(y_vars),
+            z = unique(z_vars)
+      ))
+}
+
+
+#' Get axis name for a single scale with proper fallback hierarchy
+#'
+#' @param scale_obj Scale object (can be NULL for z-axis)
+#' @param axis_name Axis name ("x", "y", or "z")
+#' @return Single axis name string
+get_scale_names <- function(scale_obj, axis_name) {
+
+      # CAPTURE SCALE NAME BEFORE BLANKING IT OUT
+      scale_name <- if (!is.null(scale_obj)) scale_obj$name %||% waiver() else waiver()
+
+      # TRY TO FIND PLOT OBJECT AND EXTRACT BOTH LABELS AND AESTHETIC VARS
+      plot_obj <- NULL
+      plot_labels <- NULL
+      aesthetic_vars <- NULL
+
+      tryCatch({
+            for (i in 1:25) {
+                  env <- parent.frame(i)
+                  if (exists("plot", envir = env)) {
+                        potential_plot <- get("plot", envir = env)
+                        if (inherits(potential_plot, "ggplot")) {
+                              plot_obj <- potential_plot
+                              plot_labels <- potential_plot$labels
+                              aesthetic_vars <- extract_aesthetic_vars(potential_plot)
+                              break
+                        }
+                  }
+            }
+      }, error = function(e) {
+            # Ignore errors - will use defaults
+      })
+
+      # RESOLVE FINAL NAME WITH FALLBACK HIERARCHY:
+      # 1. Explicit scale name (from scale constructors like scale_x_continuous(name = "..."))
+      # 2. Plot labels (automatic from aes() expressions OR user-set from labs())
+      # 3. Simple aesthetic variable names (fallback if plot labels missing)
+      # 4. Default name (axis_name)
+
+      final_name <- axis_name  # default
+
+      if (!inherits(scale_name, "waiver") && !is.null(scale_name) && scale_name != "") {
+            # Priority 1: Explicit scale name
+            final_name <- scale_name
+      } else if (!is.null(plot_labels) && !is.null(plot_labels[[axis_name]]) && !inherits(plot_labels[[axis_name]], "waiver")) {
+            # Priority 2: Plot labels (from aes expressions or labs())
+            final_name <- plot_labels[[axis_name]]
+      } else if (!is.null(aesthetic_vars) && length(aesthetic_vars[[axis_name]]) > 0) {
+            # Priority 3: Aesthetic variable names
+            final_name <- aesthetic_vars[[axis_name]][1]
+      }
+
+      return(final_name)
+}
+
 train_z_scale <- function(){
 
       # Walk parent frames to find layer data
@@ -608,6 +639,36 @@ train_z_scale <- function(){
                   }
             }
       }
+}
+
+#' Check if theme is void-like (has multiple key elements set to element_blank)
+#'
+#' @param theme_obj Theme object or theme list
+#' @return Logical indicating if theme appears to be void-like
+is_theme_void_like <- function(theme_obj) {
+      if (is.null(theme_obj)) return(FALSE)
+
+      # Create a temporary theme to test elements
+      temp_theme <- theme_obj
+
+      # Count how many key theme elements are element_blank
+      blank_count <- 0
+      key_elements <- c("panel.background", "panel.grid", "panel.grid.major",
+                        "axis.text", "axis.title")
+
+      for (element_name in key_elements) {
+            tryCatch({
+                  element_val <- calc_element(element_name, temp_theme)
+                  if (inherits(element_val, "element_blank")) {
+                        blank_count <- blank_count + 1
+                  }
+            }, error = function(e) {
+                  # If we can't evaluate the element, skip it
+            })
+      }
+
+      # If 3 or more key elements are blank, consider it void-like
+      return(blank_count >= 3)
 }
 
 get_scale_info <- function(scale_obj, expand = TRUE, axis_name = NULL) {
