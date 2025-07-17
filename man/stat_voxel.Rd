@@ -51,10 +51,9 @@ Valid face names: "xmin", "xmax", "ymin", "ymax", "zmin", "zmax".}
 \item{...}{Other arguments passed on to \code{\link[=layer]{layer()}}.}
 }
 \description{
-Creates true 3D voxel visualizations from sparse 3D point data.
+Creates 3D voxel visualizations from sparse 3D point data.
 Each data point becomes a fixed-size cube centered on its coordinates.
-Perfect for volumetric data, molecular visualization, Minecraft-style building,
-scientific simulation results, and 3D pixel art.
+Useful for volumetric data and 3D pixel art.
 }
 \section{Aesthetics}{
 
@@ -78,7 +77,7 @@ And understands these additional aesthetics:
 \itemize{
 \item \code{light}: Computed lighting value (numeric for most methods, hex color for \code{normal_rgb})
 \item \code{normal_x}, \code{normal_y}, \code{normal_z}: Face normal components
-\item \code{face_id}: Unique identifier for each face
+\item \code{group}: Hierarchical group identifier with format "voxel_XXXX__face_type" for proper depth sorting
 \item \code{voxel_id}: Sequential voxel number
 \item \code{face_type}: Face name ("zmax", "xmin", etc.)
 }

@@ -2,18 +2,32 @@
 % Please edit documentation in R/geom-point-3d.R
 \name{geom_point_3d}
 \alias{geom_point_3d}
-\title{3D scatter plot with depth-based size scaling}
+\title{3D scatter plot with depth-based size scaling and reference projections}
 \usage{
 geom_point_3d(
   mapping = NULL,
   data = NULL,
-  stat = StatIdentity3D,
+  stat = StatPoint3D,
   position = "identity",
   ...,
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE,
-  scale_depth = TRUE
+  scale_depth = TRUE,
+  raw_points = TRUE,
+  ref_lines = FALSE,
+  ref_points = FALSE,
+  ref_faces = "zmin",
+  ref_line_color = NULL,
+  ref_line_colour = NULL,
+  ref_line_linewidth = 0.25,
+  ref_line_linetype = NULL,
+  ref_line_alpha = NULL,
+  ref_point_color = NULL,
+  ref_point_colour = NULL,
+  ref_point_fill = NULL,
+  ref_point_size = NULL,
+  ref_point_alpha = NULL
 )
 }
 \arguments{
@@ -23,7 +37,7 @@ the standard point aesthetics, \code{geom_point_3d()} requires x, y, and z coord
 \item{data}{The data to be displayed in this layer.}
 
 \item{stat}{The statistical transformation to use on the data. Defaults to
-\link{StatIdentity3D} for proper discrete scale handling and depth scaling.}
+\link{StatPoint3D} for proper discrete scale handling and reference line support.}
 
 \item{position}{Position adjustment, defaults to "identity".}
 
@@ -35,14 +49,36 @@ the standard point aesthetics, \code{geom_point_3d()} requires x, y, and z coord
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics.}
 
-\item{scale_depth}{Logical indicating whether to apply depth-based size scaling.
+\item{scale_depth}{Logical indicating whether to apply depth-based scaling
+to point sizes (and stroke widths if using a point shape with a stroke property).
 When \code{TRUE} (default), points closer to the viewer appear larger and points
 farther away appear smaller. When \code{FALSE}, all points have uniform size.}
+
+\item{raw_points}{Logical indicating whether to show the original 3D points.
+Default is \code{TRUE}.}
+
+\item{ref_lines}{Logical indicating whether to show reference lines projecting
+from points to cube faces. Default is \code{FALSE}.}
+
+\item{ref_points}{Logical indicating whether to show reference points on cube faces
+representing the 2D projections. Default is \code{FALSE}.}
+
+\item{ref_faces}{Character vector specifying which cube faces to project to.
+Valid face names are: "xmin", "xmax", "ymin", "ymax", "zmin", "zmax".
+Default is "zmin" (bottom face). Multiple faces can be specified.}
+
+\item{ref_line_color, ref_line_colour, ref_line_linewidth, ref_line_linetype, ref_line_alpha}{Styling overrides for reference lines. When NULL, inherits from point aesthetics.
+Both American (\code{ref_line_color}) and British (\code{ref_line_colour}) spellings are accepted.}
+
+\item{ref_point_color, ref_point_colour, ref_point_fill, ref_point_size, ref_point_alpha}{Styling overrides for reference points. When NULL, inherits from point aesthetics,
+except \code{ref_point_size} which defaults to 1/3 of the original point size.
+Both American (\code{ref_point_color}) and British (\code{ref_point_colour}) spellings are accepted.}
 }
 \description{
 \code{geom_point_3d()} creates scatter plots in 3D space with automatic depth-based
 size scaling. Points closer to the viewer appear larger, while points farther
-away appear smaller, creating realistic perspective effects.
+away appear smaller, creating realistic perspective effects. Optionally adds
+reference lines and points projecting to cube faces.
 }
 \details{
 The size scaling is calculated relative to the center of the 3D coordinate space
@@ -79,29 +115,55 @@ This creates realistic perspective where:
 }
 }
 
+\section{Reference Features}{
+
+Reference lines and points help visualize the 3D relationships by projecting
+data points onto cube faces:
+\itemize{
+\item \strong{Reference lines}: Connect each 3D point to its projection on specified faces
+\item \strong{Reference points}: Show the projected location on the faces
+\item \strong{Depth sorting}: All elements (original points, reference lines, reference points)
+are automatically depth-sorted for proper 3D rendering
+}
+}
+
 \examples{
 library(ggplot2)
 
 # Basic 3D scatter plot with depth scaling
 ggplot(expand_grid(x = 1:5, y = 1:5, z = 1:5),
        aes(x, y, z, fill = z)) +
-  geom_point_3d(size = 5, shape = 21, color = "darkblue") +
-  coord_3d(pitch = 40, roll = 5, yaw = 0, dist = 1.25) +
+  geom_point_3d(size = 10, shape = 21, color = "white", stroke = .1) +
+  coord_3d(pitch = 40, roll = 5, yaw = 0, dist = 1.5) +
   scale_fill_viridis_c()
 
-# Disable depth scaling for uniform point sizes
-# (this gives the same behavior as using ggplot2::geom_point)
+# Add reference lines and points (ref points auto-sized to 1/3 of original)
+ggplot(mtcars, aes(mpg, wt, qsec)) +
+  geom_point_3d(ref_lines = TRUE, ref_points = TRUE,
+                ref_line_alpha = 0.5) +
+  coord_3d()
+
+# Show only reference projections (no original points)
+ggplot(mtcars, aes(mpg, wt, qsec)) +
+  geom_point_3d(raw_points = FALSE, ref_lines = TRUE, ref_points = TRUE,
+                ref_faces = c("zmin", "ymin")) +
+  coord_3d()
+
+# Project to multiple faces
+ggplot(mtcars, aes(mpg, wt, qsec, color = cyl)) +
+  geom_point_3d(ref_lines = TRUE, ref_points = TRUE,
+                ref_faces = c("zmin", "ymin", "xmax"),
+                ref_line_color = "grey50", ref_line_alpha = 0.3,
+                ref_point_fill = "white", ref_point_size = 1) +
+  coord_3d()
+
+# Disable depth scaling for uniform sizes
 ggplot(mtcars, aes(mpg, wt, qsec)) +
   geom_point_3d(scale_depth = FALSE, size = 3) +
-  coord_3d(dist = 1.5)
-
-# Works with discrete scales
-ggplot(expand_grid(x = 1:4, y = letters[5:8], z = letters[1:4]), aes(x, y, z)) +
-  geom_point_3d(size = 5, shape = 21, fill = "lightblue", color = "darkblue") +
-  coord_3d(dist = 1.5)
+  coord_3d()
 
 }
 \seealso{
 \code{\link[=geom_point]{geom_point()}} for 2D scatter plots, \code{\link[=coord_3d]{coord_3d()}} for 3D coordinate systems,
-\code{\link[=stat_identity_3d]{stat_identity_3d()}} for the underlying statistical transformation.
+\code{\link[=stat_point_3d]{stat_point_3d()}} for the underlying statistical transformation.
 }

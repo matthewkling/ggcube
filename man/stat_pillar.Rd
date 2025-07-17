@@ -12,6 +12,7 @@ stat_pillar(
   width = 1,
   faces = "all",
   light = lighting(),
+  zmin = NULL,
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE,
@@ -42,6 +43,10 @@ Valid face names: "xmin", "xmax", "ymin", "ymax", "zmin", "zmax".}
 
 \item{light}{A lighting specification object created by \code{lighting()}}
 
+\item{zmin}{Base level for all pillars. When provided as a parameter, overrides any
+\code{zmin} aesthetic mapping. If \code{NULL} (default), uses the \code{zmin} aesthetic
+if mapped, otherwise defaults to the minimum \code{z} value in the data.}
+
 \item{na.rm}{If \code{FALSE}, missing values are removed with a warning.}
 
 \item{show.legend}{Logical indicating whether this layer should be included in legends.}
@@ -67,7 +72,7 @@ Works with both complete regular grids and sparse point data.
 
 And optionally understands:
 \itemize{
-\item \strong{zmin}: Base level for each pillar (defaults to global minimum z)
+\item \strong{zmin}: Base level for each pillar (can be overridden by the \code{zmin} parameter)
 }
 }
 
@@ -76,7 +81,7 @@ And optionally understands:
 \itemize{
 \item \code{light}: Computed lighting value (numeric for most methods, hex color for \code{normal_rgb})
 \item \code{normal_x}, \code{normal_y}, \code{normal_z}: Face normal components
-\item \code{face_id}: Unique identifier for each face
+\item \code{group}: Hierarchical group identifier with format "pillarX__face_type" for proper depth sorting
 \item \code{pillar_id}: Sequential pillar number
 \item \code{face_type}: Face name ("zmax", "xmin", etc.)
 }
@@ -102,10 +107,20 @@ ggplot(sparse_data, aes(x, y, z)) +
   stat_pillar(aes(fill = z)) +
   coord_3d()
 
-# Stacked pillars with custom base levels
-d$z2 <- d$z + 2
-ggplot(d, aes(x, y, z = z2, zmin = z)) +
+# Set base level for all pillars using parameter
+ggplot(sparse_data, aes(x, y, z)) +
+  stat_pillar(aes(fill = z), zmin = 0) +
+  coord_3d()
+
+# Variable base levels using aesthetic
+d$base_level <- runif(nrow(d), -1, 1)
+ggplot(d, aes(x, y, z = z, zmin = base_level)) +
   stat_pillar(aes(fill = after_stat(light))) +
+  coord_3d()
+
+# Parameter overrides aesthetic
+ggplot(d, aes(x, y, z = z, zmin = base_level)) +
+  stat_pillar(aes(fill = after_stat(light)), zmin = -2) +  # All pillars use zmin = -2
   coord_3d()
 
 # Show only top and front faces for performance

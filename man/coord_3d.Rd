@@ -9,10 +9,10 @@ coord_3d(
   roll = 120,
   yaw = 30,
   persp = TRUE,
-  dist = 3,
+  dist = 2,
   expand = TRUE,
   clip = "off",
-  faces = "background",
+  panels = "background",
   xlabels = "auto",
   ylabels = "auto",
   zlabels = "auto",
@@ -40,8 +40,8 @@ similar to standard ggplot2 behavior.}
 \item{clip}{Character string indicating clipping behavior. Use \code{"off"} to allow
 drawing outside the plot panel (recommended for 3D plots).}
 
-\item{faces}{Character string specifying which cube faces to render. Options include
-\code{"all"}, \code{"background"}, \code{"foreground"}, or specific face names like
+\item{panels}{Character string specifying which background panels to render. Options include
+\code{"all"}, \code{"background"}, \code{"foreground"}, \code{"none"}, or specific panel names like
 \code{"xmin"}, \code{"ymax"}, etc.}
 
 \item{xlabels, ylabels, zlabels}{Character strings or length-2 character vectors specifying

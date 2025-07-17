@@ -58,7 +58,6 @@ Assumes data is on a regular x,y grid and creates quadrilateral faces.
 \item \code{slope}: Gradient magnitude from original surface calculations
 \item \code{aspect}: Direction of steepest slope from original surface calculations
 \item \code{dzdx}, \code{dzdy}: Partial derivatives from original surface calculations
-\item \code{face_id}: Quad group identifier
 }
 }
 

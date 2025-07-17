@@ -65,7 +65,7 @@
 #'
 #' @export
 coord_3d <- function(pitch = 0, roll = 120, yaw = 30,
-                     persp = TRUE, dist = 3,
+                     persp = TRUE, dist = 2,
                      expand = TRUE, clip = "off",
                      panels = "background",
                      xlabels = "auto", ylabels = "auto", zlabels = "auto",
@@ -101,10 +101,10 @@ coord_3d <- function(pitch = 0, roll = 120, yaw = 30,
 Coord3D <- ggproto("Coord3D", CoordCartesian,
                    # Parameters
                    pitch = 0,
-                   roll = 0,
-                   yaw = 0,
+                   roll = 120,
+                   yaw = 30,
                    persp = FALSE,
-                   dist = 3,
+                   dist = 2,
                    expand = TRUE,
                    clip = "off",
                    panels = "background",
@@ -338,6 +338,9 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                                panel_params$scales,
                                panel_params$ratio
                          )
+
+                         # Project data onto cube face, if applicable
+                         data_std <- project_to_face(data, data_std)
 
                          # Apply 3D transformation (returns x, y, z, depth, depth_scale)
                          transformed <- transform_3d_standard(data_std, panel_params$proj)
@@ -691,4 +694,17 @@ get_scale_info <- function(scale_obj, expand = TRUE, axis_name = NULL) {
       }
 
       return(result)
+}
+
+# Project data onto cube face, if applicable
+project_to_face <- function(data, data_std){
+      if(! "project_to_face" %in% names(data)) return(data_std)
+      data_std %>%
+            mutate(face = data$project_to_face,
+                   axis = substr(face, 1, 1),
+                   value = ifelse(substr(face, 2, 4) == "min", -.5, .5),
+                   x = ifelse(is.na(face) | axis != "x", x, value),
+                   y = ifelse(is.na(face) | axis != "y", y, value),
+                   z = ifelse(is.na(face) | axis != "z", z, value)) %>%
+            select(x, y, z)
 }
