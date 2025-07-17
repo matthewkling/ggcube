@@ -2,9 +2,10 @@ GeomPoint3D <- ggproto("GeomPoint3D", GeomPoint,
 
                        draw_panel = function(data, panel_params, coord, na.rm = FALSE, scale_depth = TRUE,
                                              ref_line_colour = NULL, ref_line_linewidth = NULL, ref_line_linetype = NULL, ref_line_alpha = NULL,
-                                             ref_point_colour = NULL, ref_point_fill = NULL, ref_point_alpha = NULL, ref_point_size = NULL) {
+                                             ref_point_colour = NULL, ref_point_fill = NULL, ref_point_alpha = NULL, ref_point_size = NULL, ref_point_stroke = NULL, ref_point_shape = NULL) {
 
                              # Transform data through coordinate system
+                             data$ref_circle_radius <- data$ref_circle_radius / 100
                              coords <- coord$transform(data, panel_params)
 
                              # Apply depth scaling to point sizes, strokes, and linewidths if enabled
@@ -20,45 +21,69 @@ GeomPoint3D <- ggproto("GeomPoint3D", GeomPoint,
                                    coords$linewidth <- coords$linewidth * coords$depth_scale
                              }
 
-                             # Initialize containers
+                             # Extract base object IDs (everything before "__")
+                             coords$object_id <- sub("__.*", "", coords$group)
+
+                             # Split data by object ID
+                             objects <- split(coords, coords$object_id)
+                             objects <- objects[unique(coords$object_id)] # restore depth ordering
+
+                             # Initialize grobs list
                              grobs <- list()
-                             segment_cache <- list()  # Track partial line segments by group
 
-                             # Process rows in depth-sorted order
-                             for (i in 1:nrow(coords)) {
-                                   row <- coords[i, ]
+                             # Loop over complete objects
+                             for (object_data in objects) {
+                                   element_type <- object_data$element_type[1]
 
-                                   if (row$element_type == "ref_line") {
-                                         # Handle line segment logic
-                                         group_name <- row$group
+                                   if (element_type == "ref_circle") {
+                                         # Create polygon grob for circle - inherit aesthetics from raw points
+                                         circle_colour <- ref_point_colour %||% object_data$colour[1]
+                                         circle_fill <- ref_point_fill %||% object_data$fill[1]
+                                         circle_alpha <- ref_point_alpha %||% (if(is.na(object_data$alpha[1])) 1 else object_data$alpha[1])
 
-                                         if (group_name %in% names(segment_cache)) {
-                                               # Second point of segment - create the line grob
-                                               start_row <- segment_cache[[group_name]]
-                                               end_row <- row
+                                         # Handle stroke/linewidth with depth scaling - inherit from raw point stroke
+                                         avg_depth_scale <- mean(object_data$depth_scale)
+                                         if (!is.null(ref_point_stroke)) {
+                                               circle_linewidth <- ref_point_stroke * avg_depth_scale
+                                         } else {
+                                               # Inherit stroke from raw point data
+                                               base_stroke <- object_data$stroke[1] %||% 0.5
+                                               circle_linewidth <- base_stroke * avg_depth_scale
+                                         }
 
-                                               # Apply styling overrides or inherit from points
+                                         polygon_grob <- grid::polygonGrob(
+                                               x = object_data$x,
+                                               y = object_data$y,
+                                               default.units = "npc",
+                                               gp = grid::gpar(
+                                                     col = circle_colour,
+                                                     fill = circle_fill,
+                                                     lwd = circle_linewidth * .pt,
+                                                     alpha = circle_alpha
+                                               )
+                                         )
 
-                                               # Apply styling overrides or inherit from points
-                                               line_colour <- ref_line_colour %||% start_row$colour
+                                         grobs <- append(grobs, list(polygon_grob))
+
+                                   } else if (element_type == "ref_line") {
+                                         # Create segment grob for line (should have exactly 2 points)
+                                         if (nrow(object_data) == 2) {
+                                               line_colour <- ref_line_colour %||% object_data$colour[1]
                                                line_linetype <- ref_line_linetype %||% 1
-                                               line_alpha <- ref_line_alpha %||% (if(is.na(start_row$alpha)) 1 else start_row$alpha)
+                                               line_alpha <- ref_line_alpha %||% (if(is.na(object_data$alpha[1])) 1 else object_data$alpha[1])
 
                                                # Handle linewidth with depth scaling
-                                               avg_depth_scale <- (start_row$depth_scale + end_row$depth_scale) / 2
+                                               avg_depth_scale <- mean(object_data$depth_scale)
                                                if (!is.null(ref_line_linewidth)) {
-                                                     # Apply averaged depth scaling to the override value
                                                      line_linewidth <- ref_line_linewidth * avg_depth_scale
                                                } else {
-                                                     # Use averaged depth scaling on base linewidth
-                                                     base_linewidth <- 0.5  # Default base linewidth
+                                                     base_linewidth <- 0.5
                                                      line_linewidth <- base_linewidth * avg_depth_scale
                                                }
 
-                                               # Create segment grob
                                                segment_grob <- grid::segmentsGrob(
-                                                     x0 = start_row$x, y0 = start_row$y,
-                                                     x1 = end_row$x, y1 = end_row$y,
+                                                     x0 = object_data$x[1], y0 = object_data$y[1],
+                                                     x1 = object_data$x[2], y1 = object_data$y[2],
                                                      default.units = "npc",
                                                      gp = grid::gpar(
                                                            col = line_colour,
@@ -69,55 +94,50 @@ GeomPoint3D <- ggproto("GeomPoint3D", GeomPoint,
                                                )
 
                                                grobs <- append(grobs, list(segment_grob))
-
-                                               # Remove from cache
-                                               segment_cache[[group_name]] <- NULL
-
-                                         } else {
-                                               # First point of segment - cache it
-                                               segment_cache[[group_name]] <- row
                                          }
 
-                                   } else if (row$element_type == "ref_point") {
-                                         # Create reference point grob immediately
-                                         point_colour <- ref_point_colour %||% row$colour
-                                         point_fill <- ref_point_fill %||% (if(is.na(row$fill)) NA else row$fill)
-                                         point_alpha <- ref_point_alpha %||% (if(is.na(row$alpha)) 1 else row$alpha)
+                                   } else if (element_type == "ref_point") {
+                                         # Create point grob for reference point
+                                         point_colour <- ref_point_colour %||% object_data$colour[1]
+                                         point_fill <- ref_point_fill %||% (if(is.na(object_data$fill[1])) NA else object_data$fill[1])
+                                         point_alpha <- ref_point_alpha %||% (if(is.na(object_data$alpha[1])) 1 else object_data$alpha[1])
+                                         point_shape <- ref_point_shape %||% object_data$shape[1]
 
                                          # Handle point size with depth scaling
                                          if (!is.null(ref_point_size)) {
-                                               # Apply depth scaling to the override value
-                                               point_size <- ref_point_size * row$depth_scale
+                                               point_size <- ref_point_size * object_data$depth_scale[1]
                                          } else {
-                                               # Default to 1/3 of the raw point size (already depth-scaled)
-                                               point_size <- row$size * (1/3)
+                                               point_size <- object_data$size[1] * (1/3)
                                          }
 
+                                         # Handle stroke for point borders
+                                         point_stroke <- ref_point_stroke %||% object_data$stroke[1]
+
                                          point_grob <- grid::pointsGrob(
-                                               x = row$x, y = row$y,
+                                               x = object_data$x[1], y = object_data$y[1],
                                                default.units = "npc",
-                                               pch = row$shape,
+                                               pch = point_shape,
                                                gp = grid::gpar(
                                                      col = point_colour,
                                                      fill = point_fill,
-                                                     fontsize = point_size * .pt + .stroke * row$stroke,
+                                                     fontsize = point_size * .pt + .stroke * point_stroke,
                                                      alpha = point_alpha
                                                )
                                          )
 
                                          grobs <- append(grobs, list(point_grob))
 
-                                   } else if (row$element_type == "raw_point") {
-                                         # Create primary point grob immediately (use original aesthetics)
+                                   } else if (element_type == "raw_point") {
+                                         # Create point grob for raw point (use original aesthetics)
                                          point_grob <- grid::pointsGrob(
-                                               x = row$x, y = row$y,
+                                               x = object_data$x[1], y = object_data$y[1],
                                                default.units = "npc",
-                                               pch = row$shape,
+                                               pch = object_data$shape[1],
                                                gp = grid::gpar(
-                                                     col = row$colour,
-                                                     fill = if(is.na(row$fill)) NA else row$fill,
-                                                     fontsize = row$size * .pt + .stroke * row$stroke,
-                                                     alpha = if(is.na(row$alpha)) 1 else row$alpha
+                                                     col = object_data$colour[1],
+                                                     fill = if(is.na(object_data$fill[1])) NA else object_data$fill[1],
+                                                     fontsize = object_data$size[1] * .pt + .stroke * object_data$stroke[1],
+                                                     alpha = if(is.na(object_data$alpha[1])) 1 else object_data$alpha[1]
                                                )
                                          )
 
@@ -159,24 +179,34 @@ GeomPoint3D <- ggproto("GeomPoint3D", GeomPoint,
 #' @param show.legend Logical indicating whether this layer should be included in legends.
 #' @param inherit.aes If `FALSE`, overrides the default aesthetics.
 #' @param scale_depth Logical indicating whether to apply depth-based scaling
-#'   to point sizes (and stroke widths if using a point shape with a stroke property).
-#'   When `TRUE` (default), points closer to the viewer appear larger and points
-#'   farther away appear smaller. When `FALSE`, all points have uniform size.
+#'   to point sizes, point stroke widths, and reference line widths.
+#'   When `TRUE` (default), points/lines closer to the viewer appear larger/wider, and
+#'   points farther away appear smaller. When `FALSE`, all points/lines have uniform size/width.
 #' @param raw_points Logical indicating whether to show the original 3D points.
 #'   Default is `TRUE`.
 #' @param ref_lines Logical indicating whether to show reference lines projecting
 #'   from points to cube faces. Default is `FALSE`.
-#' @param ref_points Logical indicating whether to show reference points on cube faces
-#'   representing the 2D projections. Default is `FALSE`.
+#' @param ref_points Type of reference points to create. Options:
+#'   \itemize{
+#'     \item \code{FALSE}: No reference points (default)
+#'     \item \code{TRUE or "circles"}: Circular reference points that project properly
+#'     \item \code{"points"}: Single-point references (renders faster and supports non-circular shapes,
+#'     but point shape is not 3D-transformed)
+#'   }
 #' @param ref_faces Character vector specifying which cube faces to project to.
 #'   Valid face names are: "xmin", "xmax", "ymin", "ymax", "zmin", "zmax".
 #'   Default is "zmin" (bottom face). Multiple faces can be specified.
+#' @param ref_circle_radius Radius for circular reference points as percentage of standardized coordinate space.
+#' @param ref_circle_vertices Number of vertices for circular reference points (higher = smoother).
 #' @param ref_line_color,ref_line_colour,ref_line_linewidth,ref_line_linetype,ref_line_alpha
 #'   Styling overrides for reference lines. When NULL, inherits from point aesthetics.
 #'   Both American (`ref_line_color`) and British (`ref_line_colour`) spellings are accepted.
-#' @param ref_point_color,ref_point_colour,ref_point_fill,ref_point_size,ref_point_alpha
-#'   Styling overrides for reference points. When NULL, inherits from point aesthetics,
-#'   except `ref_point_size` which defaults to 1/3 of the original point size.
+#' @param ref_point_color,ref_point_colour,ref_point_fill,ref_point_size,ref_point_alpha,ref_point_stroke,ref_point_shape
+#'   Styling overrides for reference points and circles. When NULL, inherits from raw point aesthetics.
+#'   \itemize{
+#'     \item For reference points: `ref_point_size` defaults to 1/3 of raw point size, `ref_point_stroke` controls border width, `ref_point_shape` controls point shape
+#'     \item For reference circles: `ref_point_stroke` controls border width, other parameters control fill/color (`ref_point_shape` is ignored)
+#'   }
 #'   Both American (`ref_point_color`) and British (`ref_point_colour`) spellings are accepted.
 #'
 #' @section Aesthetics:
@@ -205,6 +235,7 @@ GeomPoint3D <- ggproto("GeomPoint3D", GeomPoint,
 #' data points onto cube faces:
 #' - **Reference lines**: Connect each 3D point to its projection on specified faces
 #' - **Reference points**: Show the projected location on the faces
+#' - **Reference circles**: Circular projections that appear as realistic 3D shadows
 #' - **Depth sorting**: All elements (original points, reference lines, reference points)
 #'   are automatically depth-sorted for proper 3D rendering
 #'
@@ -218,24 +249,32 @@ GeomPoint3D <- ggproto("GeomPoint3D", GeomPoint,
 #'   coord_3d(pitch = 40, roll = 5, yaw = 0, dist = 1.5) +
 #'   scale_fill_viridis_c()
 #'
-#' # Add reference lines and points (ref points auto-sized to 1/3 of original)
+#' # Add circular reference points on 2D face panel
 #' ggplot(mtcars, aes(mpg, wt, qsec)) +
-#'   geom_point_3d(ref_lines = TRUE, ref_points = TRUE,
+#'   geom_point_3d(size = 3,
+#'     ref_points = TRUE, ref_lines = TRUE, ref_faces = "zmin") +
+#'   coord_3d()
+#'
+#' # Use point-style references with custom shape
+#' ggplot(mtcars, aes(mpg, wt, qsec)) +
+#'   geom_point_3d(ref_points = "points", ref_lines = TRUE,
+#'                 ref_point_shape = 4, ref_point_size = 2,
 #'                 ref_line_alpha = 0.5) +
 #'   coord_3d()
 #'
-#' # Show only reference projections (no original points)
+#' # Show only circular reference projections (no original points)
 #' ggplot(mtcars, aes(mpg, wt, qsec)) +
-#'   geom_point_3d(raw_points = FALSE, ref_lines = TRUE, ref_points = TRUE,
+#'   geom_point_3d(raw_points = FALSE, ref_points = "circles", ref_lines = TRUE,
 #'                 ref_faces = c("zmin", "ymin")) +
 #'   coord_3d()
 #'
-#' # Project to multiple faces
-#' ggplot(mtcars, aes(mpg, wt, qsec, color = cyl)) +
-#'   geom_point_3d(ref_lines = TRUE, ref_points = TRUE,
+#' # Project to multiple faces with custom circle styling
+#' ggplot(mtcars, aes(mpg, wt, qsec, color = factor(cyl))) +
+#'   geom_point_3d(ref_points = "circles", ref_lines = TRUE,
 #'                 ref_faces = c("zmin", "ymin", "xmax"),
 #'                 ref_line_color = "grey50", ref_line_alpha = 0.3,
-#'                 ref_point_fill = "white", ref_point_size = 1) +
+#'                 ref_point_fill = "white", ref_point_stroke = 0.8,
+#'                 ref_circle_radius = 1) +
 #'   coord_3d()
 #'
 #' # Disable depth scaling for uniform sizes
@@ -258,6 +297,8 @@ geom_point_3d <- function(mapping = NULL, data = NULL,
                           ref_lines = FALSE,
                           ref_points = FALSE,
                           ref_faces = "zmin",
+                          ref_circle_radius = 1.5,
+                          ref_circle_vertices = 16,
                           ref_line_color = NULL,
                           ref_line_colour = NULL,  # British spelling
                           ref_line_linewidth = 0.25,
@@ -265,9 +306,11 @@ geom_point_3d <- function(mapping = NULL, data = NULL,
                           ref_line_alpha = NULL,
                           ref_point_color = NULL,
                           ref_point_colour = NULL,  # British spelling
-                          ref_point_fill = NULL,
+                          ref_point_fill = "black",
                           ref_point_size = NULL,
-                          ref_point_alpha = NULL) {
+                          ref_point_alpha = 0.5,
+                          ref_point_stroke = NA,
+                          ref_point_shape = NULL) {
 
       # Handle both American and British spellings
       if (!is.null(ref_line_colour) && is.null(ref_line_color)) {
@@ -292,6 +335,8 @@ geom_point_3d <- function(mapping = NULL, data = NULL,
                   ref_lines = ref_lines,
                   ref_points = ref_points,
                   ref_faces = ref_faces,
+                  ref_circle_radius = ref_circle_radius,
+                  ref_circle_vertices = ref_circle_vertices,
                   ref_line_color = ref_line_color,
                   ref_line_linewidth = ref_line_linewidth,
                   ref_line_linetype = ref_line_linetype,
@@ -300,6 +345,8 @@ geom_point_3d <- function(mapping = NULL, data = NULL,
                   ref_point_fill = ref_point_fill,
                   ref_point_size = ref_point_size,
                   ref_point_alpha = ref_point_alpha,
+                  ref_point_stroke = ref_point_stroke,
+                  ref_point_shape = ref_point_shape,
                   ...
             )
       )

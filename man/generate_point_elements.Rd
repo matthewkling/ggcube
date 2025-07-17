@@ -4,18 +4,30 @@
 \alias{generate_point_elements}
 \title{Generate reference elements with simplified approach}
 \usage{
-generate_point_elements(data, raw_points, ref_faces, ref_points, ref_lines)
+generate_point_elements(
+  data,
+  raw_points,
+  ref_faces,
+  ref_points,
+  ref_lines,
+  ref_circle_radius,
+  ref_circle_vertices
+)
 }
 \arguments{
 \item{data}{Original point data}
 
-\item{faces}{Character vector of face names}
+\item{raw_points}{Whether to include raw points}
 
-\item{scale_limits}{List of scale limits}
+\item{ref_faces}{Character vector of face names}
 
-\item{include_points}{Whether to include reference points}
+\item{ref_points}{Type of reference points: FALSE, "circles", or "points"}
 
-\item{include_lines}{Whether to include reference lines}
+\item{ref_lines}{Whether to include reference lines}
+
+\item{ref_circle_radius}{Radius for circular reference points}
+
+\item{ref_circle_vertices}{Number of vertices for circular reference points}
 }
 \value{
 Data frame with reference elements

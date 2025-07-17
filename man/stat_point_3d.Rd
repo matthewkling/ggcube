@@ -14,8 +14,10 @@ stat_point_3d(
   inherit.aes = TRUE,
   raw_points = TRUE,
   ref_lines = FALSE,
-  ref_points = FALSE,
+  ref_points = "circles",
   ref_faces = "zmin",
+  ref_circle_radius = 0.02,
+  ref_circle_vertices = 16,
   ...
 )
 }
@@ -38,10 +40,19 @@ stat_point_3d(
 
 \item{ref_lines}{Logical indicating whether to show reference lines to faces.}
 
-\item{ref_points}{Logical indicating whether to show reference points on faces.}
+\item{ref_points}{Type of reference points to create. Options:
+\itemize{
+\item \code{FALSE}: No reference points
+\item \code{"circles"}: Circular reference points that project properly (default)
+\item \code{"points"}: Single-point references (legacy behavior)
+}}
 
 \item{ref_faces}{Character vector specifying which faces to project to. Uses same
-vocabulary as coord_3d panels argument. Default "background" uses visible background faces.}
+vocabulary as coord_3d panels argument. Default "zmin" uses bottom face.}
+
+\item{ref_circle_radius}{Radius for circular reference points in standardized coordinate units.}
+
+\item{ref_circle_vertices}{Number of vertices for circular reference points (higher = smoother).}
 
 \item{...}{Other arguments passed on to \code{\link[=layer]{layer()}}.}
 }
@@ -54,9 +65,11 @@ generate reference lines and points projecting to cube faces.
 
 \itemize{
 \item \code{x_raw}, \code{y_raw}, \code{z_raw}: Original values before discrete-to-numeric conversion
-\item \code{element_type}: Type of element ("primary", "ref_point", "ref_line")
+\item \code{element_type}: Type of element ("raw_point", "ref_point", "ref_line", "ref_circle")
 \item \code{segment_id}: ID linking the two endpoints of reference lines
 \item \code{ref_face}: Which face reference elements project to
+\item \code{ref_circle_radius}: Radius for circular reference points
+\item \code{ref_circle_vertices}: Number of vertices for circular reference points
 }
 }
 

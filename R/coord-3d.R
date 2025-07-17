@@ -97,7 +97,6 @@ coord_3d <- function(pitch = 0, roll = 120, yaw = 30,
       )
 }
 
-
 Coord3D <- ggproto("Coord3D", CoordCartesian,
                    # Parameters
                    pitch = 0,
@@ -326,95 +325,30 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                    transform = function(self, data, panel_params) {
 
                          # Scale data to standard domain with aspect ratio
-                         scale_ranges <- list(
-                               x = panel_params$scale_info$x$limits,
-                               y = panel_params$scale_info$y$limits,
-                               z = panel_params$scale_info$z$limits
-                         )
-
-                         data_std <- scale_to_standard(
-                               data[c("x", "y", "z")],
-                               scale_ranges,
-                               panel_params$scales,
-                               panel_params$ratio
-                         )
+                         scale_ranges <- list(x = panel_params$scale_info$x$limits,
+                                              y = panel_params$scale_info$y$limits,
+                                              z = panel_params$scale_info$z$limits)
+                         result <- scale_to_standard(data[c("x", "y", "z")], scale_ranges,
+                                                       panel_params$scales, panel_params$ratio)
 
                          # Project data onto cube face, if applicable
-                         data_std <- project_to_face(data, data_std)
+                         result <- project_to_face(data, result)
+
+                         # Expand ref_circle points to circular polygons
+                         data <- points_to_circles(data, result)
 
                          # Apply 3D transformation (returns x, y, z, depth, depth_scale)
-                         transformed <- transform_3d_standard(data_std, panel_params$proj)
+                         result <- transform_3d_standard(data, panel_params$proj)
 
-                         # Store transformed coordinates
-                         data$x <- transformed$x
-                         data$y <- transformed$y
-                         data$z <- transformed$z      # Keep for face visibility calculations
-                         data$depth <- transformed$depth  # Use for depth sorting
-                         data$depth_scale <- transformed$depth_scale  # Use for size scaling
+                         # Combine transformed coordinates and additional variables
+                         result <- bind_cols(select(result, x, y, z, depth, depth_scale),
+                                             select(data, -x, -y, -z))
 
-                         # Apply final coordinate transformation to fit plot bounds [0, 1]
-                         result <- data
-                         result$x <- (data$x - panel_params$plot_bounds[1]) / (panel_params$plot_bounds[2] - panel_params$plot_bounds[1])
-                         result$y <- (data$y - panel_params$plot_bounds[3]) / (panel_params$plot_bounds[4] - panel_params$plot_bounds[3])
+                         # Apply final coordinate transformation to fit plot bounds
+                         result <- scale_to_npc_coordinates(result, plot_bounds = panel_params$plot_bounds)
 
-                         # Depth sorting with hierarchical support
-                         if ("group" %in% names(result) && grepl("__", result$group[1], fixed = TRUE)) {
-                               # Hierarchical depth sorting
-                               # Split groups into hierarchy levels
-                               group_parts <- strsplit(result$group, "__", fixed = TRUE)
-                               n_levels <- max(lengths(group_parts))
-
-                               # Create temporary data frame for sorting calculations
-                               sort_df <- data.frame(
-                                     row_id = 1:nrow(result),
-                                     depth = result$depth,
-                                     stringsAsFactors = FALSE
-                               )
-
-                               # Add hierarchy level columns
-                               for (i in 1:n_levels) {
-                                     level_col <- paste0("level_", i)
-                                     sort_df[[level_col]] <- sapply(group_parts, function(x) {
-                                           if(length(x) >= i) x[i] else NA_character_
-                                     })
-                               }
-
-                               # Calculate summary depth for each hierarchy level
-                               for (i in 1:n_levels) {
-                                     level_col <- paste0("level_", i)
-                                     depth_col <- paste0("depth_", i)
-
-                                     fun <- switch(i, "1" = max, "2" = mean, mean)
-
-                                     # Calculate depth for each unique value at this level
-                                     level_values <- sort_df[[level_col]]
-                                     unique_values <- unique(level_values[!is.na(level_values)])
-                                     sort_df[[depth_col]] <- NA_real_
-                                     for (level_val in unique_values) {
-                                           mask <- !is.na(level_values) & level_values == level_val
-                                           sort_df[[depth_col]][mask] <- fun(sort_df$depth[mask])
-                                     }
-                               }
-
-                               # Build sorting arguments (deeper = farther = sort first)
-                               depth_cols <- paste0("depth_", 1:n_levels)
-                               sort_args <- list()
-                               for (col in depth_cols) {
-                                     if (col %in% names(sort_df)) {
-                                           sort_args[[length(sort_args) + 1]] <- -sort_df[[col]]  # Negative for back-to-front
-                                     }
-                               }
-
-                               # Sort hierarchically, preserving row order within groups
-                               if (length(sort_args) > 0) {
-                                     sort_order <- do.call(order, sort_args)
-                                     result <- result[sort_order, ]
-                               }
-
-                         } else {
-                               # Individual vertex sorting (ignore groups)
-                               result <- result[order(-result$depth), ]
-                         }
+                         # Hierarchical depth sorting
+                         result <- sort_by_depth(result)
 
                          return(result)
                    },
@@ -707,4 +641,91 @@ project_to_face <- function(data, data_std){
                    y = ifelse(is.na(face) | axis != "y", y, value),
                    z = ifelse(is.na(face) | axis != "z", z, value)) %>%
             select(x, y, z)
+}
+
+
+#' Convert ref_circle points to circular polygons
+#'
+#' @param data Original data frame
+#' @param data_std Standardized data frame
+#' @return Data frame with circular polygons replacing ref_circle points
+points_to_circles <- function(data, data_std) {
+
+      # Keep std coords and all other vars
+      d <- bind_cols(select(data, -x, -y, -z),
+                     select(data_std, x, y, z))
+
+      # Check if we have any ref_circle elements
+      if (!"element_type" %in% names(d) || !any(d$element_type == "ref_circle")) {
+            return(d)
+      }
+
+      result <- filter(d, element_type == "ref_circle") %>%
+            rowwise() %>%
+            reframe(generate_circle_vertices(x, y, z, project_to_face,
+                                             ref_circle_radius, ref_circle_vertices),
+                    vertex_order = 1:ref_circle_vertices,
+                    group = group) %>%
+            full_join(select(filter(d, element_type == "ref_circle"), -x, -y, -z),
+                      by = join_by(group)) %>%
+            arrange(group, vertex_order) %>%
+            bind_rows(filter(d, element_type != "ref_circle"))
+
+      return(result)
+}
+
+#' Generate circle vertices in 3D space for a given face
+#'
+#' @param x_std,y_std,z_std Standardized point coordinates
+#' @param face Face name (e.g., "zmin", "xmax")
+#' @param radius Circle radius in standardized units
+#' @param n_vertices Number of vertices for the circle
+#' @return Data frame with x, y, z coordinates for circle vertices
+generate_circle_vertices <- function(x_std, y_std, z_std, face, radius, n_vertices) {
+      # Generate angles for circle vertices
+      angles <- seq(0, 2 * pi, length.out = n_vertices + 1)[-(n_vertices + 1)]
+
+      # Get the face axis and value
+      face_axis <- substr(face, 1, 1)
+      face_value <- ifelse(substr(face, 2, 4) == "min", -0.5, 0.5)
+
+      # Generate circle vertices based on the face
+      if (face_axis == "z") { # Circle in x-y plane
+            x_coords <- x_std + radius * cos(angles)
+            y_coords <- y_std + radius * sin(angles)
+            z_coords <- rep(face_value, n_vertices)
+      } else if (face_axis == "x") { # Circle in y-z plane
+            x_coords <- rep(face_value, n_vertices)
+            y_coords <- y_std + radius * cos(angles)
+            z_coords <- z_std + radius * sin(angles)
+      } else if (face_axis == "y") { # Circle in x-z plane
+            x_coords <- x_std + radius * cos(angles)
+            y_coords <- rep(face_value, n_vertices)
+            z_coords <- z_std + radius * sin(angles)
+      } else {
+            stop("Invalid face: ", face)
+      }
+
+      return(data.frame(x = x_coords, y = y_coords, z = z_coords))
+}
+
+
+
+# Hierarchical depth sorting
+# split `group` into levels by `__`, and sort by group-level mean/max depth
+# this prevents depth-sorting within lowest-level group, to preserve vertex order
+sort_by_depth <- function(data) {
+      if (any(grepl("__", data$group))) {
+            # Hierarchical sorting
+            data %>%
+                  tidyr::separate(group, c("level1", "level2"), sep = "__", remove = FALSE) %>%
+                  group_by(level1) %>% mutate(depth1 = max(depth)) %>%
+                  group_by(level2) %>% mutate(depth2 = mean(depth)) %>%
+                  ungroup() %>%
+                  arrange(desc(depth1), desc(depth2)) %>%
+                  select(-level1, -level2, -depth1, -depth2)
+      } else {
+            # Simple sorting
+            arrange(data, desc(depth))
+      }
 }

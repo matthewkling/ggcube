@@ -342,15 +342,20 @@ resolve_label_text <- function(break_value, axis_labels, axis_breaks) {
 }
 
 # Helper function to scale coordinates to NPC
-scale_to_npc_coordinates <- function(x_2d, y_2d, plot_bounds) {
-      x_scaled <- (x_2d - plot_bounds[1]) / (plot_bounds[2] - plot_bounds[1])
-      y_scaled <- (y_2d - plot_bounds[3]) / (plot_bounds[4] - plot_bounds[3])
+scale_to_npc_coordinates <- function(x, y = NULL, plot_bounds) {
 
-      if (is.na(x_scaled) || is.na(y_scaled)) {
-            return(NULL)
+      if(!is.null(y)){
+            x_scaled <- (x - plot_bounds[1]) / (plot_bounds[2] - plot_bounds[1])
+            y_scaled <- (y - plot_bounds[3]) / (plot_bounds[4] - plot_bounds[3])
+            if (is.na(x_scaled) || is.na(y_scaled)) {
+                  return(NULL)
+            }
+            return(list(x = x_scaled, y = y_scaled))
+      }else{ # assume x is a data frame with x and y variables
+            x$x <- (x$x - plot_bounds[1]) / (plot_bounds[2] - plot_bounds[1])
+            x$y <- (x$y - plot_bounds[3]) / (plot_bounds[4] - plot_bounds[3])
+            return(x)
       }
-
-      return(list(x = x_scaled, y = y_scaled))
 }
 
 # Helper function to create text grob
