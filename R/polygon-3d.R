@@ -262,6 +262,10 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                                for(i in seq_along(polygon_ids)){
                                      poly_data <- coords[coords$group == polygon_ids[i], ]
 
+                                     # Handle alpha values (default to 1 if NA)
+                                     alpha_val <- poly_data$alpha[1]
+                                     if (is.na(alpha_val)) alpha_val <- 1
+
                                      # Draw this polygon
                                      polygon_grobs[[i]] <- grid::polygonGrob(
                                            x = poly_data$x,
@@ -271,7 +275,8 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                                                  col = poly_data$colour[1],
                                                  fill = poly_data$fill[1],
                                                  lwd = poly_data$linewidth[1] * .pt,
-                                                 lty = poly_data$linetype[1]
+                                                 lty = poly_data$linetype[1],
+                                                 alpha = alpha_val
                                            ),
                                            name = paste0("polygon_", i)
                                      )

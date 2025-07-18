@@ -124,6 +124,18 @@ StatSurface <- ggproto("StatSurface", Stat,
 #' p + stat_surface(aes(color = z), fill = NA) +
 #'   scale_color_viridis_c()
 #'
+#' # use `group` to plot data for multiple surfaces
+#' d <- expand.grid(x = -5:5, y = -5:5)
+#' d$z <- d$x^2 - d$y^2
+#' d$g <- "a"
+#' d2 <- d
+#' d2$z <- d$z + 10
+#' d2$g <- "b"
+#' ggplot(rbind(d, d2),
+#'        aes(x, y, z, group = g, fill = g)) +
+#'   coord_3d() +
+#'   stat_surface(color = "black", alpha = .5)
+#'
 #' ggplot(mountain, aes(x, y, z, fill = z, color = z)) +
 #'   stat_surface(light = lighting(method = "diffuse", direction = c(1, 0, .5),
 #'                            blend = "both", blend_mode = "hsv", blend_strength = .9),
@@ -141,18 +153,6 @@ stat_surface <- function(mapping = NULL, data = NULL,
                          light = lighting(),
                          na.rm = FALSE, show.legend = NA, inherit.aes = TRUE,
                          ...) {
-
-      # Set default group mapping like stat_surface does
-      default_mapping <- aes(group = after_stat(group))
-
-      if (!is.null(mapping)) {
-            mapping_names <- names(mapping)
-            if (!"group" %in% mapping_names) {
-                  mapping <- modifyList(default_mapping, mapping)
-            }
-      } else {
-            mapping <- default_mapping
-      }
 
       layer(
             stat = StatSurface, data = data, mapping = mapping, geom = geom,
