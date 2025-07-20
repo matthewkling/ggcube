@@ -27,10 +27,10 @@ geom_point_3d(
   ref_line_alpha = NULL,
   ref_point_color = NULL,
   ref_point_colour = NULL,
-  ref_point_fill = "black",
+  ref_point_fill = NULL,
   ref_point_size = NULL,
-  ref_point_alpha = 0.5,
-  ref_point_stroke = NA,
+  ref_point_alpha = NULL,
+  ref_point_stroke = NULL,
   ref_point_shape = NULL
 )
 }
@@ -80,14 +80,11 @@ Default is "zmin" (bottom face). Multiple faces can be specified.}
 
 \item{ref_circle_vertices}{Number of vertices for circular reference points (higher = smoother).}
 
-\item{ref_line_color, ref_line_colour, ref_line_linewidth, ref_line_linetype, ref_line_alpha}{Styling overrides for reference lines. When NULL, inherits from point aesthetics.
+\item{ref_line_color, ref_line_colour, ref_line_linewidth, ref_line_linetype, ref_line_alpha}{Styling overrides for reference lines. When NULL, inherits from point aesthetics or uses defaults.
 Both American (\code{ref_line_color}) and British (\code{ref_line_colour}) spellings are accepted.}
 
-\item{ref_point_color, ref_point_colour, ref_point_fill, ref_point_size, ref_point_alpha, ref_point_stroke, ref_point_shape}{Styling overrides for reference points and circles. When NULL, inherits from raw point aesthetics.
-\itemize{
-\item For reference points: \code{ref_point_size} defaults to 1/3 of raw point size, \code{ref_point_stroke} controls border width, \code{ref_point_shape} controls point shape
-\item For reference circles: \code{ref_point_stroke} controls border width, other parameters control fill/color (\code{ref_point_shape} is ignored)
-}
+\item{ref_point_color, ref_point_colour, ref_point_fill, ref_point_size, ref_point_alpha, ref_point_stroke, ref_point_shape}{Styling overrides for reference points and circles. When NULL, inherits from raw point aesthetics
+with shape-aware logic (complex shapes 21-25 vs simple shapes 0-20/characters).
 Both American (\code{ref_point_color}) and British (\code{ref_point_colour}) spellings are accepted.}
 }
 \description{
@@ -131,6 +128,17 @@ This creates realistic perspective where:
 }
 }
 
+\section{Point Rendering}{
+
+ggcube uses shape-aware rendering for improved stroke behavior:
+\itemize{
+\item \strong{Simple shapes (0-20, characters):} Use \code{size} for fontsize, \code{stroke} for border width, no fill
+\item \strong{Complex shapes (21-25):} Use ggplot2's approach: \code{size + 0.5*stroke} for fontsize to prevent gaps
+\item Both size and stroke are depth-scaled when \code{scale_depth = TRUE}
+\item All shapes preserve stroke depth scaling and parameter control
+}
+}
+
 \section{Reference Features}{
 
 Reference lines and points help visualize the 3D relationships by projecting
@@ -141,6 +149,16 @@ data points onto cube faces:
 \item \strong{Reference circles}: Circular projections that appear as realistic 3D shadows
 \item \strong{Depth sorting}: All elements (original points, reference lines, reference points)
 are automatically depth-sorted for proper 3D rendering
+}
+}
+
+\section{Aesthetic Inheritance}{
+
+Reference elements intelligently inherit styling from raw points:
+\itemize{
+\item \strong{Shape-aware}: Complex shapes (21-25) with fill/colour are handled differently from simple shapes (0-20/characters)
+\item \strong{Alpha detection}: If all points have alpha=1, uses 0.5 default for ref elements; otherwise inherits mapped alpha
+\item \strong{Priority}: Explicit ref_* parameters > mapped aesthetics > smart defaults
 }
 }
 
@@ -158,6 +176,13 @@ ggplot(expand_grid(x = 1:5, y = 1:5, z = 1:5),
 ggplot(mtcars, aes(mpg, wt, qsec)) +
   geom_point_3d(size = 3,
     ref_points = TRUE, ref_lines = TRUE, ref_faces = "zmin") +
+  coord_3d()
+
+# Aesthetic inheritance - ref elements inherit color and fill
+ggplot(mpg, aes(displ, hwy, cty, color = cty, fill = cty)) +
+  geom_point_3d(shape = 21, size = 3,
+                ref_points = TRUE, ref_lines = TRUE,
+                ref_faces = "zmin") +
   coord_3d()
 
 # Use point-style references with custom shape

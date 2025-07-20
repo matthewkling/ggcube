@@ -17,26 +17,35 @@ surfaces and volumes.
 
 ## Example
 
-Let’s make a 3D scatter plot of the `mpg` dataset. Compared to a
-standard 2D ggplot, we simply expand the aesthetic mapping to include
-our third variable, and then add `coord_3d()`:
+Let’s start with a super basic 3D scatter plot of the `mpg` dataset.
+Compared to a standard 2D ggplot, we simply expand the aesthetic mapping
+to include our third variable, and then add `coord_3d()`:
 
 ``` r
 library(ggplot2)
 library(ggcube)
 
-ggplot(mpg, aes(displ, hwy, cty)) +  # Enhanced aes() from ggcube
-  geom_point() +                     # From ggplot2  
-  coord_3d()                         # From ggcube
+ggplot(mpg, aes(displ, hwy, cty, color = drv)) +  # Enhanced aes() from ggcube
+      geom_point() + # From ggplot2
+      coord_3d() # From ggcube
 ```
 
 <img src="man/figures/README-example-1.png" width="100%" />
 
-    #> scale_z_continuous() running
-    #> Coord3D setup_panel_params() running ... done
-    #> Coord3D transform() running
-    #> Coord3D render_cube() running
-    #> Coord3D render_cube() running
+But the library also provides its own `geom_point_3d` function that
+includes features like scaling point size by perceived distance, and
+adding reference points projected as 2D scatterplots on the panel faces:
+
+``` r
+ggplot(mpg, aes(displ, hwy, cty, color = drv)) +
+      geom_point_3d(
+            ref_points = TRUE,
+            ref_faces = c("xmax", "ymin", "zmin"),
+            ref_point_alpha = .25) + 
+      coord_3d()
+```
+
+<img src="man/figures/README-scatter-1.png" width="100%" />
 
 A key 3D stat is `stat_surface()`, which can be used to plot grid-like
 data that has a z-value for every x-y combination, such as function
@@ -64,41 +73,29 @@ ggplot(d, aes(x, y, z)) +
 
 <img src="man/figures/README-surface-1.png" width="100%" />
 
-    #> scale_z_continuous() running
-    #> Coord3D setup_panel_params() running ... done
-    #> Coord3D transform() running
-    #> Coord3D render_cube() running
-    #> Coord3D render_cube() running
-
 You can also create an arbitrary third axis along which to array a set
 of data. Here’s an example using a map of the US:
 
 ``` r
 # data
-country <- map_data("usa") %>% mutate(z = 2)
-state <- map_data("state") %>% mutate(z = 1)
-county <- map_data("county") %>% mutate(z = 0)
-d <- bind_rows(country, state, county)
+country <- map_data("usa") %>% mutate(level = "country")
+state <- map_data("state") %>% mutate(level = "state")
+county <- map_data("county") %>% mutate(level = "county")
+d <- bind_rows(country, state, county) %>%
+      mutate(level = factor(level, levels = c("county", "state", "country"))) %>%
+      mutate(group = paste0(level, "_", group)) %>%
+      arrange(group, order)
 
 # plot
 d %>%
-      ggplot(aes(long, lat, z, fill = z, 
-                 group = paste(letters[3-z], group))) +
-      geom_polygon(color = "black", linewidth = .05) +
-      scale_fill_gradient(high = "red", low = "gold") +
+      ggplot(aes(long, lat, level, fill = level, group = group)) +
+      geom_polygon_3d(color = "black", linewidth = .05) +
       coord_3d(scales = "fixed", ratio = c(1, 1.3, 5),
                pitch = 0, roll = -60, yaw = 30) +
-      scale_z_continuous(breaks = 1:3, labels = c("county", "state", "country")) +
       theme(legend.position = "none")
-#> scale_z_continuous() running
 ```
 
 <img src="man/figures/README-layers-1.png" width="100%" />
-
-    #> Coord3D setup_panel_params() running ... done
-    #> Coord3D transform() running
-    #> Coord3D render_cube() running
-    #> Coord3D render_cube() running
 
 ## Installation
 

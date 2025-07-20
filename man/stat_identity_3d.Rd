@@ -36,7 +36,9 @@ stat_identity_3d(
 This stat performs identity transformation (passes data through unchanged) while
 properly handling discrete scales for 3D coordinate systems. It converts factor
 and character variables to numeric positions and preserves original values in
-\verb{*_raw} columns for proper scale labeling.
+\verb{*_raw} columns for proper scale labeling. It also converts group values to
+hierarchical format to enable proper depth sorting that preserves vertex order
+within polygons.
 }
 \details{
 This stat is primarily intended for use with 3D geoms that need discrete scale
@@ -46,9 +48,10 @@ support, following the same pattern as other ggcube stats.
 
 \itemize{
 \item \code{x_raw}, \code{y_raw}, \code{z_raw}: Original values before discrete-to-numeric conversion
+\item \code{group}: Converted to hierarchical format (e.g., "1__group", "2__group") for proper depth sorting
 }
 }
 
 \seealso{
-\code{\link[=geom_point_3d]{geom_point_3d()}} which uses this stat by default for discrete scale support.
+\code{\link[=geom_point_3d]{geom_point_3d()}}, \code{\link[=geom_polygon_3d]{geom_polygon_3d()}} which use this stat for discrete scale support.
 }

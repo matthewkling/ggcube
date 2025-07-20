@@ -298,7 +298,8 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
 #'
 #' @param mapping Set of aesthetic mappings created by [aes()].
 #' @param data The data to be displayed in this layer.
-#' @param stat The statistical transformation to use on the data. Defaults to "identity".
+#' @param stat The statistical transformation to use on the data. Defaults to
+#'   [StatIdentity3D] for proper discrete scale handling and group preservation.
 #' @param position Position adjustment, defaults to "identity".
 #' @param ... Other arguments passed on to [layer()].
 #' @param na.rm If `FALSE`, missing values are removed with a warning.
@@ -338,7 +339,7 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
 #'
 #' @seealso [stat_hull()] and [stat_surface()].
 #' @export
-geom_polygon_3d <- function(mapping = NULL, data = NULL, stat = "identity",
+geom_polygon_3d <- function(mapping = NULL, data = NULL, stat = StatIdentity3D,
                             position = "identity", ..., na.rm = FALSE,
                             show.legend = NA, inherit.aes = TRUE) {
       layer(

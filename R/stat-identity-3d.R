@@ -14,6 +14,13 @@ StatIdentity3D <- ggproto("StatIdentity3D", Stat,
                                       return(data)
                                 }
 
+                                # Convert group values to hierarchical format for depth sorting
+                                if (!"group" %in% names(data)) {
+                                      data$group <- "-1__group"
+                                } else {
+                                      data$group <- paste0(data$group, "__group")
+                                }
+
                                 # Store original z values if z column exists (following stat_voxel pattern)
                                 if ("z" %in% names(data)) {
                                       data$z_raw <- data$z
@@ -50,7 +57,9 @@ StatIdentity3D <- ggproto("StatIdentity3D", Stat,
 #' This stat performs identity transformation (passes data through unchanged) while
 #' properly handling discrete scales for 3D coordinate systems. It converts factor
 #' and character variables to numeric positions and preserves original values in
-#' `*_raw` columns for proper scale labeling.
+#' `*_raw` columns for proper scale labeling. It also converts group values to
+#' hierarchical format to enable proper depth sorting that preserves vertex order
+#' within polygons.
 #'
 #' This stat is primarily intended for use with 3D geoms that need discrete scale
 #' support, following the same pattern as other ggcube stats.
@@ -66,8 +75,9 @@ StatIdentity3D <- ggproto("StatIdentity3D", Stat,
 #'
 #' @section Computed variables:
 #' - `x_raw`, `y_raw`, `z_raw`: Original values before discrete-to-numeric conversion
+#' - `group`: Converted to hierarchical format (e.g., "1__group", "2__group") for proper depth sorting
 #'
-#' @seealso [geom_point_3d()] which uses this stat by default for discrete scale support.
+#' @seealso [geom_point_3d()], [geom_polygon_3d()] which use this stat for discrete scale support.
 #' @export
 stat_identity_3d <- function(mapping = NULL, data = NULL,
                              geom = "point", position = "identity",

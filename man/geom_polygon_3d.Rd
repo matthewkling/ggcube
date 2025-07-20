@@ -7,7 +7,7 @@
 geom_polygon_3d(
   mapping = NULL,
   data = NULL,
-  stat = "identity",
+  stat = StatIdentity3D,
   position = "identity",
   ...,
   na.rm = FALSE,
@@ -20,7 +20,8 @@ geom_polygon_3d(
 
 \item{data}{The data to be displayed in this layer.}
 
-\item{stat}{The statistical transformation to use on the data. Defaults to "identity".}
+\item{stat}{The statistical transformation to use on the data. Defaults to
+\link{StatIdentity3D} for proper discrete scale handling and group preservation.}
 
 \item{position}{Position adjustment, defaults to "identity".}
 
