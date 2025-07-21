@@ -22,7 +22,8 @@ stat_point_3d(
 )
 }
 \arguments{
-\item{mapping}{Set of aesthetic mappings created by \code{\link[=aes]{aes()}}.}
+\item{mapping}{Set of aesthetic mappings created by \code{\link[=aes]{aes()}}. This stat requires
+\code{x}, \code{y}, and \code{z} aesthetics.}
 
 \item{data}{The data to be displayed in this layer.}
 

@@ -93,19 +93,13 @@ size scaling. Points closer to the viewer appear larger, while points farther
 away appear smaller, creating realistic perspective effects. Optionally adds
 reference lines and points projecting to cube faces.
 }
-\details{
-The size scaling is calculated relative to the center of the 3D coordinate space
-(0, 0, 0). The user-specified size represents the rendered size at this reference
-point, with closer and farther points scaled proportionally based on their
-distance from the viewer.
-}
 \section{Aesthetics}{
 
-\code{geom_point_3d()} supports all the same aesthetics as \code{\link[=geom_point]{geom_point()}}:
+\code{geom_point_3d()} supports all the same aesthetics as \code{\link[=geom_point]{geom_point()}}, plus \code{z}:
 \itemize{
 \item \strong{x}: X coordinate (required)
 \item \strong{y}: Y coordinate (required)
-\item \strong{z}: Z coordinate (required for 3D positioning)
+\item \strong{z}: Z coordinate (required)
 \item \code{alpha}: Transparency
 \item \code{colour}: Point border color
 \item \code{fill}: Point fill color (for certain shapes)
@@ -124,7 +118,7 @@ This creates realistic perspective where:
 \itemize{
 \item Objects twice as far appear half as big
 \item Objects twice as close appear twice as big
-\item The reference point (0, 0, 0) renders at exactly the user-specified size
+\item The center of the plot volume renders at exactly the user-specified size
 }
 }
 

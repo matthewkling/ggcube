@@ -251,11 +251,6 @@ GeomPoint3D <- ggproto("GeomPoint3D", GeomPoint,
 #' away appear smaller, creating realistic perspective effects. Optionally adds
 #' reference lines and points projecting to cube faces.
 #'
-#' The size scaling is calculated relative to the center of the 3D coordinate space
-#' (0, 0, 0). The user-specified size represents the rendered size at this reference
-#' point, with closer and farther points scaled proportionally based on their
-#' distance from the viewer.
-#'
 #' @param mapping Set of aesthetic mappings created by [aes()]. In addition to
 #'   the standard point aesthetics, `geom_point_3d()` requires x, y, and z coordinates.
 #' @param data The data to be displayed in this layer.
@@ -295,10 +290,10 @@ GeomPoint3D <- ggproto("GeomPoint3D", GeomPoint,
 #'   Both American (`ref_point_color`) and British (`ref_point_colour`) spellings are accepted.
 #'
 #' @section Aesthetics:
-#' `geom_point_3d()` supports all the same aesthetics as [geom_point()]:
+#' `geom_point_3d()` supports all the same aesthetics as [geom_point()], plus `z`:
 #' - **x**: X coordinate (required)
 #' - **y**: Y coordinate (required)
-#' - **z**: Z coordinate (required for 3D positioning)
+#' - **z**: Z coordinate (required)
 #' - `alpha`: Transparency
 #' - `colour`: Point border color
 #' - `fill`: Point fill color (for certain shapes)
@@ -313,7 +308,7 @@ GeomPoint3D <- ggproto("GeomPoint3D", GeomPoint,
 #' This creates realistic perspective where:
 #' - Objects twice as far appear half as big
 #' - Objects twice as close appear twice as big
-#' - The reference point (0, 0, 0) renders at exactly the user-specified size
+#' - The center of the plot volume renders at exactly the user-specified size
 #'
 #' @section Point Rendering:
 #' ggcube uses shape-aware rendering for improved stroke behavior:

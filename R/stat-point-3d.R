@@ -1,5 +1,5 @@
 StatPoint3D <- ggproto("StatPoint3D", Stat,
-                       required_aes = c("x", "y"),  # Require at least x and y like geom_point
+                       required_aes = c("x", "y", "z"),
 
                        compute_panel = function(data, scales, na.rm = FALSE,
                                                 raw_points = TRUE,
@@ -143,7 +143,8 @@ generate_point_elements <- function(data, raw_points,
 #' properly handling discrete scales for 3D coordinate systems. It can optionally
 #' generate reference lines and points projecting to cube faces.
 #'
-#' @param mapping Set of aesthetic mappings created by [aes()].
+#' @param mapping Set of aesthetic mappings created by [aes()]. This stat requires
+#'   `x`, `y`, and `z` aesthetics.
 #' @param data The data to be displayed in this layer.
 #' @param geom The geometric object to use display the data.
 #' @param position Position adjustment, defaults to "identity".
