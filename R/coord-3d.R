@@ -349,7 +349,7 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
 
                          # Hierarchical depth sorting
                          result <- sort_by_depth(result)
-
+browser()
                          return(result)
                    },
 
@@ -609,6 +609,7 @@ is_theme_void_like <- function(theme_obj) {
 }
 
 get_scale_info <- function(scale_obj, expand = TRUE, axis_name = NULL) {
+
       expansion <- ggplot2:::default_expansion(scale_obj, expand = expand)
       limits <- scale_obj$get_limits()
 
@@ -715,17 +716,31 @@ generate_circle_vertices <- function(x_std, y_std, z_std, face, radius, n_vertic
 # split `group` into levels by `__`, and sort by group-level mean/max depth
 # this prevents depth-sorting within lowest-level group, to preserve vertex order
 sort_by_depth <- function(data) {
+
+      # Add vertex order within each group
+      data <- data %>%
+            group_by(group) %>%
+            mutate(.vertex_order = row_number()) %>%
+            ungroup()
+
       if (any(grepl("__", data$group))) {
             # Hierarchical sorting
-            data %>%
+            data <- data %>%
                   tidyr::separate(group, c("level1", "level2"), sep = "__", remove = FALSE) %>%
                   group_by(level1) %>% mutate(depth1 = max(depth)) %>%
                   group_by(level2) %>% mutate(depth2 = mean(depth)) %>%
                   ungroup() %>%
-                  arrange(desc(depth1), desc(depth2)) %>%
-                  select(-level1, -level2, -depth1, -depth2)
+                  arrange(desc(depth1), desc(depth2), group, .vertex_order) %>%
+                  select(-level1, -level2, -depth1, -depth2, -.vertex_order)
       } else {
             # Simple sorting
-            arrange(data, desc(depth))
+            data <- data %>%
+                  group_by(group) %>%
+                  mutate(group_depth = mean(depth)) %>%
+                  ungroup() %>%
+                  arrange(desc(group_depth), group, .vertex_order) %>%
+                  select(-group_depth, -.vertex_order)
       }
+
+      return(data)
 }
