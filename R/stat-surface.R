@@ -19,62 +19,117 @@ StatSurface <- ggproto("StatSurface", Stat,
                                    stop("Data must be on a regular, complete grid. Each x,y combination should appear exactly once.")
                              }
 
-                             # Create quadrilateral faces from grid cells
-                             faces <- create_grid_quads(data)
-
-                             # Get unique faces for normal/lighting computation
-                             face_data <- faces %>%
-                                   group_by(group) %>%
-                                   slice(1) %>%  # One row per face
-                                   ungroup()
-
-                             # Compute surface normals from gradients
-                             normals <- matrix(nrow = nrow(face_data), ncol = 3)
-                             normals[, 1] <- -face_data$dzdx  # Normal x component
-                             normals[, 2] <- -face_data$dzdy  # Normal y component
-                             normals[, 3] <- 1                # Normal z component
-
-                             # Normalize the normal vectors
-                             normal_lengths <- sqrt(rowSums(normals^2))
-                             normals <- normals / normal_lengths
-
-                             # Calculate face centers for positional lighting
-                             face_centers <- matrix(nrow = nrow(face_data), ncol = 3)
-                             for (i in seq_len(nrow(face_data))) {
-                                   face_group <- face_data$group[i]
-                                   face_vertices <- faces[faces$group == face_group, ]
-
-                                   # Calculate geometric center of the quadrilateral face
-                                   face_centers[i, 1] <- mean(face_vertices$x)  # Center x
-                                   face_centers[i, 2] <- mean(face_vertices$y)  # Center y
-                                   face_centers[i, 3] <- mean(face_vertices$z)  # Center z
-                             }
-
-                             # Apply lighting models to the normals
-                             light_vals <- compute_lighting(normals, light, face_centers)
-
-                             face_data <- select(face_data, group) %>%
-                                   mutate(light = light_vals,
-                                          normal_x = normals[, 1],
-                                          normal_y = normals[, 2],
-                                          normal_z = normals[, 3])
-
-                             # merge face-level vars back into vertex-level data set
-                             faces <- left_join(faces, face_data,
-                                                by = join_by(group))
-                             if (light$method == "normal_rgb") {
-                                   faces$light <- I(faces$light)
-                             }
-
-                             # Add lighting parameters for blend processing
-                             faces$blend_enabled <- light$blend
-                             faces$blend_strength <- light$blend_strength
-                             faces$blend_mode <- light$blend_mode
-                             faces$lighting_method <- light$method
-
-                             return(faces)
+                             # Process surface using common pipeline
+                             return(process_surface_grid(data, light))
                        }
 )
+
+#' Process regular grid data into 3D surface with lighting
+#'
+#' Common pipeline for converting regular grid data into quadrilateral faces
+#' with surface normals, lighting, and blend parameters. Used by stat_surface,
+#' stat_function_3d, and stat_smooth_3d.
+#'
+#' @param grid_data Data frame with x, y, z columns on a regular grid
+#' @param light Lighting specification object
+#' @return Data frame with face vertices, normals, and lighting
+process_surface_grid <- function(grid_data, light = lighting()) {
+
+      # Add grouping variable if not present (required for face processing)
+      if (!"group" %in% names(grid_data)) {
+            grid_data$group <- 1
+      }
+
+      # Create quadrilateral faces from grid cells
+      faces <- create_grid_quads(grid_data)
+
+      # Get unique faces for normal/lighting computation
+      face_data <- faces %>%
+            group_by(group) %>%
+            slice(1) %>%  # One row per face
+            ungroup()
+
+      # Compute surface normals and face centers
+      normals <- compute_surface_normals(face_data)
+      face_centers <- calculate_surface_face_centers(faces, face_data)
+
+      # Apply lighting models
+      face_data_with_lighting <- apply_surface_lighting(face_data, normals, face_centers, light)
+
+      # Merge face-level vars back into vertex-level data set
+      faces <- left_join(faces, face_data_with_lighting, by = join_by(group))
+
+      if (light$method == "normal_rgb") {
+            faces$light <- I(faces$light)
+      }
+
+      # Add lighting parameters for blend processing
+      faces$blend_enabled <- light$blend
+      faces$blend_strength <- light$blend_strength
+      faces$blend_mode <- light$blend_mode
+      faces$lighting_method <- light$method
+
+      return(faces)
+}
+
+#' Compute surface normals from face gradients
+#'
+#' @param face_data Data frame with unique faces containing dzdx and dzdy
+#' @return Matrix with normalized normal vectors (one row per face, 3 columns)
+compute_surface_normals <- function(face_data) {
+      # Compute surface normals from gradients
+      normals <- matrix(nrow = nrow(face_data), ncol = 3)
+      normals[, 1] <- -face_data$dzdx  # Normal x component
+      normals[, 2] <- -face_data$dzdy  # Normal y component
+      normals[, 3] <- 1                # Normal z component
+
+      # Normalize the normal vectors
+      normal_lengths <- sqrt(rowSums(normals^2))
+      normals <- normals / normal_lengths
+
+      return(normals)
+}
+
+#' Calculate face centers for positional lighting
+#'
+#' @param faces Data frame with all face vertices
+#' @param face_data Data frame with unique faces
+#' @return Matrix with face centers (one row per face, 3 columns)
+calculate_surface_face_centers <- function(faces, face_data) {
+      face_centers <- matrix(nrow = nrow(face_data), ncol = 3)
+
+      for (i in seq_len(nrow(face_data))) {
+            face_group <- face_data$group[i]
+            face_vertices <- faces[faces$group == face_group, ]
+
+            # Calculate geometric center of the quadrilateral face
+            face_centers[i, 1] <- mean(face_vertices$x)  # Center x
+            face_centers[i, 2] <- mean(face_vertices$y)  # Center y
+            face_centers[i, 3] <- mean(face_vertices$z)  # Center z
+      }
+
+      return(face_centers)
+}
+
+#' Apply lighting models to surface normals
+#'
+#' @param face_data Data frame with unique faces (group column)
+#' @param normals Matrix of surface normals
+#' @param face_centers Matrix of face centers
+#' @param light Lighting specification object
+#' @return Data frame with lighting values and normal components
+apply_surface_lighting <- function(face_data, normals, face_centers, light) {
+      # Apply lighting models to the normals
+      light_vals <- compute_lighting(normals, light, face_centers)
+
+      face_data_with_lighting <- select(face_data, group) %>%
+            mutate(light = light_vals,
+                   normal_x = normals[, 1],
+                   normal_y = normals[, 2],
+                   normal_z = normals[, 3])
+
+      return(face_data_with_lighting)
+}
 
 #' 3D surface from regular grid data
 #'
@@ -125,6 +180,7 @@ StatSurface <- ggproto("StatSurface", Stat,
 #'   scale_color_viridis_c()
 #'
 #' # use `group` to plot data for multiple surfaces
+#' # (depth rendering works fine unless the surfaces intersect)
 #' d <- expand.grid(x = -5:5, y = -5:5)
 #' d$z <- d$x^2 - d$y^2
 #' d$g <- "a"

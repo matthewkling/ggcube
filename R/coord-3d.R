@@ -141,9 +141,14 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                          # Get standard panel params from parent
                          panel_params <- ggproto_parent(CoordCartesian, self)$setup_panel_params(scale_x, scale_y, params)
 
-                         # Workaround to train and recover the z scale object
+                         # Train and recover z scale
                          train_z_scale()
                          scale_z <- .z_scale_cache$scale
+                         if (is.null(scale_z)) { # Create default z scale if none exists (e.g., when using stat_function_3d)
+                               scale_z <- scale_z_continuous()
+                               # scale_z$train(c(-10, 10))
+                               .z_scale_cache$scale <- scale_z
+                         }
 
                          # Scale info (including axis names)
                          panel_params$scales <- self$scales

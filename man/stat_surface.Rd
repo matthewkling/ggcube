@@ -81,6 +81,7 @@ p + stat_surface(aes(color = z), fill = NA) +
   scale_color_viridis_c()
 
 # use `group` to plot data for multiple surfaces
+# (depth rendering works fine unless the surfaces intersect)
 d <- expand.grid(x = -5:5, y = -5:5)
 d$z <- d$x^2 - d$y^2
 d$g <- "a"
