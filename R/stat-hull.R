@@ -4,7 +4,7 @@ StatHull <- ggproto("StatHull", Stat,
                     compute_group = function(data, scales, method = "convex", alpha = 1.0,
                                              light = lighting()) {
                           coords <- as.matrix(data[, c("x", "y", "z")])
-cat(unique(data$group), "\n")
+
                           # Get triangle indices
                           tri <- switch(method,
                                         alpha = {

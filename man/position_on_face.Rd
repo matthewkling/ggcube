@@ -2,54 +2,94 @@
 % Please edit documentation in R/position-on-face.R
 \name{position_on_face}
 \alias{position_on_face}
-\title{Position for projecting 2D layers onto 3D cube faces}
+\title{Position for projecting 2D and 3D layers onto 3D cube faces}
 \usage{
-position_on_face(face = "zmin", axes = c("x", "y"))
+position_on_face(faces = "zmin", axes = NULL)
 }
 \arguments{
-\item{face}{Character string specifying which cube face to project onto.
-Valid options are: "xmin", "xmax", "ymin", "ymax", "zmin", "zmax".}
+\item{faces}{Character string or vector specifying which cube face(s) to project onto.
+Valid options are: "xmin", "xmax", "ymin", "ymax", "zmin", "zmax".
+Multiple faces are only supported for 3D layers (when \code{axes = NULL}).}
 
-\item{axes}{Character vector of length 2 specifying which 3D dimensions the
-2D layer's x and y aesthetics represent. For example, \code{c("x", "z")} means
-the 2D x-axis maps to the 3D x-axis and the 2D y-axis maps to the 3D z-axis.
-Default is \code{c("x", "y")}.}
+\item{axes}{For 2D layers only: Character vector of length 2 specifying which
+3D dimensions the 2D layer's x and y aesthetics represent. For example,
+\code{c("x", "z")} means the 2D x-axis maps to the 3D x-axis and the 2D y-axis
+maps to the 3D z-axis. For 3D layers, use \code{NULL} (default) to preserve
+the existing x,y,z mapping.}
 }
 \description{
-\code{position_on_face()} enables 2D ggplot2 layers to be projected onto faces of the 3D
-coordinate cube. This position adjustment adds the necessary z-coordinate and projection
-metadata to allow 2D statistical transformations (like density estimation or contouring)
-to be displayed on the faces of a 3D plot.
+\code{position_on_face()} enables layers to be projected onto 2D faces of the 3D
+coordinate cube. It can be used to flatten 3D ggcube layers onto a single
+cube face as a way of visualizing them in 2D, or to add natively 2D ggplot2
+layers like \code{geom_density_2d()} or \code{geom_smooth()} to a cube face.
 }
 \details{
-This position adjustment works by:
-\enumerate{
-\item Renaming the 2D layer's x,y columns to match the specified 3D axes
-\item Adding the missing third dimension with NA values
-\item Adding projection metadata that coord_3d uses to place the layer on the face
+This position adjustment supports both 2D and 3D layers:
+
+\strong{For 3D layers} (\code{axes = NULL}):
+\itemize{
+\item Data already has x,y,z coordinates in the correct order
+\item Simply adds projection metadata for coord_3d to place the layer on the specified face(s)
+\item The face coordinate will be overridden during coordinate transformation
+\item Multiple faces are supported - the layer will be duplicated on each specified face
 }
 
-The actual projection happens during coordinate transformation in coord_3d,
-which replaces the NA values with the appropriate face position.
+\strong{For 2D layers} (\code{axes = c("dim1", "dim2")}):
+\itemize{
+\item Renames the layer's x,y columns to match the specified 3D axes
+\item Adds the missing third dimension
+\item Adds projection metadata for coord_3d
+\item Only single faces are supported for 2D layers
+}
+
+The actual projection happens during coordinate transformation in coord_3d.
+
+\strong{Compatibility Note:} This position adjustment is not compatible with all stats
+due to scale training conflicts. It works well with \code{stat_density_2d()} and other
+stats that don't depend heavily on scale ranges during computation, but may cause
+errors or rendering issues with \code{stat_density_2d_filled()} and similar stats that
+generate polygons based on scale domains, as well as with layers like \code{stat_bin_2d()}
+that return position variables other than x and y. For \code{geom_smooth()}, this position
+works only if you set \code{se = FALSE} as shown in the example.
 }
 \examples{
-# Project an x-y density contour onto the bottom face (z-minimum)
-ggplot(iris) +
-  stat_density_2d(aes(Sepal.Length, Sepal.Width),
-                  position = position_on_face(face = "zmin", axes = c("x", "y"))) +
-  geom_point_3d(aes(Sepal.Length, Sepal.Width, Petal.Length)) +
+# 3D layer in raw form, and projected onto 2D face
+ggplot(sphere_points, aes(x, y, z)) +
+  geom_point_3d(position = position_on_face("zmin"), color = "red") +
+  geom_point_3d() + # add this layer last so it appears on top
   coord_3d()
 
+# 3D layer projected to multiple faces
+ggplot(sphere_points, aes(x, y, z, fill = after_stat(light))) +
+  stat_hull(position = position_on_face(c("zmin", "ymin", "xmax")),
+    color = "black") +
+  coord_3d()
+
+# 3D layer projected differently on individual faces
+ggplot(sphere_points, aes(x, y, z)) +
+  stat_hull(position = position_on_face("zmin"), fill = "black") +
+  geom_point_3d(position = position_on_face("ymin")) +
+  geom_path(position = position_on_face("xmax")) +
+  stat_hull(color = "black") +
+  coord_3d()
+
+# 2D density contour on a specific face
+ggplot(iris, aes(Sepal.Length, Sepal.Width, Petal.Length, color = Species)) +
+  stat_density_2d(position = position_on_face(faces = "zmin", axes = c("x", "y"))) +
+  geom_point_3d() +
+  coord_3d()
+
+# Distinct 2D layers projected to different faces
 ggplot(mtcars) +
-geom_smooth(aes(mpg, qsec), color = "red", alpha = .5, se = F,
-    position = position_on_face(face = "ymin", axes = c("x", "z"))) +
-  stat_density_2d(aes(mpg, wt), color = "blue", alpha = .5,
-    position = position_on_face(face = "zmin", axes = c("x", "y"))) +
+  geom_smooth(aes(mpg, qsec), color = "red", alpha = .5, se = FALSE,
+    position = position_on_face(faces = "ymin", axes = c("x", "z"))) +
+  geom_density_2d(aes(mpg, wt), alpha = .5,
+    position = position_on_face(faces = "zmin", axes = c("x", "y"))) +
   geom_path(aes(wt, qsec), color = "forestgreen", alpha = .5,
-    position = position_on_face(face = "xmax", axes = c("y", "z"))) +
-    geom_point_3d(aes(mpg, wt, qsec)) +
+    position = position_on_face(faces = "xmax", axes = c("y", "z"))) +
+  geom_point_3d(aes(mpg, wt, qsec)) +
     coord_3d() +
-    theme_light()
+  theme_light()
 
 }
 \seealso{

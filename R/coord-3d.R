@@ -332,7 +332,7 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                                                        panel_params$scales, panel_params$ratio)
 
                          # Project data onto cube face, if applicable
-                         result <- project_to_face(data, result)
+                         result <- project_to_face(data, result, panel_params$proj)
 
                          # Expand ref_circle points to circular polygons
                          data <- points_to_circles(data, result)
@@ -660,16 +660,17 @@ get_scale_info <- function(scale_obj, expand = TRUE, axis_name = NULL) {
 }
 
 # Project data onto cube face, if applicable
-project_to_face <- function(data, data_std){
-      if(! "project_to_face" %in% names(data)) return(data_std)
+project_to_face <- function(data, data_std, proj){
+      if(! "project_to_face" %in% names(data) || all(is.na(data$project_to_face))) return(data_std)
       data_std %>%
             mutate(face = data$project_to_face,
+                   depth_3d = transform_3d_standard(data_std, proj)$depth, # used for sorting
                    axis = substr(face, 1, 1),
                    value = ifelse(substr(face, 2, 4) == "min", -.5, .5),
                    x = ifelse(is.na(face) | axis != "x", x, value),
                    y = ifelse(is.na(face) | axis != "y", y, value),
                    z = ifelse(is.na(face) | axis != "z", z, value)) %>%
-            select(x, y, z)
+            select(x, y, z, depth_3d)
 }
 
 
@@ -683,6 +684,7 @@ points_to_circles <- function(data, data_std) {
       # Keep std coords and all other vars
       d <- bind_cols(select(data, -x, -y, -z),
                      select(data_std, x, y, z))
+      if("depth_3d" %in% names(data_std)) d$depth_3d <- data_std$depth_3d
 
       # Check if we have any ref_circle elements
       if (!"element_type" %in% names(d) || !any(d$element_type == "ref_circle")) {
@@ -751,10 +753,14 @@ sort_by_depth <- function(data) {
             mutate(.vertex_order = row_number()) %>%
             ungroup()
 
+      # Use original 3d depth if available
+      if("depth_3d" %in% names(data)) data$depth <- data$depth_3d
+
       if (any(grepl("__", data$group))) {
             # Hierarchical sorting
             data <- data %>%
-                  tidyr::separate(group, c("level1", "level2"), sep = "__", remove = FALSE) %>%
+                  tidyr::separate(group, c("level1", "level2"), sep = "__",
+                                  remove = FALSE, extra = "merge") %>%
                   group_by(level1) %>% mutate(depth1 = max(depth)) %>%
                   group_by(level2) %>% mutate(depth2 = mean(depth)) %>%
                   ungroup() %>%
