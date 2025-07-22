@@ -30,9 +30,9 @@
 #'   coord_3d()
 #'
 #' ggplot(mtcars) +
-#' geom_smooth(aes(mpg, qsec), color = "red", alpha = .5, se = F,
+#'   geom_smooth(aes(mpg, qsec), color = "red", alpha = .5, se = F,
 #'     position = position_on_face(face = "ymin", axes = c("x", "z"))) +
-#'   stat_density_2d(aes(mpg, wt), color = "blue", alpha = .5,
+#'   geom_density_2d(aes(mpg, wt), alpha = .5,
 #'     position = position_on_face(face = "zmin", axes = c("x", "y"))) +
 #'   geom_path(aes(wt, qsec), color = "forestgreen", alpha = .5,
 #'     position = position_on_face(face = "xmax", axes = c("y", "z"))) +

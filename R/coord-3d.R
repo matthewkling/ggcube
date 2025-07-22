@@ -349,7 +349,10 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
 
                          # Hierarchical depth sorting
                          result <- sort_by_depth(result)
-browser()
+
+                         # convert group to integer to prevent downstream rendering errors
+                         result$group <- as.integer(factor(result$group))
+
                          return(result)
                    },
 
@@ -616,12 +619,37 @@ get_scale_info <- function(scale_obj, expand = TRUE, axis_name = NULL) {
       # Pass NULL for coord_limits since coord_3d doesn't support them yet
       expanded_range <- ggplot2:::expand_limits_scale(scale_obj, expansion, limits, coord_limits = NULL)
 
+      # Get all breaks and labels
+      all_breaks <- scale_obj$get_breaks()
+      all_labels <- scale_obj$get_labels()
+
+      # Filter breaks to be within expanded limits
+      if (is.numeric(all_breaks)) {
+            # For continuous scales, filter numerically
+            valid_mask <- !is.na(all_breaks) &
+                  all_breaks >= expanded_range[1] &
+                  all_breaks <= expanded_range[2]
+            valid_breaks <- all_breaks[valid_mask]
+
+            # Filter corresponding labels
+            if (length(all_labels) == length(all_breaks)) {
+                  valid_labels <- all_labels[valid_mask]
+            } else {
+                  valid_labels <- all_labels  # Let ggplot2 handle label mismatch
+            }
+      } else {
+            # For discrete scales, keep all breaks/labels as-is
+            # (discrete scales shouldn't have out-of-bounds issues)
+            valid_breaks <- all_breaks
+            valid_labels <- all_labels
+      }
+
       # Get the scale name if axis_name is provided
       scale_name <- if (!is.null(axis_name)) get_scale_names(scale_obj, axis_name) else NULL
 
       result <- list(limits = expanded_range,
-                     breaks = scale_obj$get_breaks(),
-                     labels = scale_obj$get_labels())
+                     breaks = valid_breaks,
+                     labels = valid_labels)
 
       # Add name if provided
       if (!is.null(scale_name)) {
