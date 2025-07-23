@@ -36,7 +36,8 @@ the stat generates its own data from the function.}
 \item{geom}{The geometric object to use display the data. Defaults to
 \link{GeomPolygon3D} for proper 3D depth sorting.}
 
-\item{position}{Position adjustment, defaults to "identity".}
+\item{position}{Position adjustment, defaults to "identity". To collapse the result
+onto one 2D surface, use \code{position_on_face()}.}
 
 \item{xlim, ylim}{Numeric vectors of length 2 giving the range for x and y values.
 If \code{NULL} (default), uses the scale ranges from the plot, which can be set via

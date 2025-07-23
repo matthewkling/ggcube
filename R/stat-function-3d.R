@@ -127,7 +127,8 @@ StatFunction3D <- ggproto("StatFunction3D", Stat,
 #'   the stat generates its own data from the function.
 #' @param geom The geometric object to use display the data. Defaults to
 #'   [GeomPolygon3D] for proper 3D depth sorting.
-#' @param position Position adjustment, defaults to "identity".
+#' @param position Position adjustment, defaults to "identity". To collapse the result
+#'   onto one 2D surface, use `position_on_face()`.
 #' @param na.rm If `TRUE`, removes missing values from function evaluation results.
 #'   If `FALSE`, missing values will cause an error. Default is `FALSE`.
 #' @param show.legend Logical indicating whether this layer should be included in legends.
