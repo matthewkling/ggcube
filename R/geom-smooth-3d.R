@@ -5,7 +5,7 @@ GeomSmooth3D <- ggproto("GeomSmooth3D", Geom,
                                linewidth = 0.1, linetype = 1, alpha = 1
                          ),
 
-                         draw_panel = function(data, panel_params, coord) {
+                         draw_panel = function(data, panel_params, coord, scale_depth = TRUE) {
 
                                # Assign correct aesthetics to primary/CI elements
                                merge_aes <- function(a, b = NULL){
@@ -20,8 +20,11 @@ GeomSmooth3D <- ggproto("GeomSmooth3D", Geom,
                                # Transform data
                                coords <- coord$transform(data, panel_params)
 
+                               # Scale linewidths by depth
+                               coords <- scale_depth(coords, scale_depth)
+
                                # Apply light blending to colors
-                               coords <- blend(coords)
+                               coords <- blend_light(coords)
 
                                # Data is already hierarchically sorted by coord$transform()
                                # Just need to create polygon grobs using the group column

@@ -78,7 +78,7 @@ the main surface \code{fill} aesthetic.}
 \item{se.colour, se.color}{Colour for confidence interval band borders. If \code{NULL},
 inherits from the main surface \code{colour} aesthetic.}
 
-\item{se.alpha}{Alpha transparency for confidence interval bands. Defaults to 0.3.}
+\item{se.alpha}{Alpha transparency for confidence interval bands. Defaults to 0.5.}
 
 \item{se.linewidth}{Line width for confidence interval band borders. If \code{NULL},
 inherits from the main surface \code{linewidth} aesthetic.}

@@ -279,7 +279,7 @@ gam_model <- function(){
 #'   the main surface `fill` aesthetic.
 #' @param se.colour,se.color Colour for confidence interval band borders. If `NULL`,
 #'   inherits from the main surface `colour` aesthetic.
-#' @param se.alpha Alpha transparency for confidence interval bands. Defaults to 0.3.
+#' @param se.alpha Alpha transparency for confidence interval bands. Defaults to 0.5.
 #' @param se.linewidth Line width for confidence interval band borders. If `NULL`,
 #'   inherits from the main surface `linewidth` aesthetic.
 #' @param light A lighting specification object created by [lighting()]

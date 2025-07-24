@@ -1,3 +1,20 @@
+
+# Apply depth scaling to point sizes, strokes, and linewidths if enabled
+scale_depth <- function(coords, scale_depth){
+      if (scale_depth && "depth_scale" %in% names(coords)) {
+            if("size" %in% names(coords)) {
+                  coords$size <- coords$size * coords$depth_scale
+            }
+            if("stroke" %in% names(coords)) {
+                  coords$stroke <- coords$stroke * coords$depth_scale
+            }
+            if("linewidth" %in% names(coords)) {
+                  coords$linewidth <- coords$linewidth * coords$depth_scale
+            }
+      }
+      return(coords)
+}
+
 GeomPoint3D <- ggproto("GeomPoint3D", GeomPoint,
 
                        draw_panel = function(data, panel_params, coord, na.rm = FALSE, scale_depth = TRUE,
@@ -8,18 +25,9 @@ GeomPoint3D <- ggproto("GeomPoint3D", GeomPoint,
                              data$ref_circle_radius <- data$ref_circle_radius / 100
                              coords <- coord$transform(data, panel_params)
 
-                             # Apply depth scaling to point sizes, strokes, and linewidths if enabled
-                             if (scale_depth && "depth_scale" %in% names(coords)) {
-                                   coords$size <- coords$size * coords$depth_scale
-                                   if("stroke" %in% names(coords)) {
-                                         coords$stroke <- coords$stroke * coords$depth_scale
-                                   }
-                                   # Add linewidth column for lines if not present
-                                   if(!"linewidth" %in% names(coords)) {
-                                         coords$linewidth <- 0.5  # Default linewidth
-                                   }
-                                   coords$linewidth <- coords$linewidth * coords$depth_scale
-                             }
+                             # Scale points, strokes, linewidths by depth
+                             if(!"linewidth" %in% names(coords)) coords$linewidth <- 0.5  # Default linewidth
+                             coords <- scale_depth(coords, scale_depth)
 
                              # Extract base object IDs (everything before "__")
                              coords$object_id <- sub("__.*", "", coords$group)

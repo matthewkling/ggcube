@@ -210,7 +210,7 @@ blend_lighting_with_colors <- function(base_colors, light_values, lighting) {
 }
 
 
-blend <- function(coords) {
+blend_light <- function(coords) {
 
       # Extract lighting parameters from special columns
       if ("blend_enabled" %in% names(coords) && coords$blend_enabled[1] != "neither") {
@@ -248,13 +248,16 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                                fill = "grey80", colour = NA, linewidth = 0.1, linetype = 1, alpha = 1
                          ),
 
-                         draw_panel = function(data, panel_params, coord) {
+                         draw_panel = function(data, panel_params, coord, scale_depth = TRUE) {
 
                                # Transform data
                                coords <- coord$transform(data, panel_params)
 
+                               # Scale linewidths by depth
+                               coords <- scale_depth(coords, scale_depth)
+
                                # Apply light blending to colors
-                               coords <- blend(coords)
+                               coords <- blend_light(coords)
 
                                # Data is already hierarchically sorted by coord$transform()
                                # Just need to create polygon grobs using the group column
