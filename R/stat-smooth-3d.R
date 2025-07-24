@@ -100,15 +100,15 @@ StatSmooth3D <- ggproto("StatSmooth3D", Stat,
                                           # Apply confidence band styling
                                           if(surface != "fitted"){
                                                 if (!is.null(se.fill)) {
-                                                      surf$fill <- se.fill
+                                                      surf$se.fill <- se.fill
                                                 }
                                                 if (!is.null(se.colour)) {
-                                                      surf$colour <- se.colour
+                                                      surf$se.colour <- se.colour
                                                 }
                                                 if (!is.null(se.linewidth)) {
-                                                      surf$linewidth <- se.linewidth
+                                                      surf$se.linewidth <- se.linewidth
                                                 }
-                                                surf$alpha <- se.alpha
+                                                surf$se.alpha <- se.alpha
                                           }
 
                                           return(surf) }) %>%
@@ -238,10 +238,11 @@ gam_model <- function(){
 #'
 #' Creates 3D surfaces by fitting smooth models to scattered (x,y,z) data points.
 #' The fitted model is evaluated on a regular grid and rendered as a 3D surface
-#' with proper depth sorting and optional lighting effects.
+#' with optional standard error surfaces and lighting effects.
 #'
 #' @param mapping Set of aesthetic mappings created by [aes()]. This stat
-#'   requires `x`, `y`, and `z` aesthetics from the input data.
+#'   requires `x`, `y`, and `z` aesthetics from the input data. By default, fill is
+#'   mapped to `after_stat(fitted)`.
 #' @param data The data to be displayed in this layer. Must contain x, y, z columns.
 #' @param geom The geometric object to use display the data. Defaults to
 #'   [GeomPolygon3D] for proper 3D depth sorting.
@@ -362,7 +363,7 @@ gam_model <- function(){
 #'   [lighting()] for lighting specifications, [coord_3d()] for 3D coordinate systems.
 #' @export
 stat_smooth_3d <- function(mapping = NULL, data = NULL,
-                           geom = GeomPolygon3D,
+                           geom = GeomSmooth3D,
                            position = "identity",
                            method = "loess",
                            formula = NULL,
@@ -372,8 +373,6 @@ stat_smooth_3d <- function(mapping = NULL, data = NULL,
                            n = 30,
                            se = FALSE,
                            level = 0.95,
-                           colour = NULL,
-                           color = "white",
                            se.fill = NULL,
                            se.colour = NULL,
                            se.color = NULL,
@@ -386,7 +385,6 @@ stat_smooth_3d <- function(mapping = NULL, data = NULL,
                            ...) {
 
       # Handle both American and British spellings
-      if(is.null(colour)) colour <- color
       if(is.null(se.colour)) se.colour <- se.color
 
       layer(
@@ -394,7 +392,6 @@ stat_smooth_3d <- function(mapping = NULL, data = NULL,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(method = method, formula = formula, method.args = method.args,
                           xlim = xlim, ylim = ylim, n = n, se = se, level = level,
-                          color = colour,
                           se.fill = se.fill, se.colour = se.colour, se.alpha = se.alpha,
                           se.linewidth = se.linewidth, light = light, na.rm = na.rm, ...)
       )

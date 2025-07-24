@@ -209,6 +209,39 @@ blend_lighting_with_colors <- function(base_colors, light_values, lighting) {
       return(result_colors)
 }
 
+
+blend <- function(coords) {
+
+      # Extract lighting parameters from special columns
+      if ("blend_enabled" %in% names(coords) && coords$blend_enabled[1] != "neither") {
+            # Reconstruct lighting object from columns
+            light <- list(
+                  blend = coords$blend_enabled[1],
+                  blend_strength = coords$blend_strength[1],
+                  blend_mode = coords$blend_mode[1],
+                  method = coords$lighting_method[1]
+            )
+
+            # Apply lighting blending if enabled
+            if (light$blend != "neither" && "light" %in% names(coords)) {
+                  # Blend fill colors if requested
+                  if (light$blend %in% c("fill", "both")) {
+                        coords$fill <- blend_lighting_with_colors(coords$fill, coords$light, light)
+                  }
+
+                  # Blend colour/border colors if requested
+                  if (light$blend %in% c("colour", "both")) {
+                        coords$colour <- blend_lighting_with_colors(coords$colour, coords$light, light)
+                  }
+            }
+
+            # Clean up lighting parameter columns
+            coords <- coords[, !names(coords) %in% c("blend_enabled", "blend_strength", "blend_mode", "lighting_method")]
+      }
+
+      return(coords)
+}
+
 GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                          required_aes = c("x", "y", "z", "group"),
                          default_aes = aes(
@@ -216,35 +249,12 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                          ),
 
                          draw_panel = function(data, panel_params, coord) {
-                               # Transform ALL data at once (includes hierarchical depth sorting)
+
+                               # Transform data
                                coords <- coord$transform(data, panel_params)
 
-                               # Extract lighting parameters from special columns
-                               if ("blend_enabled" %in% names(coords) && coords$blend_enabled[1] != "neither") {
-                                     # Reconstruct lighting object from columns
-                                     light <- list(
-                                           blend = coords$blend_enabled[1],
-                                           blend_strength = coords$blend_strength[1],
-                                           blend_mode = coords$blend_mode[1],
-                                           method = coords$lighting_method[1]
-                                     )
-
-                                     # Apply lighting blending if enabled
-                                     if (light$blend != "neither" && "light" %in% names(coords)) {
-                                           # Blend fill colors if requested
-                                           if (light$blend %in% c("fill", "both")) {
-                                                 coords$fill <- blend_lighting_with_colors(coords$fill, coords$light, light)
-                                           }
-
-                                           # Blend colour/border colors if requested
-                                           if (light$blend %in% c("colour", "both")) {
-                                                 coords$colour <- blend_lighting_with_colors(coords$colour, coords$light, light)
-                                           }
-                                     }
-
-                                     # Clean up lighting parameter columns
-                                     coords <- coords[, !names(coords) %in% c("blend_enabled", "blend_strength", "blend_mode", "lighting_method")]
-                               }
+                               # Apply light blending to colors
+                               coords <- blend(coords)
 
                                # Data is already hierarchically sorted by coord$transform()
                                # Just need to create polygon grobs using the group column

@@ -7,7 +7,7 @@
 stat_smooth_3d(
   mapping = NULL,
   data = NULL,
-  geom = GeomPolygon3D,
+  geom = GeomSmooth3D,
   position = "identity",
   method = "loess",
   formula = NULL,
@@ -17,8 +17,6 @@ stat_smooth_3d(
   n = 30,
   se = FALSE,
   level = 0.95,
-  colour = NULL,
-  color = "white",
   se.fill = NULL,
   se.colour = NULL,
   se.color = NULL,
@@ -33,7 +31,8 @@ stat_smooth_3d(
 }
 \arguments{
 \item{mapping}{Set of aesthetic mappings created by \code{\link[=aes]{aes()}}. This stat
-requires \code{x}, \code{y}, and \code{z} aesthetics from the input data.}
+requires \code{x}, \code{y}, and \code{z} aesthetics from the input data. By default, fill is
+mapped to \code{after_stat(fitted)}.}
 
 \item{data}{The data to be displayed in this layer. Must contain x, y, z columns.}
 
@@ -99,7 +98,7 @@ If \code{FALSE}, missing values will cause an error. Default is \code{FALSE}.}
 \description{
 Creates 3D surfaces by fitting smooth models to scattered (x,y,z) data points.
 The fitted model is evaluated on a regular grid and rendered as a 3D surface
-with proper depth sorting and optional lighting effects.
+with optional standard error surfaces and lighting effects.
 }
 \section{Aesthetics}{
 
