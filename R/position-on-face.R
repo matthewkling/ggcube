@@ -6,8 +6,9 @@
 #' layers like `geom_density_2d()` or `geom_smooth()` to a cube face.
 #'
 #' @param faces Character string or vector specifying which cube face(s) to project onto.
-#'   Valid options are: "xmin", "xmax", "ymin", "ymax", "zmin", "zmax".
-#'   Multiple faces are only supported for 3D layers (when `axes = NULL`).
+#'   Valid options are: "xmin", "xmax", "ymin", "ymax", "zmin", "zmax", "3D".
+#'   "3D" indicates the raw, non-flattened 3D position.
+#'   Multiple faces and "3D" are only supported for 3D layers (when `axes = NULL`).
 #' @param axes For 2D layers only: Character vector of length 2 specifying which
 #'   3D dimensions the 2D layer's x and y aesthetics represent. For example,
 #'   `c("x", "z")` means the 2D x-axis maps to the 3D x-axis and the 2D y-axis
@@ -21,7 +22,9 @@
 #' - Data already has x,y,z coordinates in the correct order
 #' - Simply adds projection metadata for coord_3d to place the layer on the specified face(s)
 #' - The face coordinate will be overridden during coordinate transformation
-#' - Multiple faces are supported - the layer will be duplicated on each specified face
+#' - Multiple faces are supported - the layer will be duplicated on each specified face.
+#'          All specified faces inherit aesthetics from the layer function; if you want different
+#'          parameters for different faces and on the primary 3D layer, add each as a separate layer call.
 #'
 #' **For 2D layers** (`axes = c("dim1", "dim2")`):
 #' - Renames the layer's x,y columns to match the specified 3D axes
@@ -31,8 +34,8 @@
 #'
 #' The actual projection happens during coordinate transformation in coord_3d.
 #'
-#' **Compatibility Note:** This position adjustment is not compatible with all stats
-#' due to scale training conflicts. It works well with `stat_density_2d()` and other
+#' **Compatibility Note:** This position adjustment is not compatible with all 2D stats.
+#' It works well with `stat_density_2d()` and other
 #' stats that don't depend heavily on scale ranges during computation, but may cause
 #' errors or rendering issues with `stat_density_2d_filled()` and similar stats that
 #' generate polygons based on scale domains, as well as with layers like `stat_bin_2d()`
@@ -40,16 +43,20 @@
 #' works only if you set `se = FALSE` as shown in the example.
 #'
 #' @examples
-#' # 3D layer in raw form, and projected onto 2D face
+#'
+#' # 3D point layer in raw 3D form, and projected onto 2D face
 #' ggplot(sphere_points, aes(x, y, z)) +
 #'   geom_point_3d(position = position_on_face("zmin"), color = "red") +
-#'   geom_point_3d() + # add this layer last so it appears on top
+#'   geom_point_3d(color = "black") + # add this layer last so it appears on top
 #'   coord_3d()
 #'
 #' # 3D layer projected to multiple faces
-#' ggplot(sphere_points, aes(x, y, z, fill = after_stat(light))) +
-#'   stat_hull(position = position_on_face(c("zmin", "ymin", "xmax")),
-#'     color = "black") +
+#' set.seed(1)
+#' d <- data.frame(x = round(rnorm(10)), y = round(rnorm(10)), z = round(rnorm(10)))
+#' ggplot(d, aes(x, y, z)) +
+#'   stat_voxel(color = "black", fill = "steelblue",
+#'     light = lighting(blend = "fill", direction = c(1, 1, 0), blend_mode = "hsl"),
+#'     position = position_on_face(c("3D", "zmin", "xmax", "ymin"))) +
 #'   coord_3d()
 #'
 #' # 3D layer projected differently on individual faces
@@ -83,7 +90,7 @@
 #' @export
 position_on_face <- function(faces = "zmin", axes = NULL) {
       # Validate faces parameter
-      valid_faces <- c("xmin", "xmax", "ymin", "ymax", "zmin", "zmax")
+      valid_faces <- c("xmin", "xmax", "ymin", "ymax", "zmin", "zmax", "3D")
       if (!all(faces %in% valid_faces)) {
             invalid_faces <- setdiff(faces, valid_faces)
             stop("Invalid face names: ", paste(invalid_faces, collapse = ", "),
@@ -235,15 +242,18 @@ PositionOnFace <- ggproto("PositionOnFace", Position,
 
                                             face_data <- data
                                             # Add projection metadata
+                                            if(face == "3D") face <- NA # transform leaves NA values alone
                                             face_data$project_to_face <- face
 
                                       } else {
-                                            # 2D case: original logic
+                                            # 2D case
                                             # If the layer doesn't have both x and y aesthetics, return unchanged
                                             if (!all(c("x", "y") %in% names(data))) {
                                                   warning("position_on_face requires both x and y aesthetics")
                                                   return(data)
                                             }
+
+                                            if(face == "3D") stop("the selected stat or `axes` specification is incompatible with `faces = '3D'` .")
 
                                             face_data <- data
                                             # Map the 2D x,y columns to the correct 3D dimensions
