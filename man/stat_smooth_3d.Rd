@@ -182,7 +182,7 @@ ggplot(mtcars, aes(mpg, disp, qsec)) +
 
 }
 \seealso{
-\code{\link[=stat_surface]{stat_surface()}} for surfaces from existing grid data,
+\code{\link[=stat_surface_3d]{stat_surface_3d()}} for surfaces from existing grid data,
 \code{\link[=stat_function_3d]{stat_function_3d()}} for mathematical function surfaces,
 \code{\link[=lighting]{lighting()}} for lighting specifications, \code{\link[=coord_3d]{coord_3d()}} for 3D coordinate systems.
 }

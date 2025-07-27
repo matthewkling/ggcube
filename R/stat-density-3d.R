@@ -77,7 +77,7 @@ StatDensity3D <- ggproto("StatDensity3D", Stat,
                                      }
                                }
 
-                               # Process surface using common pipeline (same as stat_surface)
+                               # Process surface using common pipeline (same as stat_surface_3d)
                                surface <- process_surface_grid(grid_data, light)
 
                                # Compute additional variables to match stat_density_2d
@@ -183,13 +183,6 @@ StatDensity3D <- ggproto("StatDensity3D", Stat,
 #' p + stat_density_3d(n = 50, color = "black", fill = "darkgreen", alpha = 0.8,
 #'                   light = lighting(direction = c(1, 1, 0.5), blend = "fill"))
 #'
-#' # Project density surface onto cube face
-#' ggplot(faithful, aes(eruptions, waiting)) +
-#'   geom_point() +
-#'   stat_density_3d(position = position_on_face("zmin"),
-#'                   alpha = 0.4, fill = "orange") +
-#'   coord_3d()
-#'
 #' # Multiple density surfaces by group,
 #' # using normalized density to equalize peak heights
 #' ggplot(iris, aes(Petal.Length, Sepal.Length, fill = Species)) +
@@ -201,11 +194,11 @@ StatDensity3D <- ggproto("StatDensity3D", Stat,
 #' # density filtering to remove rectangular artifacts
 #' ggplot(iris, aes(Petal.Length, Sepal.Length, fill = Species)) +
 #'   stat_density_3d(aes(z = after_stat(ndensity)),
-#'                   pad = .25, min_ndensity = .001,
+#'                   pad = .3, min_ndensity = .001,
 #'                   color = "black", alpha = .7) +
 #'   coord_3d(ratio = c(3, 3, 1))
 #'
-#' @seealso [stat_density_2d()] for 2D density contours, [stat_surface()] for
+#' @seealso [stat_density_2d()] for 2D density contours, [stat_surface_3d()] for
 #'   surfaces from existing grid data, [lighting()] for lighting specifications,
 #'   [coord_3d()] for 3D coordinate systems.
 #' @export

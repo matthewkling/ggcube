@@ -1,4 +1,4 @@
-StatSurface <- ggproto("StatSurface", Stat,
+StatSurface3D <- ggproto("StatSurface3D", Stat,
                        required_aes = c("x", "y", "z"),
 
                        compute_group = function(data, scales, na.rm = FALSE, light = lighting()) {
@@ -10,7 +10,7 @@ StatSurface <- ggproto("StatSurface", Stat,
 
                              # Check we have enough data
                              if (nrow(data) < 4) {
-                                   stop("stat_surface requires at least 4 points")
+                                   stop("stat_surface_3d requires at least 4 points")
                              }
 
                              # Detect grid structure
@@ -27,7 +27,7 @@ StatSurface <- ggproto("StatSurface", Stat,
 #' Process regular grid data into 3D surface with lighting
 #'
 #' Common pipeline for converting regular grid data into quadrilateral faces
-#' with surface normals, lighting, and blend parameters. Used by stat_surface,
+#' with surface normals, lighting, and blend parameters. Used by stat_surface_3d,
 #' stat_function_3d, and stat_smooth_3d.
 #'
 #' @param grid_data Data frame with x, y, z columns on a regular grid
@@ -148,7 +148,7 @@ apply_surface_lighting <- function(face_data, normals, face_centers, light) {
 #' @param ... Other arguments passed on to [layer()].
 #'
 #' @section Aesthetics:
-#' `stat_surface()` requires the following aesthetics:
+#' `stat_surface_3d()` requires the following aesthetics:
 #' - **x**: X coordinate
 #' - **y**: Y coordinate
 #' - **z**: Z coordinate (elevation/height)
@@ -169,14 +169,14 @@ apply_surface_lighting <- function(face_data, normals, face_centers, light) {
 #' p <- ggplot(d, aes(x, y, z)) + coord_3d()
 #'
 #' # basic surface
-#' p + stat_surface(fill = "dodgerblue", color = "darkblue", linewidth = .2)
+#' p + stat_surface_3d(fill = "dodgerblue", color = "darkblue", linewidth = .2)
 #'
 #' # with 3d lighting
-#' p + stat_surface(fill = "darkgreen", color = "darkgreen", linewidth = .2,
+#' p + stat_surface_3d(fill = "darkgreen", color = "darkgreen", linewidth = .2,
 #'       light = lighting(blend = "both"))
 #'
 #' # mesh wireframe, without fill, with aes line color
-#' p + stat_surface(aes(color = z), fill = NA) +
+#' p + stat_surface_3d(aes(color = z), fill = NA) +
 #'   scale_color_viridis_c()
 #'
 #' # use `group` to plot data for multiple surfaces
@@ -190,10 +190,10 @@ apply_surface_lighting <- function(face_data, normals, face_centers, light) {
 #' ggplot(rbind(d, d2),
 #'        aes(x, y, z, group = g, fill = g)) +
 #'   coord_3d() +
-#'   stat_surface(color = "black", alpha = .5)
+#'   stat_surface_3d(color = "black", alpha = .5)
 #'
 #' ggplot(mountain, aes(x, y, z, fill = z, color = z)) +
-#'   stat_surface(light = lighting(method = "diffuse", direction = c(1, 0, .5),
+#'   stat_surface_3d(light = lighting(method = "diffuse", direction = c(1, 0, .5),
 #'                            blend = "both", blend_mode = "hsv", blend_strength = .9),
 #'                linewidth = .2) +
 #'   coord_3d(roll = 125, pitch = 0, yaw = 150,
@@ -203,7 +203,7 @@ apply_surface_lighting <- function(face_data, normals, face_centers, light) {
 #'   scale_color_gradientn(colors = c("darkgreen", "rosybrown4", "gray60"))
 #'
 #' @export
-stat_surface <- function(mapping = NULL, data = NULL,
+stat_surface_3d <- function(mapping = NULL, data = NULL,
                          geom = GeomPolygon3D,
                          position = "identity",
                          light = lighting(),
@@ -211,7 +211,7 @@ stat_surface <- function(mapping = NULL, data = NULL,
                          ...) {
 
       layer(
-            stat = StatSurface, data = data, mapping = mapping, geom = geom,
+            stat = StatSurface3D, data = data, mapping = mapping, geom = geom,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(na.rm = na.rm, light = light, ...)
       )

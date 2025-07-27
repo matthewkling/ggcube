@@ -202,7 +202,7 @@ StatFunction3D <- ggproto("StatFunction3D", Stat,
 #'   coord_3d(scales = "fixed", ratio = c(1, 2, 3), expand = FALSE) +
 #'   xlim(-3, 3) + ylim(-2, 2) + theme_light()
 #'
-#' @seealso [stat_surface()] for surfaces from existing grid data,
+#' @seealso [stat_surface_3d()] for surfaces from existing grid data,
 #'   [lighting()] for lighting specifications, [coord_3d()] for 3D coordinate systems.
 #' @export
 stat_function_3d <- function(mapping = NULL,

@@ -307,7 +307,7 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
 #'
 #' `geom_polygon_3d()` renders 3D polygons with proper depth sorting for realistic
 #' 3D surface visualization. It's designed to work with surface data
-#' from [stat_hull()] and [stat_surface()], as well as regular polygon data like maps.
+#' from [stat_hull_3d()] and [stat_surface_3d()], as well as regular polygon data like maps.
 #'
 #' @param mapping Set of aesthetic mappings created by [aes()].
 #' @param data The data to be displayed in this layer.
@@ -335,9 +335,9 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
 #' - `order`: Vertex order within polygons (for proper polygon construction)
 #'
 #' @examples
-#' # Typically used via stat_surface() or stat_hull()
+#' # Typically used via stats like stat_surface_3d() or stat_hull_3d()
 #' ggplot(sphere_points, aes(x, y, z)) +
-#'   stat_hull(method = "convex", fill = "dodgerblue",
+#'   stat_hull_3d(method = "convex", fill = "dodgerblue",
 #'             light = lighting(blend = "fill", blend_mode = "hsl")) +
 #'   coord_3d()
 #'
@@ -350,7 +350,6 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
 #'   geom_polygon_3d(color = "black") +
 #'   coord_3d()
 #'
-#' @seealso [stat_hull()] and [stat_surface()].
 #' @export
 geom_polygon_3d <- function(mapping = NULL, data = NULL, stat = StatIdentity3D,
                             position = "identity", ..., na.rm = FALSE,

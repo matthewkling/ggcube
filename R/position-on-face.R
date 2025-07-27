@@ -54,17 +54,17 @@
 #' set.seed(1)
 #' d <- data.frame(x = round(rnorm(10)), y = round(rnorm(10)), z = round(rnorm(10)))
 #' ggplot(d, aes(x, y, z)) +
-#'   stat_voxel(color = "black", fill = "steelblue",
+#'   stat_voxel_3d(color = "black", fill = "steelblue",
 #'     light = lighting(blend = "fill", direction = c(1, 1, 0), blend_mode = "hsl"),
 #'     position = position_on_face(c("3D", "zmin", "xmax", "ymin"))) +
 #'   coord_3d()
 #'
 #' # 3D layer projected differently on individual faces
 #' ggplot(sphere_points, aes(x, y, z)) +
-#'   stat_hull(position = position_on_face("zmin"), fill = "black") +
+#'   stat_hull_3d(position = position_on_face("zmin"), fill = "black") +
 #'   geom_point_3d(position = position_on_face("ymin")) +
 #'   geom_path(position = position_on_face("xmax")) +
-#'   stat_hull(color = "black") +
+#'   stat_hull_3d(color = "black") +
 #'   coord_3d()
 #'
 #' # 2D density contour on a specific face

@@ -1,28 +1,33 @@
 #' 3D coordinate system
 #'
-#' \code{coord_3d} creates a 3D coordinate system that projects 3D data onto a 2D plot.
-#' It supports rotation, perspective projection, and automatic axis labeling with
-#' intelligent edge selection for optimal readability.
+#' \code{coord_3d} creates a 3D coordinate system that creates a 2D view of 3D data.
+#' This is the essential core component of any plot made with `ggcube`.
+#' It supports rotation, perspective projection, and options for controlling panel
+#' selection and axis label placement.
 #'
-#' @param pitch Rotation around x-axis in degrees. Positive values rotate "up" towards viewer.
-#' @param roll Rotation around y-axis in degrees. Positive values rotate "right" edge towards viewer.
-#' @param yaw Rotation around z-axis in degrees. Positive values rotate counterclockwise when viewed from above.
-#' @param persp Logical indicating whether to apply perspective projection. When \code{TRUE},
-#'   objects farther from the viewer appear smaller.
-#' @param dist Distance from viewer to center of the data cube when \code{persp = TRUE}.
-#'   Larger values create less perspective distortion.
+#' @param roll,pitch,yaw Rotation around x, y, and z axes, respectively, in degrees.
+#'    Positive values rotate the near face of the plot "downward", "rightward", and clockwise, respectively.
+#' @param persp Logical indicating whether to apply perspective projection. When \code{TRUE} (the default),
+#'   objects farther from the viewer appear smaller. When \code{FALSE}, produces an orthographic projection in which
+#'   lines that are parallel in 3D space render as parallel in the plot.
+#' @param dist Distance from viewer to center of the data cube. Only used when \code{persp = TRUE}.
+#'   Larger values create less perspective distortion. Default is 2.
+#'   Values less than 1 are allowed but can be problematic for rendering.
 #' @param expand Logical indicating whether to expand axis ranges beyond the data range,
-#'   similar to standard ggplot2 behavior.
-#' @param clip Character string indicating clipping behavior. Use \code{"off"} to allow
-#'   drawing outside the plot panel (recommended for 3D plots).
-#' @param panels Character string specifying which background panels to render. Options include
+#'   similar to standard ggplot2 behavior. If \code{TRUE} (the default), expansion behavior
+#'   can be controlled using standard axis scaling functions, e.g.
+#'   \code{... + scale_x_continuous(expand = expansion(.5))}.
+#' @param clip Character string indicating clipping behavior. Use \code{"off"} (the default, recommended
+#'   for some 3D plots) to allow drawing outside the plot panel.
+#' @param panels Character string specifying which panels to render. Options include
 #'   \code{"all"}, \code{"background"}, \code{"foreground"}, \code{"none"}, or specific panel names like
-#'   \code{"xmin"}, \code{"ymax"}, etc.
+#'   \code{"xmin"}, \code{"ymax"}, etc. (Panel styling is handled separately, via the normal \code{theme()}
+#'   approach.)
 #' @param xlabels,ylabels,zlabels Character strings or length-2 character vectors specifying
 #'   axis label (text and title) placement. Each parameter accepts:
 #'   \itemize{
 #'     \item \code{"auto"} (default): Automatic edge selection based on an algorithm
-#'       that prioritizes edges that are visible on the edge of the plot and considers
+#'       that prioritizes edges that are visible on the periphery of the plot and considers
 #'       several attributes of face geometry for better readability.
 #'     \item \code{c("face1", "face2")}: Manual edge specification using two adjacent
 #'       face names (e.g., \code{c("xmin", "ymin")} selects the edge shared by the
@@ -39,29 +44,75 @@
 #'     \item \code{"free"} (default): Each axis scales independently to fill cube space,
 #'       then \code{ratio} applies to standardized coordinates. This gives maximum
 #'       visual range for each dimension.
-#'     \item \code{"fixed"}: Maintains proportional relationship to the displayed
-#'       coordinate system (including any expansion/padding), then \code{ratio}
-#'       applies to these scale-space proportions. Similar to \code{coord_fixed()}
-#'       but for 3D - visual ratios match the labeled axis ranges.
+#'     \item \code{"fixed"}: Maintains proportional relationships in raw data values,
+#'       as scaled by \code{ratio}. Similar to \code{coord_fixed()} but for 3D
+#'       (visual ratios match the labeled axis ranges).
 #'   }
 #' @param ratio Numeric vector of length 3 specifying relative axis lengths as
 #'   \code{c(x, y, z)}. Defaults to \code{c(1, 1, 1)} for equal proportions.
 #'   \itemize{
-#'     \item With \code{scales = "free"}: Ratios apply to cube coordinates
-#'     \item With \code{scales = "fixed"}: Ratios apply to scale-space coordinates
+#'     \item With \code{scales = "free"}: Ratios apply to scaled cube coordinates
+#'     \item With \code{scales = "fixed"}: Ratios apply to original data coordinates
 #'   }
+#'
+#' @section 3D Theming:
+#' 3D plots support additional theme elements beyond standard ggplot2 themes:
+#'
+#' **Z-axis elements:**
+#' - `axis.text.z`: Styling for z-axis tick labels (inherits from `axis.text`)
+#' - `axis.title.z`: Styling for z-axis title (inherits from `axis.title`)
+#'
+#' **Panel elements:**
+#' - `panel.foreground`: Styling for cube faces rendered in front of data (inherits from `panel.background`)
+#' - `panel.grid.foreground`: Styling for grid lines on foreground faces (inherits from `panel.grid`)
+#' - `panel.grid.major.foreground`: Major grid lines on foreground faces (inherits from `panel.grid.foreground`)
+#'
+#' **Enhanced elements:**
+#' - `element_rect()` supports an `alpha` parameter for transparency effects, particularly useful for `panel.foreground`
+#'
+#' The `panels` parameter controls which cube faces are rendered, while `theme()` controls their visual styling.
+#' Background panels use standard `panel.background`, `panel.grid`, etc., while foreground panels
+#' use the `*.foreground` variants listed above. Since the foreground elements inherit from the standard background
+#' and grid elements, you can use `panel.background`, `panel.grid`, etc. to style both background and foreground faces simultaneously.
 #'
 #' @examples
 #' library(ggplot2)
+#' p <- ggplot(mtcars, aes(mpg, wt, qsec)) +
+#'   geom_point_3d(fill = "darkred", color = "white",
+#'                 stroke = .25, shape = 21, size = 3)
+#'
+#' # 3D plot with default coord settings
+#' p + coord_3d()
+#'
+#' # Use `pitch`, `roll`, `yaw` to control plot rotation
+#' p + coord_3d(pitch = 0, roll = 0, yaw = 0) # viewed from x-y face
+#' p + coord_3d(pitch = 30, roll = 0, yaw = 0) # pitch rotates plot around y axis
+#' p + coord_3d(pitch = 0, roll = 30, yaw = 0) # roll rotates plot around x axis
+#' p + coord_3d(pitch = 0, roll = 0, yaw = 30) # yaw rotates plot around z axis
+#' p + coord_3d(pitch = 10, roll = 20, yaw = 30) # combined use
+#'
+#' # Use `persp` and `dist` to control perspective effects
+#' p + coord_3d(dist = 1) # strong perspective effect as if seen from very close
+#' p + coord_3d(dist = 4) # weaker perspective effects as if seen from far away
+#' p + coord_3d(persp = FALSE) # orthographic projection, effectively dist = Inf
 #'
 #' # Use `scales` and `ratio` to modify aspect ratio
-#' p <- ggplot(mtcars, aes(mpg, wt, qsec)) +
-#'   geom_point()
 #' p + coord_3d() # Default free scales (maximum visual range)
 #' p + coord_3d(scales = "fixed") # Fixed scales (proportions match data scales, like coord_fixed)
 #' p + coord_3d(scales = "free", ratio = c(1, 2, 1)) # Custom cube ratios (make z twice as tall visually)
-#' p + coord_3d(scales = "fixed", ratio = c(1, 2, 1)) # Custom scale ratios (y gets twice the visual space relative to its scale range)
+#' p + coord_3d(scales = "fixed", ratio = c(1, 2, 1)) # Custom scale ratios (y gets twice the visual space relative to its data range)
 #'
+#' # Use `panels` to select which cube faces to render
+#' # and use `theme()` elements to control their styling
+#' p + coord_3d(panels = c("zmin", "xmax"))
+#' p + coord_3d(panels = "all") +
+#'     theme(panel.background = element_rect(color = "black"),
+#'           panel.foreground = element_rect(alpha = .3),
+#'           panel.grid.foreground = element_line(color = "gray", linewidth = .25))
+#'
+#' # Use label parameters to control axis text placement and rotation
+#' p + coord_3d(xlabels = c("ymin", "zmax"))
+#' p + coord_3d(rotate_labels = FALSE)
 #'
 #' @export
 coord_3d <- function(pitch = 0, roll = 120, yaw = 30,
@@ -80,6 +131,10 @@ coord_3d <- function(pitch = 0, roll = 120, yaw = 30,
 
       if (!is.numeric(ratio) || length(ratio) != 3 || any(ratio <= 0)) {
             stop("ratio must be a positive numeric vector of length 3")
+      }
+
+      if(persp && dist < 1) {
+            warning("Although `dist` values less than 1 are allowed, they often produce nonsensical plots.")
       }
 
       list(
@@ -669,7 +724,7 @@ project_to_face <- function(data, data_std, proj){
       if(! "project_to_face" %in% names(data) || all(is.na(data$project_to_face))) return(data_std)
       data_std %>%
             mutate(face = data$project_to_face,
-                   depth_3d = transform_3d_standard(data_std, proj)$depth, # used for sorting
+                   depth_3d = transform_3d_standard(data_std, proj)$depth, # save pre-flattening depth for sorting
                    axis = substr(face, 1, 1),
                    value = ifelse(substr(face, 2, 4) == "min", -.5, .5),
                    x = ifelse(is.na(face) | axis != "x", x, value),
@@ -758,10 +813,18 @@ sort_by_depth <- function(data) {
             mutate(.vertex_order = row_number()) %>%
             ungroup()
 
-      # Use original 3d depth if available
-      if("depth_3d" %in% names(data)) data$depth <- data$depth_3d
-
-      if (any(grepl("__", data$group))) {
+      if("depth_3d" %in% names(data)) {
+            # Face-positioned data
+            # sort among faces using final position, and within using 3d position
+            data <- data %>%
+                  tidyr::separate(group, c("level1", "level2"), sep = "__",
+                                  remove = FALSE, extra = "merge") %>%
+                  group_by(level1) %>% mutate(depth1 = max(depth)) %>%
+                  group_by(level2) %>% mutate(depth2 = mean(depth_3d)) %>%
+                  ungroup() %>%
+                  arrange(desc(depth1), desc(depth2), group, .vertex_order) %>%
+                  select(-level1, -level2, -depth1, -depth2, -.vertex_order)
+      } else if (any(grepl("__", data$group))) {
             # Hierarchical sorting
             data <- data %>%
                   tidyr::separate(group, c("level1", "level2"), sep = "__",

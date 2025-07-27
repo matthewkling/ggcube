@@ -22,33 +22,35 @@ coord_3d(
 )
 }
 \arguments{
-\item{pitch}{Rotation around x-axis in degrees. Positive values rotate "up" towards viewer.}
+\item{roll, pitch, yaw}{Rotation around x, y, and z axes, respectively, in degrees.
+Positive values rotate the near face of the plot "downward", "rightward", and clockwise, respectively.}
 
-\item{roll}{Rotation around y-axis in degrees. Positive values rotate "right" edge towards viewer.}
+\item{persp}{Logical indicating whether to apply perspective projection. When \code{TRUE} (the default),
+objects farther from the viewer appear smaller. When \code{FALSE}, produces an orthographic projection in which
+lines that are parallel in 3D space render as parallel in the plot.}
 
-\item{yaw}{Rotation around z-axis in degrees. Positive values rotate counterclockwise when viewed from above.}
-
-\item{persp}{Logical indicating whether to apply perspective projection. When \code{TRUE},
-objects farther from the viewer appear smaller.}
-
-\item{dist}{Distance from viewer to center of the data cube when \code{persp = TRUE}.
-Larger values create less perspective distortion.}
+\item{dist}{Distance from viewer to center of the data cube. Only used when \code{persp = TRUE}.
+Larger values create less perspective distortion. Default is 2.
+Values less than 1 are allowed but can be problematic for rendering.}
 
 \item{expand}{Logical indicating whether to expand axis ranges beyond the data range,
-similar to standard ggplot2 behavior.}
+similar to standard ggplot2 behavior. If \code{TRUE} (the default), expansion behavior
+can be controlled using standard axis scaling functions, e.g.
+\code{... + scale_x_continuous(expand = expansion(.5))}.}
 
-\item{clip}{Character string indicating clipping behavior. Use \code{"off"} to allow
-drawing outside the plot panel (recommended for 3D plots).}
+\item{clip}{Character string indicating clipping behavior. Use \code{"off"} (the default, recommended
+for some 3D plots) to allow drawing outside the plot panel.}
 
-\item{panels}{Character string specifying which background panels to render. Options include
+\item{panels}{Character string specifying which panels to render. Options include
 \code{"all"}, \code{"background"}, \code{"foreground"}, \code{"none"}, or specific panel names like
-\code{"xmin"}, \code{"ymax"}, etc.}
+\code{"xmin"}, \code{"ymax"}, etc. (Panel styling is handled separately, via the normal \code{theme()}
+approach.)}
 
 \item{xlabels, ylabels, zlabels}{Character strings or length-2 character vectors specifying
 axis label (text and title) placement. Each parameter accepts:
 \itemize{
 \item \code{"auto"} (default): Automatic edge selection based on an algorithm
-that prioritizes edges that are visible on the edge of the plot and considers
+that prioritizes edges that are visible on the periphery of the plot and considers
 several attributes of face geometry for better readability.
 \item \code{c("face1", "face2")}: Manual edge specification using two adjacent
 face names (e.g., \code{c("xmin", "ymin")} selects the edge shared by the
@@ -67,34 +69,89 @@ text and title angle settings.}
 \item \code{"free"} (default): Each axis scales independently to fill cube space,
 then \code{ratio} applies to standardized coordinates. This gives maximum
 visual range for each dimension.
-\item \code{"fixed"}: Maintains proportional relationship to the displayed
-coordinate system (including any expansion/padding), then \code{ratio}
-applies to these scale-space proportions. Similar to \code{coord_fixed()}
-but for 3D - visual ratios match the labeled axis ranges.
+\item \code{"fixed"}: Maintains proportional relationships in raw data values,
+as scaled by \code{ratio}. Similar to \code{coord_fixed()} but for 3D
+(visual ratios match the labeled axis ranges).
 }}
 
 \item{ratio}{Numeric vector of length 3 specifying relative axis lengths as
 \code{c(x, y, z)}. Defaults to \code{c(1, 1, 1)} for equal proportions.
 \itemize{
-\item With \code{scales = "free"}: Ratios apply to cube coordinates
-\item With \code{scales = "fixed"}: Ratios apply to scale-space coordinates
+\item With \code{scales = "free"}: Ratios apply to scaled cube coordinates
+\item With \code{scales = "fixed"}: Ratios apply to original data coordinates
 }}
 }
 \description{
-\code{coord_3d} creates a 3D coordinate system that projects 3D data onto a 2D plot.
-It supports rotation, perspective projection, and automatic axis labeling with
-intelligent edge selection for optimal readability.
+\code{coord_3d} creates a 3D coordinate system that creates a 2D view of 3D data.
+This is the essential core component of any plot made with \code{ggcube}.
+It supports rotation, perspective projection, and options for controlling panel
+selection and axis label placement.
 }
+\section{3D Theming}{
+
+3D plots support additional theme elements beyond standard ggplot2 themes:
+
+\strong{Z-axis elements:}
+\itemize{
+\item \code{axis.text.z}: Styling for z-axis tick labels (inherits from \code{axis.text})
+\item \code{axis.title.z}: Styling for z-axis title (inherits from \code{axis.title})
+}
+
+\strong{Panel elements:}
+\itemize{
+\item \code{panel.foreground}: Styling for cube faces rendered in front of data (inherits from \code{panel.background})
+\item \code{panel.grid.foreground}: Styling for grid lines on foreground faces (inherits from \code{panel.grid})
+\item \code{panel.grid.major.foreground}: Major grid lines on foreground faces (inherits from \code{panel.grid.foreground})
+}
+
+\strong{Enhanced elements:}
+\itemize{
+\item \code{element_rect()} supports an \code{alpha} parameter for transparency effects, particularly useful for \code{panel.foreground}
+}
+
+The \code{panels} parameter controls which cube faces are rendered, while \code{theme()} controls their visual styling.
+Background panels use standard \code{panel.background}, \code{panel.grid}, etc., while foreground panels
+use the \verb{*.foreground} variants listed above. Since the foreground elements inherit from the standard background
+and grid elements, you can use \code{panel.background}, \code{panel.grid}, etc. to style both background and foreground faces simultaneously.
+}
+
 \examples{
 library(ggplot2)
+p <- ggplot(mtcars, aes(mpg, wt, qsec)) +
+  geom_point_3d(fill = "darkred", color = "white",
+                stroke = .25, shape = 21, size = 3)
+
+# 3D plot with default coord settings
+p + coord_3d()
+
+# Use `pitch`, `roll`, `yaw` to control plot rotation
+p + coord_3d(pitch = 0, roll = 0, yaw = 0) # viewed from x-y face
+p + coord_3d(pitch = 30, roll = 0, yaw = 0) # pitch rotates plot around y axis
+p + coord_3d(pitch = 0, roll = 30, yaw = 0) # roll rotates plot around x axis
+p + coord_3d(pitch = 0, roll = 0, yaw = 30) # yaw rotates plot around z axis
+p + coord_3d(pitch = 10, roll = 20, yaw = 30) # combined use
+
+# Use `persp` and `dist` to control perspective effects
+p + coord_3d(dist = 1) # strong perspective effect as if seen from very close
+p + coord_3d(dist = 4) # weaker perspective effects as if seen from far away
+p + coord_3d(persp = FALSE) # orthographic projection, effectively dist = Inf
 
 # Use `scales` and `ratio` to modify aspect ratio
-p <- ggplot(mtcars, aes(mpg, wt, qsec)) +
-  geom_point()
 p + coord_3d() # Default free scales (maximum visual range)
 p + coord_3d(scales = "fixed") # Fixed scales (proportions match data scales, like coord_fixed)
 p + coord_3d(scales = "free", ratio = c(1, 2, 1)) # Custom cube ratios (make z twice as tall visually)
-p + coord_3d(scales = "fixed", ratio = c(1, 2, 1)) # Custom scale ratios (y gets twice the visual space relative to its scale range)
+p + coord_3d(scales = "fixed", ratio = c(1, 2, 1)) # Custom scale ratios (y gets twice the visual space relative to its data range)
 
+# Use `panels` to select which cube faces to render
+# and use `theme()` elements to control their styling
+p + coord_3d(panels = c("zmin", "xmax"))
+p + coord_3d(panels = "all") +
+    theme(panel.background = element_rect(color = "black"),
+          panel.foreground = element_rect(alpha = .3),
+          panel.grid.foreground = element_line(color = "gray", linewidth = .25))
+
+# Use label parameters to control axis text placement and rotation
+p + coord_3d(xlabels = c("ymin", "zmax"))
+p + coord_3d(rotate_labels = FALSE)
 
 }

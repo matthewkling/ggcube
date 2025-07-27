@@ -358,7 +358,7 @@ gam_model <- function(){
 #'   scale_fill_viridis_c() +
 #'   coord_3d()
 #'
-#' @seealso [stat_surface()] for surfaces from existing grid data,
+#' @seealso [stat_surface_3d()] for surfaces from existing grid data,
 #'   [stat_function_3d()] for mathematical function surfaces,
 #'   [lighting()] for lighting specifications, [coord_3d()] for 3D coordinate systems.
 #' @export

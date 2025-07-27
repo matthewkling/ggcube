@@ -24,7 +24,7 @@
 #' @examples
 #' # Basic 3D plot with semi-transparent foreground panels
 #' ggplot(mountain, aes(x, y, z)) +
-#'   stat_surface(fill = "darkblue", color = "lightblue", linewidth = .1) +
+#'   stat_surface_3d(fill = "darkblue", color = "lightblue", linewidth = .1) +
 #'   coord_3d(faces = c("background", "ymax")) +
 #'   theme(panel.foreground = element_rect(alpha = 0.6))
 #'

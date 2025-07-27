@@ -34,7 +34,7 @@ convert_to_numeric <- function(data) {
 }
 
 
-StatVoxel <- ggproto("StatVoxel", Stat,
+StatVoxel3D <- ggproto("StatVoxel3D", Stat,
                      required_aes = c("x", "y", "z"),
 
                      compute_panel = function(data, scales, na.rm = FALSE,
@@ -48,7 +48,7 @@ StatVoxel <- ggproto("StatVoxel", Stat,
 
                            # Check we have enough data
                            if (nrow(data) < 1) {
-                                 stop("stat_voxel requires at least 1 point")
+                                 stop("stat_voxel_3d requires at least 1 point")
                            }
 
                            # Generate numeric positions before calculating spacing
@@ -324,7 +324,7 @@ calculate_voxel_face_centers <- function(voxel_faces) {
 #' @param ... Other arguments passed on to [layer()].
 #'
 #' @section Aesthetics:
-#' `stat_voxel()` requires the following aesthetics:
+#' `stat_voxel_3d()` requires the following aesthetics:
 #' - **x**: X coordinate (voxel center position)
 #' - **y**: Y coordinate (voxel center position)
 #' - **z**: Z coordinate (voxel center position)
@@ -352,22 +352,22 @@ calculate_voxel_face_centers <- function(voxel_faces) {
 #' p <- ggplot(voxel_data, aes(x, y, z)) + coord_3d()
 #'
 #' # Basic 3D voxel plot
-#' p + stat_voxel(aes(fill = z), color = "black") +
+#' p + stat_voxel_3d(aes(fill = z), color = "black") +
 #'   scale_fill_viridis_c()
 #'
 #' # Directional lighting (like sunlight)
-#' p + stat_voxel(aes(fill = after_stat(light)),
+#' p + stat_voxel_3d(aes(fill = after_stat(light)),
 #'              light = lighting(direction = c(1, 0, .5))) +
 #'   scale_fill_gradient(low = "darkgreen", high = "lightgreen")
 #'
 #' # Show only visible faces for performance
-#' p + stat_voxel(faces = c("zmax", "ymax", "xmin"), color = "black")
+#' p + stat_voxel_3d(faces = c("zmax", "ymax", "xmin"), color = "black")
 #'
-#' @seealso [stat_pillar()] for variable-height columns, [stat_surface()] for smooth surfaces,
+#' @seealso [stat_pillar_3d()] for variable-height columns, [stat_surface_3d()] for smooth surfaces,
 #'   [coord_3d()] for 3D coordinate systems, [lighting()] for lighting specifications,
 #'   [GeomPolygon3D] for the default geometry.
 #' @export
-stat_voxel <- function(mapping = NULL, data = NULL,
+stat_voxel_3d <- function(mapping = NULL, data = NULL,
                        geom = GeomPolygon3D,
                        position = "identity",
                        width = 1.0,
@@ -389,7 +389,7 @@ stat_voxel <- function(mapping = NULL, data = NULL,
       }
 
       layer(
-            stat = StatVoxel, data = data, mapping = mapping, geom = geom,
+            stat = StatVoxel3D, data = data, mapping = mapping, geom = geom,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(na.rm = na.rm, width = width, faces = faces, light = light, ...)
       )

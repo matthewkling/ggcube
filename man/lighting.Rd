@@ -98,10 +98,10 @@ p <- ggplot(mountain, aes(x, y, z)) +
            scales = "fixed", ratio = c(1, 1.5, .01)) +
   scale_fill_viridis_c() + scale_color_viridis_c()
 
-p + stat_surface(aes(fill = after_stat(light)),
+p + stat_surface_3d(aes(fill = after_stat(light)),
   light = lighting("diffuse", direction = c(-1, 0, 1)))
 
 }
 \seealso{
-\code{\link{stat_surface}}, \code{\link{stat_voxel}}, \code{\link{stat_pillar}}
+\code{\link{stat_surface_3d}}, \code{\link{stat_voxel_3d}}, \code{\link{stat_pillar_3d}}
 }

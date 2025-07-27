@@ -18,10 +18,10 @@ Key functions:
 \itemize{
 \item \code{coord_3d()}: 3D coordinate system with rotation and perspective
 \item \code{aes()}: Enhanced aesthetic mapping with positional z support
-\item \code{stat_surface()}: Surface plotting from grid data
-\item \code{stat_hull()}: 3D convex and alpha hulls
-\item \code{stat_voxel()}: 3D voxel visualization
-\item \code{stat_pillar()}: 3D pillar/bar charts
+\item \code{stat_surface_3d()}: Surface plotting from grid data
+\item \code{stat_hull_3d()}: 3D convex and alpha hulls
+\item \code{stat_voxel_3d()}: 3D voxel visualization
+\item \code{stat_pillar_3d()}: 3D pillar/bar charts
 \item \code{lighting()}: Lighting specifications for 3D surfaces
 }
 }

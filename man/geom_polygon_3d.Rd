@@ -36,7 +36,7 @@ geom_polygon_3d(
 \description{
 \code{geom_polygon_3d()} renders 3D polygons with proper depth sorting for realistic
 3D surface visualization. It's designed to work with surface data
-from \code{\link[=stat_hull]{stat_hull()}} and \code{\link[=stat_surface]{stat_surface()}}, as well as regular polygon data like maps.
+from \code{\link[=stat_hull_3d]{stat_hull_3d()}} and \code{\link[=stat_surface_3d]{stat_surface_3d()}}, as well as regular polygon data like maps.
 }
 \section{Aesthetics}{
 
@@ -60,9 +60,9 @@ And understands these additional aesthetics:
 }
 
 \examples{
-# Typically used via stat_surface() or stat_hull()
+# Typically used via stats like stat_surface_3d() or stat_hull_3d()
 ggplot(sphere_points, aes(x, y, z)) +
-  stat_hull(method = "convex", fill = "dodgerblue",
+  stat_hull_3d(method = "convex", fill = "dodgerblue",
             light = lighting(blend = "fill", blend_mode = "hsl")) +
   coord_3d()
 
@@ -75,7 +75,4 @@ ggplot(triangles, aes(x, y, z, fill = shape)) +
   geom_polygon_3d(color = "black") +
   coord_3d()
 
-}
-\seealso{
-\code{\link[=stat_hull]{stat_hull()}} and \code{\link[=stat_surface]{stat_surface()}}.
 }

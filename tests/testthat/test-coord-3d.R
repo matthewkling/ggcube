@@ -17,12 +17,16 @@ test_that("continuous and discrete scales run without error for various stats", 
             test(disc, geom_point())
             test(mix, geom_point())
 
-            test(cont, stat_voxel())
-            test(disc, stat_voxel())
-            test(mix, stat_voxel())
+            test(cont, geom_point_3d())
+            test(disc, geom_point_3d())
+            test(mix, geom_point_3d())
 
-            test(cont, stat_pillar())
-            test(disc, stat_pillar())
-            test(mix, stat_pillar())
+            test(cont, stat_voxel_3d())
+            test(disc, stat_voxel_3d())
+            test(mix, stat_voxel_3d())
+
+            test(cont, stat_pillar_3d())
+            test(disc, stat_pillar_3d())
+            test(mix, stat_pillar_3d())
       })
 })

@@ -21,7 +21,7 @@ StatIdentity3D <- ggproto("StatIdentity3D", Stat,
                                       data$group <- paste0(data$group, "__group")
                                 }
 
-                                # Store original z values if z column exists (following stat_voxel pattern)
+                                # Store original z values if z column exists (following stat_voxel_3d pattern)
                                 if ("z" %in% names(data)) {
                                       data$z_raw <- data$z
 

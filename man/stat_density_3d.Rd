@@ -134,13 +134,6 @@ p + stat_density_3d(light = lighting(blend = "fill", blend_mode = "hsl"))
 p + stat_density_3d(n = 50, color = "black", fill = "darkgreen", alpha = 0.8,
                   light = lighting(direction = c(1, 1, 0.5), blend = "fill"))
 
-# Project density surface onto cube face
-ggplot(faithful, aes(eruptions, waiting)) +
-  geom_point() +
-  stat_density_3d(position = position_on_face("zmin"),
-                  alpha = 0.4, fill = "orange") +
-  coord_3d()
-
 # Multiple density surfaces by group,
 # using normalized density to equalize peak heights
 ggplot(iris, aes(Petal.Length, Sepal.Length, fill = Species)) +
@@ -152,13 +145,13 @@ ggplot(iris, aes(Petal.Length, Sepal.Length, fill = Species)) +
 # density filtering to remove rectangular artifacts
 ggplot(iris, aes(Petal.Length, Sepal.Length, fill = Species)) +
   stat_density_3d(aes(z = after_stat(ndensity)),
-                  pad = .25, min_ndensity = .001,
+                  pad = .3, min_ndensity = .001,
                   color = "black", alpha = .7) +
   coord_3d(ratio = c(3, 3, 1))
 
 }
 \seealso{
-\code{\link[=stat_density_2d]{stat_density_2d()}} for 2D density contours, \code{\link[=stat_surface]{stat_surface()}} for
+\code{\link[=stat_density_2d]{stat_density_2d()}} for 2D density contours, \code{\link[=stat_surface_3d]{stat_surface_3d()}} for
 surfaces from existing grid data, \code{\link[=lighting]{lighting()}} for lighting specifications,
 \code{\link[=coord_3d]{coord_3d()}} for 3D coordinate systems.
 }

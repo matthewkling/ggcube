@@ -1,4 +1,4 @@
-StatHull <- ggproto("StatHull", Stat,
+StatHull3D <- ggproto("StatHull3D", Stat,
                     required_aes = c("x", "y", "z"),
 
                     compute_group = function(data, scales, method = "convex", alpha = 1.0,
@@ -139,7 +139,7 @@ StatHull <- ggproto("StatHull", Stat,
 
 #' Create 3D convex and alpha hulls with lighting
 #'
-#' `stat_hull()` turns 3D point clouds into surface hulls consisting of triangular polygons,
+#' `stat_hull_3d()` turns 3D point clouds into surface hulls consisting of triangular polygons,
 #' using either convex hull or alpha shape algorithms. It computes surface normals and applies
 #' various lighting models to create realistic 3D surface visualizations.
 #'
@@ -160,7 +160,7 @@ StatHull <- ggproto("StatHull", Stat,
 #' @param inherit.aes If `FALSE`, overrides the default aesthetics.
 #'
 #' @section Grouping:
-#' `stat_hull()` respects ggplot2 grouping aesthetics. To create separate hulls for different
+#' `stat_hull_3d()` respects ggplot2 grouping aesthetics. To create separate hulls for different
 #' subsets of your data, use `aes(group = category_variable)` or similar grouping aesthetics.
 #' Each group will get its own independent hull calculation.
 #'
@@ -182,8 +182,8 @@ StatHull <- ggproto("StatHull", Stat,
 #' data_small <- data.frame(x = runif(100, 0, 1), y = runif(100, 0, 1), z = runif(100, 0, 1))
 #' data_large <- data.frame(x = runif(100, 0, 100), y = runif(100, 0, 100), z = runif(100, 0, 100))
 #'
-#' stat_hull(data = data_small, alpha = 0.5)    # Might work well
-#' stat_hull(data = data_large, alpha = 50)     # Might need much larger alpha
+#' stat_hull_3d(data = data_small, alpha = 0.5)    # Might work well
+#' stat_hull_3d(data = data_large, alpha = 50)     # Might need much larger alpha
 #' ```
 #'
 #' @section Computed variables:
@@ -193,7 +193,7 @@ StatHull <- ggproto("StatHull", Stat,
 #' - `face_id`: Triangle group identifier
 #'
 #' @section Aesthetics:
-#' `stat_hull()` requires the following aesthetics:
+#' `stat_hull_3d()` requires the following aesthetics:
 #' - **x**: X coordinate
 #' - **y**: Y coordinate
 #' - **z**: Z coordinate
@@ -209,13 +209,13 @@ StatHull <- ggproto("StatHull", Stat,
 #'
 #' # Convex hull (reliable default, no scale sensitivity)
 #' ggplot(sphere_points, aes(x, y, z = z)) +
-#'   stat_hull(aes(fill = after_stat(light)), method = "convex") +
+#'   stat_hull_3d(aes(fill = after_stat(light)), method = "convex") +
 #'   scale_fill_gradient(low = "black", high = "white") +
 #'   coord_3d()
 #'
 #' # Alpha shape (scale-sensitive - alpha ~1 works for unit sphere)
 #' ggplot(sphere_points, aes(x, y, z = z)) +
-#'   stat_hull(aes(fill = after_stat(light)), method = "alpha", alpha = 1.0) +
+#'   stat_hull_3d(aes(fill = after_stat(light)), method = "alpha", alpha = 1.0) +
 #'   scale_fill_gradient(low = "black", high = "white") +
 #'   coord_3d()
 #'
@@ -223,13 +223,13 @@ StatHull <- ggproto("StatHull", Stat,
 #' spheres <- rbind(dplyr::mutate(sphere_points, group = "a"),
 #'                  dplyr::mutate(sphere_points, group = "b", x = x + 3))
 #' ggplot(spheres, aes(x, y, z, group = group)) +
-#'   stat_hull(aes(fill = group), light = lighting(blend = "fill")) +
+#'   stat_hull_3d(aes(fill = group), light = lighting(blend = "fill")) +
 #'   coord_3d(scales = "fixed")
 #'
 #' # For larger coordinate scales, increase alpha proportionally:
 #' sphere_large <- sphere_points * 100  # Scale up by 100x
 #' ggplot(sphere_large, aes(x, y, z = z)) +
-#'   stat_hull(method = "alpha", alpha = 100, # Increase alpha ~100x
+#'   stat_hull_3d(method = "alpha", alpha = 100, # Increase alpha ~100x
 #'             fill = "darkgreen", light = lighting(blend = "fill")) +
 #'   coord_3d()
 #'
@@ -237,7 +237,7 @@ StatHull <- ggproto("StatHull", Stat,
 #'   default geometry with depth sorting, [lighting()] for lighting specifications.
 #'
 #' @export
-stat_hull <- function(mapping = NULL, data = NULL,
+stat_hull_3d <- function(mapping = NULL, data = NULL,
                       geom = GeomPolygon3D,
                       position = "identity",
                       method = "convex", alpha = 1.0,
@@ -246,7 +246,7 @@ stat_hull <- function(mapping = NULL, data = NULL,
                       ...) {
 
       layer(
-            stat = StatHull, data = data, mapping = mapping, geom = geom,
+            stat = StatHull3D, data = data, mapping = mapping, geom = geom,
             position = position, inherit.aes = inherit.aes,
             params = list(method = method, alpha = alpha, light = light, ...)
       )
