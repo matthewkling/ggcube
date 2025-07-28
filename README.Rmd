@@ -21,7 +21,7 @@ knitr::opts_chunk$set(
 
 **ggcube** is a ggplot2 extension for 3D data visualization. It helps you create 3D scatter plots, surfaces, volumes, and complex layered visualizations using familiar ggplot2 syntax with `aes(x, y, z)` and `coord_3d()`.
 
-The package provides a variety of 3D-specific layer functions to render surfaces, prisms, points, and paths in 3D. You can control plot geometry with 3D projection parameters, can apply a range of 3D lighting models, and can mix 3D layers with 2D layers rendered on cube faces.
+The package provides a variety of 3D-specific layer functions to render surfaces, prisms, points, and paths in 3D. You can control plot geometry with 3D projection parameters, can apply a range of 3D lighting models, and can mix 3D layers with 2D layers rendered on cube faces. 
 
 **ggcube** aims for seamless integration with ggplot2. Standard ggplot2 features work as expected, including faceting, themes, scales, legends, and layering. In addition to the 3D-specific functions, it also works with many existing ggplot2 stats and geoms.
 

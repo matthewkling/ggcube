@@ -29,6 +29,7 @@ Key functions:
 Useful links:
 \itemize{
   \item \url{https://github.com/matthewkling/ggcube}
+  \item \url{https://matthewkling.github.io/ggcube/}
   \item Report bugs at \url{https://github.com/matthewkling/ggcube/issues}
 }
 

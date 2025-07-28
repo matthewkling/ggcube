@@ -21,8 +21,8 @@ features work as expected, including faceting, themes, scales, legends,
 and layering. In addition to the 3D-specific functions, it also works
 with many existing ggplot2 stats and geoms.
 
-This package is in development and has not yet been officially released.
-Bugs and breaking changes are not unlikely.
+WARNING: This package is in development and has not yet been officially
+released. Bugs and breaking changes are not unlikely.
 
 ## Installation
 
