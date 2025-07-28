@@ -15,3 +15,4 @@ hsl2rgb(hsl_matrix)
 \description{
 Convert HSL to RGB color space
 }
+\keyword{internal}

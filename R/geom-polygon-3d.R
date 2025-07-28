@@ -2,6 +2,7 @@
 #'
 #' @param rgb_matrix 3xN matrix with RGB values in [0,1] range
 #' @return 3xN matrix with HSL values (H in [0,1], S in [0,1], L in [0,1])
+#' @keywords internal
 rgb2hsl <- function(rgb_matrix) {
       if (!is.matrix(rgb_matrix) || nrow(rgb_matrix) != 3) {
             stop("rgb_matrix must be a 3xN matrix")
@@ -54,6 +55,7 @@ rgb2hsl <- function(rgb_matrix) {
 #'
 #' @param hsl_matrix 3xN matrix with HSL values (H in [0,1], S in [0,1], L in [0,1])
 #' @return 3xN matrix with RGB values in [0,1] range
+#' @keywords internal
 hsl2rgb <- function(hsl_matrix) {
       if (!is.matrix(hsl_matrix) || nrow(hsl_matrix) != 3) {
             stop("hsl_matrix must be a 3xN matrix")
@@ -103,7 +105,7 @@ hsl2rgb <- function(hsl_matrix) {
       return(rbind(r, g, b))
 }
 
-#' Blend lighting values with base colors using HSV or HSL color spaces
+# Blend lighting values with base colors using HSV or HSL color spaces
 blend_lighting_with_colors <- function(base_colors, light_values, lighting) {
 
       if (length(base_colors) != length(light_values)) {

@@ -2,3 +2,22 @@ url: https://matthewkling.github.io/ggcube/
 template:
   bootstrap: 5
 
+reference:
+- title: 3D coordinates
+- contents:
+  - coord_3d
+  - aes
+  - position_on_face
+- title: 3D layers
+- contents:
+  - starts_with("stat_")
+  - starts_with("geom_")
+- title: Visual styling
+- contents:
+  - lighting
+  - element_rect
+- title: Z axis scales
+- contents:
+  - scale_z_continuous
+  - scale_z_discrete
+  - zlim
