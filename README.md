@@ -6,20 +6,23 @@
 <!-- badges: start -->
 <!-- badges: end -->
 
-**ggcube** extends ggplot2 into three dimensions, providing a grammar of
-graphics for 3D data visualization. Create 3D scatter plots, surfaces,
-volumes, and complex layered visualizations using familiar ggplot2
-syntax with `aes(x, y, z)` and `coord_3d()`.
+**ggcube** is a ggplot2 extension for 3D data visualization. It helps
+you create 3D scatter plots, surfaces, volumes, and complex layered
+visualizations using familiar ggplot2 syntax with `aes(x, y, z)` and
+`coord_3d()`.
 
 The package provides a variety of 3D-specific layer functions to render
-surfaces, prisms, points, and paths in 3D. Users can control plot
-geometry with 3D projection parameters, can apply a range of 3D lighting
-models, and can mix 3D layers with 2D layers rendered on cube faces.
+surfaces, prisms, points, and paths in 3D. You can control plot geometry
+with 3D projection parameters, can apply a range of 3D lighting models,
+and can mix 3D layers with 2D layers rendered on cube faces.
 
 **ggcube** aims for seamless integration with ggplot2. Standard ggplot2
 features work as expected, including faceting, themes, scales, legends,
 and layering. In addition to the 3D-specific functions, it also works
 with many existing ggplot2 stats and geoms.
+
+This package is in development and has not yet been officially released.
+Bugs and breaking changes are not unlikely.
 
 ## Installation
 
@@ -33,7 +36,7 @@ devtools::install_github("matthewkling/ggcube")
 ## Quick start
 
 The essential ingredient of a ggcube plot is `coord_3d()`. Adding this
-to a standard ggplot, and providing a third (`z`) aesthetic variable
+to a standard ggplot, and providing a third (`z`) aesthetic variable,
 creates a 3D plot:
 
 ``` r
@@ -48,9 +51,9 @@ ggplot(mtcars, aes(mpg, wt, qsec, color = factor(cyl))) +
 
 <img src="man/figures/README-quickstart-1.png" width="100%" />
 
-### Surface functions
+### Surfaces
 
-- `stat_surface_3d()` renders surfaces based on existing grids data such
+- `stat_surface_3d()` renders surfaces based on existing grid data such
   as terrain data
 - `stat_smooth_3d()` fits statistical models to input data and
   visualizes fitted predictions and confidence intervals
@@ -65,15 +68,15 @@ Example: a fitted model surface using `stat_smooth_3d()`:
 ``` r
 # Generate scattered 3D data
 set.seed(123)
-d <- data.frame(x = runif(100, -2, 2),
-                y = runif(100, -2, 2))
-d$z <- abs(1 + d$x^2 - d$y^2 + rnorm(100, 0, 1))
+d <- data.frame(x = runif(50, -2, 2),
+                y = runif(50, -2, 2))
+d$z <- d$x + d$x^2 - d$y^2 + rnorm(50)
 
-# GAM fit with uncertainty layers
+# Plot GAM fit with uncertainty layers
 ggplot(d, aes(x, y, z)) + 
       stat_smooth_3d(aes(fill = after_stat(level)),
-                   method = "gam", fomula = z ~ te(x, y),
-                   se = TRUE, level = 0.99, color = "black") +
+                     method = "gam", fomula = z ~ te(x, y),
+                     se = TRUE, level = 0.99, color = "black") +
       scale_fill_manual(values = c("red", "darkorchid4", "steelblue")) +
       coord_3d()
 ```
@@ -85,7 +88,7 @@ Example: a terrain surface using `stat_function_3d()`:
 ``` r
 ggplot(mountain, aes(x, y, z)) +
       stat_surface_3d(aes(fill = z, color = z),
-                   light = lighting(direction = c(1, 0, 1), blend = "both")) +
+                      light = lighting(direction = c(1, 0, 1), blend = "both")) +
       scale_fill_viridis_c() + scale_color_viridis_c() +
       coord_3d(yaw = 130, ratio = c(2, 2, 1))
 ```
@@ -107,12 +110,12 @@ ggplot() +
 
 <img src="man/figures/README-functions-1.png" width="100%" />
 
-### Prism-type layers
+### Prisms
 
-- `stat_voxel_3d()` renders sparse 3D pixel data as rectangular prisms
-- `stat_pillar_3d()`
-- `stat_histogram_3d()` (forthcoming)
-- `stat_prism_3d()` (forthcoming)
+- `stat_voxel_3d()` renders 3D pixel data sparse arrays of cubes
+- `stat_pillar_3d()` produces 3D column charts
+- `stat_histogram_3d()` (in prep)
+- `stat_prism_3d()` (in prep)
 
 Example: a 3D bar chart using `stat_pillar_3d()`:
 
@@ -136,7 +139,7 @@ ggplot(data, aes(x, y, z1, zmin = z2, fill = z2 - z1)) +
 - `geom_point_3d()` creates 3D scatter plots with depth-scaled point
   sizes and options to include reference lines and reference points
   projecting 3D points onto 2D panel faces
-- `geom_path_3d()` (forthcoming)
+- `geom_path_3d()` (in prep)
 
 Example: A scatter plot with reference elements, using
 `geom_points_3d()`:
@@ -153,32 +156,61 @@ ggplot(mtcars, aes(mpg, wt, qsec, fill = factor(cyl))) +
 
 ### Lighting effects
 
-Realistic 3D shading with `lighting()`
+Lighting of surface and prism layers is controlled by providing a
+`lighting()` specification. Light can be mapped to an aesthetic variable
+using `after_stat(light)`, or can be used to `blend` highlights and
+shadows into otherwise-defined color and fill aesthetics.
+
+``` r
+ggplot(sphere_points, aes(x, y, z)) +
+      stat_hull_3d( # blend shadow lighting into solid color/fill
+            fill = "gray50", color = "gray50",
+            light = lighting(method = "direct",
+                             blend = "both", blend_mode = "hsl", 
+                             direction = c(-1, 0, 0))) +
+      stat_hull_3d( # blend shadow lighting into aesthetic color/fill
+            aes(x = x + 2.5, fill = z, color = z),
+            light = lighting(method = "diffuse",
+                             blend = "both", blend_mode = "hsl", 
+                             direction = c(1, 0, 0))) +
+      stat_hull_3d( # map discrete "quantized" lighting to viridis color scale
+            aes(x = x + 5, fill = after_stat(light), color = after_stat(light)),
+            light = lighting(quanta = 5, method = "diffuse")) +
+      stat_hull_3d( # map surface orientation to RGB color channels
+            aes(x = x + 7.5, 
+                fill = after_stat(light)),
+            light = lighting(method = "normal_rgb", 
+                             direction = c(-1, 1, -1))) +
+      coord_3d(scales = "fixed") +
+      scale_fill_viridis_c() +
+      scale_color_viridis_c() +
+      theme_dark() +
+      theme(legend.position = "none")
+```
+
+<img src="man/figures/README-lighting-1.png" width="100%" />
 
 ### Face projection
 
-`position_on_face()` for projecting layers onto cube faces
-
-### Seamless ggplot2 integration
-
-ggcube works with the complete ggplot2 ecosystem:
+3D and 2D layers can be mixed by using `position_on_face()` to project
+2D data onto cube faces.
 
 ``` r
-ggplot(iris, aes(Sepal.Length, Sepal.Width, Petal.Length,
-                 fill = Species, color = Species)) +
-      geom_point_3d() +
-      stat_hull_3d(alpha = 0.5, color = "black") +
-      labs(title = "3D Species Comparison") +
-      coord_3d(scales = "fixed") +
-      theme_light() +
-      facet_wrap(~Species)
+
+ggplot(iris, aes(Sepal.Length, Sepal.Width, Petal.Length, 
+                 color = Species, fill = Species)) +
+      stat_density_2d( # place 2D density plot on zmin face
+            position = position_on_face(faces = "zmin", axes = c("x", "y")),
+            geom = "polygon", alpha = .1, linewidth = .25) +
+      stat_hull_3d( # flatten 3D hull layer onto ymin face
+            position = position_on_face("ymin"), alpha = .5) +
+      stat_voxel_3d( # flatten 3D voxel onto xma face, to create 2D binned
+            aes(round(Sepal.Length), round(Sepal.Width), round(Petal.Length)),
+                    position = position_on_face("xmax"), alpha = .25) +
+      geom_point_3d( # 3D scatter plot
+            shape = 21, color = "black", stroke = .25) +
+      coord_3d() +
+      xlim(4, 8)
 ```
 
-<img src="man/figures/README-integration-1.png" width="100%" />
-
-## Learn more
-
-- **Function reference**: Complete documentation of all functions
-- **Getting started**: Introduction to 3D plotting concepts  
-- **Gallery**: Examples showcasing different visualization types
-- **Advanced topics**: Lighting, projections, and complex layering
+<img src="man/figures/README-position-1.png" width="100%" />
