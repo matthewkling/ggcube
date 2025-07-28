@@ -150,13 +150,14 @@ as scaled by <code>ratio</code>. Similar to <code><a href="https://ggplot2.tidyv
 <p><strong>Z-axis elements:</strong></p><ul><li><p><code>axis.text.z</code>: Styling for z-axis tick labels (inherits from <code>axis.text</code>)</p></li>
 <li><p><code>axis.title.z</code>: Styling for z-axis title (inherits from <code>axis.title</code>)</p></li>
 </ul><p><strong>Panel elements:</strong></p><ul><li><p><code>panel.foreground</code>: Styling for cube faces rendered in front of data (inherits from <code>panel.background</code>)</p></li>
+<li><p><code>panel.border.foreground</code>: Styling for cube faces rendered in front of data (inherits from <code>panel.border</code>)</p></li>
 <li><p><code>panel.grid.foreground</code>: Styling for grid lines on foreground faces (inherits from <code>panel.grid</code>)</p></li>
 <li><p><code>panel.grid.major.foreground</code>: Major grid lines on foreground faces (inherits from <code>panel.grid.foreground</code>)</p></li>
 </ul><p><strong>Enhanced elements:</strong></p><ul><li><p><code><a href="element_rect.html">element_rect()</a></code> supports an <code>alpha</code> parameter for transparency effects, particularly useful for <code>panel.foreground</code></p></li>
 </ul><p>The <code>panels</code> parameter controls which cube faces are rendered, while <code><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme()</a></code> controls their visual styling.
-Background panels use standard <code>panel.background</code>, <code>panel.grid</code>, etc., while foreground panels
+Background panels use standard <code>panel.background</code>, <code>panel.border</code>, <code>panel.grid</code>, etc., while foreground panels
 use the <code>*.foreground</code> variants listed above. Since the foreground elements inherit from the standard background
-and grid elements, you can use <code>panel.background</code>, <code>panel.grid</code>, etc. to style both background and foreground faces simultaneously.</p>
+and grid elements, you can use <code>panel.background</code>, etc. to style both background and foreground faces simultaneously.</p>
     </div>
 
     <div class="section level2">
