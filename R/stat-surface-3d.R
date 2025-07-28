@@ -200,8 +200,7 @@ apply_surface_lighting <- function(face_data, normals, face_centers, light) {
 #'   stat_surface_3d(light = lighting(method = "diffuse", direction = c(1, 0, .5),
 #'                            blend = "both", blend_mode = "hsv", blend_strength = .9),
 #'                linewidth = .2) +
-#'   coord_3d(roll = 125, pitch = 0, yaw = 150,
-#'            ratio = c(1, 1.5, .5)) +
+#'   coord_3d(ratio = c(1, 1.5, .5)) +
 #'   theme_light() +
 #'   scale_fill_gradientn(colors = c("darkgreen", "rosybrown4", "gray60")) +
 #'   scale_color_gradientn(colors = c("darkgreen", "rosybrown4", "gray60"))

@@ -115,7 +115,7 @@
 #' p + coord_3d(rotate_labels = FALSE)
 #'
 #' @export
-coord_3d <- function(pitch = 0, roll = 120, yaw = 30,
+coord_3d <- function(pitch = 0, roll = -60, yaw = -30,
                      persp = TRUE, dist = 2,
                      expand = TRUE, clip = "off",
                      panels = "background",
@@ -150,6 +150,103 @@ coord_3d <- function(pitch = 0, roll = 120, yaw = 30,
             ),
             theme(plot.margin = margin(20, 20, 20, 20, "pt"))
       )
+}
+
+#' Detect if a scale transformation flips direction
+#'
+#' @param scale_obj A ggplot2 scale object
+#' @return Logical indicating if the scale transform flips direction
+#' @keywords internal
+detect_scale_direction_flip <- function(scale_obj) {
+      if (is.null(scale_obj)) return(FALSE)
+
+      transform <- scale_obj$trans
+      if (is.null(transform)) return(FALSE)
+
+      test_output <- transform$transform(c(1, 2))
+
+      # If we can't compare the outputs, assume no flip
+      if (length(test_output) != 2 || any(is.na(test_output))) {
+            return(FALSE)
+      }
+
+      return(test_output[1] > test_output[2])
+}
+
+#' Translate face names using stored flip information
+#'
+#' @param faces Character vector of face names
+#' @param flips List with x, y, z flip indicators
+#' @return Character vector of translated face names
+#' @keywords internal
+translate_face_names_from_flips <- function(faces, flips) {
+      if (length(faces) == 0) return(faces)
+      for(flip in names(flips)){
+            if(flips[[flip]]){
+                  i <- which(faces == paste0(flip, "min"))
+                  j <- which(faces == paste0(flip, "max"))
+                  faces[i] <- paste0(flip, "max")
+                  faces[j] <- paste0(flip, "min")
+            }
+      }
+      return(faces)
+}
+
+#' Translate face names to account for scale direction flips
+#'
+#' @param face_names Character vector of face names
+#' @param scale_x,scale_y,scale_z Scale objects for each axis
+#' @return Character vector of translated face names
+#' @keywords internal
+translate_face_names_from_flips <- function(face_names, scale_flips) {
+      if (length(face_names) == 0) return(face_names)
+
+      # Only translate actual face names, leave other values unchanged
+      valid_faces <- c("xmin", "xmax", "ymin", "ymax", "zmin", "zmax")
+      if (!any(face_names %in% valid_faces)) {
+            return(face_names)  # No face names to translate
+      }
+
+      # Get flip indicators
+      x_flipped <- scale_flips$x
+      y_flipped <- scale_flips$y
+      z_flipped <- scale_flips$z
+
+      # Create translation mapping
+      translated <- face_names
+
+      for (i in seq_along(translated)) {
+            face <- translated[i]
+
+            if (x_flipped && face == "xmin") {
+                  translated[i] <- "xmax"
+            } else if (x_flipped && face == "xmax") {
+                  translated[i] <- "xmin"
+            } else if (y_flipped && face == "ymin") {
+                  translated[i] <- "ymax"
+            } else if (y_flipped && face == "ymax") {
+                  translated[i] <- "ymin"
+            } else if (z_flipped && face == "zmin") {
+                  translated[i] <- "zmax"
+            } else if (z_flipped && face == "zmax") {
+                  translated[i] <- "zmin"
+            }
+      }
+
+      return(translated)
+}
+translate_face_names <- function(faces, scale_x, scale_y, scale_z) {
+      if (length(faces) == 0) return(faces)
+
+      # Detect direction flips for each axis
+      flips <- list(
+            x = detect_scale_direction_flip(scale_x),
+            y = detect_scale_direction_flip(scale_y),
+            z = detect_scale_direction_flip(scale_z)
+      )
+
+      # Use the same logic as the flips version
+      return(translate_face_names_from_flips(faces, flips))
 }
 
 Coord3D <- ggproto("Coord3D", CoordCartesian,
@@ -205,6 +302,19 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                                .z_scale_cache$scale <- scale_z
                          }
 
+                         # Translate face names to account for scale direction flips
+                         self$panels <- translate_face_names(self$panels, scale_x, scale_y, scale_z)
+                         self$xlabels <- translate_face_names(self$xlabels, scale_x, scale_y, scale_z)
+                         self$ylabels <- translate_face_names(self$ylabels, scale_x, scale_y, scale_z)
+                         self$zlabels <- translate_face_names(self$zlabels, scale_x, scale_y, scale_z)
+
+                         # Store scale flip information for later use in transform()
+                         panel_params$scale_flips <- list(
+                               x = detect_scale_direction_flip(scale_x),
+                               y = detect_scale_direction_flip(scale_y),
+                               z = detect_scale_direction_flip(scale_z)
+                         )
+
                          # Scale info (including axis names)
                          panel_params$scales <- self$scales
                          panel_params$scale_info <- list(
@@ -231,7 +341,7 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                                panel_params$ratio
                          )
 
-                         # Visible faces
+                         # Visible faces (using translated panel names)
                          visible_faces_fgbg <- select_visible_faces(self$panels, panel_params$proj, effective_ratios)
                          visible_faces <- do.call("c", visible_faces_fgbg)
                          panel_params$visible_faces <- visible_faces
@@ -384,12 +494,17 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
 
                    transform = function(self, data, panel_params) {
 
+                         # Translate project_to_face names if they exist
+                         if ("project_to_face" %in% names(data) && !is.null(panel_params$scale_flips)) {
+                               data$project_to_face <- translate_face_names_from_flips(data$project_to_face, panel_params$scale_flips)
+                         }
+
                          # Scale data to standard domain with aspect ratio
                          scale_ranges <- list(x = panel_params$scale_info$x$limits,
                                               y = panel_params$scale_info$y$limits,
                                               z = panel_params$scale_info$z$limits)
                          result <- scale_to_standard(data[c("x", "y", "z")], scale_ranges,
-                                                       panel_params$scales, panel_params$ratio)
+                                                     panel_params$scales, panel_params$ratio)
 
                          # Project data onto cube face, if applicable
                          result <- project_to_face(data, result, panel_params$proj)
@@ -850,4 +965,16 @@ sort_by_depth <- function(data) {
       }
 
       return(data)
+}
+
+#' Scale transformed coordinates to final npc coordinates
+#'
+#' @param result Data frame with transformed x, y coordinates
+#' @param plot_bounds Plot bounds vector [xmin, xmax, ymin, ymax]
+#' @return Data frame with scaled coordinates
+#' @keywords internal
+scale_to_npc_coordinates <- function(result, plot_bounds) {
+      result$x <- (result$x - plot_bounds[1]) / (plot_bounds[2] - plot_bounds[1])
+      result$y <- (result$y - plot_bounds[3]) / (plot_bounds[4] - plot_bounds[3])
+      return(result)
 }

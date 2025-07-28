@@ -25,14 +25,15 @@
 #' # Basic 3D plot with semi-transparent foreground panels
 #' ggplot(mountain, aes(x, y, z)) +
 #'   stat_surface_3d(fill = "darkblue", color = "lightblue", linewidth = .1) +
-#'   coord_3d(panels = c("background", "ymax")) +
+#'   coord_3d(panels = c("background", "ymin")) +
 #'   theme(panel.foreground = element_rect(alpha = 0.6))
 #'
 #' # Completely transparent foreground panels
 #' ggplot(mtcars, aes(mpg, wt, qsec)) +
 #'   geom_point() +
 #'   coord_3d(panels = "all") +
-#'   theme(panel.foreground = element_rect(fill = "blue", alpha = 0))
+#'   theme(panel.background = element_rect(color = "black"),
+#'         panel.foreground = element_rect(fill = "blue", alpha = 0))
 #'
 #' @seealso \code{\link[ggplot2]{element_rect}} for the original function,
 #'   \code{\link{coord_3d}} for 3D coordinate systems that utilize foreground panels

@@ -3,7 +3,7 @@ Type: Package
 Title: 3D plotting with ggplot2
 Version: 0.1.0.9000
 Author: Matthew Kling
-Maintainer: The package maintainer <mattkling@berkeley.edu>
+Maintainer: Matthew Kling <mattkling@berkeley.edu>
 Description: Use ggplot2 to create 3d visualizations
 License: What license is it under?
 Encoding: UTF-8

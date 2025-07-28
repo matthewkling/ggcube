@@ -61,6 +61,10 @@ transform_3d_standard <- function(data, proj = list(pitch = 0, roll = 0, yaw = 0
       persp <- proj$persp
       dist <- proj$dist
 
+      # Flip z coordinates, to support a more intuitive default projection
+      # in which all axes increase toward top-right plot corner
+      data[,"z"] <- data[,"z"] * -1
+
       # Apply rotation to data points
       rotated <- rotate_3d(as.matrix(data[, c("x", "y", "z")]), pitch, roll, yaw)
 

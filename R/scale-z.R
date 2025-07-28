@@ -40,7 +40,9 @@
 #'     \item \code{scales::squish} for squishing out of bounds values into range
 #'   }
 #' @param na.value Missing values will be replaced with this value.
-#' @param transform For continuous scales, the name of a transformation object or the object itself.
+#' @param transform The name of a transformation object or the object itself. Default is "identity",
+#'   but works with standard transform options such as "log10", "sqrt", and "reverse",
+#'   detailed in the documentation for [`ggplot2::scale_x_continuous()`].
 #' @param guide A function used to create a guide or its name. Since z-axis guides are not
 #'   yet supported, this defaults to \code{"none"}.
 #' @param ... Other arguments passed on to \code{continuous_scale()}.
@@ -55,6 +57,12 @@
 #'     breaks = c(15, 17, 19, 21),
 #'     labels = c("Fast", "Medium", "Slow", "Very Slow"),
 #'     limits = c(10, NA)) +
+#'   coord_3d()
+#'
+#' # Works with standard scale transformations like "reverse", "log10", etc.
+#' ggplot(mtcars, aes(mpg, wt, z = qsec)) +
+#'   geom_point() +
+#'   scale_z_continuous(transform = "reverse") +
 #'   coord_3d()
 #'
 #' @seealso \code{\link{zlim}} for a shorthand way to set z-axis limits,
