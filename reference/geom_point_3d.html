@@ -229,19 +229,19 @@ are automatically depth-sorted for proper 3D rendering</p></li>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Basic 3D scatter plot with depth scaling</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu">expand_grid</span><span class="op">(</span>x <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">5</span>, y <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">5</span>, z <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html" class="external-link">expand.grid</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">5</span>, y <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">5</span>, z <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>       <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span>, fill <span class="op">=</span> <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu">geom_point_3d</span><span class="op">(</span>size <span class="op">=</span> <span class="fl">10</span>, shape <span class="op">=</span> <span class="fl">21</span>, color <span class="op">=</span> <span class="st">"white"</span>, stroke <span class="op">=</span> <span class="fl">.1</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span>pitch <span class="op">=</span> <span class="fl">40</span>, roll <span class="op">=</span> <span class="fl">5</span>, yaw <span class="op">=</span> <span class="fl">0</span>, dist <span class="op">=</span> <span class="fl">1.5</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_c</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in expand_grid(x = 1:5, y = 1:5, z = 1:5):</span> could not find function "expand_grid"</span>
+<span class="r-plt img"><img src="geom_point_3d-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Add circular reference points on 2D face panel</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mtcars</span>, <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span><span class="va">mpg</span>, <span class="va">wt</span>, <span class="va">qsec</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu">geom_point_3d</span><span class="op">(</span>size <span class="op">=</span> <span class="fl">3</span>,</span></span>
 <span class="r-in"><span>    ref_points <span class="op">=</span> <span class="cn">TRUE</span>, ref_lines <span class="op">=</span> <span class="cn">TRUE</span>, ref_faces <span class="op">=</span> <span class="st">"zmin"</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="geom_point_3d-1.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="geom_point_3d-2.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Aesthetic inheritance - ref elements inherit color and fill</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mpg</span>, <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span><span class="va">displ</span>, <span class="va">hwy</span>, <span class="va">cty</span>, color <span class="op">=</span> <span class="va">cty</span>, fill <span class="op">=</span> <span class="va">cty</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
@@ -249,7 +249,7 @@ are automatically depth-sorted for proper 3D rendering</p></li>
 <span class="r-in"><span>                ref_points <span class="op">=</span> <span class="cn">TRUE</span>, ref_lines <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
 <span class="r-in"><span>                ref_faces <span class="op">=</span> <span class="st">"zmin"</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="geom_point_3d-2.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="geom_point_3d-3.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Use point-style references with custom shape</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mtcars</span>, <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span><span class="va">mpg</span>, <span class="va">wt</span>, <span class="va">qsec</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
@@ -257,14 +257,14 @@ are automatically depth-sorted for proper 3D rendering</p></li>
 <span class="r-in"><span>                ref_point_shape <span class="op">=</span> <span class="fl">4</span>, ref_point_size <span class="op">=</span> <span class="fl">2</span>,</span></span>
 <span class="r-in"><span>                ref_line_alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="geom_point_3d-3.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="geom_point_3d-4.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Show only circular reference projections (no original points)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mtcars</span>, <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span><span class="va">mpg</span>, <span class="va">wt</span>, <span class="va">qsec</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu">geom_point_3d</span><span class="op">(</span>raw_points <span class="op">=</span> <span class="cn">FALSE</span>, ref_points <span class="op">=</span> <span class="st">"circles"</span>, ref_lines <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
 <span class="r-in"><span>                ref_faces <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"zmin"</span>, <span class="st">"ymin"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="geom_point_3d-4.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="geom_point_3d-5.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Project to multiple faces with custom circle styling</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mtcars</span>, <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span><span class="va">mpg</span>, <span class="va">wt</span>, <span class="va">qsec</span>, color <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">cyl</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
@@ -274,13 +274,13 @@ are automatically depth-sorted for proper 3D rendering</p></li>
 <span class="r-in"><span>                ref_point_fill <span class="op">=</span> <span class="st">"white"</span>, ref_point_stroke <span class="op">=</span> <span class="fl">0.8</span>,</span></span>
 <span class="r-in"><span>                ref_circle_radius <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="geom_point_3d-5.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="geom_point_3d-6.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Disable depth scaling for uniform sizes</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mtcars</span>, <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span><span class="va">mpg</span>, <span class="va">wt</span>, <span class="va">qsec</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu">geom_point_3d</span><span class="op">(</span>scale_depth <span class="op">=</span> <span class="cn">FALSE</span>, size <span class="op">=</span> <span class="fl">3</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="geom_point_3d-6.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="geom_point_3d-7.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
