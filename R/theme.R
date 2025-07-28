@@ -5,7 +5,7 @@
 #'
 #' This function extends \code{ggplot2::element_rect()} to support transparency
 #' via an alpha parameter. It maintains full backward compatibility with the original
-#' \code{element_rect()} function while enabling transparent panel styling,
+#' \code{element_rect()} function while enabling transparent panel styling, which is
 #' particularly useful for foreground panels in 3D plots.
 #'
 #' @param fill Fill color for the rectangle. Use \code{NA} for no fill.
@@ -32,7 +32,7 @@
 #' ggplot(mtcars, aes(mpg, wt, qsec)) +
 #'   geom_point() +
 #'   coord_3d(panels = "all") +
-#'   theme(panel.background = element_rect(color = "black"),
+#'   theme(panel.border = element_rect(color = "black"),
 #'         panel.foreground = element_rect(fill = "blue", alpha = 0))
 #'
 #' @seealso \code{\link[ggplot2]{element_rect}} for the original function,

@@ -360,60 +360,71 @@ render_cube <- function(self, panel_params, theme, layer = "background"){
       }
 
       # 3. Render panel.border
-      if (show_border && !is.null(visible_faces)) {
-            tryCatch({
-                  face_corners <- make_face_panels(visible_faces, panel_params$scales, panel_params$ratio,
-                                                   list(x = panel_params$scale_info$x$limits,
-                                                        y = panel_params$scale_info$y$limits,
-                                                        z = panel_params$scale_info$z$limits))
-                  if (!is.null(face_corners) && nrow(face_corners) > 0) {
-                        face_corners_transformed <- transform_3d_standard(face_corners, panel_params$proj)
-                        face_corners_transformed$face <- face_corners$face
+      if (!is.null(visible_faces)) {
+            # Get the appropriate border element based on layer
+            if (layer == "foreground") {
+                  panel_border_element <- calc_element("panel.border.foreground", theme)
+            } else {
+                  panel_border_element <- calc_element("panel.border", theme)
+            }
 
-                        # Render only polygon *outlines*
-                        x_scaled <- (face_corners_transformed$x - panel_params$plot_bounds[1]) /
-                              (panel_params$plot_bounds[2] - panel_params$plot_bounds[1])
-                        y_scaled <- (face_corners_transformed$y - panel_params$plot_bounds[3]) /
-                              (panel_params$plot_bounds[4] - panel_params$plot_bounds[3])
+            show_border <- !inherits(panel_border_element, "element_blank")
 
-                        # Prepare outlines
-                        unique_faces <- unique(face_corners_transformed$face)
-                        face_depths <- sapply(unique_faces, function(f) {
-                              mean(face_corners_transformed$z[face_corners_transformed$face == f], na.rm = TRUE)
-                        })
-                        sorted_faces <- unique_faces[order(-face_depths)]
+            if (show_border) {
+                  tryCatch({
+                        face_corners <- make_face_panels(visible_faces, panel_params$scales, panel_params$ratio,
+                                                         list(x = panel_params$scale_info$x$limits,
+                                                              y = panel_params$scale_info$y$limits,
+                                                              z = panel_params$scale_info$z$limits))
+                        if (!is.null(face_corners) && nrow(face_corners) > 0) {
+                              face_corners_transformed <- transform_3d_standard(face_corners, panel_params$proj)
+                              face_corners_transformed$face <- face_corners$face
 
-                        all_x <- numeric()
-                        all_y <- numeric()
-                        polygon_ids <- numeric()
+                              # Render only polygon *outlines*
+                              x_scaled <- (face_corners_transformed$x - panel_params$plot_bounds[1]) /
+                                    (panel_params$plot_bounds[2] - panel_params$plot_bounds[1])
+                              y_scaled <- (face_corners_transformed$y - panel_params$plot_bounds[3]) /
+                                    (panel_params$plot_bounds[4] - panel_params$plot_bounds[3])
 
-                        pid <- 1
-                        for (face in sorted_faces) {
-                              idx <- which(face_corners_transformed$face == face)
-                              all_x <- c(all_x, x_scaled[idx][c(1, 3, 4, 2)])
-                              all_y <- c(all_y, y_scaled[idx][c(1, 3, 4, 2)])
-                              polygon_ids <- c(polygon_ids, rep(pid, 4))
-                              pid <- pid + 1
+                              # Prepare outlines
+                              unique_faces <- unique(face_corners_transformed$face)
+                              face_depths <- sapply(unique_faces, function(f) {
+                                    mean(face_corners_transformed$z[face_corners_transformed$face == f], na.rm = TRUE)
+                              })
+                              sorted_faces <- unique_faces[order(-face_depths)]
+
+                              all_x <- numeric()
+                              all_y <- numeric()
+                              polygon_ids <- numeric()
+
+                              pid <- 1
+                              for (face in sorted_faces) {
+                                    idx <- which(face_corners_transformed$face == face)
+                                    all_x <- c(all_x, x_scaled[idx][c(1, 3, 4, 2)])
+                                    all_y <- c(all_y, y_scaled[idx][c(1, 3, 4, 2)])
+                                    polygon_ids <- c(polygon_ids, rep(pid, 4))
+                                    pid <- pid + 1
+                              }
+
+                              border_grob <- grid::polygonGrob(
+                                    x = all_x,
+                                    y = all_y,
+                                    id = polygon_ids,
+                                    default.units = "npc",
+                                    gp = grid::gpar(
+                                          fill = NA,
+                                          col = panel_border_element$colour %||% "black",
+                                          lwd = (panel_border_element$linewidth %||% 0.5) * .pt,
+                                          lty = panel_border_element$linetype %||% 1
+                                    ),
+                                    name = paste0("panel.border.", layer, ".3d")
+                              )
+                              bg <- grid::grobTree(bg, border_grob, name = "panel.background.with.border")
                         }
-
-                        border_grob <- grid::polygonGrob(
-                              x = all_x,
-                              y = all_y,
-                              id = polygon_ids,
-                              default.units = "npc",
-                              gp = grid::gpar(
-                                    fill = NA,
-                                    col = panel_border$colour %||% "black",
-                                    lwd = (panel_border$linewidth %||% 0.5) * .pt,
-                                    lty = panel_border$linetype %||% 1
-                              ),
-                              name = "panel.border.3d"
-                        )
-                        bg <- grid::grobTree(bg, border_grob, name = "panel.background.with.border")
-                  }
-            }, error = function(e) {
-                  warning("Border rendering failed: ", e$message)
-            })
+                  }, error = function(e) {
+                        warning("Border rendering failed: ", e$message)
+                  })
+            }
       }
 
 

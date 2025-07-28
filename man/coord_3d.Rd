@@ -100,6 +100,7 @@ selection and axis label placement.
 \strong{Panel elements:}
 \itemize{
 \item \code{panel.foreground}: Styling for cube faces rendered in front of data (inherits from \code{panel.background})
+\item \code{panel.border.foreground}: Styling for cube faces rendered in front of data (inherits from \code{panel.border})
 \item \code{panel.grid.foreground}: Styling for grid lines on foreground faces (inherits from \code{panel.grid})
 \item \code{panel.grid.major.foreground}: Major grid lines on foreground faces (inherits from \code{panel.grid.foreground})
 }
@@ -110,9 +111,9 @@ selection and axis label placement.
 }
 
 The \code{panels} parameter controls which cube faces are rendered, while \code{theme()} controls their visual styling.
-Background panels use standard \code{panel.background}, \code{panel.grid}, etc., while foreground panels
+Background panels use standard \code{panel.background}, \code{panel.border}, \code{panel.grid}, etc., while foreground panels
 use the \verb{*.foreground} variants listed above. Since the foreground elements inherit from the standard background
-and grid elements, you can use \code{panel.background}, \code{panel.grid}, etc. to style both background and foreground faces simultaneously.
+and grid elements, you can use \code{panel.background}, etc. to style both background and foreground faces simultaneously.
 }
 
 \examples{

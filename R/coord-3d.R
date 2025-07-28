@@ -64,6 +64,7 @@
 #'
 #' **Panel elements:**
 #' - `panel.foreground`: Styling for cube faces rendered in front of data (inherits from `panel.background`)
+#' - `panel.border.foreground`: Styling for cube faces rendered in front of data (inherits from `panel.border`)
 #' - `panel.grid.foreground`: Styling for grid lines on foreground faces (inherits from `panel.grid`)
 #' - `panel.grid.major.foreground`: Major grid lines on foreground faces (inherits from `panel.grid.foreground`)
 #'
@@ -71,9 +72,9 @@
 #' - `element_rect()` supports an `alpha` parameter for transparency effects, particularly useful for `panel.foreground`
 #'
 #' The `panels` parameter controls which cube faces are rendered, while `theme()` controls their visual styling.
-#' Background panels use standard `panel.background`, `panel.grid`, etc., while foreground panels
+#' Background panels use standard `panel.background`, `panel.border`, `panel.grid`, etc., while foreground panels
 #' use the `*.foreground` variants listed above. Since the foreground elements inherit from the standard background
-#' and grid elements, you can use `panel.background`, `panel.grid`, etc. to style both background and foreground faces simultaneously.
+#' and grid elements, you can use `panel.background`, etc. to style both background and foreground faces simultaneously.
 #'
 #' @examples
 #' library(ggplot2)
