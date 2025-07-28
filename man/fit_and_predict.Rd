@@ -35,3 +35,4 @@ List with $fitted and optionally $se vectors
 \description{
 Fit and predict with 3D smoothing models
 }
+\keyword{internal}

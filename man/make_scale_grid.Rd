@@ -21,3 +21,4 @@ Data frame with grid lines in standard domain, including break values
 \description{
 Generate grid data using actual scale breaks with aspect ratio
 }
+\keyword{internal}

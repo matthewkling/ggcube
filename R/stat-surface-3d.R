@@ -33,6 +33,7 @@ StatSurface3D <- ggproto("StatSurface3D", Stat,
 #' @param grid_data Data frame with x, y, z columns on a regular grid
 #' @param light Lighting specification object
 #' @return Data frame with face vertices, normals, and lighting
+#' @keywords internal
 process_surface_grid <- function(grid_data, light = lighting()) {
 
       # Add grouping variable if not present (required for face processing)
@@ -76,6 +77,7 @@ process_surface_grid <- function(grid_data, light = lighting()) {
 #'
 #' @param face_data Data frame with unique faces containing dzdx and dzdy
 #' @return Matrix with normalized normal vectors (one row per face, 3 columns)
+#' @keywords internal
 compute_surface_normals <- function(face_data) {
       # Compute surface normals from gradients
       normals <- matrix(nrow = nrow(face_data), ncol = 3)
@@ -95,6 +97,7 @@ compute_surface_normals <- function(face_data) {
 #' @param faces Data frame with all face vertices
 #' @param face_data Data frame with unique faces
 #' @return Matrix with face centers (one row per face, 3 columns)
+#' @keywords internal
 calculate_surface_face_centers <- function(faces, face_data) {
       face_centers <- matrix(nrow = nrow(face_data), ncol = 3)
 
@@ -118,6 +121,7 @@ calculate_surface_face_centers <- function(faces, face_data) {
 #' @param face_centers Matrix of face centers
 #' @param light Lighting specification object
 #' @return Data frame with lighting values and normal components
+#' @keywords internal
 apply_surface_lighting <- function(face_data, normals, face_centers, light) {
       # Apply lighting models to the normals
       light_vals <- compute_lighting(normals, light, face_centers)
@@ -259,6 +263,7 @@ detect_grid_structure <- function(data) {
 #'
 #' @param data Regular grid data frame
 #' @return Data frame with quad faces and computed gradients
+#' @keywords internal
 create_grid_quads <- function(data) {
       data <- data %>%
             ungroup() %>%

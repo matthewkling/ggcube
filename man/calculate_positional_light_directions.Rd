@@ -17,3 +17,4 @@ Matrix with 3 columns (normalized light direction vectors)
 \description{
 Calculate per-face light directions for positional lighting
 }
+\keyword{internal}

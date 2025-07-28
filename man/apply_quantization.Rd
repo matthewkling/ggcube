@@ -19,3 +19,4 @@ Quantized lighting values mapped to \link{0, 1} range
 \description{
 Apply quantization to continuous lighting values
 }
+\keyword{internal}

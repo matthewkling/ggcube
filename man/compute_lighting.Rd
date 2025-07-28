@@ -26,3 +26,4 @@ Computes lighting values from surface normals using various lighting models.
 Supports both directional lighting (parallel rays) and positional lighting
 (point light sources with per-face light directions).
 }
+\keyword{internal}

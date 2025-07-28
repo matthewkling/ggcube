@@ -207,6 +207,7 @@ print.lighting <- function(x, ...) {
 #' @return Vector of lighting values. For most methods, returns numeric values.
 #'   For \code{method = "normal_rgb"}, returns hex color strings with \code{I()}
 #'   class for identity scaling.
+#' @keywords internal
 compute_lighting <- function(normals, lighting = lighting(), face_centers = NULL) {
 
       # Validate inputs
@@ -316,6 +317,7 @@ compute_lighting <- function(normals, lighting = lighting(), face_centers = NULL
 #' @param face_centers Matrix with 3 columns (x, y, z face center coordinates)
 #' @param light_position Numeric vector of length 3 (x, y, z light position)
 #' @return Matrix with 3 columns (normalized light direction vectors)
+#' @keywords internal
 calculate_positional_light_directions <- function(face_centers, light_position) {
       # Calculate light directions from each face center TO the light position
       light_vectors <- matrix(rep(light_position, nrow(face_centers)),
@@ -334,6 +336,7 @@ calculate_positional_light_directions <- function(face_centers, light_position) 
 #'
 #' @param light_dir Numeric vector of length 3
 #' @return Normalized light direction vector
+#' @keywords internal
 normalize_light_direction <- function(light_dir) {
       light_dir / sqrt(sum(light_dir^2))
 }
@@ -343,6 +346,7 @@ normalize_light_direction <- function(light_dir) {
 #' @param normals Matrix with 3 columns (x, y, z normal components)
 #' @param light_dir_norm Normalized light direction vector
 #' @return Vector of dot products
+#' @keywords internal
 compute_light_dot_products <- function(normals, light_dir_norm) {
       rowSums(normals * matrix(rep(light_dir_norm, nrow(normals)),
                                nrow = nrow(normals), byrow = TRUE))
@@ -356,6 +360,7 @@ compute_light_dot_products <- function(normals, light_dir_norm) {
 #' @param normals Matrix with 3 columns (x, y, z normal components)
 #' @param light_dir_norm Normalized light direction vector
 #' @return Character vector of hex color codes
+#' @keywords internal
 compute_normal_rgb_lighting <- function(normals, light_dir_norm) {
 
       # Target direction for white color in RGB space
@@ -413,6 +418,7 @@ compute_normal_rgb_lighting <- function(normals, light_dir_norm) {
 #' @param method Character string: "direct" or "diffuse"
 #' @param quanta Integer number of quantization levels
 #' @return Quantized lighting values mapped to [0, 1] range
+#' @keywords internal
 apply_quantization <- function(light_values, method, quanta) {
       if (method == "diffuse") {
             # Create n equal bins across [-1, 1]

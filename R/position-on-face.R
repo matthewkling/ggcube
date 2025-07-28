@@ -145,6 +145,7 @@ position_on_face <- function(faces = "zmin", axes = NULL) {
 #' cause incorrect rendering when used with position_on_face.
 #'
 #' @return NULL if compatible, otherwise issues a warning
+#' @keywords internal
 validate_position_stat <- function() {
       # Known incompatible stats
       incompatible_stats <- c(

@@ -15,3 +15,4 @@ Matrix of face normals (one row per face, 3 columns for x,y,z)
 \description{
 Calculate normals for voxel faces
 }
+\keyword{internal}

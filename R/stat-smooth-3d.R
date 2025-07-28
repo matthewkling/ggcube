@@ -128,6 +128,7 @@ StatSmooth3D <- ggproto("StatSmooth3D", Stat,
 #' @param se Logical, whether to compute standard errors
 #' @param level Confidence level (not used here, passed to create_confidence_surfaces)
 #' @return List with $fitted and optionally $se vectors
+#' @keywords internal
 fit_and_predict <- function(data, new_data, method, formula, method.args,
                             se = FALSE, level = 0.95){
 
@@ -345,7 +346,7 @@ gam_model <- function(){
 #'   scale_fill_manual(values = c("red", "darkorchid4", "steelblue"))
 #'
 #' # Color surface bands by uncertainty
-#' p + stat_smooth_3d(aes(fill = after_stat(se * 2)), se = T) +
+#' p + stat_smooth_3d(aes(fill = after_stat(se * 2)), se = TRUE) +
 #'   scale_fill_viridis_c()
 #'
 #' # Extend surface beyond data range (explicit extrapolation)

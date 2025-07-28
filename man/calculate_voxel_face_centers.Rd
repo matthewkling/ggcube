@@ -15,3 +15,4 @@ Matrix of face centers (one row per face, 3 columns for x,y,z)
 \description{
 Calculate face centers for voxel faces
 }
+\keyword{internal}

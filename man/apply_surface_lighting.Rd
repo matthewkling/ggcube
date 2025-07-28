@@ -21,3 +21,4 @@ Data frame with lighting values and normal components
 \description{
 Apply lighting models to surface normals
 }
+\keyword{internal}

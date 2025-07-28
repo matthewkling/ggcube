@@ -106,6 +106,7 @@ StatPillar3D <- ggproto("StatPillar3D", Stat,
 #' @param width Width factor (1.0 = full grid spacing)
 #' @param selected_faces Character vector of face names to render
 #' @return Data frame with pillar face vertices
+#' @keywords internal
 create_pillars <- function(data, x_spacing, y_spacing, width, selected_faces) {
 
       # Calculate actual pillar dimensions
@@ -203,6 +204,7 @@ create_pillars <- function(data, x_spacing, y_spacing, width, selected_faces) {
 #'
 #' @param pillar_faces Data frame with pillar face vertices
 #' @return Matrix of face normals (one row per face, 3 columns for x,y,z)
+#' @keywords internal
 calculate_pillar_face_normals <- function(pillar_faces) {
 
       if (nrow(pillar_faces) == 0) {

@@ -17,3 +17,4 @@ Vector of dot products
 \description{
 Compute dot products between normals and light direction
 }
+\keyword{internal}

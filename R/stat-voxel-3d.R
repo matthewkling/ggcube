@@ -122,6 +122,7 @@ StatVoxel3D <- ggproto("StatVoxel3D", Stat,
 #' @param width Width factor (1.0 = full grid spacing)
 #' @param selected_faces Character vector of face names to render
 #' @return Data frame with voxel face vertices
+#' @keywords internal
 create_voxels <- function(data, x_spacing, y_spacing, z_spacing, width, selected_faces) {
 
       voxel_width_x <- x_spacing * width
@@ -219,6 +220,7 @@ create_voxels <- function(data, x_spacing, y_spacing, z_spacing, width, selected
 #'
 #' @param voxel_faces Data frame with voxel face vertices
 #' @return Matrix of face normals (one row per face, 3 columns for x,y,z)
+#' @keywords internal
 calculate_voxel_face_normals <- function(voxel_faces) {
 
       if (nrow(voxel_faces) == 0) {
@@ -264,6 +266,7 @@ calculate_voxel_face_normals <- function(voxel_faces) {
 #'
 #' @param voxel_faces Data frame with voxel face vertices
 #' @return Matrix of face centers (one row per face, 3 columns for x,y,z)
+#' @keywords internal
 calculate_voxel_face_centers <- function(voxel_faces) {
 
       if (nrow(voxel_faces) == 0) {

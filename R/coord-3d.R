@@ -487,6 +487,7 @@ calculate_plot_bounds <- function(all_bounds_x, all_bounds_y){
 #'
 #' @param plot_obj A ggplot object
 #' @return A list with x, y, z character vectors of variable names
+#' @keywords internal
 extract_aesthetic_vars <- function(plot_obj) {
       x_vars <- character(0)
       y_vars <- character(0)
@@ -546,6 +547,7 @@ extract_aesthetic_vars <- function(plot_obj) {
 #' @param scale_obj Scale object (can be NULL for z-axis)
 #' @param axis_name Axis name ("x", "y", or "z")
 #' @return Single axis name string
+#' @keywords internal
 get_scale_names <- function(scale_obj, axis_name) {
 
       # CAPTURE SCALE NAME BEFORE BLANKING IT OUT
@@ -645,6 +647,7 @@ train_z_scale <- function(){
 #'
 #' @param theme_obj Theme object or theme list
 #' @return Logical indicating if theme appears to be void-like
+#' @keywords internal
 is_theme_void_like <- function(theme_obj) {
       if (is.null(theme_obj)) return(FALSE)
 
@@ -739,6 +742,7 @@ project_to_face <- function(data, data_std, proj){
 #' @param data Original data frame
 #' @param data_std Standardized data frame
 #' @return Data frame with circular polygons replacing ref_circle points
+#' @keywords internal
 points_to_circles <- function(data, data_std) {
 
       # Keep std coords and all other vars
@@ -772,6 +776,7 @@ points_to_circles <- function(data, data_std) {
 #' @param radius Circle radius in standardized units
 #' @param n_vertices Number of vertices for the circle
 #' @return Data frame with x, y, z coordinates for circle vertices
+#' @keywords internal
 generate_circle_vertices <- function(x_std, y_std, z_std, face, radius, n_vertices) {
       # Generate angles for circle vertices
       angles <- seq(0, 2 * pi, length.out = n_vertices + 1)[-(n_vertices + 1)]

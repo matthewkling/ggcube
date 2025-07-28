@@ -344,7 +344,7 @@ GeomPoint3D <- ggproto("GeomPoint3D", GeomPoint,
 #' library(ggplot2)
 #'
 #' # Basic 3D scatter plot with depth scaling
-#' ggplot(expand_grid(x = 1:5, y = 1:5, z = 1:5),
+#' ggplot(expand.grid(x = 1:5, y = 1:5, z = 1:5),
 #'        aes(x, y, z, fill = z)) +
 #'   geom_point_3d(size = 10, shape = 21, color = "white", stroke = .1) +
 #'   coord_3d(pitch = 40, roll = 5, yaw = 0, dist = 1.5) +

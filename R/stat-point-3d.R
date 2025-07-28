@@ -84,6 +84,7 @@ StatPoint3D <- ggproto("StatPoint3D", Stat,
 #' @param ref_circle_radius Radius for circular reference points
 #' @param ref_circle_vertices Number of vertices for circular reference points
 #' @return Data frame with reference elements
+#' @keywords internal
 generate_point_elements <- function(data, raw_points,
                                     ref_faces, ref_points, ref_lines,
                                     ref_circle_radius, ref_circle_vertices) {

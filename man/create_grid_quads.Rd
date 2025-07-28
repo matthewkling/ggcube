@@ -15,3 +15,4 @@ Data frame with quad faces and computed gradients
 \description{
 Create quadrilateral faces from grid data
 }
+\keyword{internal}

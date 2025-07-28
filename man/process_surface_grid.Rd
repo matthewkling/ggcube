@@ -19,3 +19,4 @@ Common pipeline for converting regular grid data into quadrilateral faces
 with surface normals, lighting, and blend parameters. Used by stat_surface_3d,
 stat_function_3d, and stat_smooth_3d.
 }
+\keyword{internal}

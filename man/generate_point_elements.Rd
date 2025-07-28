@@ -35,3 +35,4 @@ Data frame with reference elements
 \description{
 Generate reference elements with simplified approach
 }
+\keyword{internal}

@@ -21,3 +21,4 @@ Data frame with x, y, z coordinates for circle vertices
 \description{
 Generate circle vertices in 3D space for a given face
 }
+\keyword{internal}

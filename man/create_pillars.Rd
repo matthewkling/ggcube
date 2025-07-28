@@ -23,3 +23,4 @@ Data frame with pillar face vertices
 \description{
 Create pillar faces from grid data
 }
+\keyword{internal}

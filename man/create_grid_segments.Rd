@@ -17,3 +17,4 @@ Data frame with segment coordinates for grid grob
 \description{
 Create grid segments for rendering
 }
+\keyword{internal}

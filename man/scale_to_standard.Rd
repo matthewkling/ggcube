@@ -21,3 +21,4 @@ Scaled values in \link{-0.5, 0.5} domain (single axis) OR data frame with scaled
 \description{
 Scale data to standard domain with aspect ratio control
 }
+\keyword{internal}

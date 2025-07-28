@@ -17,3 +17,4 @@ Single axis name string
 \description{
 Get axis name for a single scale with proper fallback hierarchy
 }
+\keyword{internal}

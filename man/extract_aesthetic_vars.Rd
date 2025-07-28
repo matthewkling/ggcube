@@ -15,3 +15,4 @@ A list with x, y, z character vectors of variable names
 \description{
 Extract variable names from aesthetic mappings
 }
+\keyword{internal}

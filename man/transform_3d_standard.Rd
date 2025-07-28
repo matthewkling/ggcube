@@ -20,3 +20,4 @@ Data frame with transformed coordinates, depth for sorting, and depth_scale for 
 \description{
 Transform 3D points using rotation and optional perspective with viewpoint distance
 }
+\keyword{internal}

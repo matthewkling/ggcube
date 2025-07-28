@@ -15,3 +15,4 @@ Logical indicating if theme appears to be void-like
 \description{
 Check if theme is void-like (has multiple key elements set to element_blank)
 }
+\keyword{internal}

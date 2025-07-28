@@ -15,3 +15,4 @@ Matrix with normalized normal vectors (one row per face, 3 columns)
 \description{
 Compute surface normals from face gradients
 }
+\keyword{internal}

@@ -25,3 +25,4 @@ Data frame with voxel face vertices
 \description{
 Create voxel faces from 3D sparse data
 }
+\keyword{internal}

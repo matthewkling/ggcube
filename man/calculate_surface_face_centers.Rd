@@ -17,3 +17,4 @@ Matrix with face centers (one row per face, 3 columns)
 \description{
 Calculate face centers for positional lighting
 }
+\keyword{internal}

@@ -132,11 +132,11 @@ ggplot(spheres, aes(x, y, z, group = group)) +
   coord_3d(scales = "fixed")
 
 # For larger coordinate scales, increase alpha proportionally:
-sphere_large <- sphere_points * 100  # Scale up by 100x
-ggplot(sphere_large, aes(x, y, z = z)) +
-  stat_hull_3d(method = "alpha", alpha = 100, # Increase alpha ~100x
-            fill = "darkgreen", light = lighting(blend = "fill")) +
-  coord_3d()
+# sphere_large <- sphere_points * 100  # Scale up by 100x
+# ggplot(sphere_large, aes(x, y, z = z)) +
+#   stat_hull_3d(method = "alpha", alpha = 10, # Increase alpha ~100x
+#             fill = "darkgreen", light = lighting(blend = "fill")) +
+#   coord_3d()
 
 }
 \seealso{

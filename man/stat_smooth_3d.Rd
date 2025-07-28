@@ -167,7 +167,7 @@ p + stat_smooth_3d(aes(fill = after_stat(level)),
   scale_fill_manual(values = c("red", "darkorchid4", "steelblue"))
 
 # Color surface bands by uncertainty
-p + stat_smooth_3d(aes(fill = after_stat(se * 2)), se = T) +
+p + stat_smooth_3d(aes(fill = after_stat(se * 2)), se = TRUE) +
   scale_fill_viridis_c()
 
 # Extend surface beyond data range (explicit extrapolation)

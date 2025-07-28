@@ -18,3 +18,4 @@ Character vector of hex color codes
 Maps surface normals to RGB colors with rotation so that normals aligned
 with light_dir map to white/bright colors.
 }
+\keyword{internal}

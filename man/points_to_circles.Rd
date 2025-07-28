@@ -17,3 +17,4 @@ Data frame with circular polygons replacing ref_circle points
 \description{
 Convert ref_circle points to circular polygons
 }
+\keyword{internal}

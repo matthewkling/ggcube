@@ -14,3 +14,4 @@ This function walks parent frames to find the layer's stat and checks if it's
 compatible with position_on_face. Some stats have scale training conflicts that
 cause incorrect rendering when used with position_on_face.
 }
+\keyword{internal}

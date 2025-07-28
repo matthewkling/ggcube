@@ -15,3 +15,4 @@ Normalized light direction vector
 \description{
 Normalize light direction vector
 }
+\keyword{internal}
