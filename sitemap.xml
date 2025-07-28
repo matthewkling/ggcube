@@ -20,6 +20,7 @@
 <url><loc>https://matthewkling.github.io/ggcube/reference/create_grid_segments.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/create_pillars.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/create_voxels.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/detect_scale_direction_flip.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/element_rect.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/extract_aesthetic_vars.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/fit_and_predict.html</loc></url>
@@ -41,6 +42,7 @@
 <url><loc>https://matthewkling.github.io/ggcube/reference/process_surface_grid.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/rgb2hsl.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/rotate_3d.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/scale_to_npc_coordinates.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/scale_to_standard.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/scale_z_continuous.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/scale_z_discrete.html</loc></url>
@@ -54,6 +56,7 @@
 <url><loc>https://matthewkling.github.io/ggcube/reference/stat_surface_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/stat_voxel_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/transform_3d_standard.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/translate_face_names_from_flips.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/validate_position_stat.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/zlim.html</loc></url>
 </urlset>
