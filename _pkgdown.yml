@@ -21,3 +21,8 @@ reference:
   - scale_z_continuous
   - scale_z_discrete
   - zlim
+- title: Data
+- contents:
+  - mountain
+  - sphere_points
+  - lorenz_attractor

@@ -90,7 +90,7 @@ ggplot(mountain, aes(x, y, z)) +
       stat_surface_3d(aes(fill = z, color = z),
                       light = lighting(direction = c(1, 0, 1), blend = "both")) +
       scale_fill_viridis_c() + scale_color_viridis_c() +
-      coord_3d(yaw = 130, ratio = c(2, 2, 1))
+      coord_3d(ratio = c(1.5, 2, 1))
 ```
 
 <img src="man/figures/README-surfaces-1.png" width="100%" />
@@ -104,7 +104,7 @@ ggplot() +
             xlim = c(-pi, pi), ylim = c(-pi, pi),
             color = "black"
       ) +
-      coord_3d() +
+      coord_3d(yaw = 150) +
       theme_minimal()
 ```
 
@@ -134,15 +134,29 @@ ggplot(data, aes(x, y, z1, zmin = z2, fill = z2 - z1)) +
 
 <img src="man/figures/README-volumes-1.png" width="100%" />
 
-### Points and paths
+### Paths
 
-- `geom_point_3d()` creates 3D scatter plots with depth-scaled point
-  sizes and options to include reference lines and reference points
-  projecting 3D points onto 2D panel faces
-- `geom_path_3d()` (in prep)
+`geom_path_3d()` renders paths in 3D space with depth-based scaling and
+sorting:
 
-Example: A scatter plot with reference elements, using
-`geom_points_3d()`:
+``` r
+butterfly <- lorenz_attractor(n_points = 8000, dt = .01)
+ggplot(butterfly, aes(x, y, z, color = time)) +
+      geom_path_3d(linewidth = 0.1, color = "black",
+                   position = position_on_face(c("xmax", "ymax", "zmin"))) +
+      geom_path_3d(linewidth = 0.3) +
+      scale_color_gradientn(colors = c("blue", "purple", "red", "orange")) +
+      coord_3d() +
+      theme_light()
+```
+
+<img src="man/figures/README-paths-1.png" width="100%" />
+
+### Points
+
+`geom_point_3d()` creates 3D scatter plots with depth-scaled point sizes
+and options to include reference lines and reference points projecting
+3D points onto 2D panel faces:
 
 ``` r
 ggplot(mtcars, aes(mpg, wt, qsec, fill = factor(cyl))) +
@@ -159,7 +173,7 @@ ggplot(mtcars, aes(mpg, wt, qsec, fill = factor(cyl))) +
 Lighting of surface and prism layers is controlled by providing a
 `lighting()` specification. Light can be mapped to an aesthetic variable
 using `after_stat(light)`, or can be used to `blend` highlights and
-shadows into otherwise-defined color and fill aesthetics.
+shadows into otherwise-defined color and fill aesthetics:
 
 ``` r
 ggplot(sphere_points, aes(x, y, z)) +
@@ -193,7 +207,7 @@ ggplot(sphere_points, aes(x, y, z)) +
 ### Face projection
 
 3D and 2D layers can be mixed by using `position_on_face()` to project
-2D data onto cube faces.
+2D data onto cube faces:
 
 ``` r
 
@@ -202,8 +216,8 @@ ggplot(iris, aes(Sepal.Length, Sepal.Width, Petal.Length,
       stat_density_2d( # place 2D density plot on zmin face
             position = position_on_face(faces = "zmin", axes = c("x", "y")),
             geom = "polygon", alpha = .1, linewidth = .25) +
-      stat_hull_3d( # flatten 3D hull layer onto ymin face
-            position = position_on_face("ymin"), alpha = .5) +
+      stat_hull_3d( # flatten 3D hull layer onto ymax face
+            position = position_on_face("ymax"), alpha = .5) +
       stat_voxel_3d( # flatten 3D voxel onto xma face, to create 2D binned
             aes(round(Sepal.Length), round(Sepal.Width), round(Petal.Length)),
                     position = position_on_face("xmax"), alpha = .25) +
