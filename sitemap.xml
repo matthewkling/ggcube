@@ -26,8 +26,10 @@
 <url><loc>https://matthewkling.github.io/ggcube/reference/fit_and_predict.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/generate_circle_vertices.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/generate_point_elements.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/geom_path_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/geom_point_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/geom_polygon_3d.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/geom_segment_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/geom_smooth_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/get_scale_names.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/ggcube.html</loc></url>
@@ -35,7 +37,9 @@
 <url><loc>https://matthewkling.github.io/ggcube/reference/index.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/is_theme_void_like.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/lighting.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/lorenz_attractor.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/make_scale_grid.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/mountain.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/normalize_light_direction.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/points_to_circles.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/position_on_face.html</loc></url>
@@ -46,12 +50,15 @@
 <url><loc>https://matthewkling.github.io/ggcube/reference/scale_to_standard.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/scale_z_continuous.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/scale_z_discrete.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/sphere_points.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/stat_density_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/stat_function_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/stat_hull_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/stat_identity_3d.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/stat_path_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/stat_pillar_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/stat_point_3d.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/stat_segment_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/stat_smooth_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/stat_surface_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/stat_voxel_3d.html</loc></url>

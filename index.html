@@ -111,7 +111,7 @@
 <span>      <span class="fu"><a href="reference/stat_surface_3d.html">stat_surface_3d</a></span><span class="op">(</span><span class="fu"><a href="reference/aes.html">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="va">z</span>, color <span class="op">=</span> <span class="va">z</span><span class="op">)</span>,</span>
 <span>                      light <span class="op">=</span> <span class="fu"><a href="reference/lighting.html">lighting</a></span><span class="op">(</span>direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, blend <span class="op">=</span> <span class="st">"both"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_c</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_color_viridis_c</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>      <span class="fu"><a href="reference/coord_3d.html">coord_3d</a></span><span class="op">(</span>yaw <span class="op">=</span> <span class="fl">130</span>, ratio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span>      <span class="fu"><a href="reference/coord_3d.html">coord_3d</a></span><span class="op">(</span>ratio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1.5</span>, <span class="fl">2</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p><img src="reference/figures/README-surfaces-1.png" width="100%"></p>
 <p>Example: a mathematical surface using <code><a href="reference/stat_function_3d.html">stat_function_3d()</a></code>:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
@@ -121,7 +121,7 @@
 <span>            xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="va">pi</span>, <span class="va">pi</span><span class="op">)</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="va">pi</span>, <span class="va">pi</span><span class="op">)</span>,</span>
 <span>            color <span class="op">=</span> <span class="st">"black"</span></span>
 <span>      <span class="op">)</span> <span class="op">+</span></span>
-<span>      <span class="fu"><a href="reference/coord_3d.html">coord_3d</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>      <span class="fu"><a href="reference/coord_3d.html">coord_3d</a></span><span class="op">(</span>yaw <span class="op">=</span> <span class="fl">150</span><span class="op">)</span> <span class="op">+</span></span>
 <span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p><img src="reference/figures/README-functions-1.png" width="100%"></p>
 </div>
@@ -153,16 +153,25 @@
 <p><img src="reference/figures/README-volumes-1.png" width="100%"></p>
 </div>
 <div class="section level3">
-<h3 id="points-and-paths">Points and paths<a class="anchor" aria-label="anchor" href="#points-and-paths"></a>
+<h3 id="paths">Paths<a class="anchor" aria-label="anchor" href="#paths"></a>
 </h3>
-<ul>
-<li>
-<code><a href="reference/geom_point_3d.html">geom_point_3d()</a></code> creates 3D scatter plots with depth-scaled point sizes and options to include reference lines and reference points projecting 3D points onto 2D panel faces</li>
-<li>
-<code>geom_path_3d()</code> (in prep)</li>
-</ul>
-<p>Example: A scatter plot with reference elements, using <code>geom_points_3d()</code>:</p>
+<p><code><a href="reference/geom_path_3d.html">geom_path_3d()</a></code> renders paths in 3D space with depth-based scaling and sorting:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">butterfly</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/lorenz_attractor.html">lorenz_attractor</a></span><span class="op">(</span>n_points <span class="op">=</span> <span class="fl">8000</span>, dt <span class="op">=</span> <span class="fl">.01</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">butterfly</span>, <span class="fu"><a href="reference/aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span>, color <span class="op">=</span> <span class="va">time</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>      <span class="fu"><a href="reference/geom_path_3d.html">geom_path_3d</a></span><span class="op">(</span>linewidth <span class="op">=</span> <span class="fl">0.1</span>, color <span class="op">=</span> <span class="st">"black"</span>,</span>
+<span>                   position <span class="op">=</span> <span class="fu"><a href="reference/position_on_face.html">position_on_face</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"xmax"</span>, <span class="st">"ymax"</span>, <span class="st">"zmin"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>      <span class="fu"><a href="reference/geom_path_3d.html">geom_path_3d</a></span><span class="op">(</span>linewidth <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span> <span class="op">+</span></span>
+<span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_gradient.html" class="external-link">scale_color_gradientn</a></span><span class="op">(</span>colors <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"blue"</span>, <span class="st">"purple"</span>, <span class="st">"red"</span>, <span class="st">"orange"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>      <span class="fu"><a href="reference/coord_3d.html">coord_3d</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_light</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p><img src="reference/figures/README-paths-1.png" width="100%"></p>
+</div>
+<div class="section level3">
+<h3 id="points">Points<a class="anchor" aria-label="anchor" href="#points"></a>
+</h3>
+<p><code><a href="reference/geom_point_3d.html">geom_point_3d()</a></code> creates 3D scatter plots with depth-scaled point sizes and options to include reference lines and reference points projecting 3D points onto 2D panel faces:</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mtcars</span>, <span class="fu"><a href="reference/aes.html">aes</a></span><span class="op">(</span><span class="va">mpg</span>, <span class="va">wt</span>, <span class="va">qsec</span>, fill <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">cyl</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>      <span class="fu"><a href="reference/geom_point_3d.html">geom_point_3d</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">5</span>, shape <span class="op">=</span> <span class="fl">21</span>, color <span class="op">=</span> <span class="st">"black"</span>, stroke <span class="op">=</span> <span class="fl">.1</span>,</span>
 <span>                    ref_lines <span class="op">=</span> <span class="cn">TRUE</span>, ref_points <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -173,8 +182,8 @@
 <div class="section level3">
 <h3 id="lighting-effects">Lighting effects<a class="anchor" aria-label="anchor" href="#lighting-effects"></a>
 </h3>
-<p>Lighting of surface and prism layers is controlled by providing a <code><a href="reference/lighting.html">lighting()</a></code> specification. Light can be mapped to an aesthetic variable using <code>after_stat(light)</code>, or can be used to <code>blend</code> highlights and shadows into otherwise-defined color and fill aesthetics.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<p>Lighting of surface and prism layers is controlled by providing a <code><a href="reference/lighting.html">lighting()</a></code> specification. Light can be mapped to an aesthetic variable using <code>after_stat(light)</code>, or can be used to <code>blend</code> highlights and shadows into otherwise-defined color and fill aesthetics:</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">sphere_points</span>, <span class="fu"><a href="reference/aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>      <span class="fu"><a href="reference/stat_hull_3d.html">stat_hull_3d</a></span><span class="op">(</span> <span class="co"># blend shadow lighting into solid color/fill</span></span>
 <span>            fill <span class="op">=</span> <span class="st">"gray50"</span>, color <span class="op">=</span> <span class="st">"gray50"</span>,</span>
@@ -204,16 +213,16 @@
 <div class="section level3">
 <h3 id="face-projection">Face projection<a class="anchor" aria-label="anchor" href="#face-projection"></a>
 </h3>
-<p>3D and 2D layers can be mixed by using <code><a href="reference/position_on_face.html">position_on_face()</a></code> to project 2D data onto cube faces.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<p>3D and 2D layers can be mixed by using <code><a href="reference/position_on_face.html">position_on_face()</a></code> to project 2D data onto cube faces:</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">iris</span>, <span class="fu"><a href="reference/aes.html">aes</a></span><span class="op">(</span><span class="va">Sepal.Length</span>, <span class="va">Sepal.Width</span>, <span class="va">Petal.Length</span>, </span>
 <span>                 color <span class="op">=</span> <span class="va">Species</span>, fill <span class="op">=</span> <span class="va">Species</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_density_2d.html" class="external-link">stat_density_2d</a></span><span class="op">(</span> <span class="co"># place 2D density plot on zmin face</span></span>
 <span>            position <span class="op">=</span> <span class="fu"><a href="reference/position_on_face.html">position_on_face</a></span><span class="op">(</span>faces <span class="op">=</span> <span class="st">"zmin"</span>, axes <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"x"</span>, <span class="st">"y"</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>            geom <span class="op">=</span> <span class="st">"polygon"</span>, alpha <span class="op">=</span> <span class="fl">.1</span>, linewidth <span class="op">=</span> <span class="fl">.25</span><span class="op">)</span> <span class="op">+</span></span>
-<span>      <span class="fu"><a href="reference/stat_hull_3d.html">stat_hull_3d</a></span><span class="op">(</span> <span class="co"># flatten 3D hull layer onto ymin face</span></span>
-<span>            position <span class="op">=</span> <span class="fu"><a href="reference/position_on_face.html">position_on_face</a></span><span class="op">(</span><span class="st">"ymin"</span><span class="op">)</span>, alpha <span class="op">=</span> <span class="fl">.5</span><span class="op">)</span> <span class="op">+</span></span>
+<span>      <span class="fu"><a href="reference/stat_hull_3d.html">stat_hull_3d</a></span><span class="op">(</span> <span class="co"># flatten 3D hull layer onto ymax face</span></span>
+<span>            position <span class="op">=</span> <span class="fu"><a href="reference/position_on_face.html">position_on_face</a></span><span class="op">(</span><span class="st">"ymax"</span><span class="op">)</span>, alpha <span class="op">=</span> <span class="fl">.5</span><span class="op">)</span> <span class="op">+</span></span>
 <span>      <span class="fu"><a href="reference/stat_voxel_3d.html">stat_voxel_3d</a></span><span class="op">(</span> <span class="co"># flatten 3D voxel onto xma face, to create 2D binned</span></span>
 <span>            <span class="fu"><a href="reference/aes.html">aes</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">Sepal.Length</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">Sepal.Width</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">Petal.Length</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>                    position <span class="op">=</span> <span class="fu"><a href="reference/position_on_face.html">position_on_face</a></span><span class="op">(</span><span class="st">"xmax"</span><span class="op">)</span>, alpha <span class="op">=</span> <span class="fl">.25</span><span class="op">)</span> <span class="op">+</span></span>
