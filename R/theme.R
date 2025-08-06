@@ -43,7 +43,7 @@ element_rect <- function(fill = NULL, colour = NULL, linewidth = NULL, linetype 
                          alpha = NULL) {
 
       if (lifecycle::is_present(size)) {
-            deprecate_soft0("3.4.0", "element_rect(size)", "element_rect(linewidth)")
+            lifecycle::deprecate_soft("3.4.0", "element_rect(size)", "element_rect(linewidth)")
             linewidth <- size
       }
       if (!is.null(color))

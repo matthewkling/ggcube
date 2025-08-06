@@ -146,6 +146,8 @@ GeomSegment3D <- ggproto("GeomSegment3D", Geom,
                          draw_panel = function(data, panel_params, coord, scale_depth = TRUE,
                                                arrow = NULL, lineend = "butt", na.rm = FALSE) {
 
+                               validate_coord3d(coord)
+
                                if (nrow(data) == 0) {
                                      return(grid::nullGrob())
                                }

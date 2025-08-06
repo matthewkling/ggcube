@@ -250,9 +250,15 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                                fill = "grey80", colour = NA, linewidth = 0.1, linetype = 1, alpha = 1
                          ),
 
-                         draw_panel = function(data, panel_params, coord, scale_depth = TRUE) {
+                         draw_panel = function(data, panel_params, coord,
+                                               sort_method = "auto", scale_depth = TRUE) {
+
+                               # Parameter validation
+                               validate_coord3d(coord)
+                               sort_method <- match.arg(sort_method, c("auto", "pairwise", "painter"))
 
                                # Transform data
+                               data$.sort_method <- sort_method
                                coords <- coord$transform(data, panel_params)
 
                                # Scale linewidths by depth
@@ -289,7 +295,7 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                                            gp = grid::gpar(
                                                  col = poly_data$colour[1],
                                                  fill = poly_data$fill[1],
-                                                 lwd = poly_data$linewidth[1] * .pt,
+                                                 lwd = mean(poly_data$linewidth) * .pt,
                                                  lty = poly_data$linetype[1],
                                                  alpha = alpha_val
                                            ),
@@ -315,6 +321,19 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
 #' @param data The data to be displayed in this layer.
 #' @param stat The statistical transformation to use on the data. Defaults to
 #'   [StatIdentity3D] for proper discrete scale handling and group preservation.
+#' @param sort_method Character indicating algorithm used to determine the order in which
+#'   polygons are rendered.
+#'   \itemize{
+#'     \item \code{"painter"}: Polygons are sorted by the mean depth (distance from viewer after
+#'     rotation) of their vertices. This is fast, but can give incorrect results in certain cases.
+#'     \item \code{"pairwise"}: A more intensive sorting algorithm that compares every pair of
+#'     polygons in 3D to determine which face should be rendered behind the other;
+#'     slower but more accurate.
+#'     \item \code{"auto"}: The default. Uses pairwise if polygon data has less
+#'     than 500 rows and painter otherwise.
+#'   }
+#' @param scale_depth Logical indicating whether polygon linewidths should be scaled to make closer lines
+#'    wider and farther lines narrower. Default is TRUE. Scaling is based on the mean depth of a polygon.
 #' @param position Position adjustment, defaults to "identity".
 #' @param ... Other arguments passed on to [layer()].
 #' @param na.rm If `FALSE`, missing values are removed with a warning.
@@ -352,13 +371,30 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
 #'   geom_polygon_3d(color = "black") +
 #'   coord_3d()
 #'
+#' # Use `sort_method` to choose between depth sorting algorithms
+#' d <- data.frame(group = rep(letters[1:3], each = 4),
+#'                 x = c(1, 1, 2, 2,   1, 1, 3, 3,   2, 2, 3, 3),
+#'                 y = rep(c(1, 2, 2, 1), 3),
+#'                 z = rep(c(1, 1.5, 2), each = 4))
+#' p <- ggplot(d, aes(x, y, z, group = group, fill = group)) +
+#'       coord_3d(pitch = 50, roll = 20, yaw = 0, scales = "fixed") +
+#'       theme_light()
+#' # fast, but rendering order is incorrect in this particular example
+#' p + geom_polygon_3d(color = "black", linewidth = 1, alpha = .75,
+#'       sort_method = "painter")
+#' # correct rendering order (but slow for large data sets)
+#' p + geom_polygon_3d(color = "black", linewidth = 1, alpha = .75,
+#'       sort_method = "pairwise")
+#'
 #' @export
 geom_polygon_3d <- function(mapping = NULL, data = NULL, stat = StatIdentity3D,
+                            sort_method = "auto", scale_depth = TRUE,
                             position = "identity", ..., na.rm = FALSE,
                             show.legend = NA, inherit.aes = TRUE) {
+
       layer(
             geom = GeomPolygon3D, mapping = mapping, data = data, stat = stat,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
-            params = list(na.rm = na.rm, ...)
+            params = list(sort_method = sort_method, scale_depth = scale_depth, na.rm = na.rm, ...)
       )
 }

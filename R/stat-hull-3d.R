@@ -150,7 +150,8 @@ StatHull3D <- ggproto("StatHull3D", Stat,
 #' @param geom The geometric object to use display the data. Defaults to
 #'   [GeomPolygon3D] for proper 3D depth sorting.
 #' @param position Position adjustment, defaults to "identity".
-#' @param ... Other arguments passed on to [layer()].
+#' @param ... Other arguments passed on to `layer()`, such as `sort_method` and `scale_depth`
+#'    arguments to `geom_polygon_3d()`.
 #' @param method Triangulation method. Either:
 #'   - `"convex"`: Convex hull triangulation (works well for convex shapes like spheres, default)
 #'   - `"alpha"`: Alpha shape triangulation (can capture non-convex topologies like toruses)
@@ -207,7 +208,7 @@ StatHull3D <- ggproto("StatHull3D", Stat,
 #' @examples
 #' library(ggplot2)
 #'
-#' # Convex hull (reliable default, no scale sensitivity)
+#' # Convex hull
 #' ggplot(sphere_points, aes(x, y, z = z)) +
 #'   stat_hull_3d(aes(fill = after_stat(light)), method = "convex") +
 #'   scale_fill_gradient(low = "black", high = "white") +

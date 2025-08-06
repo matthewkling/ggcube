@@ -64,7 +64,7 @@ If \code{FALSE}, missing values will cause an error. Default is \code{FALSE}.}
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics.}
 
 \item{...}{Other arguments passed on to \code{\link[=layer]{layer()}}, such as \code{colour}, \code{fill},
-\code{alpha}, etc.}
+\code{alpha}, etc, or \code{sort_method} and \code{scale_depth} arguments to \code{geom_polygon_3d()}.}
 }
 \description{
 Creates 3D surfaces from 2D point data using kernel density estimation.

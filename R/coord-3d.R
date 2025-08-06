@@ -922,52 +922,6 @@ generate_circle_vertices <- function(x_std, y_std, z_std, face, radius, n_vertic
 }
 
 
-
-# Hierarchical depth sorting
-# split `group` into levels by `__`, and sort by group-level mean/max depth
-# this prevents depth-sorting within lowest-level group, to preserve vertex order
-sort_by_depth <- function(data) {
-
-      # Add vertex order within each group
-      data <- data %>%
-            group_by(group) %>%
-            mutate(.vertex_order = row_number()) %>%
-            ungroup()
-
-      if("depth_3d" %in% names(data)) {
-            # Face-positioned data
-            # sort among faces using final position, and within using 3d position
-            data <- data %>%
-                  tidyr::separate(group, c("level1", "level2"), sep = "__",
-                                  remove = FALSE, extra = "merge") %>%
-                  group_by(level1) %>% mutate(depth1 = max(depth)) %>%
-                  group_by(level2) %>% mutate(depth2 = mean(depth_3d)) %>%
-                  ungroup() %>%
-                  arrange(desc(depth1), desc(depth2), group, .vertex_order) %>%
-                  select(-level1, -level2, -depth1, -depth2, -.vertex_order)
-      } else if (any(grepl("__", data$group))) {
-            # Hierarchical sorting
-            data <- data %>%
-                  tidyr::separate(group, c("level1", "level2"), sep = "__",
-                                  remove = FALSE, extra = "merge") %>%
-                  group_by(level1) %>% mutate(depth1 = max(depth)) %>%
-                  group_by(level2) %>% mutate(depth2 = mean(depth)) %>%
-                  ungroup() %>%
-                  arrange(desc(depth1), desc(depth2), group, .vertex_order) %>%
-                  select(-level1, -level2, -depth1, -depth2, -.vertex_order)
-      } else {
-            # Simple sorting
-            data <- data %>%
-                  group_by(group) %>%
-                  mutate(group_depth = mean(depth)) %>%
-                  ungroup() %>%
-                  arrange(desc(group_depth), group, .vertex_order) %>%
-                  select(-group_depth, -.vertex_order)
-      }
-
-      return(data)
-}
-
 #' Scale transformed coordinates to final npc coordinates
 #'
 #' @param result Data frame with transformed x, y coordinates
@@ -979,3 +933,8 @@ scale_to_npc_coordinates <- function(result, plot_bounds) {
       result$y <- (result$y - plot_bounds[3]) / (plot_bounds[4] - plot_bounds[3])
       return(result)
 }
+
+validate_coord3d <- function(coord){
+      stopifnot("Did you forget to add `coord_3d()` to your plot?" = inherits(coord, "Coord3D"))
+}
+

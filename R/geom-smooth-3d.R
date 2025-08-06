@@ -18,6 +18,7 @@ GeomSmooth3D <- ggproto("GeomSmooth3D", Geom,
                                data$linewidth <- merge_aes(data$linewidth, data$se.linewidth)
 
                                # Transform data
+                               validate_coord3d(coord)
                                coords <- coord$transform(data, panel_params)
 
                                # Scale linewidths by depth

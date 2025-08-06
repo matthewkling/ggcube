@@ -53,7 +53,8 @@ if mapped, otherwise defaults to the minimum \code{z} value in the data.}
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics.}
 
-\item{...}{Other arguments passed on to \code{\link[=layer]{layer()}}.}
+\item{...}{Other arguments passed on to \code{layer()}, such as \code{sort_method} and \code{scale_depth}
+arguments to \code{geom_polygon_3d()}.}
 }
 \description{
 Creates 3D pillar visualizations from grid data (regular or sparse).

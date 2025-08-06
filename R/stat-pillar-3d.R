@@ -275,7 +275,8 @@ calculate_pillar_face_normals <- function(pillar_faces) {
 #' @param zmin Base level for all pillars. When provided as a parameter, overrides any
 #'   \code{zmin} aesthetic mapping. If \code{NULL} (default), uses the \code{zmin} aesthetic
 #'   if mapped, otherwise defaults to the minimum \code{z} value in the data.
-#' @param ... Other arguments passed on to [layer()].
+#' @param ... Other arguments passed on to `layer()`, such as `sort_method` and `scale_depth`
+#'    arguments to `geom_polygon_3d()`.
 #'
 #' @section Aesthetics:
 #' `stat_pillar_3d()` requires the following aesthetics:

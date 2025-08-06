@@ -140,7 +140,8 @@ StatFunction3D <- ggproto("StatFunction3D", Stat,
 #'   or a vector of length 2 specifying `c(nx, ny)` for different resolutions.
 #'   Default is 50. Higher values create smoother surfaces but slower rendering.
 #' @param light A lighting specification object created by [lighting()]
-#' @param ... Other arguments passed on to [layer()].
+#' @param ... Other arguments passed on to `layer()`, such as `sort_method` and `scale_depth`
+#'    arguments to `geom_polygon_3d()`.
 #'
 #' @section Aesthetics:
 #' `stat_function_3d()` generates its own x, y, z coordinates, so typically no

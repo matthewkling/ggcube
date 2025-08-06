@@ -21,7 +21,8 @@ GeomPoint3D <- ggproto("GeomPoint3D", GeomPoint,
                                              ref_line_colour = NULL, ref_line_linewidth = 0.25, ref_line_linetype = NULL, ref_line_alpha = NULL,
                                              ref_point_colour = NULL, ref_point_fill = NULL, ref_point_alpha = NULL, ref_point_size = NULL, ref_point_stroke = NULL, ref_point_shape = NULL) {
 
-                             # Transform data through coordinate system
+                             # Transform data
+                             validate_coord3d(coord)
                              data$ref_circle_radius <- data$ref_circle_radius / 100
                              coords <- coord$transform(data, panel_params)
 

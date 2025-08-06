@@ -324,7 +324,8 @@ calculate_voxel_face_centers <- function(voxel_faces) {
 #'   }
 #'   Valid face names: "xmin", "xmax", "ymin", "ymax", "zmin", "zmax".
 #' @param light A lighting specification object created by \code{lighting()}
-#' @param ... Other arguments passed on to [layer()].
+#' @param ... Other arguments passed on to `layer()`, such as `sort_method` and `scale_depth`
+#'    arguments to `geom_polygon_3d()`.
 #'
 #' @section Aesthetics:
 #' `stat_voxel_3d()` requires the following aesthetics:

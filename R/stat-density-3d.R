@@ -130,7 +130,7 @@ StatDensity3D <- ggproto("StatDensity3D", Stat,
 #'   shown for multiple groups, as in the example below. Default is 0 (no filtering).
 #' @param light A lighting specification object created by [lighting()]
 #' @param ... Other arguments passed on to [layer()], such as `colour`, `fill`,
-#'   `alpha`, etc.
+#'   `alpha`, etc, or `sort_method` and `scale_depth` arguments to `geom_polygon_3d()`.
 #'
 #' @section Aesthetics:
 #' `stat_density_3d()` requires the following aesthetics from input data:

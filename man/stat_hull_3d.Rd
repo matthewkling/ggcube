@@ -41,7 +41,8 @@ are extremely sensitive to the coordinate scales of your data. See Details secti
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics.}
 
-\item{...}{Other arguments passed on to \code{\link[=layer]{layer()}}.}
+\item{...}{Other arguments passed on to \code{layer()}, such as \code{sort_method} and \code{scale_depth}
+arguments to \code{geom_polygon_3d()}.}
 }
 \description{
 \code{stat_hull_3d()} turns 3D point clouds into surface hulls consisting of triangular polygons,
@@ -112,7 +113,7 @@ Computed variables can be accessed using \code{\link[=after_stat]{after_stat()}}
 \examples{
 library(ggplot2)
 
-# Convex hull (reliable default, no scale sensitivity)
+# Convex hull
 ggplot(sphere_points, aes(x, y, z = z)) +
   stat_hull_3d(aes(fill = after_stat(light)), method = "convex") +
   scale_fill_gradient(low = "black", high = "white") +

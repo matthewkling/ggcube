@@ -56,7 +56,8 @@ If \code{FALSE}, missing values will cause an error. Default is \code{FALSE}.}
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics.}
 
-\item{...}{Other arguments passed on to \code{\link[=layer]{layer()}}.}
+\item{...}{Other arguments passed on to \code{layer()}, such as \code{sort_method} and \code{scale_depth}
+arguments to \code{geom_polygon_3d()}.}
 }
 \description{
 Creates 3D surfaces by evaluating a function f(x,y) = z over a regular grid.
