@@ -50,7 +50,7 @@ various lighting models to create realistic 3D surface visualizations.</p>
 <span>  geom <span class="op">=</span> <span class="va">GeomPolygon3D</span>,</span>
 <span>  position <span class="op">=</span> <span class="st">"identity"</span>,</span>
 <span>  method <span class="op">=</span> <span class="st">"convex"</span>,</span>
-<span>  alpha <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  radius <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  light <span class="op">=</span> <span class="fu"><a href="lighting.html">lighting</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  inherit.aes <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  <span class="va">...</span></span>
@@ -81,14 +81,16 @@ GeomPolygon3D for proper 3D depth sorting.</p></dd>
 
 
 <dt id="arg-method">method<a class="anchor" aria-label="anchor" href="#arg-method"></a></dt>
-<dd><p>Triangulation method. Either:</p><ul><li><p><code>"convex"</code>: Convex hull triangulation (works well for convex shapes like spheres, default)</p></li>
-<li><p><code>"alpha"</code>: Alpha shape triangulation (can capture non-convex topologies like toruses)</p></li>
+<dd><p>Triangulation method. Either:</p><ul><li><p><code>"convex"</code>: Convex hull triangulation (default)</p></li>
+<li><p><code>"alpha"</code>: Alpha shape triangulation (can capture non-convex topologies)</p></li>
 </ul></dd>
 
 
-<dt id="arg-alpha">alpha<a class="anchor" aria-label="anchor" href="#arg-alpha"></a></dt>
-<dd><p>Alpha parameter for alpha shape triangulation. <strong>IMPORTANT:</strong> Alpha shapes
-are extremely sensitive to the coordinate scales of your data. See Details section.</p></dd>
+<dt id="arg-radius">radius<a class="anchor" aria-label="anchor" href="#arg-radius"></a></dt>
+<dd><p>Square root of "alpha" parameter when alpha method is used.
+A face is included in the resulting alpha shape if it can be "exposed" by a sphere of this radius.
+If NULL (the default), a simple heuristic based on the data scale is used to calculate a radius value.
+Note that alpha shapes are quite sensitive to the coordinate scales of your data. See Details section.</p></dd>
 
 
 <dt id="arg-light">light<a class="anchor" aria-label="anchor" href="#arg-light"></a></dt>
@@ -118,7 +120,7 @@ Each group will get its own independent hull calculation.</p>
 
 <p><strong>Alpha shape method is highly sensitive to coordinate scales.</strong> The <code>alpha</code> parameter
 that works for data scaled 0-1 will likely fail for data scaled 0-1000.</p>
-<p><strong>Guidelines for choosing alpha:</strong></p><ul><li><p>Start with <code>alpha = 1.0</code> and adjust based on results</p></li>
+<p><strong>Guidelines for choosing radius:</strong></p><ul><li><p>Start with <code>alpha = 1.0</code> and adjust based on results</p></li>
 <li><p>For data with mixed scales (e.g., x: 0-1, y: 0-1000), consider rescaling your data first</p></li>
 <li><p>Larger alpha values → smoother, more connected surfaces</p></li>
 <li><p>Smaller alpha values → more detailed surfaces, but may fragment</p></li>
@@ -164,16 +166,16 @@ default geometry with depth sorting, <code><a href="lighting.html">lighting()</a
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Convex hull</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">sphere_points</span>, <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, z <span class="op">=</span> <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
-<span class="r-in"><span>  <span class="fu">stat_hull_3d</span><span class="op">(</span><span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat</a></span><span class="op">(</span><span class="va">light</span><span class="op">)</span><span class="op">)</span>, method <span class="op">=</span> <span class="st">"convex"</span><span class="op">)</span> <span class="op">+</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_gradient.html" class="external-link">scale_fill_gradient</a></span><span class="op">(</span>low <span class="op">=</span> <span class="st">"black"</span>, high <span class="op">=</span> <span class="st">"white"</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">sphere_points</span>, <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span>  <span class="fu">stat_hull_3d</span><span class="op">(</span>method <span class="op">=</span> <span class="st">"convex"</span>, fill <span class="op">=</span> <span class="st">"gray40"</span>,</span></span>
+<span class="r-in"><span>               light <span class="op">=</span> <span class="fu"><a href="lighting.html">lighting</a></span><span class="op">(</span>shade <span class="op">=</span> <span class="st">"fill"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="stat_hull_3d-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Alpha shape (scale-sensitive - alpha ~1 works for unit sphere)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">sphere_points</span>, <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, z <span class="op">=</span> <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
-<span class="r-in"><span>  <span class="fu">stat_hull_3d</span><span class="op">(</span><span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat</a></span><span class="op">(</span><span class="va">light</span><span class="op">)</span><span class="op">)</span>, method <span class="op">=</span> <span class="st">"alpha"</span>, alpha <span class="op">=</span> <span class="fl">1.0</span><span class="op">)</span> <span class="op">+</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_gradient.html" class="external-link">scale_fill_gradient</a></span><span class="op">(</span>low <span class="op">=</span> <span class="st">"black"</span>, high <span class="op">=</span> <span class="st">"white"</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span><span class="co"># Alpha shape (scale-sensitive - radius ~1 works for unit sphere)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">sphere_points</span>, <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span>  <span class="fu">stat_hull_3d</span><span class="op">(</span>method <span class="op">=</span> <span class="st">"alpha"</span>, radius <span class="op">=</span> <span class="fl">1</span>, fill <span class="op">=</span> <span class="st">"gray40"</span>,</span></span>
+<span class="r-in"><span>               light <span class="op">=</span> <span class="fu"><a href="lighting.html">lighting</a></span><span class="op">(</span>shade <span class="op">=</span> <span class="st">"fill"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="stat_hull_3d-2.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
@@ -181,16 +183,18 @@ default geometry with depth sorting, <code><a href="lighting.html">lighting()</a
 <span class="r-in"><span><span class="va">spheres</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span><span class="va">sphere_points</span>, group <span class="op">=</span> <span class="st">"a"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                 <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span><span class="va">sphere_points</span>, group <span class="op">=</span> <span class="st">"b"</span>, x <span class="op">=</span> <span class="va">x</span> <span class="op">+</span> <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">spheres</span>, <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span>, group <span class="op">=</span> <span class="va">group</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
-<span class="r-in"><span>  <span class="fu">stat_hull_3d</span><span class="op">(</span><span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="va">group</span><span class="op">)</span>, light <span class="op">=</span> <span class="fu"><a href="lighting.html">lighting</a></span><span class="op">(</span>blend <span class="op">=</span> <span class="st">"fill"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span>  <span class="fu">stat_hull_3d</span><span class="op">(</span><span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="va">group</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>        light <span class="op">=</span> <span class="fu"><a href="lighting.html">lighting</a></span><span class="op">(</span>shade <span class="op">=</span> <span class="st">"fill"</span>, shade_mode <span class="op">=</span> <span class="st">"hsl"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span>scales <span class="op">=</span> <span class="st">"fixed"</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="stat_hull_3d-3.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># For larger coordinate scales, increase alpha proportionally:</span></span></span>
-<span class="r-in"><span><span class="co"># sphere_large &lt;- sphere_points * 100  # Scale up by 100x</span></span></span>
-<span class="r-in"><span><span class="co"># ggplot(sphere_large, aes(x, y, z = z)) +</span></span></span>
-<span class="r-in"><span><span class="co">#   stat_hull_3d(method = "alpha", alpha = 10, # Increase alpha ~100x</span></span></span>
-<span class="r-in"><span><span class="co">#             fill = "darkgreen", light = lighting(blend = "fill")) +</span></span></span>
-<span class="r-in"><span><span class="co">#   coord_3d()</span></span></span>
+<span class="r-in"><span><span class="co"># For larger coordinate scales, increase radius proportionally:</span></span></span>
+<span class="r-in"><span><span class="va">sphere_large</span> <span class="op">&lt;-</span> <span class="va">sphere_points</span> <span class="op">*</span> <span class="fl">100</span>  <span class="co"># Scale up by 100x</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">sphere_large</span>, <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span>   <span class="fu">stat_hull_3d</span><span class="op">(</span>method <span class="op">=</span> <span class="st">"alpha"</span>, radius <span class="op">=</span> <span class="fl">100</span>,</span></span>
+<span class="r-in"><span>             fill <span class="op">=</span> <span class="st">"darkgreen"</span>, light <span class="op">=</span> <span class="fu"><a href="lighting.html">lighting</a></span><span class="op">(</span>shade <span class="op">=</span> <span class="st">"fill"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span>   <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="stat_hull_3d-4.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
