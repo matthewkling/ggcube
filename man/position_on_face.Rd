@@ -68,14 +68,14 @@ set.seed(1)
 d <- data.frame(x = round(rnorm(10)), y = round(rnorm(10)), z = round(rnorm(10)))
 ggplot(d, aes(x, y, z)) +
   stat_voxel_3d(color = "black", fill = "steelblue",
-    light = lighting(blend = "fill", direction = c(1, 1, 0), blend_mode = "hsl"),
-    position = position_on_face(c("3D", "zmin", "xmax", "ymin"))) +
+    light = lighting(shade = "fill", direction = c(1, 1, 0), shade_mode = "hsl"),
+    position = position_on_face(c("3D", "zmin", "xmax", "ymax"))) +
   coord_3d()
 
 # 3D layer projected differently on individual faces
 ggplot(sphere_points, aes(x, y, z)) +
   stat_hull_3d(position = position_on_face("zmin"), fill = "black") +
-  geom_point_3d(position = position_on_face("ymin")) +
+  geom_point_3d(position = position_on_face("ymax")) +
   geom_path(position = position_on_face("xmax")) +
   stat_hull_3d(color = "black") +
   coord_3d()
@@ -89,7 +89,7 @@ ggplot(iris, aes(Sepal.Length, Sepal.Width, Petal.Length, color = Species)) +
 # Distinct 2D layers projected to different faces
 ggplot(mtcars) +
   geom_smooth(aes(mpg, qsec), color = "red", alpha = .5, se = FALSE,
-    position = position_on_face(faces = "ymin", axes = c("x", "z"))) +
+    position = position_on_face(faces = "ymax", axes = c("x", "z"))) +
   geom_density_2d(aes(mpg, wt), alpha = .5,
     position = position_on_face(faces = "zmin", axes = c("x", "y"))) +
   geom_path(aes(wt, qsec), color = "forestgreen", alpha = .5,

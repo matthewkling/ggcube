@@ -37,8 +37,7 @@ This stat performs identity transformation (passes data through unchanged) while
 properly handling discrete scales for 3D coordinate systems. It converts factor
 and character variables to numeric positions and preserves original values in
 \verb{*_raw} columns for proper scale labeling. It also converts group values to
-hierarchical format to enable proper depth sorting that preserves vertex order
-within polygons.
+hierarchical format to prevent reordering withing groups during depth sorting.
 }
 \details{
 This stat is primarily intended for use with 3D geoms that need discrete scale

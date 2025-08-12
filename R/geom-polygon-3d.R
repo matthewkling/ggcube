@@ -113,7 +113,7 @@ blend_lighting_with_colors <- function(base_colors, light_values, lighting) {
       }
 
       if (lighting$method == "normal_rgb") {
-            warning("Color blending is not supported with normal_rgb lighting method")
+            warning("Color shading is not supported with normal_rgb lighting method")
             return(base_colors)
       }
 
@@ -138,7 +138,7 @@ blend_lighting_with_colors <- function(base_colors, light_values, lighting) {
       # Convert to RGB matrix
       base_rgb <- col2rgb(valid_base)
 
-      if (lighting$blend_mode == "hsl") {
+      if (lighting$shade_mode == "hsl") {
             # HSL blending mode
             base_rgb_norm <- base_rgb / 255  # Normalize to [0,1] for HSL
             base_hsl <- rgb2hsl(base_rgb_norm)
@@ -154,11 +154,11 @@ blend_lighting_with_colors <- function(base_colors, light_values, lighting) {
 
                   if (light_val > 0.5) {
                         # Brighten toward white (L = 1)
-                        blend_factor <- (light_val - 0.5) * 2 * lighting$blend_strength
+                        blend_factor <- (light_val - 0.5) * 2 * lighting$shade_strength
                         new_l <- l_val + blend_factor * (1 - l_val)
                   } else {
                         # Darken toward black (L = 0)
-                        blend_factor <- (0.5 - light_val) * 2 * lighting$blend_strength
+                        blend_factor <- (0.5 - light_val) * 2 * lighting$shade_strength
                         new_l <- l_val * (1 - blend_factor)
                   }
 
@@ -172,7 +172,7 @@ blend_lighting_with_colors <- function(base_colors, light_values, lighting) {
             new_colors <- rgb(new_rgb[1, ], new_rgb[2, ], new_rgb[3, ])
 
       } else {
-            # HSV blending mode (restore exact original logic)
+            # HSV blending mode
             base_hsv <- rgb2hsv(base_rgb)
 
             # Modify only brightness (V component)
@@ -189,11 +189,11 @@ blend_lighting_with_colors <- function(base_colors, light_values, lighting) {
 
                   if (light_val > 0.5) {
                         # Brighten
-                        blend_factor <- (light_val - 0.5) * 2 * lighting$blend_strength
+                        blend_factor <- (light_val - 0.5) * 2 * lighting$shade_strength
                         new_v <- v_val + blend_factor * (1 - v_val)
                   } else {
                         # Darken
-                        blend_factor <- (0.5 - light_val) * 2 * lighting$blend_strength
+                        blend_factor <- (0.5 - light_val) * 2 * lighting$shade_strength
                         new_v <- v_val * (1 - blend_factor)
                   }
 
@@ -215,30 +215,30 @@ blend_lighting_with_colors <- function(base_colors, light_values, lighting) {
 blend_light <- function(coords) {
 
       # Extract lighting parameters from special columns
-      if ("blend_enabled" %in% names(coords) && coords$blend_enabled[1] != "neither") {
+      if ("shade_enabled" %in% names(coords) && coords$shade_enabled[1] != "neither") {
             # Reconstruct lighting object from columns
             light <- list(
-                  blend = coords$blend_enabled[1],
-                  blend_strength = coords$blend_strength[1],
-                  blend_mode = coords$blend_mode[1],
+                  shade = coords$shade_enabled[1],
+                  shade_strength = coords$shade_strength[1],
+                  shade_mode = coords$shade_mode[1],
                   method = coords$lighting_method[1]
             )
 
-            # Apply lighting blending if enabled
-            if (light$blend != "neither" && "light" %in% names(coords)) {
+            # Apply shading if enabled
+            if (light$shade != "neither" && "light" %in% names(coords)) {
                   # Blend fill colors if requested
-                  if (light$blend %in% c("fill", "both")) {
+                  if (light$shade %in% c("fill", "both")) {
                         coords$fill <- blend_lighting_with_colors(coords$fill, coords$light, light)
                   }
 
                   # Blend colour/border colors if requested
-                  if (light$blend %in% c("colour", "both")) {
+                  if (light$shade %in% c("colour", "both")) {
                         coords$colour <- blend_lighting_with_colors(coords$colour, coords$light, light)
                   }
             }
 
             # Clean up lighting parameter columns
-            coords <- coords[, !names(coords) %in% c("blend_enabled", "blend_strength", "blend_mode", "lighting_method")]
+            coords <- coords[, !names(coords) %in% c("shade_enabled", "shade_strength", "shade_mode", "lighting_method")]
       }
 
       return(coords)
@@ -359,7 +359,7 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
 #' # Typically used via stats like stat_surface_3d() or stat_hull_3d()
 #' ggplot(sphere_points, aes(x, y, z)) +
 #'   stat_hull_3d(method = "convex", fill = "dodgerblue",
-#'             light = lighting(blend = "fill", blend_mode = "hsl")) +
+#'             light = lighting(shade = "fill", shade_mode = "hsl")) +
 #'   coord_3d()
 #'
 #' # Can be used directly with properly structured data

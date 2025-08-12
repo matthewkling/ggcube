@@ -177,11 +177,11 @@ StatDensity3D <- ggproto("StatDensity3D", Stat,
 #' p + stat_density_3d(adjust = 2, color = "white")   # Smoother
 #'
 #' # With lighting effects
-#' p + stat_density_3d(light = lighting(blend = "fill", blend_mode = "hsl"))
+#' p + stat_density_3d(light = lighting(shade = "fill", shade_mode = "hsl"))
 #'
 #' # Higher resolution grid for smoother surfaces
 #' p + stat_density_3d(n = 50, color = "black", fill = "darkgreen", alpha = 0.8,
-#'                   light = lighting(direction = c(1, 1, 0.5), blend = "fill"))
+#'                   light = lighting(direction = c(1, 1, 0.5), shade = "fill"))
 #'
 #' # Multiple density surfaces by group,
 #' # using normalized density to equalize peak heights

@@ -67,20 +67,17 @@ coordinates (x, y, z) and end coordinates (xend, yend, zend).
 library(ggplot2)
 
 # Basic 3D segments
-segments_data <- data.frame(
-  x = c(0, 1, 2), y = c(0, 1, 2), z = c(0, 1, 2),
-  xend = c(1, 2, 3), yend = c(1, 2, 3), zend = c(1, 2, 3)
-)
-
-ggplot(segments_data, aes(x, y, z, xend = xend, yend = yend, zend = zend)) +
+ggplot(sphere_points,
+      aes(x, y, z, xend = 0, yend = 0, zend = 0)) +
   geom_segment_3d() +
   coord_3d()
 
-# With different colors and arrow heads
-ggplot(segments_data, aes(x, y, z, xend = xend, yend = yend, zend = zend,
-                         color = factor(1:3))) +
-  geom_segment_3d(arrow = arrow(length = unit(0.2, "inches")),
-                  linewidth = 2) +
+# 3D vector field
+ggplot(data, aes(x, y, z,
+      xend = xend, yend = yend, zend = zend, color = x)) +
+  geom_segment_3d(arrow = arrow(length = unit(0.1, "inches"),
+                  type = "closed", angle = 15),
+                  linewidth = .5) +
   coord_3d()
 
 }

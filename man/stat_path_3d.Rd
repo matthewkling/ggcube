@@ -47,3 +47,7 @@ becomes a separate segment that can be depth-sorted independently.
 }
 }
 
+\seealso{
+\code{\link[=geom_segment_3d]{geom_segment_3d()}} for the default geom associated with this stat;
+\code{\link[=stat_segment_3d]{stat_segment_3d()}} for individual segments rather than connected paths.
+}

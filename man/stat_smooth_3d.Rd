@@ -131,8 +131,8 @@ library(ggplot2)
 # Generate scattered 3D data
 set.seed(123)
 d <- data.frame(
-  x = runif(100, -2, 2),
-  y = runif(100, -2, 2)
+  x = runif(100, -1, 3),
+  y = runif(100, -3, 3)
 )
 d$z <- abs(1 + d$x^2 - d$y^2 + rnorm(100, 0, 1))
 
@@ -143,40 +143,45 @@ p <- ggplot(d, aes(x, y, z)) + coord_3d()
 p + stat_smooth_3d()
 
 # Linear model surface with 90\% confidence intervals
-p + stat_smooth_3d(method = "lm", se = TRUE, level = 0.9)
+p + stat_smooth_3d(method = "lm", color = "black", se = TRUE,
+                   level = 0.9, se.alpha = .8)
 
 # Linear model surface with custom model formula
 p + stat_smooth_3d(method = "lm",
        formula = z ~ poly(x, 2) + poly(y, 2) + x:y)
 
 # Loess with custom span parameter, and lighting aesthetics
-p + stat_smooth_3d(method = "loess", method.args = list(span = 0.3),
-                 fill = "steelblue", color = "white",
-                 light = lighting(blend = "both"))
+p + stat_smooth_3d(
+      method = "loess",
+      method.args = list(span = 0.3),
+      fill = "steelblue", color = "white",
+      light = lighting(shade = "both"))
 
-# GLM with Gamma family for positive data
+# GLM with gamma family and log link
 p + stat_smooth_3d(
       method = "glm",
       method.args = list(family = Gamma(link = "log")),
-      formula = z ~ poly(x, 2) + poly(y, 2),
-      light = lighting(blend = "both", blend_mode = "hsl", blend_strength = .8))
+      formula = z ~ poly(x, 2) + poly(y, 2)) +
+  scale_fill_viridis_c()
 
 # GAM with default smoothers, with fill colored by uncertainty layer
 p + stat_smooth_3d(aes(fill = after_stat(level)),
                    method = "gam", se = TRUE, color = "black") +
   scale_fill_manual(values = c("red", "darkorchid4", "steelblue"))
 
-# Color surface bands by uncertainty
-p + stat_smooth_3d(aes(fill = after_stat(se * 2)), se = TRUE) +
+# Use fill color to visualize uncertainty
+p + stat_smooth_3d(aes(fill = after_stat(se * 2)),
+                  se = TRUE, se.alpha = 1) +
   scale_fill_viridis_c()
 
 # Extend surface beyond data range (explicit extrapolation)
 p + stat_smooth_3d(method = "lm",
                  xlim = c(-3, 3), ylim = c(-3, 3))
 
-# Project 2D views of the surface onto face panels
+# Project 2D views of surface onto face panels
 ggplot(mtcars, aes(mpg, disp, qsec)) +
-  stat_smooth_3d(position = position_on_face(faces = c("xmax", "ymin", "zmin"))) +
+  stat_smooth_3d(position = position_on_face(
+    faces = c("xmax", "ymax", "zmin"))) +
   scale_fill_viridis_c() +
   coord_3d()
 

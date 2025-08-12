@@ -10,7 +10,7 @@ stat_hull_3d(
   geom = GeomPolygon3D,
   position = "identity",
   method = "convex",
-  alpha = 1,
+  radius = NULL,
   light = lighting(),
   inherit.aes = TRUE,
   ...
@@ -30,12 +30,14 @@ variables with \code{\link[=after_stat]{after_stat()}}.}
 
 \item{method}{Triangulation method. Either:
 \itemize{
-\item \code{"convex"}: Convex hull triangulation (works well for convex shapes like spheres, default)
-\item \code{"alpha"}: Alpha shape triangulation (can capture non-convex topologies like toruses)
+\item \code{"convex"}: Convex hull triangulation (default)
+\item \code{"alpha"}: Alpha shape triangulation (can capture non-convex topologies)
 }}
 
-\item{alpha}{Alpha parameter for alpha shape triangulation. \strong{IMPORTANT:} Alpha shapes
-are extremely sensitive to the coordinate scales of your data. See Details section.}
+\item{radius}{Square root of "alpha" parameter when alpha method is used.
+A face is included in the resulting alpha shape if it can be "exposed" by a sphere of this radius.
+If NULL (the default), a simple heuristic based on the data scale is used to calculate a radius value.
+Note that alpha shapes are quite sensitive to the coordinate scales of your data. See Details section.}
 
 \item{light}{A lighting specification object created by \code{lighting()}}
 
@@ -61,7 +63,7 @@ Each group will get its own independent hull calculation.
 \strong{Alpha shape method is highly sensitive to coordinate scales.} The \code{alpha} parameter
 that works for data scaled 0-1 will likely fail for data scaled 0-1000.
 
-\strong{Guidelines for choosing alpha:}
+\strong{Guidelines for choosing radius:}
 \itemize{
 \item Start with \code{alpha = 1.0} and adjust based on results
 \item For data with mixed scales (e.g., x: 0-1, y: 0-1000), consider rescaling your data first
@@ -114,30 +116,31 @@ Computed variables can be accessed using \code{\link[=after_stat]{after_stat()}}
 library(ggplot2)
 
 # Convex hull
-ggplot(sphere_points, aes(x, y, z = z)) +
-  stat_hull_3d(aes(fill = after_stat(light)), method = "convex") +
-  scale_fill_gradient(low = "black", high = "white") +
+ggplot(sphere_points, aes(x, y, z)) +
+  stat_hull_3d(method = "convex", fill = "gray40",
+               light = lighting(shade = "fill")) +
   coord_3d()
 
-# Alpha shape (scale-sensitive - alpha ~1 works for unit sphere)
-ggplot(sphere_points, aes(x, y, z = z)) +
-  stat_hull_3d(aes(fill = after_stat(light)), method = "alpha", alpha = 1.0) +
-  scale_fill_gradient(low = "black", high = "white") +
+# Alpha shape (scale-sensitive - radius ~1 works for unit sphere)
+ggplot(sphere_points, aes(x, y, z)) +
+  stat_hull_3d(method = "alpha", radius = 1, fill = "gray40",
+               light = lighting(shade = "fill")) +
   coord_3d()
 
 # Grouped hulls - separate hull for each species
 spheres <- rbind(dplyr::mutate(sphere_points, group = "a"),
                  dplyr::mutate(sphere_points, group = "b", x = x + 3))
 ggplot(spheres, aes(x, y, z, group = group)) +
-  stat_hull_3d(aes(fill = group), light = lighting(blend = "fill")) +
+  stat_hull_3d(aes(fill = group),
+        light = lighting(shade = "fill", shade_mode = "hsl")) +
   coord_3d(scales = "fixed")
 
-# For larger coordinate scales, increase alpha proportionally:
-# sphere_large <- sphere_points * 100  # Scale up by 100x
-# ggplot(sphere_large, aes(x, y, z = z)) +
-#   stat_hull_3d(method = "alpha", alpha = 10, # Increase alpha ~100x
-#             fill = "darkgreen", light = lighting(blend = "fill")) +
-#   coord_3d()
+# For larger coordinate scales, increase radius proportionally:
+sphere_large <- sphere_points * 100  # Scale up by 100x
+ggplot(sphere_large, aes(x, y, z)) +
+   stat_hull_3d(method = "alpha", radius = 100,
+             fill = "darkgreen", light = lighting(shade = "fill")) +
+   coord_3d()
 
 }
 \seealso{

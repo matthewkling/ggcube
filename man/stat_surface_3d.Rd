@@ -62,26 +62,26 @@ Assumes data is on a regular x,y grid and creates quadrilateral faces.
 }
 
 \examples{
-# Generate and visualize a basic surface
+# data for a basic surface
 d <- dplyr::mutate(tidyr::expand_grid(x = -20:20, y = -20:20),
       z = sqrt(x^2 + y^2) / 1.5,
       z = cos(z) - z)
 
+# base plot
 p <- ggplot(d, aes(x, y, z)) + coord_3d()
 
 # basic surface
 p + stat_surface_3d(fill = "dodgerblue", color = "darkblue", linewidth = .2)
 
-# with 3d lighting
-p + stat_surface_3d(fill = "darkgreen", color = "darkgreen", linewidth = .2,
-      light = lighting(blend = "both"))
+# surface with 3d lighting
+p + stat_surface_3d(fill = "steelblue", color = "steelblue", linewidth = .2,
+      light = lighting(shade = "both", shade_mode = "hsl",
+      direction = c(1, 0, 0)))
 
 # mesh wireframe, without fill, with aes line color
-p + stat_surface_3d(aes(color = z), fill = NA) +
-  scale_color_viridis_c()
+p + stat_surface_3d(aes(color = z), fill = NA)
 
 # use `group` to plot data for multiple surfaces
-# (depth rendering works fine unless the surfaces intersect)
 d <- expand.grid(x = -5:5, y = -5:5)
 d$z <- d$x^2 - d$y^2
 d$g <- "a"
@@ -93,13 +93,21 @@ ggplot(rbind(d, d2),
   coord_3d() +
   stat_surface_3d(color = "black", alpha = .5)
 
+# terrain surface with topographic hillshade and elevational fill
 ggplot(mountain, aes(x, y, z, fill = z, color = z)) +
   stat_surface_3d(light = lighting(method = "diffuse", direction = c(1, 0, .5),
-                           blend = "both", blend_mode = "hsv", blend_strength = .9),
+                           shade = "both", shade_mode = "hsv", shade_strength = .9),
                linewidth = .2) +
   coord_3d(ratio = c(1, 1.5, .5)) +
   theme_light() +
   scale_fill_gradientn(colors = c("darkgreen", "rosybrown4", "gray60")) +
-  scale_color_gradientn(colors = c("darkgreen", "rosybrown4", "gray60"))
+  scale_color_gradientn(colors = c("darkgreen", "rosybrown4", "gray60")) +
+  guides(fill = guide_colorbar_shaded())
 
+}
+\seealso{
+\code{\link[=stat_function_3d]{stat_function_3d()}} for surfaces representing mathematical functions;
+\code{\link[=stat_smooth_3d]{stat_smooth_3d()}} for surfaces based on fitted statistical models;
+\code{\link[=stat_pillar_3d]{stat_pillar_3d()}} for terraced column-like surfaces;
+\code{\link[=geom_polygon_3d]{geom_polygon_3d()}} for the default geom associated with \code{stat_surface_3d()}.
 }

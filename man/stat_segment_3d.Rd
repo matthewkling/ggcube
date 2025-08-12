@@ -37,3 +37,6 @@ stat_segment_3d(
 \code{stat_segment_3d()} provides 3D-aware processing for segment data, primarily
 handling discrete scale conversion while preserving segment structure.
 }
+\seealso{
+\code{\link[=geom_segment_3d]{geom_segment_3d()}} for the associated geom; \code{\link[=stat_path_3d]{stat_path_3d()}} for multi-point paths.
+}

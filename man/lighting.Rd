@@ -6,13 +6,13 @@
 \usage{
 lighting(
   method = "diffuse",
-  direction = c(1, 1, 1),
+  direction = c(1, 0, 1),
   position = NULL,
   distance_falloff = FALSE,
   quanta = NULL,
-  blend = "neither",
-  blend_strength = 1,
-  blend_mode = "hsv"
+  shade = "neither",
+  shade_strength = 1,
+  shade_mode = "hsv"
 )
 }
 \arguments{
@@ -27,8 +27,8 @@ faces more directly toward the positive end of a given dimension)
 Default is "diffuse".}
 
 \item{direction}{Numeric vector of length 3 specifying direction in 3D space that
-light comes from for directional lighting. The default is \code{c(1, 1, 1)}, giving
-diagonal lighting from the positive corner. Common examples: \code{c(0, 0, 1)} gives
+light comes from for directional lighting. The default is \code{c(1, 0, 1)}, giving
+diagonal lighting from the upper right edge with default rotation. Common examples: \code{c(0, 0, 1)} gives
 overhead lighting, \code{c(1, 0, 0)} lights surfaces facing the positive x
 direction, and \code{c(-1, -1, 0)} lights surfaces facing negative x-y edge. At least
 one value must be non-zero. Values are automatically normalized, so magnitude doesn't
@@ -53,16 +53,16 @@ When specified, continuous lighting values are binned into this many discrete le
 }
 Default is NULL (continuous lighting).}
 
-\item{blend}{Character string specifying which color aesthetics to blend with lighting.
-Options: "neither" (no blending), "fill" (blend fill colors only),
-"color"/"colour" (blend border colors only), or "both" (blend both fill and border).
+\item{shade}{Character string specifying which color aesthetics to modify with shading.
+Options: "neither" (no shading), "fill" (shade fill colors only),
+"color"/"colour" (shade border colors only), or "both" (shade both fill and border).
 Default is "neither".}
 
-\item{blend_strength}{Numeric value in the range 0--1 controlling the intensity of lighting blending.
+\item{shade_strength}{Numeric value in the range 0--1 controlling the intensity of shading.
 1.0 gives full black-to-white range, 0.5 gives subtle lighting effects.
-Only used when \code{blend} is not "neither". Default is 1.0.}
+Only used when \code{shade} is not "neither". Default is 1.0.}
 
-\item{blend_mode}{Character string specifying color blending mode when \code{blend} is not "neither":
+\item{shade_mode}{Character string specifying color shading mode when \code{shade} is not "neither":
 \itemize{
 \item \code{"hsv"}: Modifies HSV value component (fades to bright colors at high end, black at low end)
 \item \code{"hsl"}: Modifies HSL lightness component (fades to white at high end, black at low end)
@@ -78,30 +78,75 @@ Creates a lighting specification object that supports both directional lighting
 per-face light directions and optional distance falloff), for use with 3D polygon geoms.
 }
 \details{
-There are two approaches for adding lighting to a plot. The first is to use blending. This lets you
+There are two approaches for adding lighting to a plot. The first is to use shading. This lets you
 add light and shadow effects while also specifying fill/color arguments or aesthatics through
-standard ggplot2 methods. Blending alters these colors by brightening and darkening them.
+standard ggplot2 methods. Shading alters these colors by brightening and darkening them.
 
 The second approach is to use the computed light variable directly in your aesthetic mapping, such as
 \code{aes(fill = after_stat(light))}. This gives more control over you map lighting values onto color
 scales, but can't be mixed with other sources of color info.
 
-It is also possible to combine these two approaches. For example, using \code{blend = "fill"},
+It is also possible to combine these two approaches. For example, using \code{shade = "fill"},
 \code{after_stat(light)}, and \code{scale_fill_viridis_c()} will produce a higher-contrast version of
-the viridis palette (though the guide will not reflect the blending component).
+the viridis palette (though the guide will not reflect the shading component).
 }
 \examples{
-library(ggplot2)
-
+# base plot used in examples
 p <- ggplot(mountain, aes(x, y, z)) +
-  coord_3d(pitch = 0, roll = 120, yaw = 200,
-           scales = "fixed", ratio = c(1, 1.5, .01)) +
+  coord_3d(scales = "fixed", ratio = c(1, 1.5, .01)) +
   scale_fill_viridis_c() + scale_color_viridis_c()
 
+# Aesthetic lighting versus shading -----------------------
+
+# map default lighting to fill aesthetic
+p + stat_surface_3d(aes(fill = after_stat(light)))
+
+# apply shading to standard fill and color attributes
+p + stat_surface_3d(fill = "slateblue", color = "gray80",
+                    light = lighting(shade = "both"))
+
+# apply shading on top of standard aesthetic mapping
+# and add a shaded guide to match
+p + stat_surface_3d(aes(fill = z, color = z),
+                    light = lighting(shade = "both")) +
+    guides(fill = guide_colorbar_shaded())
+
+# to fade shading highlights to white, use HSL mode
+p + stat_surface_3d(aes(fill = z, color = z),
+                    light = lighting(shade = "both",
+                                     shade_mode = "hsl")) +
+    guides(fill = guide_colorbar_shaded())
+
+# Alternative lighting methods -----------------------
+
+# the above examples show "diffuse" lighting;
+# use "direct" lighting to apply full shade to unlit surfaces
+p + stat_surface_3d(fill = "gray", color = "gray",
+                    light = lighting(method = "direct", shade = "both"))
+
+# specify quantized lighting to split the scene into discrete light bins
 p + stat_surface_3d(aes(fill = after_stat(light)),
-  light = lighting("diffuse", direction = c(-1, 0, 1)))
+                    light = lighting(quanta = 5))
+
+# use RGB-normal lighting plot each face direction in a unique color
+p + stat_surface_3d(aes(fill = after_stat(light)),
+                    light = lighting(method = "normal_rgb"))
+
+# Light source specification -----------------------
+
+# light direction from upper left
+p + stat_surface_3d(light = lighting(shade = "both",
+                        direction = c(-1, 1, 1)))
+
+# positional lighting from within plot
+# p + stat_surface_3d(aes(fill = after_stat(light)),
+#             light = lighting(position = c(0, .5, 100),
+#                         distance_falloff = TRUE,
+#                         method = "direct"))
+
+
 
 }
 \seealso{
-\code{\link{stat_surface_3d}}, \code{\link{stat_voxel_3d}}, \code{\link{stat_pillar_3d}}
+\code{\link{stat_surface_3d}}, \code{\link{stat_voxel_3d}}, \code{\link{stat_pillar_3d}}, \code{\link{scale_colorbar_shade}}
 }

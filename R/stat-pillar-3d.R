@@ -88,10 +88,10 @@ StatPillar3D <- ggproto("StatPillar3D", Stat,
                             pillar_faces$normal_y <- face_normals[, 2]
                             pillar_faces$normal_z <- face_normals[, 3]
 
-                            # Add lighting parameters for blend processing
-                            pillar_faces$blend_enabled <- light$blend
-                            pillar_faces$blend_strength <- light$blend_strength
-                            pillar_faces$blend_mode <- light$blend_mode
+                            # Add lighting parameters for shade processing
+                            pillar_faces$shade_enabled <- light$shade
+                            pillar_faces$shade_strength <- light$shade_strength
+                            pillar_faces$shade_mode <- light$shade_mode
                             pillar_faces$lighting_method <- light$method
 
                             return(pillar_faces)
@@ -301,7 +301,6 @@ calculate_pillar_face_normals <- function(pillar_faces) {
 #'
 #' ggplot(d, aes(x, y, z)) +
 #'   stat_pillar_3d(aes(fill = after_stat(light))) +
-#'   scale_fill_gradient(low = "darkblue", high = "white") +
 #'   coord_3d()
 #'
 #' # Sparse data (only some points)
@@ -311,12 +310,13 @@ calculate_pillar_face_normals <- function(pillar_faces) {
 #'   z = c(2, 5, 3, 4, 6)
 #' )
 #' ggplot(sparse_data, aes(x, y, z)) +
-#'   stat_pillar_3d(aes(fill = z)) +
+#'   stat_pillar_3d(aes(fill = z), color = "white") +
 #'   coord_3d()
 #'
 #' # Set base level for all pillars using parameter
 #' ggplot(sparse_data, aes(x, y, z)) +
-#'   stat_pillar_3d(aes(fill = z), zmin = 0) +
+#'   stat_pillar_3d(aes(fill = z), color = "white",
+#'                 zmin = 0) +
 #'   coord_3d()
 #'
 #' # Variable base levels using aesthetic
@@ -325,22 +325,15 @@ calculate_pillar_face_normals <- function(pillar_faces) {
 #'   stat_pillar_3d(aes(fill = after_stat(light))) +
 #'   coord_3d()
 #'
-#' # Parameter overrides aesthetic
-#' ggplot(d, aes(x, y, z = z, zmin = base_level)) +
-#'   stat_pillar_3d(aes(fill = after_stat(light)), zmin = -2) +  # All pillars use zmin = -2
-#'   coord_3d()
-#'
-#' # Show only top and front faces for performance
+#' # Show only top and front faces
 #' ggplot(sparse_data, aes(x, y, z)) +
 #'   stat_pillar_3d(aes(fill = after_stat(light)),
-#'               faces = c("zmax", "ymax")) +
+#'               faces = c("zmax", "ymin")) +
 #'   coord_3d()
 #'
-#' # Architectural visualization with gaps between pillars
-#' ggplot(sparse_data, aes(x, y, z)) +
-#'   stat_pillar_3d(aes(fill = after_stat(normal_z)),
-#'               width = 0.9, light = lighting("direct")) +
-#'   scale_fill_viridis_c() +
+#' # With gaps between pillars
+#' ggplot(d, aes(x, y, z)) +
+#'   stat_pillar_3d(color = "black", width = 0.6) +
 #'   coord_3d()
 #'
 #' @seealso [stat_surface_3d()] for smooth surface rendering, [coord_3d()] for 3D coordinate systems,

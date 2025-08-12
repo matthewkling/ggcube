@@ -6,10 +6,10 @@
 <!-- badges: start -->
 <!-- badges: end -->
 
-**ggcube** is a ggplot2 extension for 3D data visualization. It helps
-you create 3D scatter plots, surfaces, volumes, and complex layered
-visualizations using familiar ggplot2 syntax with `aes(x, y, z)` and
-`coord_3d()`.
+**ggcube** is an R package that extends ggplot2 to support 3D data
+visualization. Use it to create 3D scatter plots, surfaces, volumes, and
+complex layered visualizations using familiar ggplot2 syntax with
+`aes(x, y, z)` and `coord_3d()`.
 
 The package provides a variety of 3D-specific layer functions to render
 surfaces, prisms, points, and paths in 3D. You can control plot geometry
@@ -88,9 +88,10 @@ Example: a terrain surface using `stat_function_3d()`:
 ``` r
 ggplot(mountain, aes(x, y, z)) +
       stat_surface_3d(aes(fill = z, color = z),
-                      light = lighting(direction = c(1, 0, 1), blend = "both")) +
+                      light = lighting(direction = c(1, 0, 1), shade = "both")) +
       scale_fill_viridis_c() + scale_color_viridis_c() +
-      coord_3d(ratio = c(1.5, 2, 1))
+      coord_3d(ratio = c(1.5, 2, 1)) +
+      guides(fill = guide_colorbar_shaded())
 ```
 
 <img src="man/figures/README-surfaces-1.png" width="100%" />
@@ -172,34 +173,38 @@ ggplot(mtcars, aes(mpg, wt, qsec, fill = factor(cyl))) +
 
 Lighting of surface and prism layers is controlled by providing a
 `lighting()` specification. Light can be mapped to an aesthetic variable
-using `after_stat(light)`, or can be used to `blend` highlights and
-shadows into otherwise-defined color and fill aesthetics:
+using `after_stat(light)`, or can be used to `shade` otherwise-defined
+color and fill aesthetics by adding highlights and shadows:
 
 ``` r
 ggplot(sphere_points, aes(x, y, z)) +
-      stat_hull_3d( # blend shadow lighting into solid color/fill
-            fill = "gray50", color = "gray50",
-            light = lighting(method = "direct",
-                             blend = "both", blend_mode = "hsl", 
-                             direction = c(-1, 0, 0))) +
-      stat_hull_3d( # blend shadow lighting into aesthetic color/fill
-            aes(x = x + 2.5, fill = z, color = z),
-            light = lighting(method = "diffuse",
-                             blend = "both", blend_mode = "hsl", 
-                             direction = c(1, 0, 0))) +
-      stat_hull_3d( # map discrete "quantized" lighting to viridis color scale
-            aes(x = x + 5, fill = after_stat(light), color = after_stat(light)),
-            light = lighting(quanta = 5, method = "diffuse")) +
-      stat_hull_3d( # map surface orientation to RGB color channels
-            aes(x = x + 7.5, 
-                fill = after_stat(light)),
-            light = lighting(method = "normal_rgb", 
-                             direction = c(-1, 1, -1))) +
       coord_3d(scales = "fixed") +
       scale_fill_viridis_c() +
       scale_color_viridis_c() +
       theme_dark() +
-      theme(legend.position = "none")
+      theme(legend.position = "none") +
+      
+      # add shading to solid color/fill
+      stat_hull_3d(fill = "gray50", color = "gray50",
+                   light = lighting(method = "direct",
+                                    shade = "both", shade_mode = "hsl", 
+                                    direction = c(-1, 0, 0))) +
+      
+      # add shading to aesthetic color/fill
+      stat_hull_3d(aes(x = x + 2.5, fill = z, color = z),
+                   light = lighting(method = "diffuse",
+                                    shade = "both", shade_mode = "hsl", 
+                                    direction = c(1, 0, 0))) +
+      
+      # map discrete "quantized" lighting to viridis color scale
+      stat_hull_3d(aes(x = x + 5, fill = after_stat(light), 
+                       color = after_stat(light)),
+            light = lighting(quanta = 5, method = "diffuse")) +
+      
+      # map surface orientation to RGB color channels
+      stat_hull_3d(aes(x = x + 7.5, fill = after_stat(light)),
+            light = lighting(method = "normal_rgb", 
+                             direction = c(-1, 1, -1)))
 ```
 
 <img src="man/figures/README-lighting-1.png" width="100%" />
@@ -220,7 +225,7 @@ ggplot(iris, aes(Sepal.Length, Sepal.Width, Petal.Length,
             position = position_on_face("ymax"), alpha = .5) +
       stat_voxel_3d( # flatten 3D voxel onto xma face, to create 2D binned
             aes(round(Sepal.Length), round(Sepal.Width), round(Petal.Length)),
-                    position = position_on_face("xmax"), alpha = .25) +
+            position = position_on_face("xmax"), alpha = .25) +
       geom_point_3d( # 3D scatter plot
             shape = 21, color = "black", stroke = .25) +
       coord_3d() +

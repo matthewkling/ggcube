@@ -14,8 +14,8 @@
 #'   }
 #'   Default is "diffuse".
 #' @param direction Numeric vector of length 3 specifying direction in 3D space that
-#'   light comes from for directional lighting. The default is \code{c(1, 1, 1)}, giving
-#'   diagonal lighting from the positive corner. Common examples: \code{c(0, 0, 1)} gives
+#'   light comes from for directional lighting. The default is \code{c(1, 0, 1)}, giving
+#'   diagonal lighting from the upper right edge with default rotation. Common examples: \code{c(0, 0, 1)} gives
 #'   overhead lighting, \code{c(1, 0, 0)} lights surfaces facing the positive x
 #'   direction, and \code{c(-1, -1, 0)} lights surfaces facing negative x-y edge. At least
 #'   one value must be non-zero. Values are automatically normalized, so magnitude doesn't
@@ -36,14 +36,14 @@
 #'     \item For \code{"direct"}: Creates one bin for negative values, and (quanta-1) bins across [0, 1] range
 #'   }
 #'   Default is NULL (continuous lighting).
-#' @param blend Character string specifying which color aesthetics to blend with lighting.
-#'   Options: "neither" (no blending), "fill" (blend fill colors only),
-#'   "color"/"colour" (blend border colors only), or "both" (blend both fill and border).
+#' @param shade Character string specifying which color aesthetics to modify with shading.
+#'   Options: "neither" (no shading), "fill" (shade fill colors only),
+#'   "color"/"colour" (shade border colors only), or "both" (shade both fill and border).
 #'   Default is "neither".
-#' @param blend_strength Numeric value in the range 0--1 controlling the intensity of lighting blending.
+#' @param shade_strength Numeric value in the range 0--1 controlling the intensity of shading.
 #'   1.0 gives full black-to-white range, 0.5 gives subtle lighting effects.
-#'   Only used when \code{blend} is not "neither". Default is 1.0.
-#' @param blend_mode Character string specifying color blending mode when \code{blend} is not "neither":
+#'   Only used when \code{shade} is not "neither". Default is 1.0.
+#' @param shade_mode Character string specifying color shading mode when \code{shade} is not "neither":
 #'   \itemize{
 #'     \item \code{"hsv"}: Modifies HSV value component (fades to bright colors at high end, black at low end)
 #'     \item \code{"hsl"}: Modifies HSL lightness component (fades to white at high end, black at low end)
@@ -51,51 +51,91 @@
 #'   Default is "hsv".
 #'
 #' @details
-#' There are two approaches for adding lighting to a plot. The first is to use blending. This lets you
+#' There are two approaches for adding lighting to a plot. The first is to use shading. This lets you
 #' add light and shadow effects while also specifying fill/color arguments or aesthatics through
-#' standard ggplot2 methods. Blending alters these colors by brightening and darkening them.
+#' standard ggplot2 methods. Shading alters these colors by brightening and darkening them.
 #'
 #' The second approach is to use the computed light variable directly in your aesthetic mapping, such as
 #' \code{aes(fill = after_stat(light))}. This gives more control over you map lighting values onto color
 #' scales, but can't be mixed with other sources of color info.
 #'
-#' It is also possible to combine these two approaches. For example, using \code{blend = "fill"},
+#' It is also possible to combine these two approaches. For example, using \code{shade = "fill"},
 #' \code{after_stat(light)}, and \code{scale_fill_viridis_c()} will produce a higher-contrast version of
-#' the viridis palette (though the guide will not reflect the blending component).
+#' the viridis palette (though the guide will not reflect the shading component).
 #'
 #' @return A \code{lighting} object that can be passed to 3D surface stats.
 #'
 #' @examples
-#' library(ggplot2)
-#'
+#' # base plot used in examples
 #' p <- ggplot(mountain, aes(x, y, z)) +
-#'   coord_3d(pitch = 0, roll = 120, yaw = 200,
-#'            scales = "fixed", ratio = c(1, 1.5, .01)) +
+#'   coord_3d(scales = "fixed", ratio = c(1, 1.5, .01)) +
 #'   scale_fill_viridis_c() + scale_color_viridis_c()
 #'
-#' p + stat_surface_3d(aes(fill = after_stat(light)),
-#'   light = lighting("diffuse", direction = c(-1, 0, 1)))
+#' # Aesthetic lighting versus shading -----------------------
 #'
-#' @seealso \code{\link{stat_surface_3d}}, \code{\link{stat_voxel_3d}}, \code{\link{stat_pillar_3d}}
+#' # map default lighting to fill aesthetic
+#' p + stat_surface_3d(aes(fill = after_stat(light)))
+#'
+#' # apply shading to standard fill and color attributes
+#' p + stat_surface_3d(fill = "slateblue", color = "gray80",
+#'                     light = lighting(shade = "both"))
+#'
+#' # apply shading on top of standard aesthetic mapping
+#' # and add a shaded guide to match
+#' p + stat_surface_3d(aes(fill = z, color = z),
+#'                     light = lighting(shade = "both")) +
+#'     guides(fill = guide_colorbar_shaded())
+#'
+#' # to fade shading highlights to white, use HSL mode
+#' p + stat_surface_3d(aes(fill = z, color = z),
+#'                     light = lighting(shade = "both",
+#'                                      shade_mode = "hsl")) +
+#'     guides(fill = guide_colorbar_shaded())
+#'
+#' # Alternative lighting methods -----------------------
+#'
+#' # the above examples show "diffuse" lighting;
+#' # use "direct" lighting to apply full shade to unlit surfaces
+#' p + stat_surface_3d(fill = "gray", color = "gray",
+#'                     light = lighting(method = "direct", shade = "both"))
+#'
+#' # specify quantized lighting to split the scene into discrete light bins
+#' p + stat_surface_3d(aes(fill = after_stat(light)),
+#'                     light = lighting(quanta = 5))
+#'
+#' # use RGB-normal lighting plot each face direction in a unique color
+#' p + stat_surface_3d(aes(fill = after_stat(light)),
+#'                     light = lighting(method = "normal_rgb"))
+#'
+#' # Light source specification -----------------------
+#'
+#' # light direction from upper left
+#' p + stat_surface_3d(light = lighting(shade = "both",
+#'                         direction = c(-1, 1, 1)))
+#'
+#' # positional lighting from within plot
+#' # p + stat_surface_3d(aes(fill = after_stat(light)),
+#' #             light = lighting(position = c(0, .5, 100),
+#' #                         distance_falloff = TRUE,
+#' #                         method = "direct"))
+#'
+#'
+#'
+#' @seealso \code{\link{stat_surface_3d}}, \code{\link{stat_voxel_3d}}, \code{\link{stat_pillar_3d}}, \code{\link{scale_colorbar_shade}}
 #' @export
 lighting <- function(method = "diffuse",
-                     direction = c(1, 1, 1),
+                     direction = c(1, 0, 1),
                      position = NULL,
                      distance_falloff = FALSE,
                      quanta = NULL,
-                     blend = "neither",
-                     blend_strength = 1.0,
-                     blend_mode = "hsv") {
+                     shade = "neither",
+                     shade_strength = 1.0,
+                     shade_mode = "hsv") {
 
       # Validate method
       valid_methods <- c("direct", "diffuse", "normal_rgb", "normal_x", "normal_y", "normal_z")
       if (!method %in% valid_methods) {
             stop("method must be one of: ", paste(valid_methods, collapse = ", "))
-      }
-
-      # Validate mutually exclusive direction/position
-      if (!is.null(position) && !identical(direction, c(1, 1, 1))) {
-            stop("direction and position are mutually exclusive. Use either direction for directional lighting or position for positional lighting.")
       }
 
       # Validate direction
@@ -125,26 +165,26 @@ lighting <- function(method = "diffuse",
             }
       }
 
-      # Validate blend
-      valid_blend_options <- c("neither", "fill", "color", "colour", "both")
-      if (!blend %in% valid_blend_options) {
-            stop("blend must be one of: ", paste(valid_blend_options, collapse = ", "))
+      # Validate shade
+      valid_shade_options <- c("neither", "fill", "color", "colour", "both")
+      if (!shade %in% valid_shade_options) {
+            stop("shade must be one of: ", paste(valid_shade_options, collapse = ", "))
       }
 
       # Normalize color spelling to match ggplot2 convention
-      if (blend == "color") {
-            blend <- "colour"
+      if (shade == "color") {
+            shade <- "colour"
       }
 
-      # Validate blend_strength
-      if (!is.numeric(blend_strength) || length(blend_strength) != 1 || blend_strength < 0) {
-            stop("blend_strength must be a single non-negative numeric value")
+      # Validate shade_strength
+      if (!is.numeric(shade_strength) || length(shade_strength) != 1 || shade_strength < 0) {
+            stop("shade_strength must be a single non-negative numeric value")
       }
 
-      # Validate blend_mode
-      valid_blend_modes <- c("hsv", "hsl")
-      if (!blend_mode %in% valid_blend_modes) {
-            stop("blend_mode must be one of: ", paste(valid_blend_modes, collapse = ", "))
+      # Validate shade_mode
+      valid_shade_modes <- c("hsv", "hsl")
+      if (!shade_mode %in% valid_shade_modes) {
+            stop("shade_mode must be one of: ", paste(valid_shade_modes, collapse = ", "))
       }
 
       # Create lighting specification object
@@ -155,9 +195,9 @@ lighting <- function(method = "diffuse",
                   position = position,
                   distance_falloff = distance_falloff,
                   quanta = if (is.null(quanta)) NULL else as.integer(quanta),
-                  blend = blend,
-                  blend_strength = blend_strength,
-                  blend_mode = blend_mode
+                  shade = shade,
+                  shade_strength = shade_strength,
+                  shade_mode = shade_mode
             ),
             class = "lighting"
       )
@@ -183,10 +223,10 @@ print.lighting <- function(x, ...) {
             cat("  Quantization:", x$quanta, "levels\n")
       }
 
-      if (x$blend != "neither") {
-            cat("  Blending:", x$blend, "(strength =", x$blend_strength, ", mode =", x$blend_mode, ")\n")
+      if (x$shade != "neither") {
+            cat("  Shading:", x$shade, "(strength =", x$shade_strength, ", mode =", x$shade_mode, ")\n")
       } else {
-            cat("  Blending: disabled\n")
+            cat("  Shading: disabled\n")
       }
 
       invisible(x)
@@ -424,7 +464,7 @@ apply_quantization <- function(light_values, method, quanta) {
             # Create n equal bins across [-1, 1]
             breaks <- seq(-1, 1, length.out = quanta + 1)
             quantized <- cut(light_values, breaks = breaks, labels = FALSE, include.lowest = TRUE)
-            # Map back to [-1, 1] range (preserve original range for blending)
+            # Map back to [-1, 1] range (preserve original range for shading)
             -1 + 2 * (quantized - 1) / (quanta - 1)
       } else if (method == "direct") {
             # One bin for negatives, (quanta-1) bins for [0, 1]

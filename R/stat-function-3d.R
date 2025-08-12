@@ -170,35 +170,37 @@ StatFunction3D <- ggproto("StatFunction3D", Stat,
 #' ggplot() +
 #'   stat_function_3d(fun = wave_fun, fill = "steelblue",
 #'                    xlim = c(-3*pi, 3*pi), ylim = c(-3*pi, 3*pi),
-#'                    light = lighting(blend = "fill", blend_mode = "hsl")) +
+#'                    light = lighting(shade = "fill", shade_mode = "hsl")) +
 #'   coord_3d(scales = "fixed") + theme_dark()
 #'
 #' # Higher resolution surface with color mapping
 #' ggplot() +
-#'   stat_function_3d(aes(fill = after_stat(light)),
+#'   stat_function_3d(aes(fill = after_stat(light),
+#'                        color = after_stat(light)),
 #'                    fun = function(x, y) sin(x) * cos(y),
 #'                    xlim = c(-pi, pi), ylim = c(-pi, pi),
-#'                    n = 80) +
+#'                    n = 60) +
 #'   scale_fill_viridis_c(option = "B") +
+#'   scale_color_viridis_c(option = "B") +
 #'   coord_3d()
 #'
 #' # Complex mathematical surface
 #' saddle <- function(x, y) x^2 - y^2
 #' ggplot() +
 #'   stat_function_3d(aes(fill = after_stat(x)),
-#'                    fun = saddle,
+#'                    fun = saddle, color = "white",
 #'                    xlim = c(-3, 3), ylim = c(-3, 3),
-#'                    n = c(60, 40)) +  # Different resolution in x and y
+#'                    n = c(20, 40)) +  # Different resolution in x and y
 #'   scale_fill_viridis_c() +
-#'   coord_3d(scales = "fixed")
+#'   coord_3d(scales = "fixed", ratio = c(3, 2, 1))
 #'
 #' # Function with lighting effects
 #' gaussian <- function(a, b) exp(-(a^2 + b^2))
 #' ggplot() +
 #'   stat_function_3d(fun = gaussian, color = "white",
 #'                    light = lighting(method = "direct",
-#'                                   direction = c(1, 1, 0.25),
-#'                                   blend = "both")) +
+#'                                   direction = c(1, -1, 0.25),
+#'                                   shade = "both")) +
 #'   scale_fill_viridis_c() + scale_color_viridis_c() +
 #'   coord_3d(scales = "fixed", ratio = c(1, 2, 3), expand = FALSE) +
 #'   xlim(-3, 3) + ylim(-2, 2) + theme_light()

@@ -101,10 +101,10 @@ StatVoxel3D <- ggproto("StatVoxel3D", Stat,
                            voxel_faces$normal_y <- face_normals[, 2]
                            voxel_faces$normal_z <- face_normals[, 3]
 
-                           # Add lighting parameters for blend processing
-                           voxel_faces$blend_enabled <- light$blend
-                           voxel_faces$blend_strength <- light$blend_strength
-                           voxel_faces$blend_mode <- light$blend_mode
+                           # Add lighting parameters for shade processing
+                           voxel_faces$shade_enabled <- light$shade
+                           voxel_faces$shade_strength <- light$shade_strength
+                           voxel_faces$shade_mode <- light$shade_mode
                            voxel_faces$lighting_method <- light$method
 
                            # Note: RGB colors are already wrapped with I() in compute_lighting()

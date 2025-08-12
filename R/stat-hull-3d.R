@@ -1,139 +1,142 @@
 StatHull3D <- ggproto("StatHull3D", Stat,
-                    required_aes = c("x", "y", "z"),
+                      required_aes = c("x", "y", "z"),
 
-                    compute_group = function(data, scales, method = "convex", alpha = 1.0,
-                                             light = lighting()) {
-                          coords <- as.matrix(data[, c("x", "y", "z")])
+                      compute_group = function(data, scales, method = "convex", radius = NA,
+                                               light = lighting()) {
+                            coords <- as.matrix(data[, c("x", "y", "z")])
 
-                          # Get triangle indices
-                          tri <- switch(method,
-                                        alpha = {
-                                              ashape <- alphashape3d::ashape3d(coords, alpha = alpha)
-                                              triangles <- ashape$triang
+                            # Get triangle indices
+                            tri <- switch(method,
+                                          alpha = {
+                                                if(is.null(radius)){
+                                                      radius <- signif(.5 * mean(apply(coords, 2, function(x) diff(range(na.omit(x))))), 3)
+                                                      message("Alpha shape `radius` parameter is NULL; defaulting to ", radius, " based on data ranges.")
+                                                }
+                                                ashape <- alphashape3d::ashape3d(coords, alpha = radius^2)
+                                                tri <- ashape$triang
+                                                alpha_triangles <- tri[tri[,ncol(tri)] %in% c(2, 3), 1:3]
 
-                                              # Filter by rhoT <= alpha to get actual alpha shape
-                                              alpha_triangles <- triangles[triangles[,6] <= alpha, 1:3]
+                                                if (nrow(alpha_triangles) > 0) {
+                                                      alpha_triangles
+                                                } else {
+                                                      stop("No valid triangle set found")
+                                                }
+                                          },
+                                          convex = {
+                                                tryCatch({
+                                                      hull_result <- geometry::convhulln(coords)
+                                                      if (is.matrix(hull_result) && ncol(hull_result) == 3) {
+                                                            hull_result
+                                                      } else {
+                                                            stop("Invalid hull result format")
+                                                      }
+                                                }, error = function(e) {
+                                                      stop("Convex hull computation failed: ", e$message)
+                                                })
+                                          },
+                                          stop("Unknown method: use 'alpha' or 'convex'")
+                            )
 
-                                              if (nrow(alpha_triangles) > 0) {
-                                                    alpha_triangles
-                                              } else {
-                                                    triangles[, 1:3]
-                                              }
-                                        },
-                                        convex = {
-                                              tryCatch({
-                                                    hull_result <- geometry::convhulln(coords)
-                                                    if (is.matrix(hull_result) && ncol(hull_result) == 3) {
-                                                          hull_result
-                                                    } else {
-                                                          stop("Invalid hull result format")
-                                                    }
-                                              }, error = function(e) {
-                                                    stop("Convex hull computation failed: ", e$message)
-                                              })
-                                        },
-                                        stop("Unknown method: use 'alpha' or 'convex'")
-                          )
+                            # Check that we got valid triangulation
+                            if (is.null(tri) || nrow(tri) == 0) {
+                                  stop("No triangles generated - try adjusting alpha parameter or check data")
+                            }
 
-                          # Check that we got valid triangulation
-                          if (is.null(tri) || nrow(tri) == 0) {
-                                stop("No triangles generated - try adjusting alpha parameter or check data")
-                          }
+                            # Compute face normals using simple cross product
+                            A <- coords[tri[,1], ]
+                            B <- coords[tri[,2], ]
+                            C <- coords[tri[,3], ]
 
-                          # Compute face normals using simple cross product
-                          A <- coords[tri[,1], ]
-                          B <- coords[tri[,2], ]
-                          C <- coords[tri[,3], ]
+                            # Edge vectors
+                            edge1 <- B - A
+                            edge2 <- C - A
 
-                          # Edge vectors
-                          edge1 <- B - A
-                          edge2 <- C - A
+                            # Cross product for each triangle
+                            normals <- matrix(0, nrow = nrow(tri), ncol = 3)
+                            for(i in 1:nrow(tri)) {
+                                  # Cross product: edge1 × edge2
+                                  cross <- c(
+                                        edge1[i,2] * edge2[i,3] - edge1[i,3] * edge2[i,2],
+                                        edge1[i,3] * edge2[i,1] - edge1[i,1] * edge2[i,3],
+                                        edge1[i,1] * edge2[i,2] - edge1[i,2] * edge2[i,1]
+                                  )
 
-                          # Cross product for each triangle
-                          normals <- matrix(0, nrow = nrow(tri), ncol = 3)
-                          for(i in 1:nrow(tri)) {
-                                # Cross product: edge1 × edge2
-                                cross <- c(
-                                      edge1[i,2] * edge2[i,3] - edge1[i,3] * edge2[i,2],
-                                      edge1[i,3] * edge2[i,1] - edge1[i,1] * edge2[i,3],
-                                      edge1[i,1] * edge2[i,2] - edge1[i,2] * edge2[i,1]
-                                )
+                                  # Normalize
+                                  cross_length <- sqrt(sum(cross^2))
+                                  if (cross_length > 0) {
+                                        normals[i,] <- cross / cross_length
+                                  } else {
+                                        normals[i,] <- c(0, 0, 1)  # Default up
+                                  }
+                            }
 
-                                # Normalize
-                                cross_length <- sqrt(sum(cross^2))
-                                if (cross_length > 0) {
-                                      normals[i,] <- cross / cross_length
-                                } else {
-                                      normals[i,] <- c(0, 0, 1)  # Default up
-                                }
-                          }
+                            # Ensure normals point outward from centroid for both methods
+                            # (imperfect for alpha, may want to fix)
+                            data_center <- colMeans(coords)
+                            for(i in 1:nrow(tri)) {
+                                  triangle_center <- (A[i,] + B[i,] + C[i,]) / 3
+                                  outward_direction <- triangle_center - data_center
 
-                          # Ensure normals point outward from centroid for both methods
-                          data_center <- colMeans(coords)
-                          for(i in 1:nrow(tri)) {
-                                triangle_center <- (A[i,] + B[i,] + C[i,]) / 3
-                                outward_direction <- triangle_center - data_center
+                                  # If normal points inward (negative dot product), flip it
+                                  if (sum(normals[i,] * outward_direction) < 0) {
+                                        normals[i,] <- -normals[i,]
+                                  }
+                            }
 
-                                # If normal points inward (negative dot product), flip it
-                                if (sum(normals[i,] * outward_direction) < 0) {
-                                      normals[i,] <- -normals[i,]
-                                }
-                          }
+                            # Calculate face centers for positional lighting
+                            face_centers <- matrix(0, nrow = nrow(tri), ncol = 3)
+                            for(i in 1:nrow(tri)) {
+                                  face_centers[i,] <- (A[i,] + B[i,] + C[i,]) / 3
+                            }
 
-                          # Calculate face centers for positional lighting
-                          face_centers <- matrix(0, nrow = nrow(tri), ncol = 3)
-                          for(i in 1:nrow(tri)) {
-                                face_centers[i,] <- (A[i,] + B[i,] + C[i,]) / 3
-                          }
+                            light_val <- compute_lighting(normals, light, face_centers)
 
-                          light_val <- compute_lighting(normals, light, face_centers)
+                            # Flatten triangle data with all computed variables
+                            verts <- coords[as.vector(t(tri)), ]
 
-                          # Flatten triangle data with all computed variables
-                          verts <- coords[as.vector(t(tri)), ]
+                            # Create unique face IDs that won't collide across groups
+                            # Use a random suffix to ensure uniqueness across compute_group calls
+                            group_suffix <- sample(10000:99999, 1)
+                            face_id <- rep(paste0("tri_", group_suffix, "_", 1:nrow(tri)), each = 3)
+                            normal_x <- rep(normals[,1], each = 3)
+                            normal_y <- rep(normals[,2], each = 3)
+                            normal_z <- rep(normals[,3], each = 3)
+                            light_val_expanded <- rep(light_val, each = 3)
+                            triangle_index <- rep(1:nrow(tri), each = 3)
 
-                          # Create unique face IDs that won't collide across groups
-                          # Use a random suffix to ensure uniqueness across compute_group calls
-                          group_suffix <- sample(10000:99999, 1)
-                          face_id <- rep(paste0("tri_", group_suffix, "_", 1:nrow(tri)), each = 3)
-                          normal_x <- rep(normals[,1], each = 3)
-                          normal_y <- rep(normals[,2], each = 3)
-                          normal_z <- rep(normals[,3], each = 3)
-                          light_val_expanded <- rep(light_val, each = 3)
-                          triangle_index <- rep(1:nrow(tri), each = 3)
+                            # Re-apply identity scaling for RGB colors after rep()
+                            if (light$method == "normal_rgb") {
+                                  light_val_expanded <- I(light_val_expanded)
+                            }
 
-                          # Re-apply identity scaling for RGB colors after rep()
-                          if (light$method == "normal_rgb") {
-                                light_val_expanded <- I(light_val_expanded)
-                          }
+                            result <- data.frame(
+                                  x = verts[,1],
+                                  y = verts[,2],
+                                  z = verts[,3],
+                                  group = paste0("hull__", face_id),
+                                  triangle_index = triangle_index,
+                                  normal_x = normal_x,
+                                  normal_y = normal_y,
+                                  normal_z = normal_z,
+                                  light = light_val_expanded,
 
-                          result <- data.frame(
-                                x = verts[,1],
-                                y = verts[,2],
-                                z = verts[,3],
-                                group = paste0("hull__", face_id),
-                                triangle_index = triangle_index,
-                                normal_x = normal_x,
-                                normal_y = normal_y,
-                                normal_z = normal_z,
-                                light = light_val_expanded,
+                                  # Add lighting parameters for shade processing
+                                  shade_enabled = light$shade,
+                                  shade_strength = light$shade_strength,
+                                  shade_mode = light$shade_mode,
+                                  lighting_method = light$method,
+                                  stringsAsFactors = FALSE
+                            )
 
-                                # Add lighting parameters for blend processing
-                                blend_enabled = light$blend,
-                                blend_strength = light$blend_strength,
-                                blend_mode = light$blend_mode,
-                                lighting_method = light$method,
-                                stringsAsFactors = FALSE
-                          )
+                            # Preserve all non-coordinate columns for each vertex
+                            # Get original indices for each vertex
+                            vertex_indices <- as.vector(t(tri))
 
-                          # Preserve all non-coordinate columns for each vertex
-                          # Get original indices for each vertex
-                          vertex_indices <- as.vector(t(tri))
+                            # Preserve additional columns from original data
+                            result <- bind_cols(result, data[vertex_indices, setdiff(names(data), names(result)), drop = FALSE])
 
-                          # Preserve additional columns from original data
-                          result <- bind_cols(result, data[vertex_indices, setdiff(names(data), names(result)), drop = FALSE])
-
-                          return(result)
-                    }
+                            return(result)
+                      }
 )
 
 
@@ -153,10 +156,12 @@ StatHull3D <- ggproto("StatHull3D", Stat,
 #' @param ... Other arguments passed on to `layer()`, such as `sort_method` and `scale_depth`
 #'    arguments to `geom_polygon_3d()`.
 #' @param method Triangulation method. Either:
-#'   - `"convex"`: Convex hull triangulation (works well for convex shapes like spheres, default)
-#'   - `"alpha"`: Alpha shape triangulation (can capture non-convex topologies like toruses)
-#' @param alpha Alpha parameter for alpha shape triangulation. **IMPORTANT:** Alpha shapes
-#'   are extremely sensitive to the coordinate scales of your data. See Details section.
+#'   - `"convex"`: Convex hull triangulation (default)
+#'   - `"alpha"`: Alpha shape triangulation (can capture non-convex topologies)
+#' @param radius Square root of "alpha" parameter when alpha method is used.
+#'   A face is included in the resulting alpha shape if it can be "exposed" by a sphere of this radius.
+#'   If NULL (the default), a simple heuristic based on the data scale is used to calculate a radius value.
+#'   Note that alpha shapes are quite sensitive to the coordinate scales of your data. See Details section.
 #' @param light A lighting specification object created by \code{lighting()}
 #' @param inherit.aes If `FALSE`, overrides the default aesthetics.
 #'
@@ -169,7 +174,7 @@ StatHull3D <- ggproto("StatHull3D", Stat,
 #' **Alpha shape method is highly sensitive to coordinate scales.** The `alpha` parameter
 #' that works for data scaled 0-1 will likely fail for data scaled 0-1000.
 #'
-#' **Guidelines for choosing alpha:**
+#' **Guidelines for choosing radius:**
 #' - Start with `alpha = 1.0` and adjust based on results
 #' - For data with mixed scales (e.g., x: 0-1, y: 0-1000), consider rescaling your data first
 #' - Larger alpha values → smoother, more connected surfaces
@@ -209,46 +214,47 @@ StatHull3D <- ggproto("StatHull3D", Stat,
 #' library(ggplot2)
 #'
 #' # Convex hull
-#' ggplot(sphere_points, aes(x, y, z = z)) +
-#'   stat_hull_3d(aes(fill = after_stat(light)), method = "convex") +
-#'   scale_fill_gradient(low = "black", high = "white") +
+#' ggplot(sphere_points, aes(x, y, z)) +
+#'   stat_hull_3d(method = "convex", fill = "gray40",
+#'                light = lighting(shade = "fill")) +
 #'   coord_3d()
 #'
-#' # Alpha shape (scale-sensitive - alpha ~1 works for unit sphere)
-#' ggplot(sphere_points, aes(x, y, z = z)) +
-#'   stat_hull_3d(aes(fill = after_stat(light)), method = "alpha", alpha = 1.0) +
-#'   scale_fill_gradient(low = "black", high = "white") +
+#' # Alpha shape (scale-sensitive - radius ~1 works for unit sphere)
+#' ggplot(sphere_points, aes(x, y, z)) +
+#'   stat_hull_3d(method = "alpha", radius = 1, fill = "gray40",
+#'                light = lighting(shade = "fill")) +
 #'   coord_3d()
 #'
 #' # Grouped hulls - separate hull for each species
 #' spheres <- rbind(dplyr::mutate(sphere_points, group = "a"),
 #'                  dplyr::mutate(sphere_points, group = "b", x = x + 3))
 #' ggplot(spheres, aes(x, y, z, group = group)) +
-#'   stat_hull_3d(aes(fill = group), light = lighting(blend = "fill")) +
+#'   stat_hull_3d(aes(fill = group),
+#'         light = lighting(shade = "fill", shade_mode = "hsl")) +
 #'   coord_3d(scales = "fixed")
 #'
-#' # For larger coordinate scales, increase alpha proportionally:
-#' # sphere_large <- sphere_points * 100  # Scale up by 100x
-#' # ggplot(sphere_large, aes(x, y, z = z)) +
-#' #   stat_hull_3d(method = "alpha", alpha = 10, # Increase alpha ~100x
-#' #             fill = "darkgreen", light = lighting(blend = "fill")) +
-#' #   coord_3d()
+#' # For larger coordinate scales, increase radius proportionally:
+#' sphere_large <- sphere_points * 100  # Scale up by 100x
+#' ggplot(sphere_large, aes(x, y, z)) +
+#'    stat_hull_3d(method = "alpha", radius = 100,
+#'              fill = "darkgreen", light = lighting(shade = "fill")) +
+#'    coord_3d()
 #'
 #' @seealso [coord_3d()] for 3D coordinate systems, [geom_polygon_3d] for the
 #'   default geometry with depth sorting, [lighting()] for lighting specifications.
 #'
 #' @export
 stat_hull_3d <- function(mapping = NULL, data = NULL,
-                      geom = GeomPolygon3D,
-                      position = "identity",
-                      method = "convex", alpha = 1.0,
-                      light = lighting(),
-                      inherit.aes = TRUE,
-                      ...) {
+                         geom = GeomPolygon3D,
+                         position = "identity",
+                         method = "convex", radius = NULL,
+                         light = lighting(),
+                         inherit.aes = TRUE,
+                         ...) {
 
       layer(
             stat = StatHull3D, data = data, mapping = mapping, geom = geom,
             position = position, inherit.aes = inherit.aes,
-            params = list(method = method, alpha = alpha, light = light, ...)
+            params = list(method = method, radius = radius, light = light, ...)
       )
 }

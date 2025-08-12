@@ -85,34 +85,60 @@
 #' # 3D plot with default coord settings
 #' p + coord_3d()
 #'
-#' # Use `pitch`, `roll`, `yaw` to control plot rotation
-#' p + coord_3d(pitch = 0, roll = 0, yaw = 0) # viewed from x-y face
-#' p + coord_3d(pitch = 30, roll = 0, yaw = 0) # pitch rotates plot around y axis
-#' p + coord_3d(pitch = 0, roll = 30, yaw = 0) # roll rotates plot around x axis
-#' p + coord_3d(pitch = 0, roll = 0, yaw = 30) # yaw rotates plot around z axis
-#' p + coord_3d(pitch = 10, roll = 20, yaw = 30) # combined use
+#' ## Use `pitch`, `roll`, `yaw` to control plot rotation ##
 #'
-#' # Use `persp` and `dist` to control perspective effects
-#' p + coord_3d(dist = 1) # strong perspective effect as if seen from very close
-#' p + coord_3d(dist = 4) # weaker perspective effects as if seen from far away
-#' p + coord_3d(persp = FALSE) # orthographic projection, effectively dist = Inf
+#' # viewed from x-y face
+#' p + coord_3d(pitch = 0, roll = 0, yaw = 0)
 #'
-#' # Use `scales` and `ratio` to modify aspect ratio
-#' p + coord_3d() # Default free scales (maximum visual range)
-#' p + coord_3d(scales = "fixed") # Fixed scales (proportions match data scales, like coord_fixed)
-#' p + coord_3d(scales = "free", ratio = c(1, 2, 1)) # Custom cube ratios (make z twice as tall visually)
-#' p + coord_3d(scales = "fixed", ratio = c(1, 2, 1)) # Custom scale ratios (y gets twice the visual space relative to its data range)
+#' # pitch rotates plot around y axis
+#' p + coord_3d(pitch = 30, roll = 0, yaw = 0)
 #'
-#' # Use `panels` to select which cube faces to render
-#' # and use `theme()` elements to control their styling
+#' # roll rotates plot around x axis
+#' p + coord_3d(pitch = 0, roll = 30, yaw = 0)
+#'
+#' # yaw rotates plot around z axis
+#' p + coord_3d(pitch = 0, roll = 0, yaw = 30)
+#'
+#' # combine them to achieve arbitrary rotations
+#' p + coord_3d(pitch = 10, roll = 20, yaw = 30)
+#'
+#' ## Use `persp` and `dist` to control perspective effects ##
+#'
+#' # strong perspective effect as if seen from very close
+#' p + coord_3d(dist = 1)
+#'
+#' # weaker perspective effects as if seen from far away
+#' p + coord_3d(dist = 4)
+#'
+#' # orthographic projection, effectively dist = Inf
+#' p + coord_3d(persp = FALSE)
+#'
+#' ## Use `scales` and `ratio` to modify aspect ratio ##
+#'
+#' # Default free scales (maximum visual range)
+#' p + coord_3d()
+#'
+#' # Fixed scales (proportions match data scales, like coord_fixed)
+#' p + coord_3d(scales = "fixed")
+#'
+#' # Custom cube ratios (make z twice as tall visually)
+#' p + coord_3d(scales = "free", ratio = c(1, 2, 1))
+#'
+#' # Custom cube ratios (make z twice as tall visually)
+#' p + coord_3d(scales = "fixed", ratio = c(1, 2, 1))
+#'
+#' ## Use `panels` to select which cube faces to render ##
 #' p + coord_3d(panels = c("zmin", "xmax"))
+#'
+#' # and use `theme()` elements to control panel styling
 #' p + coord_3d(panels = "all") +
 #'     theme(panel.background = element_rect(color = "black"),
+#'           panel.border = element_rect(color = "black"),
 #'           panel.foreground = element_rect(alpha = .3),
 #'           panel.grid.foreground = element_line(color = "gray", linewidth = .25))
 #'
-#' # Use label parameters to control axis text placement and rotation
-#' p + coord_3d(xlabels = c("ymin", "zmax"))
+#' ## Use label parameters to control axis text placement and rotation ##
+#' p + coord_3d(xlabels = c("ymax", "zmax"))
 #' p + coord_3d(rotate_labels = FALSE)
 #'
 #' @export

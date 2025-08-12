@@ -275,20 +275,17 @@ GeomSegment3D <- ggproto("GeomSegment3D", Geom,
 #' library(ggplot2)
 #'
 #' # Basic 3D segments
-#' segments_data <- data.frame(
-#'   x = c(0, 1, 2), y = c(0, 1, 2), z = c(0, 1, 2),
-#'   xend = c(1, 2, 3), yend = c(1, 2, 3), zend = c(1, 2, 3)
-#' )
-#'
-#' ggplot(segments_data, aes(x, y, z, xend = xend, yend = yend, zend = zend)) +
+#' ggplot(sphere_points,
+#'       aes(x, y, z, xend = 0, yend = 0, zend = 0)) +
 #'   geom_segment_3d() +
 #'   coord_3d()
 #'
-#' # With different colors and arrow heads
-#' ggplot(segments_data, aes(x, y, z, xend = xend, yend = yend, zend = zend,
-#'                          color = factor(1:3))) +
-#'   geom_segment_3d(arrow = arrow(length = unit(0.2, "inches")),
-#'                   linewidth = 2) +
+#' # 3D vector field
+#' ggplot(data, aes(x, y, z,
+#'       xend = xend, yend = yend, zend = zend, color = x)) +
+#'   geom_segment_3d(arrow = arrow(length = unit(0.1, "inches"),
+#'                   type = "closed", angle = 15),
+#'                   linewidth = .5) +
 #'   coord_3d()
 #'
 #' @seealso [geom_path_3d()] for connected paths, [geom_segment()] for 2D segments,
@@ -428,6 +425,8 @@ geom_path_3d <- function(mapping = NULL, data = NULL,
 #' - `xend`, `yend`, `zend`: End coordinates of each segment
 #' - `group`: Hierarchical group identifier preserving original grouping
 #'
+#' @seealso [geom_segment_3d()] for the default geom associated with this stat;
+#'   [stat_segment_3d()] for individual segments rather than connected paths.
 #' @export
 stat_path_3d <- function(mapping = NULL, data = NULL,
                          geom = GeomSegment3D, position = "identity",
@@ -456,6 +455,7 @@ stat_path_3d <- function(mapping = NULL, data = NULL,
 #' @param inherit.aes If `FALSE`, overrides the default aesthetics.
 #' @param ... Other arguments passed on to [layer()].
 #'
+#' @seealso [geom_segment_3d()] for the associated geom; [stat_path_3d()] for multi-point paths.
 #' @export
 stat_segment_3d <- function(mapping = NULL, data = NULL,
                             geom = GeomSegment3D, position = "identity",
@@ -474,7 +474,7 @@ stat_segment_3d <- function(mapping = NULL, data = NULL,
 #'
 #' @export
 lorenz_attractor <- function(n_points = 5000, dt = 0.01,
-                                      sigma = 10, rho = 28, beta = 8/3) {
+                             sigma = 10, rho = 28, beta = 8/3) {
 
       # Initialize vectors
       x <- numeric(n_points)
