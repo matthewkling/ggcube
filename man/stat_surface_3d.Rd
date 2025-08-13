@@ -75,8 +75,8 @@ p + stat_surface_3d(fill = "dodgerblue", color = "darkblue", linewidth = .2)
 
 # surface with 3d lighting
 p + stat_surface_3d(fill = "steelblue", color = "steelblue", linewidth = .2,
-      light = lighting(shade = "both", shade_mode = "hsl",
-      direction = c(1, 0, 0)))
+      light = lighting(mode = "hsl", direction = c(1, 0, 0),
+                       fill = TRUE, color = TRUE))
 
 # mesh wireframe, without fill, with aes line color
 p + stat_surface_3d(aes(color = z), fill = NA)
@@ -96,7 +96,7 @@ ggplot(rbind(d, d2),
 # terrain surface with topographic hillshade and elevational fill
 ggplot(mountain, aes(x, y, z, fill = z, color = z)) +
   stat_surface_3d(light = lighting(method = "diffuse", direction = c(1, 0, .5),
-                           shade = "both", shade_mode = "hsv", shade_strength = .9),
+                           fill = TRUE, color = TRUE, mode = "hsv", strength = .9),
                linewidth = .2) +
   coord_3d(ratio = c(1, 1.5, .5)) +
   theme_light() +

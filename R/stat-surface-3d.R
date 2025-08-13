@@ -1,27 +1,27 @@
 StatSurface3D <- ggproto("StatSurface3D", Stat,
-                       required_aes = c("x", "y", "z"),
+                         required_aes = c("x", "y", "z"),
 
-                       compute_group = function(data, scales, na.rm = FALSE, light = lighting()) {
+                         compute_group = function(data, scales, na.rm = FALSE, light = lighting()) {
 
-                             # Remove missing values if requested
-                             if (na.rm) {
-                                   data <- data[complete.cases(data[c("x", "y", "z")]), ]
-                             }
+                               # Remove missing values if requested
+                               if (na.rm) {
+                                     data <- data[complete.cases(data[c("x", "y", "z")]), ]
+                               }
 
-                             # Check we have enough data
-                             if (nrow(data) < 4) {
-                                   stop("stat_surface_3d requires at least 4 points")
-                             }
+                               # Check we have enough data
+                               if (nrow(data) < 4) {
+                                     stop("stat_surface_3d requires at least 4 points")
+                               }
 
-                             # Detect grid structure
-                             grid_info <- detect_grid_structure(data)
-                             if (!grid_info$is_regular || !grid_info$is_complete) {
-                                   stop("Data must be on a regular, complete grid. Each x,y combination should appear exactly once.")
-                             }
+                               # Detect grid structure
+                               grid_info <- detect_grid_structure(data)
+                               if (!grid_info$is_regular || !grid_info$is_complete) {
+                                     stop("Data must be on a regular, complete grid. Each x,y combination should appear exactly once.")
+                               }
 
-                             # Process surface using common pipeline
-                             return(process_surface_grid(data, light))
-                       }
+                               # Process surface using common pipeline
+                               return(process_surface_grid(data, light))
+                         }
 )
 
 #' Process regular grid data into 3D surface with lighting
@@ -264,8 +264,8 @@ create_grid_quads <- function(data) {
 #'
 #' # surface with 3d lighting
 #' p + stat_surface_3d(fill = "steelblue", color = "steelblue", linewidth = .2,
-#'       light = lighting(shade = "both", shade_mode = "hsl",
-#'       direction = c(1, 0, 0)))
+#'       light = lighting(mode = "hsl", direction = c(1, 0, 0),
+#'                        fill = TRUE, color = TRUE))
 #'
 #' # mesh wireframe, without fill, with aes line color
 #' p + stat_surface_3d(aes(color = z), fill = NA)
@@ -285,7 +285,7 @@ create_grid_quads <- function(data) {
 #' # terrain surface with topographic hillshade and elevational fill
 #' ggplot(mountain, aes(x, y, z, fill = z, color = z)) +
 #'   stat_surface_3d(light = lighting(method = "diffuse", direction = c(1, 0, .5),
-#'                            shade = "both", shade_mode = "hsv", shade_strength = .9),
+#'                            fill = TRUE, color = TRUE, mode = "hsv", strength = .9),
 #'                linewidth = .2) +
 #'   coord_3d(ratio = c(1, 1.5, .5)) +
 #'   theme_light() +
@@ -311,4 +311,3 @@ stat_surface_3d <- function(mapping = NULL, data = NULL,
             params = list(na.rm = na.rm, light = light, ...)
       )
 }
-

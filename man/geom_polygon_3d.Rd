@@ -80,7 +80,7 @@ And understands these additional aesthetics:
 # Typically used via stats like stat_surface_3d() or stat_hull_3d()
 ggplot(sphere_points, aes(x, y, z)) +
   stat_hull_3d(method = "convex", fill = "dodgerblue",
-            light = lighting(shade = "fill", shade_mode = "hsl")) +
+            light = lighting(fill = TRUE, mode = "hsl")) +
   coord_3d()
 
 # Can be used directly with properly structured data
@@ -100,10 +100,12 @@ d <- data.frame(group = rep(letters[1:3], each = 4),
 p <- ggplot(d, aes(x, y, z, group = group, fill = group)) +
       coord_3d(pitch = 50, roll = 20, yaw = 0, scales = "fixed") +
       theme_light()
+
 # fast, but rendering order is incorrect in this particular example
 p + geom_polygon_3d(color = "black", linewidth = 1, alpha = .75,
       sort_method = "painter")
-# correct rendering order (but slow for large data sets)
+
+# correct rendering order (but slower for large data sets)
 p + geom_polygon_3d(color = "black", linewidth = 1, alpha = .75,
       sort_method = "pairwise")
 
