@@ -241,7 +241,7 @@ If <code>FALSE</code>, missing values will cause an error. Default is <code>FALS
 <span class="r-in"><span>      method.args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>span <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>      fill <span class="op">=</span> <span class="st">"steelblue"</span>, color <span class="op">=</span> <span class="st">"white"</span>,</span></span>
 <span class="r-in"><span>      light <span class="op">=</span> <span class="fu"><a href="lighting.html">lighting</a></span><span class="op">(</span>shade <span class="op">=</span> <span class="st">"both"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="stat_smooth_3d-4.png" alt="" width="700" height="433"></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in lighting(shade = "both"):</span> unused argument (shade = "both")</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># GLM with gamma family and log link</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu">stat_smooth_3d</span><span class="op">(</span></span></span>
@@ -249,24 +249,24 @@ If <code>FALSE</code>, missing values will cause an error. Default is <code>FALS
 <span class="r-in"><span>      method.args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>family <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/family.html" class="external-link">Gamma</a></span><span class="op">(</span>link <span class="op">=</span> <span class="st">"log"</span><span class="op">)</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>      formula <span class="op">=</span> <span class="va">z</span> <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/stats/poly.html" class="external-link">poly</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">2</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/poly.html" class="external-link">poly</a></span><span class="op">(</span><span class="va">y</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_c</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="stat_smooth_3d-5.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="stat_smooth_3d-4.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># GAM with default smoothers, with fill colored by uncertainty layer</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu">stat_smooth_3d</span><span class="op">(</span><span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat</a></span><span class="op">(</span><span class="va">level</span><span class="op">)</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                   method <span class="op">=</span> <span class="st">"gam"</span>, se <span class="op">=</span> <span class="cn">TRUE</span>, color <span class="op">=</span> <span class="st">"black"</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_fill_manual</a></span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"red"</span>, <span class="st">"darkorchid4"</span>, <span class="st">"steelblue"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="stat_smooth_3d-6.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="stat_smooth_3d-5.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Use fill color to visualize uncertainty</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu">stat_smooth_3d</span><span class="op">(</span><span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat</a></span><span class="op">(</span><span class="va">se</span> <span class="op">*</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                  se <span class="op">=</span> <span class="cn">TRUE</span>, se.alpha <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_c</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="stat_smooth_3d-7.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="stat_smooth_3d-6.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Extend surface beyond data range (explicit extrapolation)</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu">stat_smooth_3d</span><span class="op">(</span>method <span class="op">=</span> <span class="st">"lm"</span>,</span></span>
 <span class="r-in"><span>                 xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3</span>, <span class="fl">3</span><span class="op">)</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="stat_smooth_3d-8.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="stat_smooth_3d-7.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Project 2D views of surface onto face panels</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mtcars</span>, <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span><span class="va">mpg</span>, <span class="va">disp</span>, <span class="va">qsec</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
@@ -274,7 +274,7 @@ If <code>FALSE</code>, missing values will cause an error. Default is <code>FALS
 <span class="r-in"><span>    faces <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"xmax"</span>, <span class="st">"ymax"</span>, <span class="st">"zmin"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_c</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="stat_smooth_3d-9.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="stat_smooth_3d-8.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

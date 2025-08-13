@@ -49,10 +49,10 @@ per-face light directions and optional distance falloff), for use with 3D polygo
 <span>  direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>,</span>
 <span>  position <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  distance_falloff <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  quanta <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  shade <span class="op">=</span> <span class="st">"neither"</span>,</span>
-<span>  shade_strength <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  shade_mode <span class="op">=</span> <span class="st">"hsv"</span></span>
+<span>  fill <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  color <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  mode <span class="op">=</span> <span class="st">"hsv"</span>,</span>
+<span>  strength <span class="op">=</span> <span class="fl">1</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -64,8 +64,6 @@ per-face light directions and optional distance falloff), for use with 3D polygo
 <dd><p>Character string specifying lighting model:</p><ul><li><p><code>"diffuse"</code>: Atmospheric lighting with soft shadows (includes negative values for subsurface scattering effect)</p></li>
 <li><p><code>"direct"</code>: Direct lighting with hard shadows (surfaces facing away are completely dark)</p></li>
 <li><p><code>"normal_rgb"</code>: Map surface normals to RGB colors</p></li>
-<li><p><code>"normal_x"</code>, <code>"normal_y"</code>, <code>"normal_z"</code>: Individual surface normal components (with higher positive values indicating a surface
-faces more directly toward the positive end of a given dimension)</p></li>
 </ul><p>Default is "diffuse".</p></dd>
 
 
@@ -94,30 +92,26 @@ intensity falloff for positional lighting using inverse square law
 Default is FALSE.</p></dd>
 
 
-<dt id="arg-quanta">quanta<a class="anchor" aria-label="anchor" href="#arg-quanta"></a></dt>
-<dd><p>Integer number of discrete quantization levels, or NULL for continuous lighting.
-When specified, continuous lighting values are binned into this many discrete levels:</p><ul><li><p>For <code>"diffuse"</code>: Creates equal-width bins across -1, 1 range</p></li>
-<li><p>For <code>"direct"</code>: Creates one bin for negative values, and (quanta-1) bins across 0, 1 range</p></li>
-</ul><p>Default is NULL (continuous lighting).</p></dd>
+<dt id="arg-fill">fill<a class="anchor" aria-label="anchor" href="#arg-fill"></a></dt>
+<dd><p>Logical indicating whether to apply lighting effects to fill colors.
+Default is FALSE.</p></dd>
 
 
-<dt id="arg-shade">shade<a class="anchor" aria-label="anchor" href="#arg-shade"></a></dt>
-<dd><p>Character string specifying which color aesthetics to modify with shading.
-Options: "neither" (no shading), "fill" (shade fill colors only),
-"color"/"colour" (shade border colors only), or "both" (shade both fill and border).
-Default is "neither".</p></dd>
+<dt id="arg-color">color<a class="anchor" aria-label="anchor" href="#arg-color"></a></dt>
+<dd><p>Logical indicating whether to apply lighting effects to border/line colors.
+Default is FALSE.</p></dd>
 
 
-<dt id="arg-shade-strength">shade_strength<a class="anchor" aria-label="anchor" href="#arg-shade-strength"></a></dt>
-<dd><p>Numeric value in the range 0–1 controlling the intensity of shading.
-1.0 gives full black-to-white range, 0.5 gives subtle lighting effects.
-Only used when <code>shade</code> is not "neither". Default is 1.0.</p></dd>
-
-
-<dt id="arg-shade-mode">shade_mode<a class="anchor" aria-label="anchor" href="#arg-shade-mode"></a></dt>
-<dd><p>Character string specifying color shading mode when <code>shade</code> is not "neither":</p><ul><li><p><code>"hsv"</code>: Modifies HSV value component (fades to bright colors at high end, black at low end)</p></li>
+<dt id="arg-mode">mode<a class="anchor" aria-label="anchor" href="#arg-mode"></a></dt>
+<dd><p>Character string specifying color shading mode:</p><ul><li><p><code>"hsv"</code>: Modifies HSV value component (fades to bright colors at high end, black at low end)</p></li>
 <li><p><code>"hsl"</code>: Modifies HSL lightness component (fades to white at high end, black at low end)</p></li>
 </ul><p>Default is "hsv".</p></dd>
+
+
+<dt id="arg-strength">strength<a class="anchor" aria-label="anchor" href="#arg-strength"></a></dt>
+<dd><p>Numeric value in the range 0–1 controlling the intensity of lighting effects.
+1.0 gives full black-to-white range, 0.5 gives subtle lighting effects.
+Default is 1.0.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -126,86 +120,48 @@ Only used when <code>shade</code> is not "neither". Default is 1.0.</p></dd>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>There are two approaches for adding lighting to a plot. The first is to use shading. This lets you
-add light and shadow effects while also specifying fill/color arguments or aesthatics through
-standard ggplot2 methods. Shading alters these colors by brightening and darkening them.</p>
-<p>The second approach is to use the computed light variable directly in your aesthetic mapping, such as
-<code>aes(fill = after_stat(light))</code>. This gives more control over you map lighting values onto color
-scales, but can't be mixed with other sources of color info.</p>
-<p>It is also possible to combine these two approaches. For example, using <code>shade = "fill"</code>,
-<code>after_stat(light)</code>, and <code><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_c()</a></code> will produce a higher-contrast version of
-the viridis palette (though the guide will not reflect the shading component).</p>
-    </div>
-    <div class="section level2">
-    <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="stat_surface_3d.html">stat_surface_3d</a></code>, <code><a href="stat_voxel_3d.html">stat_voxel_3d</a></code>, <code><a href="stat_pillar_3d.html">stat_pillar_3d</a></code>, <code>scale_colorbar_shade</code></p></div>
+    <p>Lighting in this package works through shading - modifying the brightness
+of fill and/or color aesthetics based on computed lighting values. This approach
+allows lighting effects while still using standard ggplot2 color specifications.</p>
     </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># base plot used in examples</span></span></span>
-<span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mountain</span>, <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span>scales <span class="op">=</span> <span class="st">"fixed"</span>, ratio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1.5</span>, <span class="fl">.01</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_c</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_color_viridis_c</a></span><span class="op">(</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Default diffuse lighting (no shading)</span></span></span>
+<span class="r-in"><span><span class="fu">lighting</span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Lighting specification:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Method: diffuse </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Direction: [ 1, 0, 1 ] (directional lighting)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Shading: disabled</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Aesthetic lighting versus shading -----------------------</span></span></span>
+<span class="r-in"><span><span class="co"># Directional lighting with fill shading</span></span></span>
+<span class="r-in"><span><span class="fu">lighting</span><span class="op">(</span>method <span class="op">=</span> <span class="st">"direct"</span>, direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">0.5</span><span class="op">)</span>, fill <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Lighting specification:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Method: direct </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Direction: [ 1, 0, 0.5 ] (directional lighting)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Shading: fill (strength = 1 , mode = hsv )</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># map default lighting to fill aesthetic</span></span></span>
-<span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="stat_surface_3d.html">stat_surface_3d</a></span><span class="op">(</span><span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat</a></span><span class="op">(</span><span class="va">light</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="lighting-1.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span><span class="co"># Rainbow normal mapping</span></span></span>
+<span class="r-in"><span><span class="fu">lighting</span><span class="op">(</span>method <span class="op">=</span> <span class="st">"normal_rgb"</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Lighting specification:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Method: normal_rgb </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Direction: [ 1, 0, 1 ] (directional lighting)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Shading: disabled</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># apply shading to standard fill and color attributes</span></span></span>
-<span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="stat_surface_3d.html">stat_surface_3d</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="st">"slateblue"</span>, color <span class="op">=</span> <span class="st">"gray80"</span>,</span></span>
-<span class="r-in"><span>                    light <span class="op">=</span> <span class="fu">lighting</span><span class="op">(</span>shade <span class="op">=</span> <span class="st">"both"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="lighting-2.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span><span class="co"># Apply to both fill and color</span></span></span>
+<span class="r-in"><span><span class="fu">lighting</span><span class="op">(</span>fill <span class="op">=</span> <span class="cn">TRUE</span>, color <span class="op">=</span> <span class="cn">TRUE</span>, strength <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Lighting specification:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Method: diffuse </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Direction: [ 1, 0, 1 ] (directional lighting)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Shading: fill + color (strength = 0.8 , mode = hsv )</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># apply shading on top of standard aesthetic mapping</span></span></span>
-<span class="r-in"><span><span class="co"># and add a shaded guide to match</span></span></span>
-<span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="stat_surface_3d.html">stat_surface_3d</a></span><span class="op">(</span><span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="va">z</span>, color <span class="op">=</span> <span class="va">z</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                    light <span class="op">=</span> <span class="fu">lighting</span><span class="op">(</span>shade <span class="op">=</span> <span class="st">"both"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
-<span class="r-in"><span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/guides.html" class="external-link">guides</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="fu"><a href="shade_guides.html">guide_colorbar_shaded</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="lighting-3.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># to fade shading highlights to white, use HSL mode</span></span></span>
-<span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="stat_surface_3d.html">stat_surface_3d</a></span><span class="op">(</span><span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="va">z</span>, color <span class="op">=</span> <span class="va">z</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                    light <span class="op">=</span> <span class="fu">lighting</span><span class="op">(</span>shade <span class="op">=</span> <span class="st">"both"</span>,</span></span>
-<span class="r-in"><span>                                     shade_mode <span class="op">=</span> <span class="st">"hsl"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
-<span class="r-in"><span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/guides.html" class="external-link">guides</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="fu"><a href="shade_guides.html">guide_colorbar_shaded</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="lighting-4.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Alternative lighting methods -----------------------</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># the above examples show "diffuse" lighting;</span></span></span>
-<span class="r-in"><span><span class="co"># use "direct" lighting to apply full shade to unlit surfaces</span></span></span>
-<span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="stat_surface_3d.html">stat_surface_3d</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="st">"gray"</span>, color <span class="op">=</span> <span class="st">"gray"</span>,</span></span>
-<span class="r-in"><span>                    light <span class="op">=</span> <span class="fu">lighting</span><span class="op">(</span>method <span class="op">=</span> <span class="st">"direct"</span>, shade <span class="op">=</span> <span class="st">"both"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="lighting-5.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># specify quantized lighting to split the scene into discrete light bins</span></span></span>
-<span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="stat_surface_3d.html">stat_surface_3d</a></span><span class="op">(</span><span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat</a></span><span class="op">(</span><span class="va">light</span><span class="op">)</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                    light <span class="op">=</span> <span class="fu">lighting</span><span class="op">(</span>quanta <span class="op">=</span> <span class="fl">5</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="lighting-6.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># use RGB-normal lighting plot each face direction in a unique color</span></span></span>
-<span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="stat_surface_3d.html">stat_surface_3d</a></span><span class="op">(</span><span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat</a></span><span class="op">(</span><span class="va">light</span><span class="op">)</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                    light <span class="op">=</span> <span class="fu">lighting</span><span class="op">(</span>method <span class="op">=</span> <span class="st">"normal_rgb"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="lighting-7.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Light source specification -----------------------</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># light direction from upper left</span></span></span>
-<span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="stat_surface_3d.html">stat_surface_3d</a></span><span class="op">(</span>light <span class="op">=</span> <span class="fu">lighting</span><span class="op">(</span>shade <span class="op">=</span> <span class="st">"both"</span>,</span></span>
-<span class="r-in"><span>                        direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="lighting-8.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># positional lighting from within plot</span></span></span>
-<span class="r-in"><span><span class="co"># p + stat_surface_3d(aes(fill = after_stat(light)),</span></span></span>
-<span class="r-in"><span><span class="co">#             light = lighting(position = c(0, .5, 100),</span></span></span>
-<span class="r-in"><span><span class="co">#                         distance_falloff = TRUE,</span></span></span>
-<span class="r-in"><span><span class="co">#                         method = "direct"))</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Positional lighting with distance falloff</span></span></span>
+<span class="r-in"><span><span class="fu">lighting</span><span class="op">(</span>position <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">10</span>, <span class="fl">10</span>, <span class="fl">20</span><span class="op">)</span>, distance_falloff <span class="op">=</span> <span class="cn">TRUE</span>, fill <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Lighting specification:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Method: diffuse </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Position: [ 10, 10, 20 ] (positional lighting)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Distance falloff: enabled</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Shading: fill (strength = 1 , mode = hsv )</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
