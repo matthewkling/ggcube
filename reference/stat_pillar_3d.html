@@ -54,7 +54,7 @@ Works with both complete regular grids and sparse point data.</p>
 <span>  position <span class="op">=</span> <span class="st">"identity"</span>,</span>
 <span>  width <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  faces <span class="op">=</span> <span class="st">"all"</span>,</span>
-<span>  light <span class="op">=</span> <span class="fu"><a href="lighting.html">lighting</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  light <span class="op">=</span> <span class="fu">ggcube</span><span class="fu">::</span><span class="fu"><a href="light.html">light</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  zmin <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  na.rm <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  show.legend <span class="op">=</span> <span class="cn">NA</span>,</span>
@@ -98,7 +98,7 @@ Grid spacing is determined automatically using <code><a href="https://ggplot2.ti
 
 
 <dt id="arg-light">light<a class="anchor" aria-label="anchor" href="#arg-light"></a></dt>
-<dd><p>A lighting specification object created by <code><a href="lighting.html">lighting()</a></code></p></dd>
+<dd><p>A lighting specification object created by <code><a href="light.html">light()</a></code>, or NULL to disable shading.</p></dd>
 
 
 <dt id="arg-zmin">zmin<a class="anchor" aria-label="anchor" href="#arg-zmin"></a></dt>
@@ -146,7 +146,7 @@ arguments to <code><a href="geom_polygon_3d.html">geom_polygon_3d()</a></code>.<
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="stat_surface_3d.html">stat_surface_3d()</a></code> for smooth surface rendering, <code><a href="coord_3d.html">coord_3d()</a></code> for 3D coordinate systems,
-<code><a href="lighting.html">lighting()</a></code> for lighting specifications, GeomPolygon3D for the default geometry.</p></div>
+<code><a href="light.html">light()</a></code> for lighting specifications, GeomPolygon3D for the default geometry.</p></div>
     </div>
 
     <div class="section level2">
@@ -158,7 +158,13 @@ arguments to <code><a href="geom_polygon_3d.html">geom_polygon_3d()</a></code>.<
 <span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">d</span>, <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu">stat_pillar_3d</span><span class="op">(</span><span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat</a></span><span class="op">(</span><span class="va">light</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="stat_pillar_3d-1.png" alt="" width="700" height="433"></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in stat_pillar_3d(aes(fill = after_stat(light))):</span> Problem while mapping stat to aesthetics.</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Error occurred in the 1st layer.</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="font-weight: bold;">Caused by error in `map_statistic()`:</span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="color: #BBBB00;">!</span> Aesthetics must be valid computed stats.</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="color: #BB0000;">✖</span> The following aesthetics are invalid:</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="color: #BB0000;">✖</span> `fill = after_stat(light)`</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Did you map your stat in the wrong layer?</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Sparse data (only some points)</span></span></span>
 <span class="r-in"><span><span class="va">sparse_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
@@ -169,34 +175,46 @@ arguments to <code><a href="geom_polygon_3d.html">geom_polygon_3d()</a></code>.<
 <span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">sparse_data</span>, <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu">stat_pillar_3d</span><span class="op">(</span><span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="va">z</span><span class="op">)</span>, color <span class="op">=</span> <span class="st">"white"</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="stat_pillar_3d-2.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="stat_pillar_3d-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Set base level for all pillars using parameter</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">sparse_data</span>, <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu">stat_pillar_3d</span><span class="op">(</span><span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="va">z</span><span class="op">)</span>, color <span class="op">=</span> <span class="st">"white"</span>,</span></span>
 <span class="r-in"><span>                zmin <span class="op">=</span> <span class="fl">0</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="stat_pillar_3d-3.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="stat_pillar_3d-2.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Variable base levels using aesthetic</span></span></span>
 <span class="r-in"><span><span class="va">d</span><span class="op">$</span><span class="va">base_level</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">d</span><span class="op">)</span>, <span class="op">-</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">d</span>, <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, z <span class="op">=</span> <span class="va">z</span>, zmin <span class="op">=</span> <span class="va">base_level</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu">stat_pillar_3d</span><span class="op">(</span><span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat</a></span><span class="op">(</span><span class="va">light</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="stat_pillar_3d-4.png" alt="" width="700" height="433"></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in stat_pillar_3d(aes(fill = after_stat(light))):</span> Problem while mapping stat to aesthetics.</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Error occurred in the 1st layer.</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="font-weight: bold;">Caused by error in `map_statistic()`:</span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="color: #BBBB00;">!</span> Aesthetics must be valid computed stats.</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="color: #BB0000;">✖</span> The following aesthetics are invalid:</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="color: #BB0000;">✖</span> `fill = after_stat(light)`</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Did you map your stat in the wrong layer?</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Show only top and front faces</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">sparse_data</span>, <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu">stat_pillar_3d</span><span class="op">(</span><span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat</a></span><span class="op">(</span><span class="va">light</span><span class="op">)</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>              faces <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"zmax"</span>, <span class="st">"ymin"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="stat_pillar_3d-5.png" alt="" width="700" height="433"></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in stat_pillar_3d(aes(fill = after_stat(light)), faces = c("zmax",     "ymin")):</span> Problem while mapping stat to aesthetics.</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Error occurred in the 1st layer.</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="font-weight: bold;">Caused by error in `map_statistic()`:</span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="color: #BBBB00;">!</span> Aesthetics must be valid computed stats.</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="color: #BB0000;">✖</span> The following aesthetics are invalid:</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="color: #BB0000;">✖</span> `fill = after_stat(light)`</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Did you map your stat in the wrong layer?</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># With gaps between pillars</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">d</span>, <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu">stat_pillar_3d</span><span class="op">(</span>color <span class="op">=</span> <span class="st">"black"</span>, width <span class="op">=</span> <span class="fl">0.6</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="stat_pillar_3d-6.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="stat_pillar_3d-3.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
