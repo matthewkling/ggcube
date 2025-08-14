@@ -110,8 +110,8 @@ Grid spacing is determined automatically using <code><a href="https://ggplot2.ti
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Other arguments passed on to <code><a href="https://ggplot2.tidyverse.org/reference/layer.html" class="external-link">layer()</a></code>, such as <code>sort_method</code> and <code>scale_depth</code>
-arguments to <code><a href="geom_polygon_3d.html">geom_polygon_3d()</a></code>.</p></dd>
+<dd><p>Other arguments passed on to the geom (typically <code><a href="geom_polygon_3d.html">geom_polygon_3d()</a></code>), such as
+<code>sort_method</code> and <code>scale_depth</code> as well as aesthetics like <code>colour</code>, <code>fill</code>, <code>linewidth</code>, etc.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -159,7 +159,7 @@ GeomPolygon3D for the default geometry.</p></div>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># With aesthetic fill</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu">stat_voxel_3d</span><span class="op">(</span><span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_c</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/guides.html" class="external-link">guides</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="fu"><a href="shade_guides.html">guide_colorbar_shaded</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_c</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/guides.html" class="external-link">guides</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="fu"><a href="guide_3d.html">guide_colorbar_3d</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="stat_voxel_3d-2.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Show only visible faces for performance</span></span></span>
