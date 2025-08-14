@@ -27,9 +27,6 @@ GeomSmooth3D <- ggproto("GeomSmooth3D", Geom,
                                # Apply light blending to colors
                                coords <- blend_light(coords)
 
-                               # Data is already hierarchically sorted by coord$transform()
-                               # Just need to create polygon grobs using the group column
-
                                if (!"group" %in% names(coords)) {
                                      # Fallback for data without groups
                                      warning("No group column found in polygon data")

@@ -121,7 +121,10 @@ StatSmooth3D <- ggproto("StatSmooth3D", Stat,
                                                 geometry::convhulln(data[, c("x", "y")]),
                                                 cbind(surfaces$x, surfaces$y))) %>%
                                           filter(in_hull) %>%
-                                          select(-in_hull)
+                                          select(-in_hull) %>%
+                                          group_by(group) %>%
+                                          filter(n() > 2) %>%
+                                          ungroup()
                               }
 
                               return(surfaces)
@@ -298,8 +301,8 @@ gam_model <- function(){
 #' @param se.linewidth Line width for confidence interval band borders. If `NULL`,
 #'   inherits from the main surface `linewidth` aesthetic.
 #' @param light A lighting specification object created by [light()], or NULL to disable shading.
-#' @param ... Other arguments passed on to [layer()], such as `colour`, `fill`,
-#'   `linewidth`, etc..
+#' @param ... Other arguments passed on to the geom (typically `geom_smooth_3d()`), such as
+#'   `sort_method` and `scale_depth` as well as aesthetics like `colour`, `fill`, `linewidth`, etc.
 #'
 #' @section Aesthetics:
 #' `stat_smooth_3d()` requires the following aesthetics from input data:

@@ -1,4 +1,4 @@
-#' Shaded color guides for 3D plots
+#' Color guides showing lighting effects
 #'
 #' Creates color guides that show shading variation as gradients
 #' within each color. Shows the full range of colors visible when
@@ -6,35 +6,34 @@
 #'
 #' When fill and color aesthetics map to the same variable (e.g.,
 #' \code{aes(fill = z, color = z)}), ggplot2 creates a shared scale with a
-#' single guide. In this case, use \code{guides(fill = guide_colorbar_shaded())}
-#' or \code{guides(fill = guide_legend_shaded())} to apply shading, even if
-#' your layer uses the color aesthetic. Use \code{guides(color = ...)} only when color and fill map to different
-#' variables and you want separate guides for each.
+#' single guide. In this case, use \code{guides(fill = guide_*_3d())} to
+#' apply shading, **not** \code{guides(color = guide_*_3d())}, even if your layer
+#' uses the color aesthetic. Only use the color guide when color and fill
+#' map to different variables and you want separate guides for each.
 #'
 #' @param ... Arguments passed to \code{guide_colorbar()} or \code{guide_legend()}
 #' @param reverse_shade Logical. If TRUE, reverses the lighting gradient direction. By default,
 #'   shadows are placed on the left, or on the bottom for horizontal colorbars.
 #' @param shade_limits Length-2 numeric vector in the range -1 to 1, giving the limits
-#'   of the shading gradient. 0 is the base color, -1 is full shade, and 1 is full
-#'   highlight. Default is c(-.5, 5).
+#'   of the shading gradient. -1 is full shade, and 1 is full highlight. Default is `c(-.5, 5)`.
 #' @param ... Additional arguments passed to \code{guide_colorbar()} or \code{guide_legend()}.
 #' @return A guide object that displays shading effects
 #' @examples
 #' # continuous `colorbar` guide
 #' ggplot(mountain, aes(x, y, z, fill = z)) +
-#'    stat_surface_3d(light = light(shade = "fill", shade_mode = "hsl")) +
-#'    guides(fill = guide_colorbar_shaded()) +
+#'    stat_surface_3d(light = light(mode = "hsl", direction = c(1, 0, 0))) +
+#'    guides(fill = guide_colorbar_3d()) +
 #'    scale_fill_gradientn(colors = c("tomato", "dodgerblue")) +
 #'    coord_3d()
 #'
 #' # discrete `legend` guide
 #' ggplot(mountain, aes(x, y, z, fill = x > .5, group = 1)) +
-#'    stat_surface_3d(light = light(shade = "fill")) +
-#'    guides(fill = guide_legend_shaded()) +
+#'    stat_surface_3d(light = light(mode = "hsl", direction = c(1, 0, 0))) +
+#'    guides(fill = guide_legend_3d()) +
 #'    coord_3d()
-#' @name shade_guides
+#' @name guide_3d
 #' @export
-guide_colorbar_shaded <- function(reverse_shade = FALSE, shade_range = c(-.5, .5), ...) {
+guide_colorbar_3d <- function(reverse_shade = FALSE, shade_range = c(-.5, .5), ...) {
       # Create normal guide
       guide <- guide_colorbar(...)
 
@@ -72,9 +71,9 @@ guide_colorbar_shaded <- function(reverse_shade = FALSE, shade_range = c(-.5, .5
       guide
 }
 
-#' @rdname shade_guides
+#' @rdname guide_3d
 #' @export
-guide_legend_shaded <- function(reverse_shade = FALSE, shade_range = c(-.5, .5), ...) {
+guide_legend_3d <- function(reverse_shade = FALSE, shade_range = c(-.5, .5), ...) {
       # Create normal guide
       guide <- guide_legend(...)
 

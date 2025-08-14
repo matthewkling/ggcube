@@ -150,8 +150,8 @@ ensure_nonempty_data <- function(data) {
 #'   or a vector of length 2 specifying `c(nx, ny)` for different resolutions.
 #'   Default is 50. Higher values create smoother surfaces but slower rendering.
 #' @param light A lighting specification object created by \code{light()}, or NULL to disable shading.
-#' @param ... Other arguments passed on to `layer()`, such as `sort_method` and `scale_depth`
-#'    arguments to `geom_polygon_3d()`.
+#' @param ... Other arguments passed on to the geom (typically `geom_polygon_3d()`), such as
+#'   `sort_method` and `scale_depth` as well as aesthetics like `colour`, `fill`, `linewidth`, etc.
 #'
 #' @section Aesthetics:
 #' `stat_function_3d()` generates its own x, y, z coordinates, so typically no

@@ -230,8 +230,8 @@ create_pillars <- function(data, x_spacing, y_spacing, width, selected_faces) {
 #' @param zmin Base level for all pillars. When provided as a parameter, overrides any
 #'   \code{zmin} aesthetic mapping. If \code{NULL} (default), uses the \code{zmin} aesthetic
 #'   if mapped, otherwise defaults to the minimum \code{z} value in the data.
-#' @param ... Other arguments passed on to `layer()`, such as `sort_method` and `scale_depth`
-#'    arguments to `geom_polygon_3d()`.
+#' @param ... Other arguments passed on to the geom (typically `geom_polygon_3d()`), such as
+#'   `sort_method` and `scale_depth` as well as aesthetics like `colour`, `fill`, `linewidth`, etc.
 #'
 #' @section Aesthetics:
 #' `stat_pillar_3d()` requires the following aesthetics:

@@ -88,7 +88,7 @@
 #'                     light = light(contrast = 2)) +
 #'       scale_fill_viridis_c() +
 #'       scale_color_viridis_c() +
-#'       guides(fill = guide_colorbar_shaded())
+#'       guides(fill = guide_colorbar_3d())
 #'
 #'
 #' # Light sources -----------------------

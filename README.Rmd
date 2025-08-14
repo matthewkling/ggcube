@@ -39,20 +39,21 @@ devtools::install_github("matthewkling/ggcube")
 
 ## Quick start
 
-The essential ingredient of a ggcube plot is `coord_3d()`. Adding this to a standard ggplot, and providing a third (`z`) aesthetic variable, creates a 3D plot:
+The essential ingredient of a ggcube plot is `coord_3d()`. Adding this to a standard ggplot, and providing a `z` aesthetic variable, creates a 3D plot:
 
 ```{r quickstart, warning = FALSE, message = FALSE}
 library(ggplot2)
 library(ggcube)
 
 # Basic 3D scatter plot
-ggplot(mtcars, aes(mpg, wt, qsec, color = factor(cyl))) +
+ggplot(mtcars, aes(x = mpg, y = wt, z = qsec, 
+                   color = factor(cyl))) +
       geom_point() +
       coord_3d()
 ```
 
 
-### Surfaces
+## Surfaces
 
 - `stat_function()` visualizes mathematical functions
 - `stat_surface_3d()` renders surfaces based on existing grid data such as terrain data
@@ -68,8 +69,9 @@ ggplot(mountain, aes(x, y, z)) +
       stat_surface_3d(aes(fill = z, color = z),
                       light = light(direction = c(1, 0, 0))) +
       scale_fill_viridis_c() + scale_color_viridis_c() +
-      coord_3d(ratio = c(1.5, 2, 1)) +
-      guides(fill = guide_colorbar_shaded())
+      coord_3d(ratio = c(1.5, 2, 1), expand = FALSE, panels = "zmin") +
+      guides(fill = guide_colorbar_3d()) +
+      theme_light()
 ```
 
 Example: a mathematical surface using `stat_function_3d()`:
@@ -97,8 +99,7 @@ d$z <- d$x + d$x^2 - d$y^2 + rnorm(50)
 ggplot(d, aes(x, y, z)) + 
       stat_smooth_3d(aes(fill = after_stat(level)),
                      method = "gam", fomula = z ~ te(x, y),
-                     se = TRUE, level = 0.99, 
-                     domain = "bbox", color = "black") +
+                     se = TRUE, level = 0.99, color = "black") +
       scale_fill_manual(values = c("red", "darkorchid4", "steelblue")) +
       coord_3d()
 
@@ -106,31 +107,34 @@ ggplot(d, aes(x, y, z)) +
 ```
 
 
-### Prisms
+## Prisms
 
-- `stat_voxel_3d()` renders 3D pixel data sparse arrays of cubes
 - `stat_pillar_3d()` produces 3D column charts
-- `stat_histogram_3d()` (in prep)
-- `stat_prism_3d()` (in prep)
+- `stat_voxel_3d()` renders sparse 3D pixel data as arrays of cubes
+- `stat_histogram_3d()` (coming soon)
+- `stat_prism_3d()` (coming soon)
 
 Example: a 3D bar chart using `stat_pillar_3d()`:
 
 ```{r volumes, warning = FALSE, message = FALSE}
 # 3D pillar visualization
 set.seed(123)
-data <- data.frame(x = sample(1:10, 20, replace = TRUE),
-                   y = sample(1:10, 20, replace = TRUE),
-                   z1 = runif(20),
-                   z2 = runif(20))
+data <- expand.grid(x = 1:10, y = 1:10)
+data$z1 <- runif(nrow(data))
+data$z2 <- runif(nrow(data))
 ggplot(data, aes(x, y, z1, zmin = z2, fill = z2 - z1)) +
-      stat_pillar_3d(color = "black", linewidth = 0.1, width = 1) +
-      scale_fill_gradient2() + guides(fill = guide_colorbar_shaded()) +
-      coord_3d()
+      stat_pillar_3d(color = "black", linewidth = 0.1, width = .8,
+                     light = light(direction = c(1, .5, 0), color = FALSE),
+                     sort_method = "pairwise") +
+      coord_3d(pitch = 0, yaw = 0, roll = -50, dist = 1.5) +
+      scale_fill_gradient2() + 
+      guides(fill = guide_colorbar_3d()) +
+      theme(panel.border = element_rect(color = "black", linewidth = .25))
 ```
 
-### Paths
+## Paths
 
-`geom_path_3d()` renders paths in 3D space with depth-based scaling and sorting:
+`geom_path_3d()` renders paths in 3D space with depth-based sorting and scaling:
 
 ```{r paths, warning = FALSE, message = FALSE}
 butterfly <- lorenz_attractor(n_points = 8000, dt = .01)
@@ -144,7 +148,7 @@ ggplot(butterfly, aes(x, y, z, color = time)) +
 ```
 
 
-### Points
+## Points
 
 While `ggplot2::geom_point()` works with ggcube as demonstrated above, `geom_point_3d()` creates 3D-aware scatter plots with proper point ordering, depth-scaled point sizes, and options to include reference lines and reference points projecting 3D points onto 2D face panels:
 
@@ -157,7 +161,7 @@ ggplot(mtcars, aes(mpg, wt, qsec, fill = factor(cyl))) +
 ```
 
 
-### Lighting effects
+## Lighting effects
 
 Lighting of 3D polygon layers is controlled by providing a `light()` specification.
 
@@ -181,7 +185,7 @@ ggplot(sphere_points, aes(x, y, z)) +
 ```
 
 
-### Face projection
+## Face projection
 
 3D and 2D layers can be mixed by using `position_on_face()` to project 2D data onto cube faces:
 
@@ -189,16 +193,19 @@ ggplot(sphere_points, aes(x, y, z)) +
 
 ggplot(iris, aes(Sepal.Length, Sepal.Width, Petal.Length, 
                  color = Species, fill = Species)) +
-      stat_density_2d( # place 2D density plot on zmin face
-            position = position_on_face(faces = "zmin", axes = c("x", "y")),
+      coord_3d() + xlim(4, 8) +
+      
+      # place 2D density plot on zmin face
+      stat_density_2d(position = position_on_face(faces = "zmin", axes = c("x", "y")),
             geom = "polygon", alpha = .1, linewidth = .25) +
-      stat_hull_3d( # flatten 3D hull layer onto ymax face
-            position = position_on_face("ymax"), alpha = .5) +
-      stat_voxel_3d( # flatten 3D voxel onto xma face, to create 2D binned
-            aes(round(Sepal.Length), round(Sepal.Width), round(Petal.Length)),
-            position = position_on_face("xmax"), alpha = .25) +
-      geom_point_3d( # 3D scatter plot
-            shape = 21, color = "black", stroke = .25) +
-      coord_3d() +
-      xlim(4, 8)
+      
+      # flatten 3D hull layer onto ymax face
+      stat_hull_3d(position = position_on_face("ymax"), alpha = .5) +
+      
+      # flatten 3D voxels onto xmax face to create 2D bins
+      stat_voxel_3d(aes(round(Sepal.Length), round(Sepal.Width), round(Petal.Length)),
+            position = position_on_face("xmax"), alpha = .15, light = NULL) +
+      
+      # 3D scatter plot
+      geom_point_3d( shape = 21, color = "black", stroke = .25)
 ```

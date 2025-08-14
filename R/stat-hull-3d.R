@@ -67,8 +67,6 @@ StatHull3D <- ggproto("StatHull3D", Stat,
 #' @param geom The geometric object to use display the data. Defaults to
 #'   [GeomPolygon3D] for proper 3D depth sorting.
 #' @param position Position adjustment, defaults to "identity".
-#' @param ... Other arguments passed on to `layer()`, such as `sort_method` and `scale_depth`
-#'    arguments to `geom_polygon_3d()`.
 #' @param method Triangulation method. Either:
 #'   - `"convex"`: Convex hull triangulation (default)
 #'   - `"alpha"`: Alpha shape triangulation (can capture non-convex topologies)
@@ -78,6 +76,8 @@ StatHull3D <- ggproto("StatHull3D", Stat,
 #'   Note that alpha shapes are quite sensitive to the coordinate scales of your data. See Details section.
 #' @param light A lighting specification object created by \code{light()}, or NULL to disable shading.
 #' @param inherit.aes If `FALSE`, overrides the default aesthetics.
+#' @param ... Other arguments passed on to the geom (typically `geom_polygon_3d()`), such as
+#'   `sort_method` and `scale_depth` as well as aesthetics like `colour`, `fill`, `linewidth`, etc.
 #'
 #' @section Grouping:
 #' `stat_hull_3d()` respects ggplot2 grouping aesthetics. To create separate hulls for different

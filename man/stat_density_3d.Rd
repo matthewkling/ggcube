@@ -63,8 +63,8 @@ If \code{FALSE}, missing values will cause an error. Default is \code{FALSE}.}
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics.}
 
-\item{...}{Other arguments passed on to \code{\link[=layer]{layer()}}, such as \code{colour}, \code{fill},
-\code{alpha}, etc, or \code{sort_method} and \code{scale_depth} arguments to \code{geom_polygon_3d()}.}
+\item{...}{Other arguments passed on to the geom (typically \code{geom_polygon_3d()}), such as
+\code{sort_method} and \code{scale_depth} as well as aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc.}
 }
 \description{
 Creates 3D surfaces from 2D point data using kernel density estimation.
@@ -118,7 +118,8 @@ library(ggplot2)
 p <- ggplot(faithful, aes(eruptions, waiting)) +
   coord_3d() +
   scale_fill_viridis_c()
-p + stat_density_3d() + guides(fill = guide_colorbar_shaded())
+
+p + stat_density_3d() + guides(fill = guide_colorbar_3d())
 
 # Color by alternative density values
 p + stat_density_3d(aes(fill = after_stat(count)))
@@ -127,10 +128,6 @@ p + stat_density_3d(aes(fill = after_stat(count)))
 p + stat_density_3d(adjust = 0.5, color = "white")  # More detail
 p + stat_density_3d(adjust = 2, color = "white")   # Smoother
 
-# Higher resolution grid for smoother surfaces
-p + stat_density_3d(n = 50, color = "black", fill = "darkgreen", alpha = 0.85,
-                  light = light(direction = c(1, 1, 0.5)))
-
 # Multiple density surfaces by group,
 # using normalized density to equalize peak heights
 ggplot(iris, aes(Petal.Length, Sepal.Length, fill = Species)) +
@@ -138,8 +135,8 @@ ggplot(iris, aes(Petal.Length, Sepal.Length, fill = Species)) +
                   color = "black", alpha = .7, light = NULL) +
   coord_3d()
 
-# Same, but with extra padding and with
-# density filtering to remove rectangular artifacts
+# Same, but with extra padding to remove edge effects and
+# with density filtering to remove rectangular artifacts
 ggplot(iris, aes(Petal.Length, Sepal.Length, fill = Species)) +
   stat_density_3d(aes(z = after_stat(ndensity)),
                   pad = .3, min_ndensity = .001,

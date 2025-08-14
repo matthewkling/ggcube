@@ -43,8 +43,8 @@ Note that alpha shapes are quite sensitive to the coordinate scales of your data
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics.}
 
-\item{...}{Other arguments passed on to \code{layer()}, such as \code{sort_method} and \code{scale_depth}
-arguments to \code{geom_polygon_3d()}.}
+\item{...}{Other arguments passed on to the geom (typically \code{geom_polygon_3d()}), such as
+\code{sort_method} and \code{scale_depth} as well as aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc.}
 }
 \description{
 \code{stat_hull_3d()} turns 3D point clouds into surface hulls consisting of triangular polygons,

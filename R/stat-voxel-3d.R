@@ -210,8 +210,8 @@ convert_to_numeric <- function(data) {
 #'   }
 #'   Valid face names: "xmin", "xmax", "ymin", "ymax", "zmin", "zmax".
 #' @param light A lighting specification object created by \code{light()}, or NULL to disable shading.
-#' @param ... Other arguments passed on to `layer()`, such as `sort_method` and `scale_depth`
-#'    arguments to `geom_polygon_3d()`.
+#' @param ... Other arguments passed on to the geom (typically `geom_polygon_3d()`), such as
+#'   `sort_method` and `scale_depth` as well as aesthetics like `colour`, `fill`, `linewidth`, etc.
 #'
 #' @section Aesthetics:
 #' `stat_voxel_3d()` requires the following aesthetics:
@@ -246,7 +246,7 @@ convert_to_numeric <- function(data) {
 #'
 #' # With aesthetic fill
 #' p + stat_voxel_3d(aes(fill = z)) +
-#'   scale_fill_viridis_c() + guides(fill = guide_colorbar_shaded())
+#'   scale_fill_viridis_c() + guides(fill = guide_colorbar_3d())
 #'
 #' # Show only visible faces for performance
 #' p + stat_voxel_3d(faces = c("zmax", "ymin", "xmin"))

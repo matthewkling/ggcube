@@ -28,7 +28,8 @@ representing coordinates on a regular grid.}
 
 \item{position}{Position adjustment, defaults to "identity".}
 
-\item{...}{Other arguments passed on to \code{\link[=layer]{layer()}}.}
+\item{...}{Other arguments passed on to the geom (typically \code{geom_polygon_3d()}), such as
+\code{sort_method} and \code{scale_depth} as well as aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc.}
 
 \item{na.rm}{If \code{FALSE}, missing values are removed with a warning.}
 
@@ -100,7 +101,7 @@ ggplot(mountain, aes(x, y, z, fill = z, color = z)) +
   theme_light() +
   scale_fill_gradientn(colors = c("darkgreen", "rosybrown4", "gray60")) +
   scale_color_gradientn(colors = c("darkgreen", "rosybrown4", "gray60")) +
-  guides(fill = guide_colorbar_shaded())
+  guides(fill = guide_colorbar_3d())
 
 }
 \seealso{

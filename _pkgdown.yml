@@ -15,7 +15,7 @@ reference:
 - title: Visual styling
 - contents:
   - light
-  - shade_guides
+  - guide_3d
   - element_rect
 - title: Z axis scales
 - contents:

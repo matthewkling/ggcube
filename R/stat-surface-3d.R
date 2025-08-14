@@ -134,7 +134,9 @@ create_grid_quads <- function(data, light) {
 #' @param show.legend Logical indicating whether this layer should be included in legends.
 #' @param inherit.aes If `FALSE`, overrides the default aesthetics.
 #' @param light A lighting specification object created by \code{light()}, or NULL to disable shading.
-#' @param ... Other arguments passed on to [layer()].
+#' @param ... Other arguments passed on to the geom (typically `geom_polygon_3d()`), such as
+#'   `sort_method` and `scale_depth` as well as aesthetics like `colour`, `fill`, `linewidth`, etc.
+
 #'
 #' @section Aesthetics:
 #' `stat_surface_3d()` requires the following aesthetics:
@@ -185,7 +187,7 @@ create_grid_quads <- function(data, light) {
 #'   theme_light() +
 #'   scale_fill_gradientn(colors = c("darkgreen", "rosybrown4", "gray60")) +
 #'   scale_color_gradientn(colors = c("darkgreen", "rosybrown4", "gray60")) +
-#'   guides(fill = guide_colorbar_shaded())
+#'   guides(fill = guide_colorbar_3d())
 #'
 #' @seealso [stat_function_3d()] for surfaces representing mathematical functions;
 #'   [stat_smooth_3d()] for surfaces based on fitted statistical models;

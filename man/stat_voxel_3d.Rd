@@ -48,8 +48,8 @@ Valid face names: "xmin", "xmax", "ymin", "ymax", "zmin", "zmax".}
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics.}
 
-\item{...}{Other arguments passed on to \code{layer()}, such as \code{sort_method} and \code{scale_depth}
-arguments to \code{geom_polygon_3d()}.}
+\item{...}{Other arguments passed on to the geom (typically \code{geom_polygon_3d()}), such as
+\code{sort_method} and \code{scale_depth} as well as aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc.}
 }
 \description{
 Creates 3D voxel visualizations from sparse 3D point data.
@@ -99,7 +99,7 @@ p + stat_voxel_3d(fill = "steelblue")
 
 # With aesthetic fill
 p + stat_voxel_3d(aes(fill = z)) +
-  scale_fill_viridis_c() + guides(fill = guide_colorbar_shaded())
+  scale_fill_viridis_c() + guides(fill = guide_colorbar_3d())
 
 # Show only visible faces for performance
 p + stat_voxel_3d(faces = c("zmax", "ymin", "xmin"))

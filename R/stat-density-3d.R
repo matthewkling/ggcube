@@ -129,8 +129,8 @@ StatDensity3D <- ggproto("StatDensity3D", Stat,
 #'   removing low-density corners of rectangular density grids when density surfaces are
 #'   shown for multiple groups, as in the example below. Default is 0 (no filtering).
 #' @param light A lighting specification object created by [light()], or NULL to disable shading.
-#' @param ... Other arguments passed on to [layer()], such as `colour`, `fill`,
-#'   `alpha`, etc, or `sort_method` and `scale_depth` arguments to `geom_polygon_3d()`.
+#' @param ... Other arguments passed on to the geom (typically `geom_polygon_3d()`), such as
+#'   `sort_method` and `scale_depth` as well as aesthetics like `colour`, `fill`, `linewidth`, etc.
 #'
 #' @section Aesthetics:
 #' `stat_density_3d()` requires the following aesthetics from input data:
@@ -167,7 +167,8 @@ StatDensity3D <- ggproto("StatDensity3D", Stat,
 #' p <- ggplot(faithful, aes(eruptions, waiting)) +
 #'   coord_3d() +
 #'   scale_fill_viridis_c()
-#' p + stat_density_3d() + guides(fill = guide_colorbar_shaded())
+#'
+#' p + stat_density_3d() + guides(fill = guide_colorbar_3d())
 #'
 #' # Color by alternative density values
 #' p + stat_density_3d(aes(fill = after_stat(count)))
@@ -176,10 +177,6 @@ StatDensity3D <- ggproto("StatDensity3D", Stat,
 #' p + stat_density_3d(adjust = 0.5, color = "white")  # More detail
 #' p + stat_density_3d(adjust = 2, color = "white")   # Smoother
 #'
-#' # Higher resolution grid for smoother surfaces
-#' p + stat_density_3d(n = 50, color = "black", fill = "darkgreen", alpha = 0.85,
-#'                   light = light(direction = c(1, 1, 0.5)))
-#'
 #' # Multiple density surfaces by group,
 #' # using normalized density to equalize peak heights
 #' ggplot(iris, aes(Petal.Length, Sepal.Length, fill = Species)) +
@@ -187,8 +184,8 @@ StatDensity3D <- ggproto("StatDensity3D", Stat,
 #'                   color = "black", alpha = .7, light = NULL) +
 #'   coord_3d()
 #'
-#' # Same, but with extra padding and with
-#' # density filtering to remove rectangular artifacts
+#' # Same, but with extra padding to remove edge effects and
+#' # with density filtering to remove rectangular artifacts
 #' ggplot(iris, aes(Petal.Length, Sepal.Length, fill = Species)) +
 #'   stat_density_3d(aes(z = after_stat(ndensity)),
 #'                   pad = .3, min_ndensity = .001,
