@@ -91,14 +91,14 @@ Example: a fitted model surface using `stat_smooth_3d()`:
 ```{r smooth, warning = FALSE, message = FALSE}
 # Generate scattered 3D data
 set.seed(123)
-d <- data.frame(x = runif(50, -2, 2),
-                y = runif(50, -2, 2))
+d <- data.frame(x = rnorm(50),
+                y = rnorm(50))
 d$z <- d$x + d$x^2 - d$y^2 + rnorm(50)
 
 # Plot GAM fit with uncertainty layers
 ggplot(d, aes(x, y, z)) + 
       stat_smooth_3d(aes(fill = after_stat(level)),
-                     method = "gam", fomula = z ~ te(x, y),
+                     method = "gam", formula = z ~ te(x, y),
                      se = TRUE, level = 0.99, color = "black") +
       scale_fill_manual(values = c("red", "darkorchid4", "steelblue")) +
       coord_3d()

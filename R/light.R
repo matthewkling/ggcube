@@ -475,7 +475,7 @@ compute_light_in_coord <- function(data, standardized_coords, scale_ranges, scal
       } else {
 
             # Surface-like data: normals from fitted plane gradients
-            gradients <- compute_surface_gradients_from_vertices(data, face_data)
+            gradients <- compute_surface_gradients_from_vertices(data)
             normals <- compute_surface_normals(gradients)
       }
 
@@ -504,7 +504,7 @@ compute_light_in_coord <- function(data, standardized_coords, scale_ranges, scal
       return(data)
 }
 
-compute_surface_gradients_from_vertices <- function(data, face_data) {
+compute_surface_gradients_from_vertices <- function(data) {
       # Compute both gradients in one pass using least squares normal equations
       gradients <- data %>%
             group_by(group) %>%

@@ -7,7 +7,7 @@ StatSmooth3D <- ggproto("StatSmooth3D", Stat,
 
                         compute_panel = function(data, scales, method = "loess", formula = NULL,
                                                  method.args = list(), xlim = NULL, ylim = NULL,
-                                                 n = 30, light = NULL, na.rm = FALSE, domain = NULL,
+                                                 n = 30, light = NULL, na.rm = FALSE, domain = "chull",
                                                  se = FALSE, level = 0.95, se.fill = NULL, se.colour = NULL,
                                                  se.alpha = 0.5, se.linewidth = NULL) {
 
@@ -28,108 +28,160 @@ StatSmooth3D <- ggproto("StatSmooth3D", Stat,
                                     stop("method must be one of: ", paste(valid_methods, collapse = ", "))
                               }
 
-                              # Get x and y ranges from data if not specified
-                              if (is.null(xlim)) {
-                                    xlim <- range(data$x, na.rm = TRUE)
+
+
+                              # Validate grid size
+                              if (length(n) == 1) {
+                                    n <- c(n, n)
+                              }
+                              if (length(n) != 2 || any(n < 3)) {
+                                    stop("n must be a single integer >= 3 or a vector of length 2 with values >= 3")
                               }
 
-                              if (is.null(ylim)) {
-                                    ylim <- range(data$y, na.rm = TRUE)
-                              }
+                              # Get model specification
+                              model_func <- switch(method,
+                                                   lm = lm_model,
+                                                   glm = glm_model,
+                                                   loess = loess_model,
+                                                   gam = gam_model,
+                                                   stop("invalid model"))
 
-                              # Validate ranges
-                              if (length(xlim) != 2 || !is.numeric(xlim) || xlim[1] >= xlim[2]) {
-                                    stop("xlim must be a numeric vector of length 2 with xlim[1] < xlim[2]")
-                              }
-
-                              if (length(ylim) != 2 || !is.numeric(ylim) || ylim[1] >= ylim[2]) {
-                                    stop("ylim must be a numeric vector of length 2 with ylim[1] < ylim[2]")
-                              }
-
-                              # Warn about loess extrapolation limitations
-                              if (method == "loess") {
-                                    data_x_range <- range(data$x, na.rm = TRUE)
-                                    data_y_range <- range(data$y, na.rm = TRUE)
-
-                                    if (xlim[1] < data_x_range[1] || xlim[2] > data_x_range[2] ||
-                                        ylim[1] < data_y_range[1] || ylim[2] > data_y_range[2]) {
-                                          warning("loess can't extrapolate beyond the data range. Consider method = 'lm', 'glm', or 'gam' for extrapolation.")
+                              # Handle formula defaults
+                              if (is.null(formula)) {
+                                    model_spec <- model_func()
+                                    if("default_formula" %in% names(model_spec)) {
+                                          formula <- model_spec$default_formula
+                                    } else {
+                                          formula <- z ~ x + y
                                     }
                               }
 
-                              # Handle n parameter (grid resolution)
-                              if (length(n) == 1) {
-                                    nx <- ny <- n
-                              } else if (length(n) == 2) {
-                                    nx <- n[1]
-                                    ny <- n[2]
-                              } else {
-                                    stop("n must be a single number or a vector of length 2")
-                              }
-
-                              if (!is.numeric(c(nx, ny)) || any(c(nx, ny) < 2)) {
-                                    stop("Grid resolution (n) must be at least 2 in each dimension")
-                              }
-
-                              # Generate regular grid for prediction
-                              x_seq <- seq(xlim[1], xlim[2], length.out = nx)
-                              y_seq <- seq(ylim[1], ylim[2], length.out = ny)
-                              grid_data <- expand.grid(x = x_seq, y = y_seq)
-
-                              # Fit and predict model
-                              grid_data <- fit_and_predict(data, grid_data, method, formula, method.args,
-                                                           se = se, level = level) %>%
-                                    bind_cols(grid_data, .)
-
-
+                              # Determine confidence levels to compute
                               z_score <- qnorm(1 - (1 - level)/2)
-                              if(se) {surfaces <- c("upper", "fitted", "lower")} else {surfaces <- "fitted"}
-                              surfaces <- surfaces %>%
-                                    lapply(function(surface, data = grid_data){
-                                          data$level <- factor(surface,
+                              if(se) {
+                                    surface_types <- c("upper", "fitted", "lower")
+                              } else {
+                                    surface_types <- "fitted"
+                              }
+
+
+                              # Create grid polygons, with hull clipping if applicable
+                              polys <- create_grid_polys(data, domain, xlim, ylim, n)
+
+                              # Fit model and predict
+                              predictions <- fit_and_predict(data, polys, method, formula,
+                                                             method.args, se = se, level = level)
+                              polys$fitted <- predictions$fitted
+                              polys$se <- predictions$se
+
+                              # Create surfaces for each level
+                              surfaces <- surface_types %>%
+                                    lapply(function(surface_type, data = polys) {
+                                          data$level <- factor(surface_type,
                                                                levels = c("upper", "fitted", "lower"),
                                                                labels = c(paste0("upper ", level*100, "% CI"),
-                                                                          "fitted", paste0("lower ", level*100, "% CI")))
-                                          data$group <- surface
-                                          data$z <- switch(surface,
+                                                                          "fitted",
+                                                                          paste0("lower ", level*100, "% CI")))
+                                          data$group <- paste0(data$group, "-", surface_type)
+                                          data$z <- switch(surface_type,
                                                            fitted = data$fitted,
                                                            lower = data$fitted - z_score * data$se,
                                                            upper = data$fitted + z_score * data$se)
-                                          surf <- create_grid_quads(data, light)
 
                                           # Apply confidence band styling
-                                          if(surface != "fitted"){
+                                          if(surface_type != "fitted"){
                                                 if (!is.null(se.fill)) {
-                                                      surf$se.fill <- se.fill
+                                                      data$fill <- se.fill
                                                 }
                                                 if (!is.null(se.colour)) {
-                                                      surf$se.colour <- se.colour
+                                                      data$colour <- se.colour
                                                 }
                                                 if (!is.null(se.linewidth)) {
-                                                      surf$se.linewidth <- se.linewidth
+                                                      data$linewidth <- se.linewidth
                                                 }
-                                                surf$se.alpha <- se.alpha
+                                                data$alpha <- se.alpha
                                           }
 
-                                          return(surf) }) %>%
+                                          return(data)
+                                    }) %>%
                                     bind_rows()
 
-                              # if requested, remove results outside convex hull
-                              if(domain == "chull"){
-                                    surfaces <- surfaces %>%
-                                          mutate(in_hull = geometry::inhulln(
-                                                geometry::convhulln(data[, c("x", "y")]),
-                                                cbind(surfaces$x, surfaces$y))) %>%
-                                          filter(in_hull) %>%
-                                          select(-in_hull) %>%
-                                          group_by(group) %>%
-                                          filter(n() > 2) %>%
-                                          ungroup()
-                              }
+                              # Add computed variables and light info
+                              surfaces <- surfaces %>%
+                                    bind_rows(compute_surface_gradients_from_vertices(surfaces)) %>%
+                                    mutate(slope = sqrt(dzdy^2 + dzdx^2),
+                                           aspect = atan2(dzdy, dzdx)) %>%
+                                    attach_light(light)
 
                               return(surfaces)
+
                         }
 )
+
+create_grid_polys <- function(point_data, domain, xlim, ylim, n) {
+
+      ### create regular rectangular grid ###
+
+      if (is.null(xlim)) xlim <- range(point_data$x, na.rm = TRUE)
+      if (is.null(ylim)) ylim <- range(point_data$y, na.rm = TRUE)
+      x_seq <- seq(xlim[1], xlim[2], length.out = n[1])
+      y_seq <- seq(ylim[1], ylim[2], length.out = n[2])
+
+      data <- expand_grid(x = x_seq, y = y_seq)
+      data$group <- 1
+
+      data <- data %>%
+            ungroup() %>%
+            mutate(quad_id = 1:nrow(.))
+
+      dy <- data %>%
+            group_by(x) %>%
+            mutate(y = lag(y)) %>%
+            ungroup()
+
+      dx <- data %>%
+            group_by(y) %>%
+            mutate(x = lag(x)) %>%
+            ungroup()
+
+      dxy <- data.frame(x = dx$x,
+                        y = dy$y) %>%
+            left_join(data, by = join_by(x, y)) %>%
+            mutate(quad_id = dx$quad_id)
+
+      d <- bind_rows(data, dx, dxy, dy) %>%
+            na.omit() %>%
+            group_by(quad_id) %>%
+            filter(n() == 4) %>%
+            arrange(x, y) %>%
+            mutate(vertex_order = c(1, 2, 4, 3)) %>%
+            ungroup() %>%
+            arrange(quad_id, vertex_order) %>%
+            mutate(group = paste0("surface__quad", quad_id, "::", group)) %>%
+            as.data.frame()
+
+
+      if(domain == "bbox") return(d)
+
+
+      ### clip to convex hull, if applicable ###
+
+      hull_ind <- grDevices::chull(point_data[, c("x", "y")])
+      hull <- as.matrix(point_data[hull_ind, c("x", "y")])
+      d <- d %>%
+            group_by(group) %>%
+            reframe(poly = sutherland_hodgman_clip(cbind(x, y), hull)) %>%
+            ungroup()
+
+      xy <- d[[2]]
+      colnames(xy) <- c("x", "y")
+      d <- d %>% select(group) %>% bind_cols(xy, .) %>%
+            group_by(group) %>%
+            mutate(vertex_order = 1:n()) %>%
+            ungroup()
+
+      return(d)
+}
 
 #' Fit and predict with 3D smoothing models
 #'
@@ -279,9 +331,9 @@ gam_model <- function(){
 #'   For glm, this might include `family` (defaults to `gaussian()`). For gam, this might
 #'   include smoothing parameters or basis specifications.
 #' @param domain Character indicating the x-y domain over which to visualize the surface.
-#'   The default, `"chull"`, shows predictions only within the convex hull of the input data,
-#'   which prevents extrapolation into unoccupied corners of predictor space. The alternative,
-#'   `"bbox"`, shows predictions over the full rectangular bounding box of the predictors.
+#'   The default, `"bbox"`, shows predictions over the full rectangular bounding box of
+#'   the predictors.The alternative, `"chull"`, shows predictions only within the convex
+#'   hull of the input data, which prevents extrapolation into unoccupied corners of predictor space.
 #' @param xlim,ylim Numeric vectors of length 2 giving the range for prediction grid.
 #'   If `NULL` (default), uses the exact data range with no extrapolation, following
 #'   [geom_smooth()] conventions.
@@ -368,19 +420,12 @@ gam_model <- function(){
 #' p + stat_smooth_3d(aes(fill = after_stat(se * 2))) +
 #'   scale_fill_viridis_c()
 #'
-#' # Extend surface across entire predictor bounding box
-#' p + stat_smooth_3d(method = "lm", domain = "bbox")
-#'
 #' # Extend surface beyond training data range (explicit extrapolation)
-#' p + stat_smooth_3d(method = "lm", domain = "bbox",
-#'                  xlim = c(-5, 5), ylim = c(-5, 5))
-#'
-#' # Project 2D views of surface onto face panels
-#' ggplot(mtcars, aes(mpg, disp, qsec)) +
-#'   stat_smooth_3d(position = position_on_face(
-#'     faces = c("xmax", "ymax", "zmin"))) +
-#'   scale_fill_viridis_c() +
-#'   coord_3d()
+#' p + stat_smooth_3d(method = "lm", xlim = c(-5, 5), ylim = c(-5, 5))
+
+#' # Clip surface to predictor convex hull
+#' # to prevent extrapolation into corner areas
+#' p + stat_smooth_3d(method = "lm", domain = "chull")
 #'
 #' @seealso [stat_surface_3d()] for surfaces from existing grid data,
 #'   [stat_function_3d()] for mathematical function surfaces,
@@ -394,7 +439,7 @@ stat_smooth_3d <- function(mapping = NULL, data = NULL,
                            method.args = list(),
                            xlim = NULL,
                            ylim = NULL,
-                           domain = c("chull", "bbox"),
+                           domain = c("bbox", "chull"),
                            n = 30,
                            se = FALSE,
                            level = 0.95,
@@ -423,3 +468,6 @@ stat_smooth_3d <- function(mapping = NULL, data = NULL,
                           se.linewidth = se.linewidth, light = light, na.rm = na.rm, ...)
       )
 }
+
+
+

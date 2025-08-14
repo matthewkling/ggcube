@@ -14,7 +14,7 @@ stat_smooth_3d(
   method.args = list(),
   xlim = NULL,
   ylim = NULL,
-  domain = c("chull", "bbox"),
+  domain = c("bbox", "chull"),
   n = 30,
   se = FALSE,
   level = 0.95,
@@ -63,9 +63,9 @@ If \code{NULL} (default), uses the exact data range with no extrapolation, follo
 \code{\link[=geom_smooth]{geom_smooth()}} conventions.}
 
 \item{domain}{Character indicating the x-y domain over which to visualize the surface.
-The default, \code{"chull"}, shows predictions only within the convex hull of the input data,
-which prevents extrapolation into unoccupied corners of predictor space. The alternative,
-\code{"bbox"}, shows predictions over the full rectangular bounding box of the predictors.}
+The default, \code{"bbox"}, shows predictions over the full rectangular bounding box of
+the predictors.The alternative, \code{"chull"}, shows predictions only within the convex
+hull of the input data, which prevents extrapolation into unoccupied corners of predictor space.}
 
 \item{n}{Either a single integer specifying grid resolution in both dimensions,
 or a vector of length 2 specifying \code{c(nx, ny)} for different resolutions.
@@ -178,19 +178,11 @@ p + stat_smooth_3d(aes(fill = after_stat(level)),
 p + stat_smooth_3d(aes(fill = after_stat(se * 2))) +
   scale_fill_viridis_c()
 
-# Extend surface across entire predictor bounding box
-p + stat_smooth_3d(method = "lm", domain = "bbox")
-
 # Extend surface beyond training data range (explicit extrapolation)
-p + stat_smooth_3d(method = "lm", domain = "bbox",
-                 xlim = c(-5, 5), ylim = c(-5, 5))
-
-# Project 2D views of surface onto face panels
-ggplot(mtcars, aes(mpg, disp, qsec)) +
-  stat_smooth_3d(position = position_on_face(
-    faces = c("xmax", "ymax", "zmin"))) +
-  scale_fill_viridis_c() +
-  coord_3d()
+p + stat_smooth_3d(method = "lm", xlim = c(-5, 5), ylim = c(-5, 5))
+# Clip surface to predictor convex hull
+# to prevent extrapolation into corner areas
+p + stat_smooth_3d(method = "lm", domain = "chull")
 
 }
 \seealso{
