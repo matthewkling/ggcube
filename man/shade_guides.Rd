@@ -39,14 +39,14 @@ variables and you want separate guides for each.
 \examples{
 # continuous `colorbar` guide
 ggplot(mountain, aes(x, y, z, fill = z)) +
-   stat_surface_3d(light = lighting(shade = "fill", shade_mode = "hsl")) +
+   stat_surface_3d(light = light(shade = "fill", shade_mode = "hsl")) +
    guides(fill = guide_colorbar_shaded()) +
    scale_fill_gradientn(colors = c("tomato", "dodgerblue")) +
    coord_3d()
 
 # discrete `legend` guide
 ggplot(mountain, aes(x, y, z, fill = x > .5, group = 1)) +
-   stat_surface_3d(light = lighting(shade = "fill")) +
+   stat_surface_3d(light = light(shade = "fill")) +
    guides(fill = guide_legend_shaded()) +
    coord_3d()
 }

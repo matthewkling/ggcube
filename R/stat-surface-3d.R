@@ -1,7 +1,7 @@
 StatSurface3D <- ggproto("StatSurface3D", Stat,
                          required_aes = c("x", "y", "z"),
 
-                         compute_group = function(data, scales, na.rm = FALSE, light = lighting()) {
+                         compute_group = function(data, scales, na.rm = FALSE, light = NULL) {
 
                                # Remove missing values if requested
                                if (na.rm) {
@@ -19,121 +19,17 @@ StatSurface3D <- ggproto("StatSurface3D", Stat,
                                      stop("Data must be on a regular, complete grid. Each x,y combination should appear exactly once.")
                                }
 
-                               # Process surface using common pipeline
-                               return(process_surface_grid(data, light))
+                               # Add grouping variable if not present (required for face processing)
+                               if (!"group" %in% names(data)) {
+                                     data$group <- 1
+                               }
+
+                               # Create quadrilateral faces from grid cells
+                               data <- create_grid_quads(data, light)
+
+                               return(data)
                          }
 )
-
-#' Process regular grid data into 3D surface with lighting
-#'
-#' Common pipeline for converting regular grid data into quadrilateral faces
-#' with surface normals, lighting, and shade parameters. Used by stat_surface_3d,
-#' stat_function_3d, and stat_smooth_3d.
-#'
-#' @param grid_data Data frame with x, y, z columns on a regular grid
-#' @param light Lighting specification object
-#' @return Data frame with face vertices, normals, and lighting
-#' @keywords internal
-process_surface_grid <- function(grid_data, light = lighting()) {
-
-      # Add grouping variable if not present (required for face processing)
-      if (!"group" %in% names(grid_data)) {
-            grid_data$group <- 1
-      }
-
-      # Create quadrilateral faces from grid cells
-      faces <- create_grid_quads(grid_data)
-
-      # Get unique faces for normal/lighting computation
-      face_data <- faces %>%
-            group_by(group) %>%
-            slice(1) %>%  # One row per face
-            ungroup()
-
-      # Compute surface normals and face centers
-      normals <- compute_surface_normals(face_data)
-      face_centers <- calculate_surface_face_centers(faces, face_data)
-
-      # Apply lighting models
-      face_data_with_lighting <- apply_surface_lighting(face_data, normals, face_centers, light)
-
-      # Merge face-level vars back into vertex-level data set
-      faces <- left_join(faces, face_data_with_lighting, by = join_by(group))
-
-      if (light$method == "normal_rgb") {
-            faces$light <- I(faces$light)
-      }
-
-      # Add lighting parameters for shade processing
-      faces$shade_enabled <- light$shade
-      faces$shade_strength <- light$shade_strength
-      faces$shade_mode <- light$shade_mode
-      faces$lighting_method <- light$method
-
-      return(faces)
-}
-
-#' Compute surface normals from face gradients
-#'
-#' @param face_data Data frame with unique faces containing dzdx and dzdy
-#' @return Matrix with normalized normal vectors (one row per face, 3 columns)
-#' @keywords internal
-compute_surface_normals <- function(face_data) {
-      # Compute surface normals from gradients
-      normals <- matrix(nrow = nrow(face_data), ncol = 3)
-      normals[, 1] <- -face_data$dzdx  # Normal x component
-      normals[, 2] <- -face_data$dzdy  # Normal y component
-      normals[, 3] <- 1                # Normal z component
-
-      # Normalize the normal vectors
-      normal_lengths <- sqrt(rowSums(normals^2))
-      normals <- normals / normal_lengths
-
-      return(normals)
-}
-
-#' Calculate face centers for positional lighting
-#'
-#' @param faces Data frame with all face vertices
-#' @param face_data Data frame with unique faces
-#' @return Matrix with face centers (one row per face, 3 columns)
-#' @keywords internal
-calculate_surface_face_centers <- function(faces, face_data) {
-      face_centers <- matrix(nrow = nrow(face_data), ncol = 3)
-
-      for (i in seq_len(nrow(face_data))) {
-            face_group <- face_data$group[i]
-            face_vertices <- faces[faces$group == face_group, ]
-
-            # Calculate geometric center of the quadrilateral face
-            face_centers[i, 1] <- mean(face_vertices$x)  # Center x
-            face_centers[i, 2] <- mean(face_vertices$y)  # Center y
-            face_centers[i, 3] <- mean(face_vertices$z)  # Center z
-      }
-
-      return(face_centers)
-}
-
-#' Apply lighting models to surface normals
-#'
-#' @param face_data Data frame with unique faces (group column)
-#' @param normals Matrix of surface normals
-#' @param face_centers Matrix of face centers
-#' @param light Lighting specification object
-#' @return Data frame with lighting values and normal components
-#' @keywords internal
-apply_surface_lighting <- function(face_data, normals, face_centers, light) {
-      # Apply lighting models to the normals
-      light_vals <- compute_lighting(normals, light, face_centers)
-
-      face_data_with_lighting <- select(face_data, group) %>%
-            mutate(light = light_vals,
-                   normal_x = normals[, 1],
-                   normal_y = normals[, 2],
-                   normal_z = normals[, 3])
-
-      return(face_data_with_lighting)
-}
 
 # Helper function to detect if data is on regular grid
 detect_grid_structure <- function(data) {
@@ -178,7 +74,7 @@ detect_grid_structure <- function(data) {
 #' @param data Regular grid data frame
 #' @return Data frame with quad faces and computed gradients
 #' @keywords internal
-create_grid_quads <- function(data) {
+create_grid_quads <- function(data, light) {
       data <- data %>%
             ungroup() %>%
             mutate(quad_id = 1:nrow(.))
@@ -217,24 +113,27 @@ create_grid_quads <- function(data) {
             mutate(group = paste0("surface__quad", quad_id, "::", group)) %>%
             as.data.frame()
 
-      return(d)
+      return(attach_light(d, light))
 }
 
 
 #' 3D surface from regular grid data
 #'
 #' Creates 3D surfaces from regularly gridded data (like elevation maps).
-#' Assumes data is on a regular x,y grid and creates quadrilateral faces.
+#' The data must be on a regular, complete grid where every combination
+#' of x and y values appears exactly once.
 #'
-#' @param mapping Set of aesthetic mappings created by [aes()].
-#' @param data The data to be displayed in this layer.
+#' @param mapping Set of aesthetic mappings created by [aes()]. This stat
+#'   requires the `x`, `y`, and `z` aesthetics.
+#' @param data The data to be displayed in this layer. Must contain x, y, z columns
+#'   representing coordinates on a regular grid.
 #' @param geom The geometric object to use display the data. Defaults to
 #'   [GeomPolygon3D] for proper 3D depth sorting.
 #' @param position Position adjustment, defaults to "identity".
 #' @param na.rm If `FALSE`, missing values are removed with a warning.
 #' @param show.legend Logical indicating whether this layer should be included in legends.
 #' @param inherit.aes If `FALSE`, overrides the default aesthetics.
-#' @param light A lighting specification object created by \code{lighting()}
+#' @param light A lighting specification object created by \code{light()}, or NULL to disable shading.
 #' @param ... Other arguments passed on to [layer()].
 #'
 #' @section Aesthetics:
@@ -244,50 +143,45 @@ create_grid_quads <- function(data) {
 #' - **z**: Z coordinate (elevation/height)
 #'
 #' @section Computed variables:
-#' - `light`: Computed lighting value (numeric for most methods, hex color for `normal_rgb`)
-#' - `normal_x`, `normal_y`, `normal_z`: Surface normal components
-#' - `slope`: Gradient magnitude from original surface calculations
-#' - `aspect`: Direction of steepest slope from original surface calculations
-#' - `dzdx`, `dzdy`: Partial derivatives from original surface calculations
+#' - `slope`: Gradient magnitude from surface calculations
+#' - `aspect`: Direction of steepest slope from surface calculations
+#' - `dzdx`, `dzdy`: Partial derivatives from surface calculations
 #'
 #' @examples
-#' # data for a basic surface
+#' # data and base plot for basic surface
 #' d <- dplyr::mutate(tidyr::expand_grid(x = -20:20, y = -20:20),
 #'       z = sqrt(x^2 + y^2) / 1.5,
 #'       z = cos(z) - z)
-#'
-#'# base plot
 #' p <- ggplot(d, aes(x, y, z)) + coord_3d()
-#'
-#' # basic surface
-#' p + stat_surface_3d(fill = "dodgerblue", color = "darkblue", linewidth = .2)
 #'
 #' # surface with 3d lighting
 #' p + stat_surface_3d(fill = "steelblue", color = "steelblue", linewidth = .2,
-#'       light = lighting(mode = "hsl", direction = c(1, 0, 0),
-#'                        fill = TRUE, color = TRUE))
+#'       light = light(mode = "hsl", direction = c(1, 0, 0)))
 #'
 #' # mesh wireframe, without fill, with aes line color
 #' p + stat_surface_3d(aes(color = z), fill = NA)
+#'
+#' # use after_stat to access computed surface-orientation variables
+#' p + stat_surface_3d(aes(fill = after_stat(aspect))) +
+#'       scale_fill_gradientn(colors = rainbow(20))
 #'
 #' # use `group` to plot data for multiple surfaces
 #' d <- expand.grid(x = -5:5, y = -5:5)
 #' d$z <- d$x^2 - d$y^2
 #' d$g <- "a"
 #' d2 <- d
-#' d2$z <- d$z + 10
+#' d2$z <- d$z + 15
 #' d2$g <- "b"
-#' ggplot(rbind(d, d2),
-#'        aes(x, y, z, group = g, fill = g)) +
+#' ggplot(rbind(d, d2), aes(x, y, z, group = g, fill = g)) +
 #'   coord_3d() +
-#'   stat_surface_3d(color = "black", alpha = .5)
+#'   stat_surface_3d(color = "black", alpha = .5, light = NULL)
 #'
 #' # terrain surface with topographic hillshade and elevational fill
 #' ggplot(mountain, aes(x, y, z, fill = z, color = z)) +
-#'   stat_surface_3d(light = lighting(method = "diffuse", direction = c(1, 0, .5),
-#'                            fill = TRUE, color = TRUE, mode = "hsv", strength = .9),
+#'   stat_surface_3d(light = light(direction = c(1, 0, .5),
+#'                            mode = "hsv", contrast = 1.5),
 #'                linewidth = .2) +
-#'   coord_3d(ratio = c(1, 1.5, .5)) +
+#'   coord_3d(ratio = c(1, 1.5, .75)) +
 #'   theme_light() +
 #'   scale_fill_gradientn(colors = c("darkgreen", "rosybrown4", "gray60")) +
 #'   scale_color_gradientn(colors = c("darkgreen", "rosybrown4", "gray60")) +
@@ -298,15 +192,13 @@ create_grid_quads <- function(data) {
 #'   [stat_pillar_3d()] for terraced column-like surfaces;
 #'   [geom_polygon_3d()] for the default geom associated with `stat_surface_3d()`.
 #' @export
-stat_surface_3d <- function(mapping = NULL, data = NULL,
-                            geom = GeomPolygon3D,
-                            position = "identity",
-                            light = lighting(),
-                            na.rm = FALSE, show.legend = NA, inherit.aes = TRUE,
-                            ...) {
+stat_surface_3d <- function(mapping = NULL, data = NULL, geom = GeomPolygon3D,
+                            position = "identity", ..., na.rm = FALSE,
+                            show.legend = NA, inherit.aes = TRUE,
+                            light = ggcube::light()) {
 
       layer(
-            stat = StatSurface3D, data = data, mapping = mapping, geom = geom,
+            geom = geom, mapping = mapping, data = data, stat = StatSurface3D,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(na.rm = na.rm, light = light, ...)
       )

@@ -11,7 +11,7 @@ stat_hull_3d(
   position = "identity",
   method = "convex",
   radius = NULL,
-  light = lighting(),
+  light = ggcube::light(),
   inherit.aes = TRUE,
   ...
 )
@@ -39,7 +39,7 @@ A face is included in the resulting alpha shape if it can be "exposed" by a sphe
 If NULL (the default), a simple heuristic based on the data scale is used to calculate a radius value.
 Note that alpha shapes are quite sensitive to the coordinate scales of your data. See Details section.}
 
-\item{light}{A lighting specification object created by \code{lighting()}}
+\item{light}{A lighting specification object created by \code{light()}, or NULL to disable shading.}
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics.}
 
@@ -113,37 +113,24 @@ Computed variables can be accessed using \code{\link[=after_stat]{after_stat()}}
 }
 
 \examples{
-library(ggplot2)
-
 # Convex hull
 ggplot(sphere_points, aes(x, y, z)) +
-  stat_hull_3d(method = "convex", fill = "gray40",
-               light = lighting(shade = "fill")) +
+  stat_hull_3d(method = "convex", fill = "gray40") +
   coord_3d()
 
-# Alpha shape (scale-sensitive - radius ~1 works for unit sphere)
+# Alpha shape (for sphere data, gives similar result to convex)
 ggplot(sphere_points, aes(x, y, z)) +
-  stat_hull_3d(method = "alpha", radius = 1, fill = "gray40",
-               light = lighting(shade = "fill")) +
+  stat_hull_3d(method = "alpha", radius = 2, fill = "gray40") +
   coord_3d()
 
-# Grouped hulls - separate hull for each species
-spheres <- rbind(dplyr::mutate(sphere_points, group = "a"),
-                 dplyr::mutate(sphere_points, group = "b", x = x + 3))
-ggplot(spheres, aes(x, y, z, group = group)) +
-  stat_hull_3d(aes(fill = group),
-        light = lighting(shade = "fill", shade_mode = "hsl")) +
-  coord_3d(scales = "fixed")
-
-# For larger coordinate scales, increase radius proportionally:
-sphere_large <- sphere_points * 100  # Scale up by 100x
-ggplot(sphere_large, aes(x, y, z)) +
-   stat_hull_3d(method = "alpha", radius = 100,
-             fill = "darkgreen", light = lighting(shade = "fill")) +
-   coord_3d()
+# Use grouping to build separate hulls for data subsets
+ggplot(iris, aes(Petal.Length, Sepal.Length, Sepal.Width,
+                 color = Species, fill = Species)) +
+      stat_hull_3d() +
+      coord_3d(scales = "fixed")
 
 }
 \seealso{
 \code{\link[=coord_3d]{coord_3d()}} for 3D coordinate systems, \link{geom_polygon_3d} for the
-default geometry with depth sorting, \code{\link[=lighting]{lighting()}} for lighting specifications.
+default geometry with depth sorting, \code{\link[=light]{light()}} for lighting specifications.
 }

@@ -13,7 +13,7 @@ stat_function_3d(
   xlim = NULL,
   ylim = NULL,
   n = 50,
-  light = lighting(),
+  light = ggcube::light(),
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE,
@@ -25,7 +25,7 @@ stat_function_3d(
 \arguments{
 \item{mapping}{Set of aesthetic mappings created by \code{\link[=aes]{aes()}}. Since this stat
 generates its own data, typically only used for additional aesthetics like
-\code{fill} or \code{color} based on computed variables.}
+\code{fill} or \code{color} based on computed variables. Fill is mapped to \code{after_stat(z)} by default.}
 
 \item{fun}{Function to evaluate. Must accept two arguments (vectors corresponding
 to x and y axis values) and return a numeric vector of z values. Required parameter.}
@@ -47,7 +47,7 @@ If \code{NULL} (default), uses the scale ranges from the plot, which can be set 
 or a vector of length 2 specifying \code{c(nx, ny)} for different resolutions.
 Default is 50. Higher values create smoother surfaces but slower rendering.}
 
-\item{light}{A lighting specification object created by \code{\link[=lighting]{lighting()}}}
+\item{light}{A lighting specification object created by \code{light()}, or NULL to disable shading.}
 
 \item{na.rm}{If \code{TRUE}, removes missing values from function evaluation results.
 If \code{FALSE}, missing values will cause an error. Default is \code{FALSE}.}
@@ -62,7 +62,7 @@ arguments to \code{geom_polygon_3d()}.}
 \description{
 Creates 3D surfaces by evaluating a function f(x,y) = z over a regular grid.
 The function is evaluated at each grid point and the resulting surface is rendered
-with proper 3D depth sorting and optional lighting effects.
+as in \code{\link[=stat_surface_3d]{stat_surface_3d()}}.
 }
 \section{Aesthetics}{
 
@@ -88,52 +88,34 @@ library(ggplot2)
 
 # Basic function surface
 ggplot() +
-  stat_function_3d(fun = function(x, y) x^2 + y^2,
-                   xlim = c(-2, 2), ylim = c(-2, 2)) +
-  coord_3d()
+  stat_function_3d(fun = function(a, b) exp(-(a^2 + b^2)),
+                   xlim = c(-2, 2), ylim = c(-2, 2),
+                   light = NULL, color = "white") +
+  coord_3d() +
+  scale_fill_viridis_c()
 
 # Wave function with lighting
 wave_fun <- function(x, y) cos(x) + cos(y) + cos(x+y) + cos(sqrt(x^2 + y^2))
 ggplot() +
   stat_function_3d(fun = wave_fun, fill = "steelblue",
                    xlim = c(-3*pi, 3*pi), ylim = c(-3*pi, 3*pi),
-                   light = lighting(shade = "fill", shade_mode = "hsl")) +
+                   light = light(method = "direct", mode = "hsl",
+                          contrast = .8, direction = c(1, 0, 1))) +
   coord_3d(scales = "fixed") + theme_dark()
 
-# Higher resolution surface with color mapping
+# Use after_stat to access computed surface-orientation variables
 ggplot() +
-  stat_function_3d(aes(fill = after_stat(light),
-                       color = after_stat(light)),
+  stat_function_3d(aes(fill = after_stat(dzdx),
+                       color = after_stat(dzdx)),
                    fun = function(x, y) sin(x) * cos(y),
                    xlim = c(-pi, pi), ylim = c(-pi, pi),
-                   n = 60) +
+                   n = 60, light = NULL) +
   scale_fill_viridis_c(option = "B") +
   scale_color_viridis_c(option = "B") +
-  coord_3d()
-
-# Complex mathematical surface
-saddle <- function(x, y) x^2 - y^2
-ggplot() +
-  stat_function_3d(aes(fill = after_stat(x)),
-                   fun = saddle, color = "white",
-                   xlim = c(-3, 3), ylim = c(-3, 3),
-                   n = c(20, 40)) +  # Different resolution in x and y
-  scale_fill_viridis_c() +
-  coord_3d(scales = "fixed", ratio = c(3, 2, 1))
-
-# Function with lighting effects
-gaussian <- function(a, b) exp(-(a^2 + b^2))
-ggplot() +
-  stat_function_3d(fun = gaussian, color = "white",
-                   light = lighting(method = "direct",
-                                  direction = c(1, -1, 0.25),
-                                  shade = "both")) +
-  scale_fill_viridis_c() + scale_color_viridis_c() +
-  coord_3d(scales = "fixed", ratio = c(1, 2, 3), expand = FALSE) +
-  xlim(-3, 3) + ylim(-2, 2) + theme_light()
+  coord_3d(scales = "fixed")
 
 }
 \seealso{
 \code{\link[=stat_surface_3d]{stat_surface_3d()}} for surfaces from existing grid data,
-\code{\link[=lighting]{lighting()}} for lighting specifications, \code{\link[=coord_3d]{coord_3d()}} for 3D coordinate systems.
+\code{\link[=light]{light()}} for lighting specifications, \code{\link[=coord_3d]{coord_3d()}} for 3D coordinate systems.
 }

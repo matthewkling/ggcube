@@ -14,6 +14,7 @@ stat_smooth_3d(
   method.args = list(),
   xlim = NULL,
   ylim = NULL,
+  domain = c("chull", "bbox"),
   n = 30,
   se = FALSE,
   level = 0.95,
@@ -22,7 +23,7 @@ stat_smooth_3d(
   se.color = NULL,
   se.alpha = 0.5,
   se.linewidth = NULL,
-  light = lighting(),
+  light = NULL,
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE,
@@ -61,6 +62,11 @@ include smoothing parameters or basis specifications.}
 If \code{NULL} (default), uses the exact data range with no extrapolation, following
 \code{\link[=geom_smooth]{geom_smooth()}} conventions.}
 
+\item{domain}{Character indicating the x-y domain over which to visualize the surface.
+The default, \code{"chull"}, shows predictions only within the convex hull of the input data,
+which prevents extrapolation into unoccupied corners of predictor space. The alternative,
+\code{"bbox"}, shows predictions over the full rectangular bounding box of the predictors.}
+
 \item{n}{Either a single integer specifying grid resolution in both dimensions,
 or a vector of length 2 specifying \code{c(nx, ny)} for different resolutions.
 Default is 30. Higher values create smoother surfaces but slower rendering.}
@@ -83,7 +89,7 @@ inherits from the main surface \code{colour} aesthetic.}
 \item{se.linewidth}{Line width for confidence interval band borders. If \code{NULL},
 inherits from the main surface \code{linewidth} aesthetic.}
 
-\item{light}{A lighting specification object created by \code{\link[=lighting]{lighting()}}}
+\item{light}{A lighting specification object created by \code{\link[=light]{light()}}, or NULL to disable shading.}
 
 \item{na.rm}{If \code{TRUE}, removes missing values before fitting the model.
 If \code{FALSE}, missing values will cause an error. Default is \code{FALSE}.}
@@ -152,10 +158,9 @@ p + stat_smooth_3d(method = "lm",
 
 # Loess with custom span parameter, and lighting aesthetics
 p + stat_smooth_3d(
-      method = "loess",
-      method.args = list(span = 0.3),
+      method = "loess", method.args = list(span = 0.3),
       fill = "steelblue", color = "white",
-      light = lighting(shade = "both"))
+      light = light(direction = c(-1, 0, 0)))
 
 # GLM with gamma family and log link
 p + stat_smooth_3d(
@@ -164,19 +169,21 @@ p + stat_smooth_3d(
       formula = z ~ poly(x, 2) + poly(y, 2)) +
   scale_fill_viridis_c()
 
-# GAM with default smoothers, with fill colored by uncertainty layer
+# GAM with default smoothers, with fill colored by confidence interval
 p + stat_smooth_3d(aes(fill = after_stat(level)),
                    method = "gam", se = TRUE, color = "black") +
   scale_fill_manual(values = c("red", "darkorchid4", "steelblue"))
 
-# Use fill color to visualize uncertainty
-p + stat_smooth_3d(aes(fill = after_stat(se * 2)),
-                  se = TRUE, se.alpha = 1) +
+# Visualize uncertainty with computed "standard error" variable
+p + stat_smooth_3d(aes(fill = after_stat(se * 2))) +
   scale_fill_viridis_c()
 
-# Extend surface beyond data range (explicit extrapolation)
-p + stat_smooth_3d(method = "lm",
-                 xlim = c(-3, 3), ylim = c(-3, 3))
+# Extend surface across entire predictor bounding box
+p + stat_smooth_3d(method = "lm", domain = "bbox")
+
+# Extend surface beyond training data range (explicit extrapolation)
+p + stat_smooth_3d(method = "lm", domain = "bbox",
+                 xlim = c(-5, 5), ylim = c(-5, 5))
 
 # Project 2D views of surface onto face panels
 ggplot(mtcars, aes(mpg, disp, qsec)) +
@@ -189,5 +196,5 @@ ggplot(mtcars, aes(mpg, disp, qsec)) +
 \seealso{
 \code{\link[=stat_surface_3d]{stat_surface_3d()}} for surfaces from existing grid data,
 \code{\link[=stat_function_3d]{stat_function_3d()}} for mathematical function surfaces,
-\code{\link[=lighting]{lighting()}} for lighting specifications, \code{\link[=coord_3d]{coord_3d()}} for 3D coordinate systems.
+\code{\link[=light]{light()}} for lighting specifications, \code{\link[=coord_3d]{coord_3d()}} for 3D coordinate systems.
 }

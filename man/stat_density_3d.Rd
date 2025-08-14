@@ -14,7 +14,7 @@ stat_density_3d(
   adjust = 1,
   pad = 0.1,
   min_ndensity = 0,
-  light = lighting(),
+  light = ggcube::light(),
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE,
@@ -54,7 +54,7 @@ described below), below which to filter out results. This is particularly useful
 removing low-density corners of rectangular density grids when density surfaces are
 shown for multiple groups, as in the example below. Default is 0 (no filtering).}
 
-\item{light}{A lighting specification object created by \code{\link[=lighting]{lighting()}}}
+\item{light}{A lighting specification object created by \code{\link[=light]{light()}}, or NULL to disable shading.}
 
 \item{na.rm}{If \code{TRUE}, removes missing values before computing density.
 If \code{FALSE}, missing values will cause an error. Default is \code{FALSE}.}
@@ -118,7 +118,7 @@ library(ggplot2)
 p <- ggplot(faithful, aes(eruptions, waiting)) +
   coord_3d() +
   scale_fill_viridis_c()
-p + stat_density_3d()
+p + stat_density_3d() + guides(fill = guide_colorbar_shaded())
 
 # Color by alternative density values
 p + stat_density_3d(aes(fill = after_stat(count)))
@@ -127,18 +127,15 @@ p + stat_density_3d(aes(fill = after_stat(count)))
 p + stat_density_3d(adjust = 0.5, color = "white")  # More detail
 p + stat_density_3d(adjust = 2, color = "white")   # Smoother
 
-# With lighting effects
-p + stat_density_3d(light = lighting(shade = "fill", shade_mode = "hsl"))
-
 # Higher resolution grid for smoother surfaces
-p + stat_density_3d(n = 50, color = "black", fill = "darkgreen", alpha = 0.8,
-                  light = lighting(direction = c(1, 1, 0.5), shade = "fill"))
+p + stat_density_3d(n = 50, color = "black", fill = "darkgreen", alpha = 0.85,
+                  light = light(direction = c(1, 1, 0.5)))
 
 # Multiple density surfaces by group,
 # using normalized density to equalize peak heights
 ggplot(iris, aes(Petal.Length, Sepal.Length, fill = Species)) +
   stat_density_3d(aes(z = after_stat(ndensity)),
-                  color = "black", alpha = .7) +
+                  color = "black", alpha = .7, light = NULL) +
   coord_3d()
 
 # Same, but with extra padding and with
@@ -146,12 +143,12 @@ ggplot(iris, aes(Petal.Length, Sepal.Length, fill = Species)) +
 ggplot(iris, aes(Petal.Length, Sepal.Length, fill = Species)) +
   stat_density_3d(aes(z = after_stat(ndensity)),
                   pad = .3, min_ndensity = .001,
-                  color = "black", alpha = .7) +
+                  color = "black", alpha = .7, light = NULL) +
   coord_3d(ratio = c(3, 3, 1))
 
 }
 \seealso{
 \code{\link[=stat_density_2d]{stat_density_2d()}} for 2D density contours, \code{\link[=stat_surface_3d]{stat_surface_3d()}} for
-surfaces from existing grid data, \code{\link[=lighting]{lighting()}} for lighting specifications,
+surfaces from existing grid data, \code{\link[=light]{light()}} for lighting specifications,
 \code{\link[=coord_3d]{coord_3d()}} for 3D coordinate systems.
 }

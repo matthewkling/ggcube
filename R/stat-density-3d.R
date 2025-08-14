@@ -4,7 +4,7 @@ StatDensity3D <- ggproto("StatDensity3D", Stat,
 
                          compute_group = function(data, scales, n = 30, h = NULL,
                                                   adjust = 1, pad = 0.1, min_ndensity = 0,
-                                                  light = lighting(), na.rm = FALSE) {
+                                                  light = NULL, na.rm = FALSE) {
 
                                # Remove missing values if requested
                                if (na.rm) {
@@ -78,7 +78,7 @@ StatDensity3D <- ggproto("StatDensity3D", Stat,
                                }
 
                                # Process surface using common pipeline (same as stat_surface_3d)
-                               surface <- process_surface_grid(grid_data, light)
+                               surface <- create_grid_quads(grid_data, light)
 
                                # Compute additional variables to match stat_density_2d
                                surface$density <- surface$z
@@ -128,7 +128,7 @@ StatDensity3D <- ggproto("StatDensity3D", Stat,
 #'   described below), below which to filter out results. This is particularly useful for
 #'   removing low-density corners of rectangular density grids when density surfaces are
 #'   shown for multiple groups, as in the example below. Default is 0 (no filtering).
-#' @param light A lighting specification object created by [lighting()]
+#' @param light A lighting specification object created by [light()], or NULL to disable shading.
 #' @param ... Other arguments passed on to [layer()], such as `colour`, `fill`,
 #'   `alpha`, etc, or `sort_method` and `scale_depth` arguments to `geom_polygon_3d()`.
 #'
@@ -167,7 +167,7 @@ StatDensity3D <- ggproto("StatDensity3D", Stat,
 #' p <- ggplot(faithful, aes(eruptions, waiting)) +
 #'   coord_3d() +
 #'   scale_fill_viridis_c()
-#' p + stat_density_3d()
+#' p + stat_density_3d() + guides(fill = guide_colorbar_shaded())
 #'
 #' # Color by alternative density values
 #' p + stat_density_3d(aes(fill = after_stat(count)))
@@ -176,18 +176,15 @@ StatDensity3D <- ggproto("StatDensity3D", Stat,
 #' p + stat_density_3d(adjust = 0.5, color = "white")  # More detail
 #' p + stat_density_3d(adjust = 2, color = "white")   # Smoother
 #'
-#' # With lighting effects
-#' p + stat_density_3d(light = lighting(shade = "fill", shade_mode = "hsl"))
-#'
 #' # Higher resolution grid for smoother surfaces
-#' p + stat_density_3d(n = 50, color = "black", fill = "darkgreen", alpha = 0.8,
-#'                   light = lighting(direction = c(1, 1, 0.5), shade = "fill"))
+#' p + stat_density_3d(n = 50, color = "black", fill = "darkgreen", alpha = 0.85,
+#'                   light = light(direction = c(1, 1, 0.5)))
 #'
 #' # Multiple density surfaces by group,
 #' # using normalized density to equalize peak heights
 #' ggplot(iris, aes(Petal.Length, Sepal.Length, fill = Species)) +
 #'   stat_density_3d(aes(z = after_stat(ndensity)),
-#'                   color = "black", alpha = .7) +
+#'                   color = "black", alpha = .7, light = NULL) +
 #'   coord_3d()
 #'
 #' # Same, but with extra padding and with
@@ -195,11 +192,11 @@ StatDensity3D <- ggproto("StatDensity3D", Stat,
 #' ggplot(iris, aes(Petal.Length, Sepal.Length, fill = Species)) +
 #'   stat_density_3d(aes(z = after_stat(ndensity)),
 #'                   pad = .3, min_ndensity = .001,
-#'                   color = "black", alpha = .7) +
+#'                   color = "black", alpha = .7, light = NULL) +
 #'   coord_3d(ratio = c(3, 3, 1))
 #'
 #' @seealso [stat_density_2d()] for 2D density contours, [stat_surface_3d()] for
-#'   surfaces from existing grid data, [lighting()] for lighting specifications,
+#'   surfaces from existing grid data, [light()] for lighting specifications,
 #'   [coord_3d()] for 3D coordinate systems.
 #' @export
 stat_density_3d <- function(mapping = NULL, data = NULL,
@@ -210,7 +207,7 @@ stat_density_3d <- function(mapping = NULL, data = NULL,
                             adjust = 1,
                             pad = 0.1,
                             min_ndensity = 0,
-                            light = lighting(),
+                            light = ggcube::light(),
                             na.rm = FALSE,
                             show.legend = NA,
                             inherit.aes = TRUE,

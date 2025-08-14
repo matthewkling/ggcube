@@ -22,14 +22,14 @@
 #' @examples
 #' # continuous `colorbar` guide
 #' ggplot(mountain, aes(x, y, z, fill = z)) +
-#'    stat_surface_3d(light = lighting(shade = "fill", shade_mode = "hsl")) +
+#'    stat_surface_3d(light = light(shade = "fill", shade_mode = "hsl")) +
 #'    guides(fill = guide_colorbar_shaded()) +
 #'    scale_fill_gradientn(colors = c("tomato", "dodgerblue")) +
 #'    coord_3d()
 #'
 #' # discrete `legend` guide
 #' ggplot(mountain, aes(x, y, z, fill = x > .5, group = 1)) +
-#'    stat_surface_3d(light = lighting(shade = "fill")) +
+#'    stat_surface_3d(light = light(shade = "fill")) +
 #'    guides(fill = guide_legend_shaded()) +
 #'    coord_3d()
 #' @name shade_guides
@@ -48,14 +48,14 @@ guide_colorbar_shaded <- function(reverse_shade = FALSE, shade_range = c(-.5, .5
             original_grob <- original_draw(theme, position, direction, params)
 
             # Get lighting info
-            lighting_info <- extract_lighting_from_plot()
+            lighting_info <- extract_light_from_plot()
             if (is.null(lighting_info) || lighting_info$shade == "neither") {
                   return(original_grob)
             }
 
             # Create lighting gradients
             base_colors <- params$decor[["colour"]]
-            grad <- create_lighting_gradients(base_colors, lighting_info, shade_range)
+            grad <- create_light_gradients(base_colors, lighting_info, shade_range)
             if(reverse_shade){
                   if(is.null(params$direction) || params$direction == "vertical"){
                         grad <- grad[, ncol(grad):1]
@@ -88,14 +88,14 @@ guide_legend_shaded <- function(reverse_shade = FALSE, shade_range = c(-.5, .5),
             original_grob <- original_draw(theme, position, direction, params)
 
             # Get lighting info
-            lighting_info <- extract_lighting_from_plot()
+            lighting_info <- extract_light_from_plot()
             if (is.null(lighting_info) || lighting_info$shade == "neither") {
                   return(original_grob)
             }
 
             # Create lighting gradients
             base_colors <- params$key[[params$aesthetic]]
-            grad <- create_lighting_gradients(base_colors, lighting_info, shade_range)
+            grad <- create_light_gradients(base_colors, lighting_info, shade_range)
             if(reverse_shade){
                   if(is.null(params$direction) || params$direction == "vertical"){
                         grad <- grad[, ncol(grad):1]
@@ -118,7 +118,7 @@ guide_legend_shaded <- function(reverse_shade = FALSE, shade_range = c(-.5, .5),
 #'
 #' @return List with lighting specification or NULL if none found
 #' @keywords internal
-extract_lighting_from_plot <- function() {
+extract_light_from_plot <- function() {
 
       # Walk up the call stack to find the plot object
       for (i in 1:20) {
@@ -166,7 +166,7 @@ extract_lighting_from_plot <- function() {
 #' @param n_steps Number of lighting gradient steps (default 10)
 #' @return Matrix of colors with lighting applied
 #' @keywords internal
-create_lighting_gradients <- function(base_colors,
+create_light_gradients <- function(base_colors,
                                       lighting_info,
                                       shade_range = c(-1, 1),
                                       n_steps = 20) {
@@ -191,7 +191,7 @@ create_lighting_gradients <- function(base_colors,
 
       # Apply lighting to base colors across
       for (i in seq_along(base_colors)) {
-            gradient_colors <- blend_lighting_with_colors(
+            gradient_colors <- blend_light_with_colors(
                   rep(base_colors[i], n_steps),
                   light,
                   lighting_info
@@ -231,10 +231,10 @@ replace_colorbar_colors <- function(grob, grad) {
 
                         # Create a new raster with lighting gradients
                         n_colors <- nrow(grad)
-                        n_lighting_steps <- ncol(grad)
+                        n_light_steps <- ncol(grad)
 
                         # Create wider raster to show lighting gradient
-                        new_width <- n_lighting_steps
+                        new_width <- n_light_steps
                         new_height <- nrow(original_raster)
 
                         # Create the 2D lighting raster
@@ -247,8 +247,8 @@ replace_colorbar_colors <- function(grob, grad) {
 
                               for (col in 1:new_width) {
                                     # Map column to lighting step (left to right = shadow to highlight)
-                                    lighting_idx <- ceiling(col / new_width * n_lighting_steps)
-                                    lighting_idx <- max(1, min(lighting_idx, n_lighting_steps))
+                                    lighting_idx <- ceiling(col / new_width * n_light_steps)
+                                    lighting_idx <- max(1, min(lighting_idx, n_light_steps))
 
                                     new_raster[row, col] <- grad[color_idx, lighting_idx]
                               }

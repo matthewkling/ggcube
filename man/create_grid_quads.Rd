@@ -4,7 +4,7 @@
 \alias{create_grid_quads}
 \title{Create quadrilateral faces from grid data}
 \usage{
-create_grid_quads(data)
+create_grid_quads(data, light)
 }
 \arguments{
 \item{data}{Regular grid data frame}

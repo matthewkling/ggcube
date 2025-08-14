@@ -9,24 +9,26 @@ stat_surface_3d(
   data = NULL,
   geom = GeomPolygon3D,
   position = "identity",
-  light = lighting(),
+  ...,
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE,
-  ...
+  light = ggcube::light()
 )
 }
 \arguments{
-\item{mapping}{Set of aesthetic mappings created by \code{\link[=aes]{aes()}}.}
+\item{mapping}{Set of aesthetic mappings created by \code{\link[=aes]{aes()}}. This stat
+requires the \code{x}, \code{y}, and \code{z} aesthetics.}
 
-\item{data}{The data to be displayed in this layer.}
+\item{data}{The data to be displayed in this layer. Must contain x, y, z columns
+representing coordinates on a regular grid.}
 
 \item{geom}{The geometric object to use display the data. Defaults to
 \link{GeomPolygon3D} for proper 3D depth sorting.}
 
 \item{position}{Position adjustment, defaults to "identity".}
 
-\item{light}{A lighting specification object created by \code{lighting()}}
+\item{...}{Other arguments passed on to \code{\link[=layer]{layer()}}.}
 
 \item{na.rm}{If \code{FALSE}, missing values are removed with a warning.}
 
@@ -34,11 +36,12 @@ stat_surface_3d(
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics.}
 
-\item{...}{Other arguments passed on to \code{\link[=layer]{layer()}}.}
+\item{light}{A lighting specification object created by \code{light()}, or NULL to disable shading.}
 }
 \description{
 Creates 3D surfaces from regularly gridded data (like elevation maps).
-Assumes data is on a regular x,y grid and creates quadrilateral faces.
+The data must be on a regular, complete grid where every combination
+of x and y values appears exactly once.
 }
 \section{Aesthetics}{
 
@@ -53,52 +56,47 @@ Assumes data is on a regular x,y grid and creates quadrilateral faces.
 \section{Computed variables}{
 
 \itemize{
-\item \code{light}: Computed lighting value (numeric for most methods, hex color for \code{normal_rgb})
-\item \code{normal_x}, \code{normal_y}, \code{normal_z}: Surface normal components
-\item \code{slope}: Gradient magnitude from original surface calculations
-\item \code{aspect}: Direction of steepest slope from original surface calculations
-\item \code{dzdx}, \code{dzdy}: Partial derivatives from original surface calculations
+\item \code{slope}: Gradient magnitude from surface calculations
+\item \code{aspect}: Direction of steepest slope from surface calculations
+\item \code{dzdx}, \code{dzdy}: Partial derivatives from surface calculations
 }
 }
 
 \examples{
-# data for a basic surface
+# data and base plot for basic surface
 d <- dplyr::mutate(tidyr::expand_grid(x = -20:20, y = -20:20),
       z = sqrt(x^2 + y^2) / 1.5,
       z = cos(z) - z)
-
-# base plot
 p <- ggplot(d, aes(x, y, z)) + coord_3d()
-
-# basic surface
-p + stat_surface_3d(fill = "dodgerblue", color = "darkblue", linewidth = .2)
 
 # surface with 3d lighting
 p + stat_surface_3d(fill = "steelblue", color = "steelblue", linewidth = .2,
-      light = lighting(mode = "hsl", direction = c(1, 0, 0),
-                       fill = TRUE, color = TRUE))
+      light = light(mode = "hsl", direction = c(1, 0, 0)))
 
 # mesh wireframe, without fill, with aes line color
 p + stat_surface_3d(aes(color = z), fill = NA)
+
+# use after_stat to access computed surface-orientation variables
+p + stat_surface_3d(aes(fill = after_stat(aspect))) +
+      scale_fill_gradientn(colors = rainbow(20))
 
 # use `group` to plot data for multiple surfaces
 d <- expand.grid(x = -5:5, y = -5:5)
 d$z <- d$x^2 - d$y^2
 d$g <- "a"
 d2 <- d
-d2$z <- d$z + 10
+d2$z <- d$z + 15
 d2$g <- "b"
-ggplot(rbind(d, d2),
-       aes(x, y, z, group = g, fill = g)) +
+ggplot(rbind(d, d2), aes(x, y, z, group = g, fill = g)) +
   coord_3d() +
-  stat_surface_3d(color = "black", alpha = .5)
+  stat_surface_3d(color = "black", alpha = .5, light = NULL)
 
 # terrain surface with topographic hillshade and elevational fill
 ggplot(mountain, aes(x, y, z, fill = z, color = z)) +
-  stat_surface_3d(light = lighting(method = "diffuse", direction = c(1, 0, .5),
-                           fill = TRUE, color = TRUE, mode = "hsv", strength = .9),
+  stat_surface_3d(light = light(direction = c(1, 0, .5),
+                           mode = "hsv", contrast = 1.5),
                linewidth = .2) +
-  coord_3d(ratio = c(1, 1.5, .5)) +
+  coord_3d(ratio = c(1, 1.5, .75)) +
   theme_light() +
   scale_fill_gradientn(colors = c("darkgreen", "rosybrown4", "gray60")) +
   scale_color_gradientn(colors = c("darkgreen", "rosybrown4", "gray60")) +

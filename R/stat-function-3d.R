@@ -14,7 +14,7 @@ StatFunction3D <- ggproto("StatFunction3D", Stat,
                           },
 
                           compute_panel = function(data, scales, fun = NULL, xlim = NULL, ylim = NULL,
-                                                   n = 50, light = lighting(), na.rm = FALSE) {
+                                                   n = 50, light = NULL, na.rm = FALSE) {
 
                                 # Validate function
                                 if (is.null(fun)) {
@@ -107,20 +107,30 @@ StatFunction3D <- ggproto("StatFunction3D", Stat,
                                       stop("Function evaluation resulted in insufficient data points for surface creation")
                                 }
 
+                                if(! "group" %in% names(grid_data)) grid_data$group <- 1
+
                                 # Process surface using common pipeline
-                                return(process_surface_grid(grid_data, light))
+                                return(create_grid_quads(grid_data, light))
                           }
 )
+
+ensure_nonempty_data <- function(data) {
+      if (ggplot2:::empty(data)) {
+            ggplot2:::data_frame0(group = -1L, .size = 1)
+      } else {
+            data
+      }
+}
 
 #' 3D function surface visualization
 #'
 #' Creates 3D surfaces by evaluating a function f(x,y) = z over a regular grid.
 #' The function is evaluated at each grid point and the resulting surface is rendered
-#' with proper 3D depth sorting and optional lighting effects.
+#' as in [stat_surface_3d()].
 #'
 #' @param mapping Set of aesthetic mappings created by [aes()]. Since this stat
 #'   generates its own data, typically only used for additional aesthetics like
-#'   `fill` or `color` based on computed variables.
+#'   `fill` or `color` based on computed variables. Fill is mapped to `after_stat(z)` by default.
 #' @param fun Function to evaluate. Must accept two arguments (vectors corresponding
 #' to x and y axis values) and return a numeric vector of z values. Required parameter.
 #' @param data The data to be displayed in this layer. Usually not needed since
@@ -139,7 +149,7 @@ StatFunction3D <- ggproto("StatFunction3D", Stat,
 #' @param n Either a single integer specifying grid resolution in both dimensions,
 #'   or a vector of length 2 specifying `c(nx, ny)` for different resolutions.
 #'   Default is 50. Higher values create smoother surfaces but slower rendering.
-#' @param light A lighting specification object created by [lighting()]
+#' @param light A lighting specification object created by \code{light()}, or NULL to disable shading.
 #' @param ... Other arguments passed on to `layer()`, such as `sort_method` and `scale_depth`
 #'    arguments to `geom_polygon_3d()`.
 #'
@@ -161,52 +171,34 @@ StatFunction3D <- ggproto("StatFunction3D", Stat,
 #'
 #' # Basic function surface
 #' ggplot() +
-#'   stat_function_3d(fun = function(x, y) x^2 + y^2,
-#'                    xlim = c(-2, 2), ylim = c(-2, 2)) +
-#'   coord_3d()
+#'   stat_function_3d(fun = function(a, b) exp(-(a^2 + b^2)),
+#'                    xlim = c(-2, 2), ylim = c(-2, 2),
+#'                    light = NULL, color = "white") +
+#'   coord_3d() +
+#'   scale_fill_viridis_c()
 #'
 #' # Wave function with lighting
 #' wave_fun <- function(x, y) cos(x) + cos(y) + cos(x+y) + cos(sqrt(x^2 + y^2))
 #' ggplot() +
 #'   stat_function_3d(fun = wave_fun, fill = "steelblue",
 #'                    xlim = c(-3*pi, 3*pi), ylim = c(-3*pi, 3*pi),
-#'                    light = lighting(shade = "fill", shade_mode = "hsl")) +
+#'                    light = light(method = "direct", mode = "hsl",
+#'                           contrast = .8, direction = c(1, 0, 1))) +
 #'   coord_3d(scales = "fixed") + theme_dark()
 #'
-#' # Higher resolution surface with color mapping
+#' # Use after_stat to access computed surface-orientation variables
 #' ggplot() +
-#'   stat_function_3d(aes(fill = after_stat(light),
-#'                        color = after_stat(light)),
+#'   stat_function_3d(aes(fill = after_stat(dzdx),
+#'                        color = after_stat(dzdx)),
 #'                    fun = function(x, y) sin(x) * cos(y),
 #'                    xlim = c(-pi, pi), ylim = c(-pi, pi),
-#'                    n = 60) +
+#'                    n = 60, light = NULL) +
 #'   scale_fill_viridis_c(option = "B") +
 #'   scale_color_viridis_c(option = "B") +
-#'   coord_3d()
-#'
-#' # Complex mathematical surface
-#' saddle <- function(x, y) x^2 - y^2
-#' ggplot() +
-#'   stat_function_3d(aes(fill = after_stat(x)),
-#'                    fun = saddle, color = "white",
-#'                    xlim = c(-3, 3), ylim = c(-3, 3),
-#'                    n = c(20, 40)) +  # Different resolution in x and y
-#'   scale_fill_viridis_c() +
-#'   coord_3d(scales = "fixed", ratio = c(3, 2, 1))
-#'
-#' # Function with lighting effects
-#' gaussian <- function(a, b) exp(-(a^2 + b^2))
-#' ggplot() +
-#'   stat_function_3d(fun = gaussian, color = "white",
-#'                    light = lighting(method = "direct",
-#'                                   direction = c(1, -1, 0.25),
-#'                                   shade = "both")) +
-#'   scale_fill_viridis_c() + scale_color_viridis_c() +
-#'   coord_3d(scales = "fixed", ratio = c(1, 2, 3), expand = FALSE) +
-#'   xlim(-3, 3) + ylim(-2, 2) + theme_light()
+#'   coord_3d(scales = "fixed")
 #'
 #' @seealso [stat_surface_3d()] for surfaces from existing grid data,
-#'   [lighting()] for lighting specifications, [coord_3d()] for 3D coordinate systems.
+#'   [light()] for lighting specifications, [coord_3d()] for 3D coordinate systems.
 #' @export
 stat_function_3d <- function(mapping = NULL,
                              fun = NULL,
@@ -216,7 +208,7 @@ stat_function_3d <- function(mapping = NULL,
                              xlim = NULL,
                              ylim = NULL,
                              n = 50,
-                             light = lighting(),
+                             light = ggcube::light(),
                              na.rm = FALSE,
                              show.legend = NA,
                              inherit.aes = TRUE,
@@ -243,12 +235,4 @@ stat_function_3d <- function(mapping = NULL,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = params
       )
-}
-
-ensure_nonempty_data <- function(data) {
-      if (ggplot2:::empty(data)) {
-            ggplot2:::data_frame0(group = -1L, .size = 1)
-      } else {
-            data
-      }
 }

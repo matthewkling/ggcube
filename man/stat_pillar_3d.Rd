@@ -11,7 +11,7 @@ stat_pillar_3d(
   position = "identity",
   width = 1,
   faces = "all",
-  light = lighting(),
+  light = ggcube::light(),
   zmin = NULL,
   na.rm = FALSE,
   show.legend = NA,
@@ -41,7 +41,7 @@ Grid spacing is determined automatically using \code{\link[=resolution]{resoluti
 }
 Valid face names: "xmin", "xmax", "ymin", "ymax", "zmin", "zmax".}
 
-\item{light}{A lighting specification object created by \code{lighting()}}
+\item{light}{A lighting specification object created by \code{light()}, or NULL to disable shading.}
 
 \item{zmin}{Base level for all pillars. When provided as a parameter, overrides any
 \code{zmin} aesthetic mapping. If \code{NULL} (default), uses the \code{zmin} aesthetic
@@ -133,5 +133,5 @@ ggplot(d, aes(x, y, z)) +
 }
 \seealso{
 \code{\link[=stat_surface_3d]{stat_surface_3d()}} for smooth surface rendering, \code{\link[=coord_3d]{coord_3d()}} for 3D coordinate systems,
-\code{\link[=lighting]{lighting()}} for lighting specifications, \link{GeomPolygon3D} for the default geometry.
+\code{\link[=light]{light()}} for lighting specifications, \link{GeomPolygon3D} for the default geometry.
 }

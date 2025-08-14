@@ -7,7 +7,7 @@ StatSmooth3D <- ggproto("StatSmooth3D", Stat,
 
                         compute_panel = function(data, scales, method = "loess", formula = NULL,
                                                  method.args = list(), xlim = NULL, ylim = NULL,
-                                                 n = 30, light = lighting(), na.rm = FALSE,
+                                                 n = 30, light = NULL, na.rm = FALSE, domain = NULL,
                                                  se = FALSE, level = 0.95, se.fill = NULL, se.colour = NULL,
                                                  se.alpha = 0.5, se.linewidth = NULL) {
 
@@ -95,7 +95,7 @@ StatSmooth3D <- ggproto("StatSmooth3D", Stat,
                                                            fitted = data$fitted,
                                                            lower = data$fitted - z_score * data$se,
                                                            upper = data$fitted + z_score * data$se)
-                                          surf <- process_surface_grid(data, light)
+                                          surf <- create_grid_quads(data, light)
 
                                           # Apply confidence band styling
                                           if(surface != "fitted"){
@@ -113,6 +113,16 @@ StatSmooth3D <- ggproto("StatSmooth3D", Stat,
 
                                           return(surf) }) %>%
                                     bind_rows()
+
+                              # if requested, remove results outside convex hull
+                              if(domain == "chull"){
+                                    surfaces <- surfaces %>%
+                                          mutate(in_hull = geometry::inhulln(
+                                                geometry::convhulln(data[, c("x", "y")]),
+                                                cbind(surfaces$x, surfaces$y))) %>%
+                                          filter(in_hull) %>%
+                                          select(-in_hull)
+                              }
 
                               return(surfaces)
                         }
@@ -265,6 +275,10 @@ gam_model <- function(){
 #'   For loess, this might include `span` or `degree`. For lm, this might include `weights`.
 #'   For glm, this might include `family` (defaults to `gaussian()`). For gam, this might
 #'   include smoothing parameters or basis specifications.
+#' @param domain Character indicating the x-y domain over which to visualize the surface.
+#'   The default, `"chull"`, shows predictions only within the convex hull of the input data,
+#'   which prevents extrapolation into unoccupied corners of predictor space. The alternative,
+#'   `"bbox"`, shows predictions over the full rectangular bounding box of the predictors.
 #' @param xlim,ylim Numeric vectors of length 2 giving the range for prediction grid.
 #'   If `NULL` (default), uses the exact data range with no extrapolation, following
 #'   [geom_smooth()] conventions.
@@ -283,7 +297,7 @@ gam_model <- function(){
 #' @param se.alpha Alpha transparency for confidence interval bands. Defaults to 0.5.
 #' @param se.linewidth Line width for confidence interval band borders. If `NULL`,
 #'   inherits from the main surface `linewidth` aesthetic.
-#' @param light A lighting specification object created by [lighting()]
+#' @param light A lighting specification object created by [light()], or NULL to disable shading.
 #' @param ... Other arguments passed on to [layer()], such as `colour`, `fill`,
 #'   `linewidth`, etc..
 #'
@@ -331,10 +345,9 @@ gam_model <- function(){
 #'
 #' # Loess with custom span parameter, and lighting aesthetics
 #' p + stat_smooth_3d(
-#'       method = "loess",
-#'       method.args = list(span = 0.3),
+#'       method = "loess", method.args = list(span = 0.3),
 #'       fill = "steelblue", color = "white",
-#'       light = lighting(shade = "both"))
+#'       light = light(direction = c(-1, 0, 0)))
 #'
 #' # GLM with gamma family and log link
 #' p + stat_smooth_3d(
@@ -343,19 +356,21 @@ gam_model <- function(){
 #'       formula = z ~ poly(x, 2) + poly(y, 2)) +
 #'   scale_fill_viridis_c()
 #'
-#' # GAM with default smoothers, with fill colored by uncertainty layer
+#' # GAM with default smoothers, with fill colored by confidence interval
 #' p + stat_smooth_3d(aes(fill = after_stat(level)),
 #'                    method = "gam", se = TRUE, color = "black") +
 #'   scale_fill_manual(values = c("red", "darkorchid4", "steelblue"))
 #'
-#' # Use fill color to visualize uncertainty
-#' p + stat_smooth_3d(aes(fill = after_stat(se * 2)),
-#'                   se = TRUE, se.alpha = 1) +
+#' # Visualize uncertainty with computed "standard error" variable
+#' p + stat_smooth_3d(aes(fill = after_stat(se * 2))) +
 #'   scale_fill_viridis_c()
 #'
-#' # Extend surface beyond data range (explicit extrapolation)
-#' p + stat_smooth_3d(method = "lm",
-#'                  xlim = c(-3, 3), ylim = c(-3, 3))
+#' # Extend surface across entire predictor bounding box
+#' p + stat_smooth_3d(method = "lm", domain = "bbox")
+#'
+#' # Extend surface beyond training data range (explicit extrapolation)
+#' p + stat_smooth_3d(method = "lm", domain = "bbox",
+#'                  xlim = c(-5, 5), ylim = c(-5, 5))
 #'
 #' # Project 2D views of surface onto face panels
 #' ggplot(mtcars, aes(mpg, disp, qsec)) +
@@ -366,7 +381,7 @@ gam_model <- function(){
 #'
 #' @seealso [stat_surface_3d()] for surfaces from existing grid data,
 #'   [stat_function_3d()] for mathematical function surfaces,
-#'   [lighting()] for lighting specifications, [coord_3d()] for 3D coordinate systems.
+#'   [light()] for lighting specifications, [coord_3d()] for 3D coordinate systems.
 #' @export
 stat_smooth_3d <- function(mapping = NULL, data = NULL,
                            geom = GeomSmooth3D,
@@ -376,6 +391,7 @@ stat_smooth_3d <- function(mapping = NULL, data = NULL,
                            method.args = list(),
                            xlim = NULL,
                            ylim = NULL,
+                           domain = c("chull", "bbox"),
                            n = 30,
                            se = FALSE,
                            level = 0.95,
@@ -384,7 +400,7 @@ stat_smooth_3d <- function(mapping = NULL, data = NULL,
                            se.color = NULL,
                            se.alpha = 0.5,
                            se.linewidth = NULL,
-                           light = lighting(),
+                           light = NULL,
                            na.rm = FALSE,
                            show.legend = NA,
                            inherit.aes = TRUE,
@@ -393,11 +409,13 @@ stat_smooth_3d <- function(mapping = NULL, data = NULL,
       # Handle both American and British spellings
       if(is.null(se.colour)) se.colour <- se.color
 
+      domain <- match.arg(domain)
+
       layer(
             stat = StatSmooth3D, data = data, mapping = mapping, geom = geom,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(method = method, formula = formula, method.args = method.args,
-                          xlim = xlim, ylim = ylim, n = n, se = se, level = level,
+                          xlim = xlim, ylim = ylim, domain = domain, n = n, se = se, level = level,
                           se.fill = se.fill, se.colour = se.colour, se.alpha = se.alpha,
                           se.linewidth = se.linewidth, light = light, na.rm = na.rm, ...)
       )

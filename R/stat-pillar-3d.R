@@ -3,7 +3,7 @@ StatPillar3D <- ggproto("StatPillar3D", Stat,
 
                       compute_panel = function(data, scales, na.rm = FALSE,
                                                width = 1.0, faces = "all",
-                                               light = lighting(), zmin = NULL) {
+                                               light = NULL, zmin = NULL) {
 
                             # Remove missing values if requested
                             if (na.rm) {
@@ -76,25 +76,25 @@ StatPillar3D <- ggproto("StatPillar3D", Stat,
                                   ))
                             }
 
-                            # Calculate face normals
-                            face_normals <- calculate_pillar_face_normals(pillar_faces)
+                            # # Calculate face normals
+                            # face_normals <- calculate_pillar_face_normals(pillar_faces)
+                            #
+                            # # Apply lighting
+                            # light_vals <- compute_light(face_normals, light)
+                            #
+                            # # Add lighting and normal components to faces data
+                            # pillar_faces$light <- light_vals
+                            # pillar_faces$normal_x <- face_normals[, 1]
+                            # pillar_faces$normal_y <- face_normals[, 2]
+                            # pillar_faces$normal_z <- face_normals[, 3]
+                            #
+                            # # Add lighting parameters for shade processing
+                            # pillar_faces$shade_enabled <- light$shade
+                            # pillar_faces$shade_strength <- light$shade_strength
+                            # pillar_faces$shade_mode <- light$shade_mode
+                            # pillar_faces$lighting_method <- light$method
 
-                            # Apply lighting
-                            light_vals <- compute_lighting(face_normals, light)
-
-                            # Add lighting and normal components to faces data
-                            pillar_faces$light <- light_vals
-                            pillar_faces$normal_x <- face_normals[, 1]
-                            pillar_faces$normal_y <- face_normals[, 2]
-                            pillar_faces$normal_z <- face_normals[, 3]
-
-                            # Add lighting parameters for shade processing
-                            pillar_faces$shade_enabled <- light$shade
-                            pillar_faces$shade_strength <- light$shade_strength
-                            pillar_faces$shade_mode <- light$shade_mode
-                            pillar_faces$lighting_method <- light$method
-
-                            return(pillar_faces)
+                            return(attach_light(pillar_faces, light))
                       }
 )
 
@@ -200,51 +200,6 @@ create_pillars <- function(data, x_spacing, y_spacing, width, selected_faces) {
       return(result)
 }
 
-#' Calculate normals for pillar faces
-#'
-#' @param pillar_faces Data frame with pillar face vertices
-#' @return Matrix of face normals (one row per face, 3 columns for x,y,z)
-#' @keywords internal
-calculate_pillar_face_normals <- function(pillar_faces) {
-
-      if (nrow(pillar_faces) == 0) {
-            return(matrix(nrow = 0, ncol = 3))
-      }
-
-      # Get unique faces using the new group column
-      unique_faces <- unique(pillar_faces$group)
-      normals <- matrix(0, nrow = length(unique_faces), ncol = 3)
-
-      for (i in seq_along(unique_faces)) {
-            face_data <- pillar_faces[pillar_faces$group == unique_faces[i], ]
-            face_type <- face_data$face_type[1]
-
-            # Use predefined normals for axis-aligned rectangular faces
-            normal <- switch(face_type,
-                             zmin = c(0, 0, -1),   # Bottom face (points down)
-                             zmax = c(0, 0, 1),    # Top face (points up)
-                             xmin = c(-1, 0, 0),   # Left face (points left)
-                             xmax = c(1, 0, 0),    # Right face (points right)
-                             ymin = c(0, -1, 0),   # Back face (points back)
-                             ymax = c(0, 1, 0),    # Front face (points front)
-                             c(0, 0, 1)            # Default fallback
-            )
-
-            normals[i, ] <- normal
-      }
-
-      # Expand normals to match number of vertices (4 per face)
-      vertex_normals <- matrix(0, nrow = nrow(pillar_faces), ncol = 3)
-      for (i in seq_along(unique_faces)) {
-            face_indices <- which(pillar_faces$group == unique_faces[i])
-            # Assign the same normal to all vertices of this face
-            for (idx in face_indices) {
-                  vertex_normals[idx, ] <- normals[i, ]
-            }
-      }
-
-      return(vertex_normals)
-}
 
 #' 3D pillar visualization from grid data
 #'
@@ -271,7 +226,7 @@ calculate_pillar_face_normals <- function(pillar_faces) {
 #'     \item Vector of face names: \code{c("zmax", "xmin", "ymax")}, etc.
 #'   }
 #'   Valid face names: "xmin", "xmax", "ymin", "ymax", "zmin", "zmax".
-#' @param light A lighting specification object created by \code{lighting()}
+#' @param light A lighting specification object created by \code{light()}, or NULL to disable shading.
 #' @param zmin Base level for all pillars. When provided as a parameter, overrides any
 #'   \code{zmin} aesthetic mapping. If \code{NULL} (default), uses the \code{zmin} aesthetic
 #'   if mapped, otherwise defaults to the minimum \code{z} value in the data.
@@ -337,14 +292,14 @@ calculate_pillar_face_normals <- function(pillar_faces) {
 #'   coord_3d()
 #'
 #' @seealso [stat_surface_3d()] for smooth surface rendering, [coord_3d()] for 3D coordinate systems,
-#'   [lighting()] for lighting specifications, [GeomPolygon3D] for the default geometry.
+#'   [light()] for lighting specifications, [GeomPolygon3D] for the default geometry.
 #' @export
 stat_pillar_3d <- function(mapping = NULL, data = NULL,
                         geom = GeomPolygon3D,
                         position = "identity",
                         width = 1.0,
                         faces = "all",
-                        light = lighting(),
+                        light = ggcube::light(),
                         zmin = NULL,
                         na.rm = FALSE, show.legend = NA, inherit.aes = TRUE,
                         ...) {

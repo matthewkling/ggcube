@@ -533,6 +533,12 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                          result <- scale_to_standard(data[c("x", "y", "z")], scale_ranges,
                                                      panel_params$scales, panel_params$ratio)
 
+                         # lighting computation
+                         if ("lighting_spec" %in% names(data)) {
+                               data <- compute_light_in_coord(data, result, scale_ranges,
+                                                              panel_params$scales, panel_params$ratio)
+                         }
+
                          # Project data onto cube face, if applicable
                          result <- project_to_face(data, result, panel_params$proj)
 
@@ -963,4 +969,5 @@ scale_to_npc_coordinates <- function(result, plot_bounds) {
 validate_coord3d <- function(coord){
       stopifnot("Did you forget to add `coord_3d()` to your plot?" = inherits(coord, "Coord3D"))
 }
+
 

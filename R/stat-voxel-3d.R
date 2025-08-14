@@ -1,37 +1,3 @@
-# Validate and process faces parameter
-# (Helper used by multiple stats)
-select_faces <- function(faces) {
-      valid_faces <- c("xmin", "xmax", "ymin", "ymax", "zmin", "zmax")
-      if (length(faces) == 1 && faces == "all") {
-            selected_faces <- valid_faces
-      } else if (length(faces) == 1 && faces == "none") {
-            selected_faces <- character(0)
-      } else {
-            invalid_faces <- setdiff(faces, valid_faces)
-            if (length(invalid_faces) > 0) {
-                  stop("Invalid face names: ", paste(invalid_faces, collapse = ", "),
-                       ". Valid faces are: ", paste(valid_faces, collapse = ", "))
-            }
-            selected_faces <- faces
-      }
-      return(selected_faces)
-}
-
-# Convert categorical position columns to numeric positions
-# (Helper used by multiple stats)
-convert_to_numeric <- function(data) {
-      data$z_raw <- data$z # (stash a copy of original z values first)
-      if (is.factor(data$x) || is.character(data$x)) {
-            data$x <- as.numeric(as.factor(data$x))
-      }
-      if (is.factor(data$y) || is.character(data$y)) {
-            data$y <- as.numeric(as.factor(data$y))
-      }
-      if (is.factor(data$z) || is.character(data$z)) {
-            data$z <- as.numeric(as.factor(data$z))
-      }
-      data
-}
 
 
 StatVoxel3D <- ggproto("StatVoxel3D", Stat,
@@ -39,7 +5,7 @@ StatVoxel3D <- ggproto("StatVoxel3D", Stat,
 
                      compute_panel = function(data, scales, na.rm = FALSE,
                                               width = 1.0, faces = "all",
-                                              light = lighting()) {
+                                              light = NULL) {
 
                            # Remove missing values if requested
                            if (na.rm) {
@@ -73,43 +39,10 @@ StatVoxel3D <- ggproto("StatVoxel3D", Stat,
                            # Validate and process faces parameter
                            selected_faces <- select_faces(faces)
 
-                           # Return empty data frame with required columns for consistency
-                           empty_frame <- data.frame(
-                                       x = numeric(0), y = numeric(0), z = numeric(0),
-                                       group = character(0), voxel_id = integer(0), face_type = character(0),
-                                       light = numeric(0),
-                                       normal_x = numeric(0), normal_y = numeric(0), normal_z = numeric(0)
-                           )
-                           if (length(selected_faces) == 0) return(empty_frame)
-
                            # Create voxels
                            voxel_faces <- create_voxels(data, x_spacing, y_spacing, z_spacing, width, selected_faces)
-                           if (nrow(voxel_faces) == 0) return(empty_frame)
 
-                           # Calculate face normals
-                           face_normals <- calculate_voxel_face_normals(voxel_faces)
-
-                           # Calculate face centers for positional lighting
-                           face_centers <- calculate_voxel_face_centers(voxel_faces)
-
-                           # Apply lighting
-                           light_vals <- compute_lighting(face_normals, light, face_centers)
-
-                           # Add lighting and normal components to faces data
-                           voxel_faces$light <- light_vals
-                           voxel_faces$normal_x <- face_normals[, 1]
-                           voxel_faces$normal_y <- face_normals[, 2]
-                           voxel_faces$normal_z <- face_normals[, 3]
-
-                           # Add lighting parameters for shade processing
-                           voxel_faces$shade_enabled <- light$shade
-                           voxel_faces$shade_strength <- light$shade_strength
-                           voxel_faces$shade_mode <- light$shade_mode
-                           voxel_faces$lighting_method <- light$method
-
-                           # Note: RGB colors are already wrapped with I() in compute_lighting()
-
-                           return(voxel_faces)
+                           return(attach_light(voxel_faces, light))
                      }
 )
 
@@ -216,88 +149,41 @@ create_voxels <- function(data, x_spacing, y_spacing, z_spacing, width, selected
       return(result)
 }
 
-#' Calculate normals for voxel faces
-#'
-#' @param voxel_faces Data frame with voxel face vertices
-#' @return Matrix of face normals (one row per face, 3 columns for x,y,z)
-#' @keywords internal
-calculate_voxel_face_normals <- function(voxel_faces) {
-
-      if (nrow(voxel_faces) == 0) {
-            return(matrix(nrow = 0, ncol = 3))
-      }
-
-      # Get unique faces using the new group column
-      unique_faces <- unique(voxel_faces$group)
-      normals <- matrix(0, nrow = length(unique_faces), ncol = 3)
-
-      for (i in seq_along(unique_faces)) {
-            face_data <- voxel_faces[voxel_faces$group == unique_faces[i], ]
-            face_type <- face_data$face_type[1]
-
-            # Use predefined normals for axis-aligned rectangular faces
-            normal <- switch(face_type,
-                             zmin = c(0, 0, -1),   # Bottom face (points down)
-                             zmax = c(0, 0, 1),    # Top face (points up)
-                             xmin = c(-1, 0, 0),   # Left face (points left)
-                             xmax = c(1, 0, 0),    # Right face (points right)
-                             ymin = c(0, -1, 0),   # Back face (points back)
-                             ymax = c(0, 1, 0),    # Front face (points front)
-                             c(0, 0, 1)            # Default fallback
-            )
-
-            normals[i, ] <- normal
-      }
-
-      # Expand normals to match number of vertices (4 per face)
-      vertex_normals <- matrix(0, nrow = nrow(voxel_faces), ncol = 3)
-      for (i in seq_along(unique_faces)) {
-            face_indices <- which(voxel_faces$group == unique_faces[i])
-            # Assign the same normal to all vertices of this face
-            for (idx in face_indices) {
-                  vertex_normals[idx, ] <- normals[i, ]
+# Validate and process faces parameter
+# (Helper used by multiple stats)
+select_faces <- function(faces) {
+      valid_faces <- c("xmin", "xmax", "ymin", "ymax", "zmin", "zmax")
+      if (length(faces) == 1 && faces == "all") {
+            selected_faces <- valid_faces
+      } else if (length(faces) == 1 && faces == "none") {
+            selected_faces <- character(0)
+      } else {
+            invalid_faces <- setdiff(faces, valid_faces)
+            if (length(invalid_faces) > 0) {
+                  stop("Invalid face names: ", paste(invalid_faces, collapse = ", "),
+                       ". Valid faces are: ", paste(valid_faces, collapse = ", "))
             }
+            selected_faces <- faces
       }
-
-      return(vertex_normals)
+      return(selected_faces)
 }
 
-#' Calculate face centers for voxel faces
-#'
-#' @param voxel_faces Data frame with voxel face vertices
-#' @return Matrix of face centers (one row per face, 3 columns for x,y,z)
-#' @keywords internal
-calculate_voxel_face_centers <- function(voxel_faces) {
-
-      if (nrow(voxel_faces) == 0) {
-            return(matrix(nrow = 0, ncol = 3))
+# Convert categorical position columns to numeric positions
+# (Helper used by multiple stats)
+convert_to_numeric <- function(data) {
+      data$z_raw <- data$z # (stash a copy of original z values first)
+      if (is.factor(data$x) || is.character(data$x)) {
+            data$x <- as.numeric(as.factor(data$x))
       }
-
-      # Get unique faces using the new group column
-      unique_faces <- unique(voxel_faces$group)
-      face_centers <- matrix(0, nrow = length(unique_faces), ncol = 3)
-
-      for (i in seq_along(unique_faces)) {
-            face_data <- voxel_faces[voxel_faces$group == unique_faces[i], ]
-
-            # Calculate geometric center of the rectangular face (mean of 4 vertices)
-            face_centers[i, 1] <- mean(face_data$x)  # Center x
-            face_centers[i, 2] <- mean(face_data$y)  # Center y
-            face_centers[i, 3] <- mean(face_data$z)  # Center z
+      if (is.factor(data$y) || is.character(data$y)) {
+            data$y <- as.numeric(as.factor(data$y))
       }
-
-      # Expand face centers to match number of vertices (4 per face)
-      vertex_face_centers <- matrix(0, nrow = nrow(voxel_faces), ncol = 3)
-      for (i in seq_along(unique_faces)) {
-            face_indices <- which(voxel_faces$group == unique_faces[i])
-            # Assign the same face center to all vertices of this face
-            for (idx in face_indices) {
-                  vertex_face_centers[idx, ] <- face_centers[i, ]
-            }
+      if (is.factor(data$z) || is.character(data$z)) {
+            data$z <- as.numeric(as.factor(data$z))
       }
-
-      return(vertex_face_centers)
+      data
 }
+
 
 #' 3D voxel visualization from sparse 3D data
 #'
@@ -323,7 +209,7 @@ calculate_voxel_face_centers <- function(voxel_faces) {
 #'     \item Vector of face names: \code{c("zmax", "xmin", "ymax")}, etc.
 #'   }
 #'   Valid face names: "xmin", "xmax", "ymin", "ymax", "zmin", "zmax".
-#' @param light A lighting specification object created by \code{lighting()}
+#' @param light A lighting specification object created by \code{light()}, or NULL to disable shading.
 #' @param ... Other arguments passed on to `layer()`, such as `sort_method` and `scale_depth`
 #'    arguments to `geom_polygon_3d()`.
 #'
@@ -348,27 +234,25 @@ calculate_voxel_face_centers <- function(voxel_faces) {
 #' @examples
 #' # Sparse 3D voxel data
 #' voxel_data <- data.frame(
-#'   x = c(1, 2, 3, 2, 1, 3, 4),
-#'   y = c(1, 1, 2, 3, 2, 1, 2),
-#'   z = c(1, 2, 1, 1, 3, 3, 2)
+#'   x = round(rnorm(100, 0, 2)),
+#'   y = round(rnorm(100, 0, 2)),
+#'   z = round(rnorm(100, 0, 2))
 #' )
 #'
 #' p <- ggplot(voxel_data, aes(x, y, z)) + coord_3d()
 #'
 #' # Basic 3D voxel plot
-#' p + stat_voxel_3d(aes(fill = z), color = "black") +
-#'   scale_fill_viridis_c()
+#' p + stat_voxel_3d(fill = "steelblue")
 #'
-#' # Directional lighting (like sunlight)
-#' p + stat_voxel_3d(aes(fill = after_stat(light)),
-#'              light = lighting(direction = c(1, 0, .5))) +
-#'   scale_fill_gradient(low = "darkgreen", high = "lightgreen")
+#' # With aesthetic fill
+#' p + stat_voxel_3d(aes(fill = z)) +
+#'   scale_fill_viridis_c() + guides(fill = guide_colorbar_shaded())
 #'
 #' # Show only visible faces for performance
-#' p + stat_voxel_3d(faces = c("zmax", "ymax", "xmin"), color = "black")
+#' p + stat_voxel_3d(faces = c("zmax", "ymin", "xmin"))
 #'
 #' @seealso [stat_pillar_3d()] for variable-height columns, [stat_surface_3d()] for smooth surfaces,
-#'   [coord_3d()] for 3D coordinate systems, [lighting()] for lighting specifications,
+#'   [coord_3d()] for 3D coordinate systems, [light()] for lighting specifications,
 #'   [GeomPolygon3D] for the default geometry.
 #' @export
 stat_voxel_3d <- function(mapping = NULL, data = NULL,
@@ -376,7 +260,7 @@ stat_voxel_3d <- function(mapping = NULL, data = NULL,
                        position = "identity",
                        width = 1.0,
                        faces = "all",
-                       light = lighting(),
+                       light = ggcube::light(),
                        na.rm = FALSE, show.legend = NA, inherit.aes = TRUE,
                        ...) {
 

@@ -11,7 +11,7 @@ stat_voxel_3d(
   position = "identity",
   width = 1,
   faces = "all",
-  light = lighting(),
+  light = ggcube::light(),
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE,
@@ -40,7 +40,7 @@ Grid spacing is determined automatically using \code{\link[=resolution]{resoluti
 }
 Valid face names: "xmin", "xmax", "ymin", "ymax", "zmin", "zmax".}
 
-\item{light}{A lighting specification object created by \code{lighting()}}
+\item{light}{A lighting specification object created by \code{light()}, or NULL to disable shading.}
 
 \item{na.rm}{If \code{FALSE}, missing values are removed with a warning.}
 
@@ -87,28 +87,26 @@ And understands these additional aesthetics:
 \examples{
 # Sparse 3D voxel data
 voxel_data <- data.frame(
-  x = c(1, 2, 3, 2, 1, 3, 4),
-  y = c(1, 1, 2, 3, 2, 1, 2),
-  z = c(1, 2, 1, 1, 3, 3, 2)
+  x = round(rnorm(100, 0, 2)),
+  y = round(rnorm(100, 0, 2)),
+  z = round(rnorm(100, 0, 2))
 )
 
 p <- ggplot(voxel_data, aes(x, y, z)) + coord_3d()
 
 # Basic 3D voxel plot
-p + stat_voxel_3d(aes(fill = z), color = "black") +
-  scale_fill_viridis_c()
+p + stat_voxel_3d(fill = "steelblue")
 
-# Directional lighting (like sunlight)
-p + stat_voxel_3d(aes(fill = after_stat(light)),
-             light = lighting(direction = c(1, 0, .5))) +
-  scale_fill_gradient(low = "darkgreen", high = "lightgreen")
+# With aesthetic fill
+p + stat_voxel_3d(aes(fill = z)) +
+  scale_fill_viridis_c() + guides(fill = guide_colorbar_shaded())
 
 # Show only visible faces for performance
-p + stat_voxel_3d(faces = c("zmax", "ymax", "xmin"), color = "black")
+p + stat_voxel_3d(faces = c("zmax", "ymin", "xmin"))
 
 }
 \seealso{
 \code{\link[=stat_pillar_3d]{stat_pillar_3d()}} for variable-height columns, \code{\link[=stat_surface_3d]{stat_surface_3d()}} for smooth surfaces,
-\code{\link[=coord_3d]{coord_3d()}} for 3D coordinate systems, \code{\link[=lighting]{lighting()}} for lighting specifications,
+\code{\link[=coord_3d]{coord_3d()}} for 3D coordinate systems, \code{\link[=light]{light()}} for lighting specifications,
 \link{GeomPolygon3D} for the default geometry.
 }

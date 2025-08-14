@@ -80,7 +80,7 @@ And understands these additional aesthetics:
 # Typically used via stats like stat_surface_3d() or stat_hull_3d()
 ggplot(sphere_points, aes(x, y, z)) +
   stat_hull_3d(method = "convex", fill = "dodgerblue",
-            light = lighting(fill = TRUE, mode = "hsl")) +
+            light = light(fill = TRUE, mode = "hsl")) +
   coord_3d()
 
 # Can be used directly with properly structured data

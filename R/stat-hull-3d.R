@@ -1,8 +1,7 @@
 StatHull3D <- ggproto("StatHull3D", Stat,
                       required_aes = c("x", "y", "z"),
 
-                      compute_group = function(data, scales, method = "convex", radius = NA,
-                                               light = lighting()) {
+                      compute_group = function(data, scales, method = "convex", radius = NA, light = NULL) {
                             coords <- as.matrix(data[, c("x", "y", "z")])
 
                             # Get triangle indices
@@ -42,100 +41,15 @@ StatHull3D <- ggproto("StatHull3D", Stat,
                                   stop("No triangles generated - try adjusting alpha parameter or check data")
                             }
 
-                            # Compute face normals using simple cross product
-                            A <- coords[tri[,1], ]
-                            B <- coords[tri[,2], ]
-                            C <- coords[tri[,3], ]
+                            # Assemble triangle vertices
+                            data <- data[as.vector(t(tri)), ]
 
-                            # Edge vectors
-                            edge1 <- B - A
-                            edge2 <- C - A
-
-                            # Cross product for each triangle
-                            normals <- matrix(0, nrow = nrow(tri), ncol = 3)
-                            for(i in 1:nrow(tri)) {
-                                  # Cross product: edge1 × edge2
-                                  cross <- c(
-                                        edge1[i,2] * edge2[i,3] - edge1[i,3] * edge2[i,2],
-                                        edge1[i,3] * edge2[i,1] - edge1[i,1] * edge2[i,3],
-                                        edge1[i,1] * edge2[i,2] - edge1[i,2] * edge2[i,1]
-                                  )
-
-                                  # Normalize
-                                  cross_length <- sqrt(sum(cross^2))
-                                  if (cross_length > 0) {
-                                        normals[i,] <- cross / cross_length
-                                  } else {
-                                        normals[i,] <- c(0, 0, 1)  # Default up
-                                  }
-                            }
-
-                            # Ensure normals point outward from centroid for both methods
-                            # (imperfect for alpha, may want to fix)
-                            data_center <- colMeans(coords)
-                            for(i in 1:nrow(tri)) {
-                                  triangle_center <- (A[i,] + B[i,] + C[i,]) / 3
-                                  outward_direction <- triangle_center - data_center
-
-                                  # If normal points inward (negative dot product), flip it
-                                  if (sum(normals[i,] * outward_direction) < 0) {
-                                        normals[i,] <- -normals[i,]
-                                  }
-                            }
-
-                            # Calculate face centers for positional lighting
-                            face_centers <- matrix(0, nrow = nrow(tri), ncol = 3)
-                            for(i in 1:nrow(tri)) {
-                                  face_centers[i,] <- (A[i,] + B[i,] + C[i,]) / 3
-                            }
-
-                            light_val <- compute_lighting(normals, light, face_centers)
-
-                            # Flatten triangle data with all computed variables
-                            verts <- coords[as.vector(t(tri)), ]
-
-                            # Create unique face IDs that won't collide across groups
-                            # Use a random suffix to ensure uniqueness across compute_group calls
+                            # Create unique face IDs that won't collide across groups,
+                            # using a random suffix to ensure uniqueness across compute_group calls
                             group_suffix <- sample(10000:99999, 1)
-                            face_id <- rep(paste0("tri_", group_suffix, "_", 1:nrow(tri)), each = 3)
-                            normal_x <- rep(normals[,1], each = 3)
-                            normal_y <- rep(normals[,2], each = 3)
-                            normal_z <- rep(normals[,3], each = 3)
-                            light_val_expanded <- rep(light_val, each = 3)
-                            triangle_index <- rep(1:nrow(tri), each = 3)
+                            data$group <- rep(paste0("sh3d__hull", group_suffix, "_tri", 1:nrow(tri)), each = 3)
 
-                            # Re-apply identity scaling for RGB colors after rep()
-                            if (light$method == "normal_rgb") {
-                                  light_val_expanded <- I(light_val_expanded)
-                            }
-
-                            result <- data.frame(
-                                  x = verts[,1],
-                                  y = verts[,2],
-                                  z = verts[,3],
-                                  group = paste0("hull__", face_id),
-                                  triangle_index = triangle_index,
-                                  normal_x = normal_x,
-                                  normal_y = normal_y,
-                                  normal_z = normal_z,
-                                  light = light_val_expanded,
-
-                                  # Add lighting parameters for shade processing
-                                  shade_enabled = light$shade,
-                                  shade_strength = light$shade_strength,
-                                  shade_mode = light$shade_mode,
-                                  lighting_method = light$method,
-                                  stringsAsFactors = FALSE
-                            )
-
-                            # Preserve all non-coordinate columns for each vertex
-                            # Get original indices for each vertex
-                            vertex_indices <- as.vector(t(tri))
-
-                            # Preserve additional columns from original data
-                            result <- bind_cols(result, data[vertex_indices, setdiff(names(data), names(result)), drop = FALSE])
-
-                            return(result)
+                            return(attach_light(data, light))
                       }
 )
 
@@ -162,7 +76,7 @@ StatHull3D <- ggproto("StatHull3D", Stat,
 #'   A face is included in the resulting alpha shape if it can be "exposed" by a sphere of this radius.
 #'   If NULL (the default), a simple heuristic based on the data scale is used to calculate a radius value.
 #'   Note that alpha shapes are quite sensitive to the coordinate scales of your data. See Details section.
-#' @param light A lighting specification object created by \code{lighting()}
+#' @param light A lighting specification object created by \code{light()}, or NULL to disable shading.
 #' @param inherit.aes If `FALSE`, overrides the default aesthetics.
 #'
 #' @section Grouping:
@@ -211,44 +125,31 @@ StatHull3D <- ggproto("StatHull3D", Stat,
 #' - `after_stat(normal_z)`: Z component of surface normal
 #'
 #' @examples
-#' library(ggplot2)
-#'
 #' # Convex hull
 #' ggplot(sphere_points, aes(x, y, z)) +
-#'   stat_hull_3d(method = "convex", fill = "gray40",
-#'                light = lighting(shade = "fill")) +
+#'   stat_hull_3d(method = "convex", fill = "gray40") +
 #'   coord_3d()
 #'
-#' # Alpha shape (scale-sensitive - radius ~1 works for unit sphere)
+#' # Alpha shape (for sphere data, gives similar result to convex)
 #' ggplot(sphere_points, aes(x, y, z)) +
-#'   stat_hull_3d(method = "alpha", radius = 1, fill = "gray40",
-#'                light = lighting(shade = "fill")) +
+#'   stat_hull_3d(method = "alpha", radius = 2, fill = "gray40") +
 #'   coord_3d()
 #'
-#' # Grouped hulls - separate hull for each species
-#' spheres <- rbind(dplyr::mutate(sphere_points, group = "a"),
-#'                  dplyr::mutate(sphere_points, group = "b", x = x + 3))
-#' ggplot(spheres, aes(x, y, z, group = group)) +
-#'   stat_hull_3d(aes(fill = group),
-#'         light = lighting(shade = "fill", shade_mode = "hsl")) +
-#'   coord_3d(scales = "fixed")
-#'
-#' # For larger coordinate scales, increase radius proportionally:
-#' sphere_large <- sphere_points * 100  # Scale up by 100x
-#' ggplot(sphere_large, aes(x, y, z)) +
-#'    stat_hull_3d(method = "alpha", radius = 100,
-#'              fill = "darkgreen", light = lighting(shade = "fill")) +
-#'    coord_3d()
+#' # Use grouping to build separate hulls for data subsets
+#' ggplot(iris, aes(Petal.Length, Sepal.Length, Sepal.Width,
+#'                  color = Species, fill = Species)) +
+#'       stat_hull_3d() +
+#'       coord_3d(scales = "fixed")
 #'
 #' @seealso [coord_3d()] for 3D coordinate systems, [geom_polygon_3d] for the
-#'   default geometry with depth sorting, [lighting()] for lighting specifications.
+#'   default geometry with depth sorting, [light()] for lighting specifications.
 #'
 #' @export
 stat_hull_3d <- function(mapping = NULL, data = NULL,
                          geom = GeomPolygon3D,
                          position = "identity",
                          method = "convex", radius = NULL,
-                         light = lighting(),
+                         light = ggcube::light(),
                          inherit.aes = TRUE,
                          ...) {
 

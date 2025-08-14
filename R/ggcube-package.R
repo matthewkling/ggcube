@@ -15,7 +15,7 @@
 #'   \item \code{stat_hull_3d()}: 3D convex and alpha hulls
 #'   \item \code{stat_voxel_3d()}: 3D voxel visualization
 #'   \item \code{stat_pillar_3d()}: 3D pillar/bar charts
-#'   \item \code{lighting()}: Lighting specifications for 3D surfaces
+#'   \item \code{light()}: Lighting specifications for 3D surfaces
 #' }
 #'
 #' @docType package
