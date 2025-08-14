@@ -1,9 +1,9 @@
 #' 3D coordinate system
 #'
-#' \code{coord_3d} creates a 3D coordinate system that creates a 2D view of 3D data.
+#' \code{coord_3d} is a 3D coordinate system that creates a 2D view of 3D data.
 #' This is the essential core component of any plot made with `ggcube`.
-#' It supports rotation, perspective projection, and options for controlling panel
-#' selection and axis label placement.
+#' It supports rotation, perspective projection, and options for controlling plot
+#' aspect ratios, panel selection, and axis label placement.
 #'
 #' @param roll,pitch,yaw Rotation around x, y, and z axes, respectively, in degrees.
 #'    Positive values rotate the near face of the plot "downward", "rightward", and clockwise, respectively.
@@ -19,12 +19,21 @@
 #'   \code{... + scale_x_continuous(expand = expansion(.5))}.
 #' @param clip Character string indicating clipping behavior. Use \code{"off"} (the default, recommended
 #'   for some 3D plots) to allow drawing outside the plot panel.
-#' @param panels Character string specifying which panels to render. Options include
-#'   \code{"all"}, \code{"background"}, \code{"foreground"}, \code{"none"}, or specific panel names like
-#'   \code{"xmin"}, \code{"ymax"}, etc. (Panel styling is handled separately, via the normal \code{theme()}
-#'   approach.)
+#' @param panels Character vector specifying which panels to render, including one or more of the following:
+#'   \itemize{
+#'     \item \code{"background"}, \code{"foreground"}: faces laying behind or in front of
+#'       the cube's interior volume, respectively. These panels vary depending on plot rotation.
+#'     \item \code{"xmin"}, \code{"ymax"}, etc.: names of specific cube faces.
+#'     \item \code{"all"}, \code{"none"}: display the full cube or remove all faces.
+#'   }
+#'   The default is \code{"background"}. Note that panel styling is handled
+#'   via the normal \code{theme()} approach; if you select panels that sit in front of
+#'   the data, you can control their transparency with `element_rect(alpha = ...)`.
 #' @param xlabels,ylabels,zlabels Character strings or length-2 character vectors specifying
-#'   axis label (text and title) placement. Each parameter accepts:
+#'   axis label (text and title) placement. Labels are placed inline with grid lines for
+#'   the selected panel face. For each axis, there are four potential panels where labels
+#'   could be placed, and two potential edges for each panel. Labels can only be placed on
+#'   visible faces (see `panels` argument). Each parameter accepts:
 #'   \itemize{
 #'     \item \code{"auto"} (default): Automatic edge selection based on an algorithm
 #'       that prioritizes edges that are visible on the periphery of the plot and considers
@@ -58,9 +67,15 @@
 #' @section 3D Theming:
 #' 3D plots support additional theme elements beyond standard ggplot2 themes:
 #'
-#' **Z-axis elements:**
+#' **Text elements:**
 #' - `axis.text.z`: Styling for z-axis tick labels (inherits from `axis.text`)
 #' - `axis.title.z`: Styling for z-axis title (inherits from `axis.title`)
+#' - `axis.text`, `axis.text`: Standard styling with `element_text()`. Note: use
+#'    `element_text(margin = margin(...))` to adjust text padding, with left/right
+#'    margins affecting axis text and top/bottom margins affecting axis titles;
+#'    since placement and justification of these elements varies dynamically,
+#'    no distinction is made between left and right margins, or between top and
+#'    bottom margins -- you can set either, and the maximum of the two will be used.
 #'
 #' **Panel elements:**
 #' - `panel.foreground`: Styling for cube faces rendered in front of data (inherits from `panel.background`)
@@ -77,17 +92,21 @@
 #' and grid elements, you can use `panel.background`, etc. to style both background and foreground faces simultaneously.
 #'
 #' @examples
-#' library(ggplot2)
-#' p <- ggplot(mtcars, aes(mpg, wt, qsec)) +
-#'   geom_point_3d(fill = "darkred", color = "white",
-#'                 stroke = .25, shape = 21, size = 3)
+#' p <- ggplot() +
+#'   stat_function_3d(
+#'     aes(fill = after_stat(z), color = after_stat(z)),
+#'     fun = function(x, y) sin(x) * cos(y),
+#'     xlim = c(-pi, pi), ylim = c(-pi, pi),
+#'     n = 50, light = light(contrast = 1.5)) +
+#'   scale_fill_viridis_c() + scale_color_viridis_c() +
+#'   theme(legend.position = "none")
 #'
 #' # 3D plot with default coord settings
 #' p + coord_3d()
 #'
-#' ## Use `pitch`, `roll`, `yaw` to control plot rotation ##
+#' # Use `pitch`, `roll`, `yaw` to control plot rotation ----------------------
 #'
-#' # viewed from x-y face
+#' # zero rotation gives view from x-y face
 #' p + coord_3d(pitch = 0, roll = 0, yaw = 0)
 #'
 #' # pitch rotates plot around y axis
@@ -100,45 +119,49 @@
 #' p + coord_3d(pitch = 0, roll = 0, yaw = 30)
 #'
 #' # combine them to achieve arbitrary rotations
-#' p + coord_3d(pitch = 10, roll = 20, yaw = 30)
+#' p + coord_3d(pitch = 20, roll = 40, yaw = 60)
 #'
-#' ## Use `persp` and `dist` to control perspective effects ##
+#' # Use `persp` and `dist` to control perspective effects --------------------
 #'
 #' # strong perspective effect as if seen from very close
 #' p + coord_3d(dist = 1)
 #'
 #' # weaker perspective effects as if seen from far away
-#' p + coord_3d(dist = 4)
+#' p + coord_3d(dist = 3)
 #'
 #' # orthographic projection, effectively dist = Inf
 #' p + coord_3d(persp = FALSE)
 #'
-#' ## Use `scales` and `ratio` to modify aspect ratio ##
+#' # Use `scales` and `ratio` to modify aspect ratio --------------------------
 #'
-#' # Default free scales (maximum visual range)
-#' p + coord_3d()
-#'
+#' # Default "free" scales shown above give maximum visual range
 #' # Fixed scales (proportions match data scales, like coord_fixed)
 #' p + coord_3d(scales = "fixed")
 #'
-#' # Custom cube ratios (make z twice as tall visually)
+#' # Custom aspect ratios: make y twice as long visually
 #' p + coord_3d(scales = "free", ratio = c(1, 2, 1))
 #'
-#' # Custom cube ratios (make z twice as tall visually)
+#' # Custom aspect ratios: fix scales but make y twice long
 #' p + coord_3d(scales = "fixed", ratio = c(1, 2, 1))
 #'
-#' ## Use `panels` to select which cube faces to render ##
+#' # Use `panels` to select which cube faces to render ------------------------
+#'
 #' p + coord_3d(panels = c("zmin", "xmax"))
 #'
-#' # and use `theme()` elements to control panel styling
+#' # and use `theme()` elements to control panel and text styling
 #' p + coord_3d(panels = "all") +
 #'     theme(panel.background = element_rect(color = "black"),
 #'           panel.border = element_rect(color = "black"),
 #'           panel.foreground = element_rect(alpha = .3),
-#'           panel.grid.foreground = element_line(color = "gray", linewidth = .25))
+#'           panel.grid.foreground = element_line(color = "gray", linewidth = .25),
+#'           axis.text = element_text(color = "darkblue"),
+#'           axis.text.z = element_text(color = "darkred"),
+#'           axis.title = element_text(margin = margin(t = 30)),
+#'           axis.title.x = element_text(color = "magenta"))
 #'
-#' ## Use label parameters to control axis text placement and rotation ##
-#' p + coord_3d(xlabels = c("ymax", "zmax"))
+#' # Use label params to control axis text placement and rotation -------------
+#' p + coord_3d(xlabels = c("ymax", "zmax"),
+#'              zlabels = c("xmax", "ymin"))
 #' p + coord_3d(rotate_labels = FALSE)
 #'
 #' @export

@@ -136,7 +136,6 @@ create_grid_quads <- function(data, light) {
 #' @param light A lighting specification object created by \code{light()}, or NULL to disable shading.
 #' @param ... Other arguments passed on to the geom (typically `geom_polygon_3d()`), such as
 #'   `sort_method` and `scale_depth` as well as aesthetics like `colour`, `fill`, `linewidth`, etc.
-
 #'
 #' @section Aesthetics:
 #' `stat_surface_3d()` requires the following aesthetics:

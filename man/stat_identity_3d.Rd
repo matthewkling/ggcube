@@ -12,6 +12,7 @@ stat_identity_3d(
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE,
+  light = NULL,
   ...
 )
 }
@@ -30,24 +31,26 @@ stat_identity_3d(
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics.}
 
-\item{...}{Other arguments passed on to \code{\link[=layer]{layer()}}.}
+\item{light}{A lighting specification object created by \code{light()},
+or NULL (the default) to disable shading.}
+
+\item{...}{Other arguments passed on to geom layer.}
 }
 \description{
 This stat performs identity transformation (passes data through unchanged) while
-properly handling discrete scales for 3D coordinate systems. It converts factor
-and character variables to numeric positions and preserves original values in
-\verb{*_raw} columns for proper scale labeling. It also converts group values to
-hierarchical format to prevent reordering withing groups during depth sorting.
+properly handling discrete scales and lighting specifications for 3D coordinate
+systems. It also converts group values to hierarchical format to prevent
+reordering withing groups during depth sorting.
 }
 \details{
 This stat is primarily intended for use with 3D geoms that need discrete scale
-support, following the same pattern as other ggcube stats.
+or lighting support, following the same pattern as other ggcube stats.
 }
 \section{Computed variables}{
 
 \itemize{
 \item \code{x_raw}, \code{y_raw}, \code{z_raw}: Original values before discrete-to-numeric conversion
-\item \code{group}: Converted to hierarchical format (e.g., "1__group", "2__group") for proper depth sorting
+\item \code{group}: Converted to hierarchical format (e.g., "1__group", "2__group") for proper depth sorting.
 }
 }
 

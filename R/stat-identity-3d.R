@@ -1,7 +1,7 @@
 StatIdentity3D <- ggproto("StatIdentity3D", Stat,
                           required_aes = c("x", "y"),  # Require at least x and y like geom_point
 
-                          compute_panel = function(data, scales, na.rm = FALSE) {
+                          compute_panel = function(data, scales, na.rm = FALSE, light = NULL) {
 
                                 # Remove missing values if requested
                                 if (na.rm) {
@@ -48,20 +48,19 @@ StatIdentity3D <- ggproto("StatIdentity3D", Stat,
                                       }
                                 }
 
-                                return(data)
+                                return(attach_light(data, light))
                           }
 )
 
 #' 3D-aware identity transformation
 #'
 #' This stat performs identity transformation (passes data through unchanged) while
-#' properly handling discrete scales for 3D coordinate systems. It converts factor
-#' and character variables to numeric positions and preserves original values in
-#' `*_raw` columns for proper scale labeling. It also converts group values to
-#' hierarchical format to prevent reordering withing groups during depth sorting.
+#' properly handling discrete scales and lighting specifications for 3D coordinate
+#' systems. It also converts group values to hierarchical format to prevent
+#' reordering withing groups during depth sorting.
 #'
 #' This stat is primarily intended for use with 3D geoms that need discrete scale
-#' support, following the same pattern as other ggcube stats.
+#' or lighting support, following the same pattern as other ggcube stats.
 #'
 #' @param mapping Set of aesthetic mappings created by [aes()].
 #' @param data The data to be displayed in this layer.
@@ -70,22 +69,24 @@ StatIdentity3D <- ggproto("StatIdentity3D", Stat,
 #' @param na.rm If `FALSE`, missing values are removed with a warning.
 #' @param show.legend Logical indicating whether this layer should be included in legends.
 #' @param inherit.aes If `FALSE`, overrides the default aesthetics.
-#' @param ... Other arguments passed on to [layer()].
+#' @param light A lighting specification object created by \code{light()},
+#'   or NULL (the default) to disable shading.
+#' @param ... Other arguments passed on to geom layer.
 #'
 #' @section Computed variables:
 #' - `x_raw`, `y_raw`, `z_raw`: Original values before discrete-to-numeric conversion
-#' - `group`: Converted to hierarchical format (e.g., "1__group", "2__group") for proper depth sorting
+#' - `group`: Converted to hierarchical format (e.g., "1__group", "2__group") for proper depth sorting.
 #'
 #' @seealso [geom_point_3d()], [geom_polygon_3d()] which use this stat for discrete scale support.
 #' @export
 stat_identity_3d <- function(mapping = NULL, data = NULL,
                              geom = "point", position = "identity",
                              na.rm = FALSE, show.legend = NA, inherit.aes = TRUE,
-                             ...) {
+                             light = NULL, ...) {
 
       layer(
             stat = StatIdentity3D, data = data, mapping = mapping, geom = geom,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
-            params = list(na.rm = na.rm, ...)
+            params = list(na.rm = na.rm, light = light, ...)
       )
 }
