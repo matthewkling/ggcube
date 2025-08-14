@@ -60,25 +60,6 @@ ggplot(mtcars, aes(mpg, wt, qsec, color = factor(cyl))) +
 - `stat_density_3d()` creates perspective visualizations of 2D kernel density estimates 
 - `stat_hull_3d()` plots triangulated volumes based on convex or alpha hulls of 3D point data
 
-Example: a fitted model surface using `stat_smooth_3d()`:
-
-```{r smooth, warning = FALSE, message = FALSE}
-# Generate scattered 3D data
-set.seed(123)
-d <- data.frame(x = runif(50, -2, 2),
-                y = runif(50, -2, 2))
-d$z <- d$x + d$x^2 - d$y^2 + rnorm(50)
-
-# Plot GAM fit with uncertainty layers
-ggplot(d, aes(x, y, z)) + 
-      stat_smooth_3d(aes(fill = after_stat(level)),
-                     method = "gam", fomula = z ~ te(x, y),
-                     se = TRUE, level = 0.99, color = "black") +
-      scale_fill_manual(values = c("red", "darkorchid4", "steelblue")) +
-      coord_3d()
-
-
-```
 
 Example: a terrain surface using `stat_function_3d()`:
 
@@ -90,7 +71,6 @@ ggplot(mountain, aes(x, y, z)) +
       coord_3d(ratio = c(1.5, 2, 1)) +
       guides(fill = guide_colorbar_shaded())
 ```
-
 
 Example: a mathematical surface using `stat_function_3d()`:
 
@@ -104,6 +84,27 @@ ggplot() +
       coord_3d(yaw = 150) +
       theme_minimal()
 ```
+Example: a fitted model surface using `stat_smooth_3d()`:
+
+```{r smooth, warning = FALSE, message = FALSE}
+# Generate scattered 3D data
+set.seed(123)
+d <- data.frame(x = runif(50, -2, 2),
+                y = runif(50, -2, 2))
+d$z <- d$x + d$x^2 - d$y^2 + rnorm(50)
+
+# Plot GAM fit with uncertainty layers
+ggplot(d, aes(x, y, z)) + 
+      stat_smooth_3d(aes(fill = after_stat(level)),
+                     method = "gam", fomula = z ~ te(x, y),
+                     se = TRUE, level = 0.99, 
+                     domain = "bbox", color = "black") +
+      scale_fill_manual(values = c("red", "darkorchid4", "steelblue")) +
+      coord_3d()
+
+
+```
+
 
 ### Prisms
 

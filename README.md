@@ -63,26 +63,6 @@ ggplot(mtcars, aes(mpg, wt, qsec, color = factor(cyl))) +
 - `stat_hull_3d()` plots triangulated volumes based on convex or alpha
   hulls of 3D point data
 
-Example: a fitted model surface using `stat_smooth_3d()`:
-
-``` r
-# Generate scattered 3D data
-set.seed(123)
-d <- data.frame(x = runif(50, -2, 2),
-                y = runif(50, -2, 2))
-d$z <- d$x + d$x^2 - d$y^2 + rnorm(50)
-
-# Plot GAM fit with uncertainty layers
-ggplot(d, aes(x, y, z)) + 
-      stat_smooth_3d(aes(fill = after_stat(level)),
-                     method = "gam", fomula = z ~ te(x, y),
-                     se = TRUE, level = 0.99, color = "black") +
-      scale_fill_manual(values = c("red", "darkorchid4", "steelblue")) +
-      coord_3d()
-```
-
-<img src="man/figures/README-smooth-1.png" width="100%" />
-
 Example: a terrain surface using `stat_function_3d()`:
 
 ``` r
@@ -109,7 +89,27 @@ ggplot() +
       theme_minimal()
 ```
 
-<img src="man/figures/README-functions-1.png" width="100%" />
+<img src="man/figures/README-functions-1.png" width="100%" /> Example: a
+fitted model surface using `stat_smooth_3d()`:
+
+``` r
+# Generate scattered 3D data
+set.seed(123)
+d <- data.frame(x = runif(50, -2, 2),
+                y = runif(50, -2, 2))
+d$z <- d$x + d$x^2 - d$y^2 + rnorm(50)
+
+# Plot GAM fit with uncertainty layers
+ggplot(d, aes(x, y, z)) + 
+      stat_smooth_3d(aes(fill = after_stat(level)),
+                     method = "gam", fomula = z ~ te(x, y),
+                     se = TRUE, level = 0.99, 
+                     domain = "bbox", color = "black") +
+      scale_fill_manual(values = c("red", "darkorchid4", "steelblue")) +
+      coord_3d()
+```
+
+<img src="man/figures/README-smooth-1.png" width="100%" />
 
 ### Prisms
 

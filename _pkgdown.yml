@@ -14,7 +14,7 @@ reference:
   - starts_with("geom_")
 - title: Visual styling
 - contents:
-  - lighting
+  - light
   - shade_guides
   - element_rect
 - title: Z axis scales
