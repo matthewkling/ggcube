@@ -54,7 +54,11 @@ if mapped, otherwise defaults to the minimum \code{z} value in the data.}
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics.}
 
 \item{...}{Other arguments passed on to the geom (typically \code{geom_polygon_3d()}), such as
-\code{sort_method} and \code{scale_depth} as well as aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc.}
+\code{sort_method} and \code{scale_depth} as well as aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc.
+
+Note that pillar geometries often require pairwise depth sorting for correct rendering.
+This is the default for smaller data sets, but not for larger data sets due to compute speed;
+in those cases you may wish to manually specify \code{sort_method = "pairwise"}.}
 }
 \description{
 Creates 3D pillar visualizations from grid data (regular or sparse).

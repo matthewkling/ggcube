@@ -9,7 +9,9 @@ stat_density_3d(
   data = NULL,
   geom = GeomPolygon3D,
   position = "identity",
-  n = 30,
+  n = NULL,
+  grid = NULL,
+  direction = NULL,
   h = NULL,
   adjust = 1,
   pad = 0.1,
@@ -34,9 +36,8 @@ with point coordinates.}
 
 \item{position}{Position adjustment, defaults to "identity".}
 
-\item{n}{Either a single integer specifying grid resolution in both dimensions,
-or a vector of length 2 specifying \code{c(nx, ny)} for different resolutions.
-Default is 30 (lower than ggplot2's default for better performance with 3D rendering).}
+\item{grid, n, direction}{Arguments passed to \code{make_tile_grid()} specifying the geometry,
+resolution, and orientation of the surface grid. See \code{?make_tile_grid()} for details.}
 
 \item{h}{Bandwidth vector. If \code{NULL} (default), uses automatic bandwidth selection
 via \code{MASS::bandwidth.nrd()}. Can be a single number (used for both dimensions)
@@ -142,6 +143,12 @@ ggplot(iris, aes(Petal.Length, Sepal.Length, fill = Species)) +
                   pad = .3, min_ndensity = .001,
                   color = "black", alpha = .7, light = NULL) +
   coord_3d(ratio = c(3, 3, 1))
+
+# Specify alternative grid geometry and light model
+p + stat_density_3d(grid = "hex", n = 30, direction = "y",
+                    light = light("direct"),
+                    color = "white", linewidth = .1) +
+  guides(fill = guide_colorbar_3d())
 
 }
 \seealso{

@@ -49,7 +49,11 @@ Valid face names: "xmin", "xmax", "ymin", "ymax", "zmin", "zmax".}
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics.}
 
 \item{...}{Other arguments passed on to the geom (typically \code{geom_polygon_3d()}), such as
-\code{sort_method} and \code{scale_depth} as well as aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc.}
+\code{sort_method} and \code{scale_depth} as well as aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc.
+
+Note that voxel geometries sometimes require pairwise depth sorting for correct rendering.
+This is the default for smaller data sets, but not for larger data sets due to compute speed;
+in those cases you may wish to manually specify \code{sort_method = "pairwise"}.}
 }
 \description{
 Creates 3D voxel visualizations from sparse 3D point data.

@@ -233,6 +233,10 @@ create_pillars <- function(data, x_spacing, y_spacing, width, selected_faces) {
 #' @param ... Other arguments passed on to the geom (typically `geom_polygon_3d()`), such as
 #'   `sort_method` and `scale_depth` as well as aesthetics like `colour`, `fill`, `linewidth`, etc.
 #'
+#' Note that pillar geometries often require pairwise depth sorting for correct rendering.
+#' This is the default for smaller data sets, but not for larger data sets due to compute speed;
+#' in those cases you may wish to manually specify `sort_method = "pairwise"`.
+#'
 #' @section Aesthetics:
 #' `stat_pillar_3d()` requires the following aesthetics:
 #' - **x**: X coordinate (grid position)

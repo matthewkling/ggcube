@@ -2,8 +2,8 @@ StatDensity3D <- ggproto("StatDensity3D", Stat,
                          required_aes = c("x", "y"),
                          default_aes = aes(fill = after_stat(density), z = after_stat(z)),
 
-                         compute_group = function(data, scales, n = 30, h = NULL,
-                                                  adjust = 1, pad = 0.1, min_ndensity = 0,
+                         compute_group = function(data, scales, n = NULL, grid = NULL, direction = NULL,
+                                                  h = NULL, adjust = 1, pad = 0.1, min_ndensity = 0,
                                                   light = NULL, na.rm = FALSE) {
 
                                # Remove missing values if requested
@@ -14,20 +14,6 @@ StatDensity3D <- ggproto("StatDensity3D", Stat,
                                # Check we have enough data
                                if (nrow(data) < 3) {
                                      stop("stat_density_3d requires at least 3 points per group")
-                               }
-
-                               # Handle n parameter (grid resolution)
-                               if (length(n) == 1) {
-                                     nx <- ny <- n
-                               } else if (length(n) == 2) {
-                                     nx <- n[1]
-                                     ny <- n[2]
-                               } else {
-                                     stop("n must be a single number or a vector of length 2")
-                               }
-
-                               if (!is.numeric(c(nx, ny)) || any(c(nx, ny) < 2)) {
-                                     stop("Grid resolution (n) must be at least 2 in each dimension")
                                }
 
                                # Load MASS for kde2d
@@ -55,45 +41,84 @@ StatDensity3D <- ggproto("StatDensity3D", Stat,
                                # Add some padding (similar to what kde2d does by default)
                                x_extend <- diff(x_range) * pad
                                y_extend <- diff(y_range) * pad
-                               xlims <- c(x_range[1] - x_extend, x_range[2] + x_extend)
-                               ylims <- c(y_range[1] - y_extend, y_range[2] + y_extend)
+                               xlim <- c(x_range[1] - x_extend, x_range[2] + x_extend)
+                               ylim <- c(y_range[1] - y_extend, y_range[2] + y_extend)
 
-                               # Compute 2D kernel density estimate
-                               tryCatch({
-                                     kde_result <- MASS::kde2d(data$x, data$y, h = h, n = c(nx, ny), lims = c(xlims, ylims))
-                               }, error = function(e) {
-                                     stop("Error computing kernel density estimate: ", e$message)
-                               })
+                               # Generate grid
+                               d <- make_tile_grid(grid, n, direction, xlim, ylim)
+                               d$group <- paste0("surface__tile", d$group)
 
-                               # Convert kde2d result to data frame
-                               grid_data <- expand.grid(x = kde_result$x, y = kde_result$y)
-                               grid_data$z <- as.vector(t(kde_result$z))
+                               # Compute kernel density
+                               d$z <- kde2d(data$x, data$y, d$x, d$y, h)
 
                                # Preserve group-level aesthetics (everything except coordinates)
-                               non_coord_cols <- setdiff(names(data), c("x", "y", "z"))
+                               non_coord_cols <- setdiff(names(data), names(d))
                                if (length(non_coord_cols) > 0) {
                                      for (col_name in non_coord_cols) {
-                                           grid_data[[col_name]] <- rep(data[[col_name]][1], nrow(grid_data))
+                                           d[[col_name]] <- rep(data[[col_name]][1], nrow(d))
                                      }
                                }
 
-                               # Process surface using common pipeline (same as stat_surface_3d)
-                               surface <- create_grid_quads(grid_data, light)
-
                                # Compute additional variables to match stat_density_2d
-                               surface$density <- surface$z
+                               d$density <- d$z
                                n_obs <- nrow(data)
-                               max_density <- max(surface$density, na.rm = TRUE)
-                               surface$ndensity <- if (max_density > 0) surface$density / max_density else 0
-                               surface$count <- surface$density * n_obs
-                               surface$n <- n_obs
+                               max_density <- max(d$density, na.rm = TRUE)
+                               d$ndensity <- if (max_density > 0) d$density / max_density else 0
+                               d$count <- d$density * n_obs
+                               d$n <- n_obs
 
                                # Remove data below ndensity threshold
-                               surface <- filter(surface, ndensity >= min_ndensity)
+                               d <- filter(d, ndensity >= min_ndensity)
 
-                               return(surface)
+                               return(attach_light(d, light))
                          }
 )
+
+# Adapted from MASS::kde2d in order to support non-rectangular grids
+kde2d <- function(x, y, eval_x, eval_y, h) {
+      # x, y: data points
+      # eval_x, eval_y: points where we want to evaluate density
+      # h: bandwidth (optional)
+
+      nx <- length(x)
+      if (length(y) != nx)
+            stop("data vectors must be the same length")
+      if (length(eval_x) != length(eval_y))
+            stop("evaluation point vectors must be the same length")
+      if (any(!is.finite(x)) || any(!is.finite(y)))
+            stop("missing or infinite values in the data are not allowed")
+      if (any(!is.finite(eval_x)) || any(!is.finite(eval_y)))
+            stop("missing or infinite values in evaluation points are not allowed")
+
+      # Estimate bandwidth if not provided
+      h <- if (missing(h))
+            c(MASS::bandwidth.nrd(x), MASS::bandwidth.nrd(y))
+      else rep(h, length.out = 2L)
+      if (any(h <= 0))
+            stop("bandwidths must be strictly positive")
+      h <- h/4  # Same scaling as original kde2d
+
+      n_eval <- length(eval_x)
+
+      # For each evaluation point, compute density
+      # Vectorized approach: compute all distances at once
+
+      # Create matrices for vectorized computation
+      # eval_x[i] - x[j] for all i,j combinations
+      dx_matrix <- outer(eval_x, x, "-") / h[1L]  # n_eval x nx
+      dy_matrix <- outer(eval_y, y, "-") / h[2L]  # n_eval x nx
+
+      # Evaluate normal densities
+      kernel_x <- dnorm(dx_matrix)  # n_eval x nx
+      kernel_y <- dnorm(dy_matrix)  # n_eval x nx
+
+      # For each evaluation point, sum over all data points
+      # kernel_x[i,j] * kernel_y[i,j] gives kernel contribution from data point j to eval point i
+      density <- rowSums(kernel_x * kernel_y) / (nx * h[1L] * h[2L])
+
+      return(density)
+}
+
 
 #' 3D kernel density estimation surface
 #'
@@ -113,9 +138,8 @@ StatDensity3D <- ggproto("StatDensity3D", Stat,
 #'   If `FALSE`, missing values will cause an error. Default is `FALSE`.
 #' @param show.legend Logical indicating whether this layer should be included in legends.
 #' @param inherit.aes If `FALSE`, overrides the default aesthetics.
-#' @param n Either a single integer specifying grid resolution in both dimensions,
-#'   or a vector of length 2 specifying `c(nx, ny)` for different resolutions.
-#'   Default is 30 (lower than ggplot2's default for better performance with 3D rendering).
+#' @param grid,n,direction Arguments passed to `make_tile_grid()` specifying the geometry,
+#'   resolution, and orientation of the surface grid. See `?make_tile_grid()` for details.
 #' @param h Bandwidth vector. If `NULL` (default), uses automatic bandwidth selection
 #'   via `MASS::bandwidth.nrd()`. Can be a single number (used for both dimensions)
 #'   or a vector of length 2 for different bandwidths in x and y directions.
@@ -192,6 +216,12 @@ StatDensity3D <- ggproto("StatDensity3D", Stat,
 #'                   color = "black", alpha = .7, light = NULL) +
 #'   coord_3d(ratio = c(3, 3, 1))
 #'
+#' # Specify alternative grid geometry and light model
+#' p + stat_density_3d(grid = "hex", n = 30, direction = "y",
+#'                     light = light("direct"),
+#'                     color = "white", linewidth = .1) +
+#'   guides(fill = guide_colorbar_3d())
+#'
 #' @seealso [stat_density_2d()] for 2D density contours, [stat_surface_3d()] for
 #'   surfaces from existing grid data, [light()] for lighting specifications,
 #'   [coord_3d()] for 3D coordinate systems.
@@ -199,9 +229,8 @@ StatDensity3D <- ggproto("StatDensity3D", Stat,
 stat_density_3d <- function(mapping = NULL, data = NULL,
                             geom = GeomPolygon3D,
                             position = "identity",
-                            n = 30,
-                            h = NULL,
-                            adjust = 1,
+                            n = NULL, grid = NULL, direction = NULL,
+                            h = NULL, adjust = 1,
                             pad = 0.1,
                             min_ndensity = 0,
                             light = ggcube::light(),
@@ -213,7 +242,8 @@ stat_density_3d <- function(mapping = NULL, data = NULL,
       layer(
             stat = StatDensity3D, data = data, mapping = mapping, geom = geom,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
-            params = list(n = n, h = h, adjust = adjust, pad = pad, min_ndensity = min_ndensity,
+            params = list(n = n, grid = grid, direction = direction,
+                          h = h, adjust = adjust, pad = pad, min_ndensity = min_ndensity,
                           light = light, na.rm = na.rm, ...)
       )
 }

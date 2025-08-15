@@ -14,7 +14,7 @@ StatFunction3D <- ggproto("StatFunction3D", Stat,
                           },
 
                           compute_panel = function(data, scales, fun = NULL, xlim = NULL, ylim = NULL,
-                                                   n = 50, light = NULL, na.rm = FALSE) {
+                                                   n = NULL, grid = NULL, direction = NULL, light = NULL, na.rm = FALSE) {
 
                                 # Validate function
                                 if (is.null(fun)) {
@@ -47,24 +47,9 @@ StatFunction3D <- ggproto("StatFunction3D", Stat,
                                       stop("ylim must be a numeric vector of length 2 with ylim[1] < ylim[2]")
                                 }
 
-                                # Handle n parameter (grid resolution)
-                                if (length(n) == 1) {
-                                      nx <- ny <- n
-                                } else if (length(n) == 2) {
-                                      nx <- n[1]
-                                      ny <- n[2]
-                                } else {
-                                      stop("n must be a single number or a vector of length 2")
-                                }
-
-                                if (!is.numeric(c(nx, ny)) || any(c(nx, ny) < 2)) {
-                                      stop("Grid resolution (n) must be at least 2 in each dimension")
-                                }
-
                                 # Generate regular grid
-                                x_seq <- seq(xlim[1], xlim[2], length.out = nx)
-                                y_seq <- seq(ylim[1], ylim[2], length.out = ny)
-                                grid_data <- expand.grid(x = x_seq, y = y_seq)
+                                grid_data <- make_tile_grid(grid, n, direction, xlim, ylim)
+                                grid_data$group <- paste0("surface__tile", grid_data$group)
 
                                 # Evaluate function at grid points
                                 tryCatch({
@@ -102,15 +87,9 @@ StatFunction3D <- ggproto("StatFunction3D", Stat,
                                       }
                                 }
 
-                                # Check we have enough data for surface creation
-                                if (nrow(grid_data) < 4) {
-                                      stop("Function evaluation resulted in insufficient data points for surface creation")
-                                }
-
-                                if(! "group" %in% names(grid_data)) grid_data$group <- 1
 
                                 # Process surface using common pipeline
-                                return(create_grid_quads(grid_data, light))
+                                return(attach_light(grid_data, light))
                           }
 )
 
@@ -146,9 +125,8 @@ ensure_nonempty_data <- function(data) {
 #' @param xlim,ylim Numeric vectors of length 2 giving the range for x and y values.
 #'   If `NULL` (default), uses the scale ranges from the plot, which can be set via
 #'   `xlim()` and `ylim()`, or trained by supplying data to the plot.
-#' @param n Either a single integer specifying grid resolution in both dimensions,
-#'   or a vector of length 2 specifying `c(nx, ny)` for different resolutions.
-#'   Default is 50. Higher values create smoother surfaces but slower rendering.
+#' @param grid,n,direction Arguments passed to `make_tile_grid()` specifying the geometry,
+#'   resolution, and orientation of the surface grid. See `?make_tile_grid()` for details.
 #' @param light A lighting specification object created by \code{light()}, or NULL to disable shading.
 #' @param ... Other arguments passed on to the geom (typically `geom_polygon_3d()`), such as
 #'   `sort_method` and `scale_depth` as well as aesthetics like `colour`, `fill`, `linewidth`, etc.
@@ -197,6 +175,24 @@ ensure_nonempty_data <- function(data) {
 #'   scale_color_viridis_c(option = "B") +
 #'   coord_3d(scales = "fixed")
 #'
+#' # Use "filtering" functions to constrain output domain
+#' ggplot() +
+#'   stat_function_3d(fun = function(a, b) {
+#'     ifelse(sqrt(a^2 + b^2) < 2, exp(-(a^2 + b^2)), NA)},
+#'     xlim = c(-2, 2), ylim = c(-2, 2), color = "white") +
+#'   coord_3d() +
+#'   scale_fill_viridis_c() +
+#'   guides(fill = guide_colorbar_3d())
+#'
+#' # Specify alternative grid geometry
+#' ggplot() +
+#'   stat_function_3d(fun = function(a, b) exp(-(a^2 + b^2)),
+#'     xlim = c(-2, 2), ylim = c(-2, 2), color = "white",
+#'     grid = "tri", n = 30, direction = "y") +
+#'   coord_3d() +
+#'   scale_fill_viridis_c() +
+#'   guides(fill = guide_colorbar_3d())
+#'
 #' @seealso [stat_surface_3d()] for surfaces from existing grid data,
 #'   [light()] for lighting specifications, [coord_3d()] for 3D coordinate systems.
 #' @export
@@ -207,7 +203,9 @@ stat_function_3d <- function(mapping = NULL,
                              position = "identity",
                              xlim = NULL,
                              ylim = NULL,
-                             n = 50,
+                             n = NULL,
+                             grid = NULL,
+                             direction = NULL,
                              light = ggcube::light(),
                              na.rm = FALSE,
                              show.legend = NA,
@@ -223,7 +221,8 @@ stat_function_3d <- function(mapping = NULL,
       colour <- colour %||% color
 
       # Build params list, only including colour if not NULL
-      params <- list(fun = fun, xlim = xlim, ylim = ylim, n = n,
+      params <- list(fun = fun, xlim = xlim, ylim = ylim,
+                     n = n, grid = grid, direction = direction,
                      light = light, na.rm = na.rm, ...)
 
       if (!is.null(colour)) {

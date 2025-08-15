@@ -85,7 +85,7 @@ ggplot() +
       stat_function_3d(
             fun = function(x, y) cos(x) * sin(y),
             xlim = c(-pi, pi), ylim = c(-pi, pi),
-            color = "black"
+            color = "black", grid = "hex"
       ) +
       coord_3d(yaw = 150) +
       theme_minimal()

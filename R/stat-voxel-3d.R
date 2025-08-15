@@ -213,6 +213,10 @@ convert_to_numeric <- function(data) {
 #' @param ... Other arguments passed on to the geom (typically `geom_polygon_3d()`), such as
 #'   `sort_method` and `scale_depth` as well as aesthetics like `colour`, `fill`, `linewidth`, etc.
 #'
+#' Note that voxel geometries sometimes require pairwise depth sorting for correct rendering.
+#' This is the default for smaller data sets, but not for larger data sets due to compute speed;
+#' in those cases you may wish to manually specify `sort_method = "pairwise"`.
+#'
 #' @section Aesthetics:
 #' `stat_voxel_3d()` requires the following aesthetics:
 #' - **x**: X coordinate (voxel center position)

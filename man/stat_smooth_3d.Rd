@@ -14,8 +14,10 @@ stat_smooth_3d(
   method.args = list(),
   xlim = NULL,
   ylim = NULL,
+  n = NULL,
+  grid = NULL,
+  direction = NULL,
   domain = c("bbox", "chull"),
-  n = 30,
   se = FALSE,
   level = 0.95,
   se.fill = NULL,
@@ -62,14 +64,13 @@ include smoothing parameters or basis specifications.}
 If \code{NULL} (default), uses the exact data range with no extrapolation, following
 \code{\link[=geom_smooth]{geom_smooth()}} conventions.}
 
+\item{grid, n, direction}{Arguments passed to \code{make_tile_grid()} specifying the geometry,
+resolution, and orientation of the surface grid. See \code{?make_tile_grid()} for details.}
+
 \item{domain}{Character indicating the x-y domain over which to visualize the surface.
 The default, \code{"bbox"}, shows predictions over the full rectangular bounding box of
 the predictors.The alternative, \code{"chull"}, shows predictions only within the convex
 hull of the input data, which prevents extrapolation into unoccupied corners of predictor space.}
-
-\item{n}{Either a single integer specifying grid resolution in both dimensions,
-or a vector of length 2 specifying \code{c(nx, ny)} for different resolutions.
-Default is 30. Higher values create smoother surfaces but slower rendering.}
 
 \item{se}{Logical indicating whether to display confidence interval bands around
 the smooth; if \code{TRUE}, these are rendered as additional surfaces; they inherit
@@ -183,6 +184,9 @@ p + stat_smooth_3d(method = "lm", xlim = c(-5, 5), ylim = c(-5, 5))
 # Clip surface to predictor convex hull
 # to prevent extrapolation into corner areas
 p + stat_smooth_3d(method = "lm", domain = "chull")
+
+# Specify alternative grid geometry
+p + stat_smooth_3d(grid = "hex", n = 30, direction = "y")
 
 }
 \seealso{

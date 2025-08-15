@@ -6,8 +6,9 @@ StatSmooth3D <- ggproto("StatSmooth3D", Stat,
                                           fill = after_stat(fitted)),
 
                         compute_panel = function(data, scales, method = "loess", formula = NULL,
-                                                 method.args = list(), xlim = NULL, ylim = NULL,
-                                                 n = 30, light = NULL, na.rm = FALSE, domain = "chull",
+                                                 method.args = list(),
+                                                 xlim = NULL, ylim = NULL, n = NULL, grid = NULL, direction = NULL,
+                                                 light = NULL, na.rm = FALSE, domain = "chull",
                                                  se = FALSE, level = 0.95, se.fill = NULL, se.colour = NULL,
                                                  se.alpha = 0.5, se.linewidth = NULL) {
 
@@ -26,16 +27,6 @@ StatSmooth3D <- ggproto("StatSmooth3D", Stat,
                               valid_methods <- c("loess", "lm", "glm", "gam")
                               if (!method %in% valid_methods) {
                                     stop("method must be one of: ", paste(valid_methods, collapse = ", "))
-                              }
-
-
-
-                              # Validate grid size
-                              if (length(n) == 1) {
-                                    n <- c(n, n)
-                              }
-                              if (length(n) != 2 || any(n < 3)) {
-                                    stop("n must be a single integer >= 3 or a vector of length 2 with values >= 3")
                               }
 
                               # Get model specification
@@ -64,9 +55,14 @@ StatSmooth3D <- ggproto("StatSmooth3D", Stat,
                                     surface_types <- "fitted"
                               }
 
+                              # Create grid polygons
+                              if(is.null(xlim)) xlim <- range(data$x, na.rm = TRUE)
+                              if(is.null(ylim)) ylim <- range(data$y, na.rm = TRUE)
+                              polys <- make_tile_grid(grid, n, direction, xlim, ylim)
+                              polys$group <- paste0("surface__tile", polys$group)
 
-                              # Create grid polygons, with hull clipping if applicable
-                              polys <- create_grid_polys(data, domain, xlim, ylim, n)
+                              # Clip to hull if applicable
+                              if(domain == "chull") polys <- clip_polys_to_chull(polys, data)
 
                               # Fit model and predict
                               predictions <- fit_and_predict(data, polys, method, formula,
@@ -118,56 +114,11 @@ StatSmooth3D <- ggproto("StatSmooth3D", Stat,
                         }
 )
 
-create_grid_polys <- function(point_data, domain, xlim, ylim, n) {
-
-      ### create regular rectangular grid ###
-
-      if (is.null(xlim)) xlim <- range(point_data$x, na.rm = TRUE)
-      if (is.null(ylim)) ylim <- range(point_data$y, na.rm = TRUE)
-      x_seq <- seq(xlim[1], xlim[2], length.out = n[1])
-      y_seq <- seq(ylim[1], ylim[2], length.out = n[2])
-
-      data <- expand_grid(x = x_seq, y = y_seq)
-      data$group <- 1
-
-      data <- data %>%
-            ungroup() %>%
-            mutate(quad_id = 1:nrow(.))
-
-      dy <- data %>%
-            group_by(x) %>%
-            mutate(y = lag(y)) %>%
-            ungroup()
-
-      dx <- data %>%
-            group_by(y) %>%
-            mutate(x = lag(x)) %>%
-            ungroup()
-
-      dxy <- data.frame(x = dx$x,
-                        y = dy$y) %>%
-            left_join(data, by = join_by(x, y)) %>%
-            mutate(quad_id = dx$quad_id)
-
-      d <- bind_rows(data, dx, dxy, dy) %>%
-            na.omit() %>%
-            group_by(quad_id) %>%
-            filter(n() == 4) %>%
-            arrange(x, y) %>%
-            mutate(vertex_order = c(1, 2, 4, 3)) %>%
-            ungroup() %>%
-            arrange(quad_id, vertex_order) %>%
-            mutate(group = paste0("surface__quad", quad_id, "::", group)) %>%
-            as.data.frame()
-
-
-      if(domain == "bbox") return(d)
-
-
-      ### clip to convex hull, if applicable ###
+clip_polys_to_chull <- function(d, point_data){
 
       hull_ind <- grDevices::chull(point_data[, c("x", "y")])
       hull <- as.matrix(point_data[hull_ind, c("x", "y")])
+
       d <- d %>%
             group_by(group) %>%
             reframe(poly = sutherland_hodgman_clip(cbind(x, y), hull)) %>%
@@ -177,7 +128,7 @@ create_grid_polys <- function(point_data, domain, xlim, ylim, n) {
       colnames(xy) <- c("x", "y")
       d <- d %>% select(group) %>% bind_cols(xy, .) %>%
             group_by(group) %>%
-            mutate(vertex_order = 1:n()) %>%
+            mutate(.vertex_order = 1:n()) %>%
             ungroup()
 
       return(d)
@@ -337,9 +288,8 @@ gam_model <- function(){
 #' @param xlim,ylim Numeric vectors of length 2 giving the range for prediction grid.
 #'   If `NULL` (default), uses the exact data range with no extrapolation, following
 #'   [geom_smooth()] conventions.
-#' @param n Either a single integer specifying grid resolution in both dimensions,
-#'   or a vector of length 2 specifying `c(nx, ny)` for different resolutions.
-#'   Default is 30. Higher values create smoother surfaces but slower rendering.
+#' @param grid,n,direction Arguments passed to `make_tile_grid()` specifying the geometry,
+#'   resolution, and orientation of the surface grid. See `?make_tile_grid()` for details.
 #' @param se Logical indicating whether to display confidence interval bands around
 #'   the smooth; if `TRUE`, these are rendered as additional surfaces; they inherit
 #'   aesthetics from the primary smooth layer unless otherwise specified.
@@ -427,6 +377,9 @@ gam_model <- function(){
 #' # to prevent extrapolation into corner areas
 #' p + stat_smooth_3d(method = "lm", domain = "chull")
 #'
+#' # Specify alternative grid geometry
+#' p + stat_smooth_3d(grid = "hex", n = 30, direction = "y")
+#'
 #' @seealso [stat_surface_3d()] for surfaces from existing grid data,
 #'   [stat_function_3d()] for mathematical function surfaces,
 #'   [light()] for lighting specifications, [coord_3d()] for 3D coordinate systems.
@@ -439,8 +392,10 @@ stat_smooth_3d <- function(mapping = NULL, data = NULL,
                            method.args = list(),
                            xlim = NULL,
                            ylim = NULL,
+                           n = NULL,
+                           grid = NULL,
+                           direction = NULL,
                            domain = c("bbox", "chull"),
-                           n = 30,
                            se = FALSE,
                            level = 0.95,
                            se.fill = NULL,
@@ -464,6 +419,7 @@ stat_smooth_3d <- function(mapping = NULL, data = NULL,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(method = method, formula = formula, method.args = method.args,
                           xlim = xlim, ylim = ylim, domain = domain, n = n, se = se, level = level,
+                          grid = grid, direction = direction,
                           se.fill = se.fill, se.colour = se.colour, se.alpha = se.alpha,
                           se.linewidth = se.linewidth, light = light, na.rm = na.rm, ...)
       )

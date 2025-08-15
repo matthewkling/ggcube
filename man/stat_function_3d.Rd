@@ -12,7 +12,9 @@ stat_function_3d(
   position = "identity",
   xlim = NULL,
   ylim = NULL,
-  n = 50,
+  n = NULL,
+  grid = NULL,
+  direction = NULL,
   light = ggcube::light(),
   na.rm = FALSE,
   show.legend = NA,
@@ -43,9 +45,8 @@ onto one 2D surface, use \code{position_on_face()}.}
 If \code{NULL} (default), uses the scale ranges from the plot, which can be set via
 \code{xlim()} and \code{ylim()}, or trained by supplying data to the plot.}
 
-\item{n}{Either a single integer specifying grid resolution in both dimensions,
-or a vector of length 2 specifying \code{c(nx, ny)} for different resolutions.
-Default is 50. Higher values create smoother surfaces but slower rendering.}
+\item{grid, n, direction}{Arguments passed to \code{make_tile_grid()} specifying the geometry,
+resolution, and orientation of the surface grid. See \code{?make_tile_grid()} for details.}
 
 \item{light}{A lighting specification object created by \code{light()}, or NULL to disable shading.}
 
@@ -113,6 +114,24 @@ ggplot() +
   scale_fill_viridis_c(option = "B") +
   scale_color_viridis_c(option = "B") +
   coord_3d(scales = "fixed")
+
+# Use "filtering" functions to constrain output domain
+ggplot() +
+  stat_function_3d(fun = function(a, b) {
+    ifelse(sqrt(a^2 + b^2) < 2, exp(-(a^2 + b^2)), NA)},
+    xlim = c(-2, 2), ylim = c(-2, 2), color = "white") +
+  coord_3d() +
+  scale_fill_viridis_c() +
+  guides(fill = guide_colorbar_3d())
+
+# Specify alternative grid geometry
+ggplot() +
+  stat_function_3d(fun = function(a, b) exp(-(a^2 + b^2)),
+    xlim = c(-2, 2), ylim = c(-2, 2), color = "white",
+    grid = "tri", n = 30, direction = "y") +
+  coord_3d() +
+  scale_fill_viridis_c() +
+  guides(fill = guide_colorbar_3d())
 
 }
 \seealso{
