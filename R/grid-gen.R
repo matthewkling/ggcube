@@ -1,18 +1,20 @@
 
-#' Generate regular grids
+#' Generate rectangular, triangular, or hexagonal grids
 #'
-#' Creates a rectangular, hexagonal, or triangular grid of specified proportions.
-#' Returns tile vertex data formatted for `geom_poygon()`
+#' Creates a regular grid of tiles of specified resolution and geometry.
+#' This function is called by various ggcube stats that generate surfaces, but can
+#' also be used directly. Returns tile vertex data formatted for geoms like
+#' `geom_poygon()` and `geom_poygon_3d()`.
 #'
 #' @param grid Character argument specifying geometry of grid to generate.
-#'   Options include `"rect"` for rectangular grid (the default), `"tri"` for
+#'   Options include `"rect"` (the default) for rectangular grid, `"tri"` for
 #'   triangular grid, or `"hex"` for hexagonal grid.
 #' @param n Either a single integer specifying grid resolution in both dimensions,
-#'   or a vector of length 2 specifying `c(nx, ny)` for different resolutions.
-#'   Default is 40. Higher values create smoother surfaces but slower rendering.
+#'   or a vector of length 2 specifying `c(nx, ny)` for separate x and y resolutions.
+#'   Default is `40`. Higher values create smoother surfaces but slower rendering.
 #' @param direction Either `"x"` (the default) or `"y"`, specifying the orientation
 #'   of tile rows. Ignored for rectangular grids.
-#' @param xlim,ylim Length-two numeric vectors bounding box over which to
+#' @param xlim,ylim Length-two numeric vectors defining bounding box over which to
 #'   generate the grid.
 #'
 #' @details Grids are constructed such that tiles are approximately equilateral
@@ -20,9 +22,24 @@
 #'   for the two dimensions. For triangular and hexagonal grids, this means that
 #'   `n` is only approximate.
 #'
-#' @return A data frame with the following columns: `x`, `y`, `group` (integer denoting)
-#'   unique polygon id, and `order` (integer giving vertex order, for plotting).
+#' @return A data frame with the following columns: `x`, `y`, `group` (integer denoting
+#'   unique polygon id), and `order` (integer giving vertex order, for plotting).
 #'
+#' @examples
+#' # direct use
+#' g <- make_tile_grid("tri", xlim = c(0, 5), ylim = c(-100, 100))
+#' head(g)
+#'
+#' # use from within ggcube stat
+#' ggplot() +
+#'   stat_function_3d(
+#'     grid = "hex", n = 20, xlim = c(-2, 2), ylim = c(-2, 2),
+#'     fun = function(x, y) - x^2 - y^2,
+#'     fill = "black", color = "white", light = NULL) +
+#'   coord_3d()
+#'
+#' @seealso [stat_function_3d()], [stat_smooth_3d()], and [stat_density_3d()] for ggcube layers that
+#'   use `make_tile_grid()` to generate gridded surfaces.
 #' @export
 make_tile_grid <- function(grid = c("rect", "tri", "hex"),
                            n = 40,
@@ -35,55 +52,43 @@ make_tile_grid <- function(grid = c("rect", "tri", "hex"),
       if(is.null(n)) n <- 40
       n <- as.integer(n)
       if(any(n < 2)) stop("`n` must be at least 2")
+      if(! length(n) %in% 1:2) stop("`n` must be a vector of length 1 or 2")
+      if(direction == "y") n <- rev(n)
 
-      switch(grid,
-             rect = make_rect_tiles(xlim, ylim, n),
-             tri = make_tri_tiles(xlim, ylim, n, direction),
-             hex = make_hex_tiles(xlim, ylim, n, direction),
-             stop("unknown argument to `grid`"))
+      tiles <- switch(grid,
+             rect = make_rect_tiles(n),
+             tri = make_tri_tiles(n),
+             hex = make_hex_tiles(n))
+
+      tiles <- tiles %>%
+            transpose_grid(direction) %>%
+            rescale_grid(xlim, ylim)
+
+      return(tiles)
 }
 
-make_rect_tiles <- function(xlim, ylim, n) {
+make_rect_tiles <- function(n) {
 
+      # Centers
       if(length(n) == 1) n <- c(n, n)
-      x_seq <- seq(xlim[1], xlim[2], length.out = n[1])
-      y_seq <- seq(ylim[1], ylim[2], length.out = n[2])
+      d <- expand_grid(x = 1:n[1], y = 1:n[2])
 
-      data <- expand_grid(x = x_seq, y = y_seq)
-
-      data <- data %>%
-            ungroup() %>%
-            mutate(group = 1:nrow(.))
-
-      dy <- data %>%
-            group_by(x) %>%
-            mutate(y = lag(y)) %>%
-            ungroup()
-
-      dx <- data %>%
-            group_by(y) %>%
-            mutate(x = lag(x)) %>%
-            ungroup()
-
-      dxy <- data.frame(x = dx$x,
-                        y = dy$y) %>%
-            left_join(data, by = join_by(x, y)) %>%
-            mutate(group = dx$group)
-
-      d <- bind_rows(data, dx, dxy, dy) %>%
-            na.omit() %>%
+      # Vertices
+      dx <- dy <- .5
+      d <- d %>%
+            mutate(group = 1:nrow(.)) %>%
             group_by(group) %>%
-            filter(n() == 4) %>%
-            arrange(x, y) %>%
-            mutate(order = c(1, 2, 4, 3)) %>%
+            reframe(x = c(x+dx, x+dx, x-dx, x-dx),
+                    y = c(y+dy, y-dy, y-dy, y+dy),
+                    group = group,
+                    order = 1:4) %>%
             ungroup() %>%
-            arrange(group, order) %>%
-            as.data.frame()
+            arrange(group, order)
 
       return(d)
 }
 
-make_tri_tiles <- function(xlim, ylim, n, direction = "x") {
+make_tri_tiles <- function(n) {
 
       if (length(n) == 1) {
             # Equilateral triangles
@@ -120,22 +125,10 @@ make_tri_tiles <- function(xlim, ylim, n, direction = "x") {
             ungroup() %>%
             arrange(group, order)
 
-      # Flip orientation if applicable
-      if(direction == "y") tri <- tri %>%
-            mutate(temp = x,
-                   x = y,
-                   y = temp) %>%
-            select(-temp)
-
-      # Scale
-      tri <- tri %>%
-            mutate(x = scales::rescale(x, xlim),
-                   y = scales::rescale(y, ylim))
-
       return(tri)
 }
 
-make_hex_tiles <- function(xlim, ylim, n, direction = "x") {
+make_hex_tiles <- function(n) {
 
       hr3 <- sqrt(3)/2
 
@@ -166,17 +159,33 @@ make_hex_tiles <- function(xlim, ylim, n, direction = "x") {
             arrange(group, order) %>%
             select(x, y, group, order)
 
-      # Flip orientation if applicable
-      if(direction == "y") hex <- hex %>%
-            mutate(temp = x,
-                   x = y,
-                   y = temp) %>%
-            select(-temp)
+      return(hex)
+}
 
-      # Scale
-      hex <- hex %>%
+# Flip orientation if applicable
+transpose_grid <- function(grid, direction){
+      if(direction == "y"){
+            grid <- grid %>%
+                  mutate(temp = x,
+                         x = y,
+                         y = temp) %>%
+                  select(-temp)
+      }
+      return(grid)
+}
+
+# Scale to target range
+rescale_grid <- function(grid, xlim, ylim){
+      grid %>%
             mutate(x = scales::rescale(x, xlim),
                    y = scales::rescale(y, ylim))
+}
 
-      return(hex)
+# Add computed surface orientation variables
+compute_surface_vars <- function(tiles){
+      left_join(tiles,
+                compute_surface_gradients_from_vertices(tiles),
+                by = join_by(group)) %>%
+            mutate(slope = sqrt(dzdy^2 + dzdx^2),
+                   aspect = atan2(dzdy, dzdx))
 }

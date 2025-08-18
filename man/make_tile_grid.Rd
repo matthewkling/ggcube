@@ -2,7 +2,7 @@
 % Please edit documentation in R/grid-gen.R
 \name{make_tile_grid}
 \alias{make_tile_grid}
-\title{Generate regular grids}
+\title{Generate rectangular, triangular, or hexagonal grids}
 \usage{
 make_tile_grid(
   grid = c("rect", "tri", "hex"),
@@ -14,30 +14,50 @@ make_tile_grid(
 }
 \arguments{
 \item{grid}{Character argument specifying geometry of grid to generate.
-Options include \code{"rect"} for rectangular grid (the default), \code{"tri"} for
+Options include \code{"rect"} (the default) for rectangular grid, \code{"tri"} for
 triangular grid, or \code{"hex"} for hexagonal grid.}
 
 \item{n}{Either a single integer specifying grid resolution in both dimensions,
-or a vector of length 2 specifying \code{c(nx, ny)} for different resolutions.
-Default is 40. Higher values create smoother surfaces but slower rendering.}
+or a vector of length 2 specifying \code{c(nx, ny)} for separate x and y resolutions.
+Default is \code{40}. Higher values create smoother surfaces but slower rendering.}
 
 \item{direction}{Either \code{"x"} (the default) or \code{"y"}, specifying the orientation
 of tile rows. Ignored for rectangular grids.}
 
-\item{xlim, ylim}{Length-two numeric vectors bounding box over which to
+\item{xlim, ylim}{Length-two numeric vectors defining bounding box over which to
 generate the grid.}
 }
 \value{
-A data frame with the following columns: \code{x}, \code{y}, \code{group} (integer denoting)
-unique polygon id, and \code{order} (integer giving vertex order, for plotting).
+A data frame with the following columns: \code{x}, \code{y}, \code{group} (integer denoting
+unique polygon id), and \code{order} (integer giving vertex order, for plotting).
 }
 \description{
-Creates a rectangular, hexagonal, or triangular grid of specified proportions.
-Returns tile vertex data formatted for \code{geom_poygon()}
+Creates a regular grid of tiles of specified resolution and geometry.
+This function is called by various ggcube stats that generate surfaces, but can
+also be used directly. Returns tile vertex data formatted for geoms like
+\code{geom_poygon()} and \code{geom_poygon_3d()}.
 }
 \details{
 Grids are constructed such that tiles are approximately equilateral
 when scaled to a square domain, unless \code{n} gives separate resolution values
 for the two dimensions. For triangular and hexagonal grids, this means that
 \code{n} is only approximate.
+}
+\examples{
+# direct use
+g <- make_tile_grid("tri", xlim = c(0, 5), ylim = c(-100, 100))
+head(g)
+
+# use from within ggcube stat
+ggplot() +
+  stat_function_3d(
+    grid = "hex", n = 20, xlim = c(-2, 2), ylim = c(-2, 2),
+    fun = function(x, y) - x^2 - y^2,
+    fill = "black", color = "white", light = NULL) +
+  coord_3d()
+
+}
+\seealso{
+\code{\link[=stat_function_3d]{stat_function_3d()}}, \code{\link[=stat_smooth_3d]{stat_smooth_3d()}}, and \code{\link[=stat_density_3d]{stat_density_3d()}} for ggcube layers that
+use \code{make_tile_grid()} to generate gridded surfaces.
 }

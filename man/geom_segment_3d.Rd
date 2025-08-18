@@ -2,7 +2,8 @@
 % Please edit documentation in R/geom-segment-3d.R
 \name{geom_segment_3d}
 \alias{geom_segment_3d}
-\title{3D line segments with depth-based scaling and proper depth sorting}
+\alias{stat_segment_3d}
+\title{3D line segments}
 \usage{
 geom_segment_3d(
   mapping = NULL,
@@ -16,6 +17,17 @@ geom_segment_3d(
   scale_depth = TRUE,
   arrow = NULL,
   lineend = "butt"
+)
+
+stat_segment_3d(
+  mapping = NULL,
+  data = NULL,
+  geom = GeomSegment3D,
+  position = "identity",
+  na.rm = FALSE,
+  show.legend = NA,
+  inherit.aes = TRUE,
+  ...
 )
 }
 \arguments{
@@ -44,11 +56,15 @@ thicker, and segments farther away appear thinner.}
 \item{arrow}{Specification for arrow heads, created by \code{\link[=arrow]{arrow()}}.}
 
 \item{lineend}{Line end style, one of "round", "butt", "square".}
+
+\item{geom}{The geom object used to display the data. Defaults to
+\link{GeomSegment3D}.}
 }
 \description{
-\code{geom_segment_3d()} draws line segments in 3D space with automatic depth-based
-linewidth scaling and proper depth sorting. Each segment is defined by start
-coordinates (x, y, z) and end coordinates (xend, yend, zend).
+\code{geom_segment_3d()} and \code{stat_segment_3d()} drawe line segments in 3D space
+with automatic depth-based linewidth scaling and proper depth sorting.
+Each segment is defined by start coordinates (x, y, z) and end
+coordinates (xend, yend, zend).
 }
 \section{Aesthetics}{
 

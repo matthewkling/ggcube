@@ -54,11 +54,10 @@ StatHull3D <- ggproto("StatHull3D", Stat,
 )
 
 
-#' Create 3D convex and alpha hulls with lighting
+#' 3D convex and alpha hulls
 #'
 #' `stat_hull_3d()` turns 3D point clouds into surface hulls consisting of triangular polygons,
-#' using either convex hull or alpha shape algorithms. It computes surface normals and applies
-#' various lighting models to create realistic 3D surface visualizations.
+#' using either convex hull or alpha shape algorithms.
 #'
 #' @param mapping Set of aesthetic mappings created by [aes()]. The required
 #'   aesthetics are `x`, `y`, and `z`. Additional aesthetics can use computed

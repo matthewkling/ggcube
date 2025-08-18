@@ -87,9 +87,12 @@ StatFunction3D <- ggproto("StatFunction3D", Stat,
                                       }
                                 }
 
+                                # Add computed variables and light info
+                                grid_data <- grid_data %>%
+                                      compute_surface_vars() %>%
+                                      attach_light(light)
 
-                                # Process surface using common pipeline
-                                return(attach_light(grid_data, light))
+                                return(grid_data)
                           }
 )
 
@@ -101,9 +104,10 @@ ensure_nonempty_data <- function(data) {
       }
 }
 
-#' 3D function surface visualization
+#' 3D function as a continuous surface
 #'
-#' Creates 3D surfaces by evaluating a function f(x,y) = z over a regular grid.
+#' A 3D version of `ggplot2::stat_function()`.
+#' Creates surfaces by evaluating a function f(x,y) = z over a regular grid.
 #' The function is evaluated at each grid point and the resulting surface is rendered
 #' as in [stat_surface_3d()].
 #'
@@ -161,7 +165,7 @@ ensure_nonempty_data <- function(data) {
 #'   stat_function_3d(fun = wave_fun, fill = "steelblue",
 #'                    xlim = c(-3*pi, 3*pi), ylim = c(-3*pi, 3*pi),
 #'                    light = light(method = "direct", mode = "hsl",
-#'                           contrast = .8, direction = c(1, 0, 1))) +
+#'                           contrast = .8, direction = c(1, -1, 1))) +
 #'   coord_3d(scales = "fixed") + theme_dark()
 #'
 #' # Use after_stat to access computed surface-orientation variables
@@ -170,7 +174,7 @@ ensure_nonempty_data <- function(data) {
 #'                        color = after_stat(dzdx)),
 #'                    fun = function(x, y) sin(x) * cos(y),
 #'                    xlim = c(-pi, pi), ylim = c(-pi, pi),
-#'                    n = 60, light = NULL) +
+#'                    light = NULL) +
 #'   scale_fill_viridis_c(option = "B") +
 #'   scale_color_viridis_c(option = "B") +
 #'   coord_3d(scales = "fixed")
@@ -194,7 +198,9 @@ ensure_nonempty_data <- function(data) {
 #'   guides(fill = guide_colorbar_3d())
 #'
 #' @seealso [stat_surface_3d()] for surfaces from existing grid data,
-#'   [light()] for lighting specifications, [coord_3d()] for 3D coordinate systems.
+#'   [make_tile_grid()] for details about grid geometry options,
+#'   [light()] for lighting specifications,
+#'   [coord_3d()] for 3D coordinate systems.
 #' @export
 stat_function_3d <- function(mapping = NULL,
                              fun = NULL,

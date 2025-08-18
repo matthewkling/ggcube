@@ -25,7 +25,10 @@ StatSurface3D <- ggproto("StatSurface3D", Stat,
                                }
 
                                # Create quadrilateral faces from grid cells
-                               data <- create_grid_quads(data, light)
+                               data <- data %>%
+                                     convert_to_quads() %>%
+                                     compute_surface_vars() %>%
+                                     attach_light(light)
 
                                return(data)
                          }
@@ -74,7 +77,7 @@ detect_grid_structure <- function(data) {
 #' @param data Regular grid data frame
 #' @return Data frame with quad faces and computed gradients
 #' @keywords internal
-create_grid_quads <- function(data, light) {
+convert_to_quads <- function(data) {
       data <- data %>%
             ungroup() %>%
             mutate(quad_id = 1:nrow(.))
@@ -102,18 +105,12 @@ create_grid_quads <- function(data, light) {
             filter(n() == 4) %>%
             arrange(x, y) %>%
             mutate(vertex_order = c(1, 2, 4, 3)) %>%
-            arrange(x) %>%
-            mutate(dzdx = (mean(z[3:4]) - mean(z[1:2])) / (mean(x[3:4]) - mean(x[1:2]))) %>%
-            arrange(y) %>%
-            mutate(dzdy = (mean(z[3:4]) - mean(z[1:2])) / (mean(y[3:4]) - mean(y[1:2])),
-                   slope = sqrt(dzdy^2 + dzdx^2),
-                   aspect = atan2(dzdy, dzdx)) %>%
             ungroup() %>%
             arrange(quad_id, vertex_order) %>%
             mutate(group = paste0("surface__quad", quad_id, "::", group)) %>%
             as.data.frame()
 
-      return(attach_light(d, light))
+      return(d)
 }
 
 

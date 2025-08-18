@@ -2,7 +2,8 @@
 % Please edit documentation in R/geom-point-3d.R
 \name{geom_point_3d}
 \alias{geom_point_3d}
-\title{3D scatter plot with depth-based size scaling and reference projections}
+\alias{stat_point_3d}
+\title{3D scatter plot with 2D reference elements}
 \usage{
 geom_point_3d(
   mapping = NULL,
@@ -32,6 +33,23 @@ geom_point_3d(
   ref_point_alpha = NULL,
   ref_point_stroke = NULL,
   ref_point_shape = NULL
+)
+
+stat_point_3d(
+  mapping = NULL,
+  data = NULL,
+  geom = "point_3d",
+  position = "identity",
+  na.rm = FALSE,
+  show.legend = NA,
+  inherit.aes = TRUE,
+  raw_points = TRUE,
+  ref_lines = FALSE,
+  ref_points = "circles",
+  ref_faces = "zmin",
+  ref_circle_radius = 0.02,
+  ref_circle_vertices = 16,
+  ...
 )
 }
 \arguments{
@@ -91,7 +109,13 @@ Both American (\code{ref_point_color}) and British (\code{ref_point_colour}) spe
 \code{geom_point_3d()} creates scatter plots in 3D space with automatic depth-based
 size scaling. Points closer to the viewer appear larger, while points farther
 away appear smaller, creating realistic perspective effects. Optionally adds
-reference lines and points projecting to cube faces.
+reference lines and points projecting to cube faces, to illustrate point locations
+in 2D.
+}
+\details{
+StatPoint3D performs identity transformation (passes data through unchanged) while
+properly handling discrete scales for 3D coordinate systems. It can optionally
+generate reference lines and points projecting to cube faces.
 }
 \section{Aesthetics}{
 
@@ -106,6 +130,18 @@ reference lines and points projecting to cube faces.
 \item \code{shape}: Point shape
 \item \code{size}: Point size (gets depth-scaled when \code{scale_depth = TRUE})
 \item \code{stroke}: Border width for shapes with borders
+}
+}
+
+\section{StatPoint3D returns the following computed variables}{
+
+\itemize{
+\item \code{x_raw}, \code{y_raw}, \code{z_raw}: Original values before discrete-to-numeric conversion
+\item \code{element_type}: Type of element ("raw_point", "ref_point", "ref_line", "ref_circle")
+\item \code{segment_id}: ID linking the two endpoints of reference lines
+\item \code{ref_face}: Which face reference elements project to
+\item \code{ref_circle_radius}: Radius for circular reference points
+\item \code{ref_circle_vertices}: Number of vertices for circular reference points
 }
 }
 

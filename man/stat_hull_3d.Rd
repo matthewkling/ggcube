@@ -2,7 +2,7 @@
 % Please edit documentation in R/stat-hull-3d.R
 \name{stat_hull_3d}
 \alias{stat_hull_3d}
-\title{Create 3D convex and alpha hulls with lighting}
+\title{3D convex and alpha hulls}
 \usage{
 stat_hull_3d(
   mapping = NULL,
@@ -48,8 +48,7 @@ Note that alpha shapes are quite sensitive to the coordinate scales of your data
 }
 \description{
 \code{stat_hull_3d()} turns 3D point clouds into surface hulls consisting of triangular polygons,
-using either convex hull or alpha shape algorithms. It computes surface normals and applies
-various lighting models to create realistic 3D surface visualizations.
+using either convex hull or alpha shape algorithms.
 }
 \section{Grouping}{
 

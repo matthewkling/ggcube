@@ -2,7 +2,7 @@
 % Please edit documentation in R/stat-density-3d.R
 \name{stat_density_3d}
 \alias{stat_density_3d}
-\title{3D kernel density estimation surface}
+\title{3D surface from 2D density estimate}
 \usage{
 stat_density_3d(
   mapping = NULL,
@@ -68,7 +68,8 @@ If \code{FALSE}, missing values will cause an error. Default is \code{FALSE}.}
 \code{sort_method} and \code{scale_depth} as well as aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc.}
 }
 \description{
-Creates 3D surfaces from 2D point data using kernel density estimation.
+A 3D version of \code{ggplot2::stat_density_2d()}.
+Creates surfaces from 2D point data using kernel density estimation.
 The density values become the z-coordinates of the surface, allowing
 visualization of data concentration as peaks and valleys in 3D space.
 }
@@ -154,5 +155,6 @@ p + stat_density_3d(grid = "hex", n = 30, direction = "y",
 \seealso{
 \code{\link[=stat_density_2d]{stat_density_2d()}} for 2D density contours, \code{\link[=stat_surface_3d]{stat_surface_3d()}} for
 surfaces from existing grid data, \code{\link[=light]{light()}} for lighting specifications,
+\code{\link[=make_tile_grid]{make_tile_grid()}} for details about grid geometry options,
 \code{\link[=coord_3d]{coord_3d()}} for 3D coordinate systems.
 }

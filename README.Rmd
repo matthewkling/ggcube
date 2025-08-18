@@ -46,21 +46,26 @@ library(ggplot2)
 library(ggcube)
 
 # Basic 3D scatter plot
-ggplot(mtcars, aes(x = mpg, y = wt, z = qsec, 
-                   color = factor(cyl))) +
+ggplot(mpg, aes(x = displ, y = hwy, z = drv, color = class)) +
       geom_point() +
       coord_3d()
 ```
 
+You control plot rotation and perspective via parameters to `coord_3d()`:
 
-## Surfaces
+```{r rotation, warning = FALSE, message = FALSE}
+ggplot(mpg, aes(displ, hwy, drv, color = class)) +
+      geom_point() +
+      coord_3d(pitch = 0, roll = 60, yaw = 0, dist = 1.4)
+```
 
+## 3D surfaces
+
+- `stat_hull_3d()` plots triangulated volumes based on convex or alpha hulls of 3D points
 - `stat_function()` visualizes mathematical functions
 - `stat_surface_3d()` renders surfaces based on existing grid data such as terrain data
-- `stat_smooth_3d()` fits statistical models with two predictors, and visualizes fitted predictions and confidence intervals
+- `stat_smooth_3d()` fits statistical models with two predictors and visualizes fitted surfaces with confidence intervals
 - `stat_density_3d()` creates perspective visualizations of 2D kernel density estimates 
-- `stat_hull_3d()` plots triangulated volumes based on convex or alpha hulls of 3D point data
-
 
 Example: a terrain surface using `stat_function_3d()`:
 
@@ -97,7 +102,7 @@ d$z <- d$x + d$x^2 - d$y^2 + rnorm(50)
 
 # Plot GAM fit with uncertainty layers
 ggplot(d, aes(x, y, z)) + 
-      stat_smooth_3d(aes(fill = after_stat(level)),
+      geom_smooth_3d(aes(fill = after_stat(level)),
                      method = "gam", formula = z ~ te(x, y),
                      se = TRUE, level = 0.99, color = "black") +
       scale_fill_manual(values = c("red", "darkorchid4", "steelblue")) +
@@ -107,7 +112,7 @@ ggplot(d, aes(x, y, z)) +
 ```
 
 
-## Prisms
+## 3D prisms
 
 - `stat_pillar_3d()` produces 3D column charts
 - `stat_voxel_3d()` renders sparse 3D pixel data as arrays of cubes
@@ -118,21 +123,18 @@ Example: a 3D bar chart using `stat_pillar_3d()`:
 
 ```{r volumes, warning = FALSE, message = FALSE}
 # 3D pillar visualization
-set.seed(123)
-data <- expand.grid(x = 1:10, y = 1:10)
-data$z1 <- runif(nrow(data))
-data$z2 <- runif(nrow(data))
-ggplot(data, aes(x, y, z1, zmin = z2, fill = z2 - z1)) +
-      stat_pillar_3d(color = "black", linewidth = 0.1, width = .8,
-                     light = light(direction = c(1, .5, 0), color = FALSE),
-                     sort_method = "pairwise") +
-      coord_3d(pitch = 0, yaw = 0, roll = -50, dist = 1.5) +
-      scale_fill_gradient2() + 
-      guides(fill = guide_colorbar_3d()) +
-      theme(panel.border = element_rect(color = "black", linewidth = .25))
+ggplot(mountain[mountain$z > 90, ], 
+       aes(x, y, z, zmin = 90, fill = z)) +
+    stat_pillar_3d(color = "black", linewidth = 0.1, width = .9,
+                   light = light(direction = c(1, -.25, 0), color = FALSE),
+                   sort_method = "pairwise") +
+    coord_3d() +
+    scale_fill_viridis_c(option = "B") + 
+    guides(fill = guide_colorbar_3d()) +
+    theme(panel.border = element_rect(color = "black", linewidth = .25))
 ```
 
-## Paths
+## 3D paths
 
 `geom_path_3d()` renders paths in 3D space with depth-based sorting and scaling:
 
@@ -148,15 +150,15 @@ ggplot(butterfly, aes(x, y, z, color = time)) +
 ```
 
 
-## Points
+## 3D points
 
 While `ggplot2::geom_point()` works with ggcube as demonstrated above, `geom_point_3d()` creates 3D-aware scatter plots with proper point ordering, depth-scaled point sizes, and options to include reference lines and reference points projecting 3D points onto 2D face panels:
 
 ```{r points, warning = FALSE, message = FALSE}
-ggplot(mtcars, aes(mpg, wt, qsec, fill = factor(cyl))) +
-      geom_point_3d(size = 5, shape = 21, color = "black", stroke = .1,
+ggplot(mpg, aes(x = displ, y = hwy, z = drv, fill = class)) +
+      geom_point_3d(size = 3, shape = 21, color = "black", stroke = .1,
                     ref_lines = TRUE, ref_points = TRUE,
-                    ref_faces = c("zmin", "xmax")) +
+                    ref_faces = c("ymax", "xmax")) +
       coord_3d()
 ```
 
@@ -187,7 +189,7 @@ ggplot(sphere_points, aes(x, y, z)) +
 
 ## Face projection
 
-3D and 2D layers can be mixed by using `position_on_face()` to project 2D data onto cube faces:
+3D and 2D layers can be mixed by using `position_on_face()` to project data onto cube faces. We saw this in the `geom_path_3d()` example above, but here's another example that mixes different geoms, including natively-2D layers like `ggplot2::stat_density_2d()`:
 
 ```{r position, warning = FALSE, message = FALSE}
 
@@ -206,6 +208,6 @@ ggplot(iris, aes(Sepal.Length, Sepal.Width, Petal.Length,
       stat_voxel_3d(aes(round(Sepal.Length), round(Sepal.Width), round(Petal.Length)),
             position = position_on_face("xmax"), alpha = .15, light = NULL) +
       
-      # 3D scatter plot
+      # 3D scatter plot (added last so it renders in front)
       geom_point_3d( shape = 21, color = "black", stroke = .25)
 ```

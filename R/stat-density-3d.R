@@ -70,7 +70,12 @@ StatDensity3D <- ggproto("StatDensity3D", Stat,
                                # Remove data below ndensity threshold
                                d <- filter(d, ndensity >= min_ndensity)
 
-                               return(attach_light(d, light))
+                               # Add computed variables and light info
+                               d <- d %>%
+                                     compute_surface_vars() %>%
+                                     attach_light(light)
+
+                               return(d)
                          }
 )
 
@@ -120,9 +125,10 @@ kde2d <- function(x, y, eval_x, eval_y, h) {
 }
 
 
-#' 3D kernel density estimation surface
+#' 3D surface from 2D density estimate
 #'
-#' Creates 3D surfaces from 2D point data using kernel density estimation.
+#' A 3D version of `ggplot2::stat_density_2d()`.
+#' Creates surfaces from 2D point data using kernel density estimation.
 #' The density values become the z-coordinates of the surface, allowing
 #' visualization of data concentration as peaks and valleys in 3D space.
 #'
@@ -224,6 +230,7 @@ kde2d <- function(x, y, eval_x, eval_y, h) {
 #'
 #' @seealso [stat_density_2d()] for 2D density contours, [stat_surface_3d()] for
 #'   surfaces from existing grid data, [light()] for lighting specifications,
+#'   [make_tile_grid()] for details about grid geometry options,
 #'   [coord_3d()] for 3D coordinate systems.
 #' @export
 stat_density_3d <- function(mapping = NULL, data = NULL,

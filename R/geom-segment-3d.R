@@ -1,72 +1,97 @@
-StatPath3D <- ggproto("StatPath3D", Stat,
-                      required_aes = c("x", "y", "z"),
 
-                      compute_group = function(data, scales, na.rm = FALSE) {
+#' 3D line segments
+#'
+#' `geom_segment_3d()` and `stat_segment_3d()` drawe line segments in 3D space
+#' with automatic depth-based linewidth scaling and proper depth sorting.
+#' Each segment is defined by start coordinates (x, y, z) and end
+#' coordinates (xend, yend, zend).
+#'
+#' @param mapping Set of aesthetic mappings created by [aes()]. Requires x, y, z
+#'   for start coordinates and xend, yend, zend for end coordinates.
+#' @param data The data to be displayed in this layer.
+#' @param stat The statistical transformation to use on the data. Defaults to
+#'   [StatSegment3D] for proper discrete scale handling.
+#' @param geom The geom object used to display the data. Defaults to
+#'   [GeomSegment3D].
+#' @param position Position adjustment, defaults to "identity".
+#' @param ... Other arguments passed on to [layer()].
+#' @param na.rm If `FALSE`, missing values are removed with a warning.
+#' @param show.legend Logical indicating whether this layer should be included in legends.
+#' @param inherit.aes If `FALSE`, overrides the default aesthetics.
+#' @param scale_depth Logical indicating whether to apply depth-based scaling
+#'   to linewidth. When `TRUE` (default), segments closer to the viewer appear
+#'   thicker, and segments farther away appear thinner.
+#' @param arrow Specification for arrow heads, created by [arrow()].
+#' @param lineend Line end style, one of "round", "butt", "square".
+#'
+#' @section Aesthetics:
+#' `geom_segment_3d()` understands the following aesthetics:
+#' - **x, y, z**: Start coordinates (required)
+#' - **xend, yend, zend**: End coordinates (required)
+#' - `colour`: Line color
+#' - `linewidth`: Line width (gets depth-scaled when `scale_depth = TRUE`)
+#' - `linetype`: Line type
+#' - `alpha`: Transparency
+#'
+#' @examples
+#' library(ggplot2)
+#'
+#' # Basic 3D segments
+#' ggplot(sphere_points,
+#'       aes(x, y, z, xend = 0, yend = 0, zend = 0)) +
+#'   geom_segment_3d() +
+#'   coord_3d()
+#'
+#' # 3D vector field
+#' ggplot(data, aes(x, y, z,
+#'       xend = xend, yend = yend, zend = zend, color = x)) +
+#'   geom_segment_3d(arrow = arrow(length = unit(0.1, "inches"),
+#'                   type = "closed", angle = 15),
+#'                   linewidth = .5) +
+#'   coord_3d()
+#'
+#' @seealso [geom_path_3d()] for connected paths, [geom_segment()] for 2D segments,
+#'   [coord_3d()] for 3D coordinate systems.
+#' @rdname geom_segment_3d
+#' @export
+geom_segment_3d <- function(mapping = NULL, data = NULL,
+                            stat = StatSegment3D, position = "identity",
+                            ...,
+                            na.rm = FALSE, show.legend = NA, inherit.aes = TRUE,
+                            scale_depth = TRUE, arrow = NULL, lineend = "butt") {
 
-                            # Remove missing values if requested
-                            if (na.rm) {
-                                  complete_cases <- complete.cases(data[c("x", "y", "z")])
-                                  data <- data[complete_cases, ]
-                            }
+      layer(
+            data = data,
+            mapping = mapping,
+            stat = stat,
+            geom = GeomSegment3D,
+            position = position,
+            show.legend = show.legend,
+            inherit.aes = inherit.aes,
+            params = list(
+                  na.rm = na.rm,
+                  scale_depth = scale_depth,
+                  arrow = arrow,
+                  lineend = lineend,
+                  ...
+            )
+      )
+}
 
-                            # Need at least 2 points to make a path
-                            if (nrow(data) < 2) {
-                                  return(data.frame())
-                            }
+#' @rdname geom_segment_3d
+#' @export
+stat_segment_3d <- function(mapping = NULL, data = NULL,
+                            geom = GeomSegment3D, position = "identity",
+                            na.rm = FALSE, show.legend = NA, inherit.aes = TRUE,
+                            ...) {
 
-                            # Handle discrete scale conversion (following StatPoint3D pattern)
-                            if ("z" %in% names(data)) {
-                                  data$z_raw <- data$z
-                                  if (is.factor(data$z) || is.character(data$z)) {
-                                        data$z <- as.numeric(as.factor(data$z))
-                                  }
-                            }
+      layer(
+            stat = StatSegment3D, data = data, mapping = mapping, geom = geom,
+            position = position, show.legend = show.legend, inherit.aes = inherit.aes,
+            params = list(na.rm = na.rm, ...)
+      )
+}
 
-                            if ("x" %in% names(data)) {
-                                  data$x_raw <- data$x
-                                  if (is.factor(data$x) || is.character(data$x)) {
-                                        data$x <- as.numeric(as.factor(data$x))
-                                  }
-                            }
-
-                            if ("y" %in% names(data)) {
-                                  data$y_raw <- data$y
-                                  if (is.factor(data$y) || is.character(data$y)) {
-                                        data$y <- as.numeric(as.factor(data$y))
-                                  }
-                            }
-
-                            # Convert path to segments
-                            n_points <- nrow(data)
-                            n_segments <- n_points - 1
-
-                            if (n_segments == 0) {
-                                  return(data.frame())
-                            }
-
-                            # Create segments from consecutive points
-                            segments <- data.frame(
-                                  x = data$x[1:n_segments],
-                                  y = data$y[1:n_segments],
-                                  z = data$z[1:n_segments],
-                                  xend = data$x[2:n_points],
-                                  yend = data$y[2:n_points],
-                                  zend = data$z[2:n_points]
-                            )
-
-                            # Create hierarchical group IDs
-                            original_group <- data$group[1]
-                            segments$group <- paste0(original_group, "__seg", 1:n_segments)
-
-                            # Preserve other aesthetics from the first point of each segment
-                            other_cols <- setdiff(names(data), c("x", "y", "z", "group"))
-                            for (col_name in other_cols) {
-                                  segments[[col_name]] <- data[[col_name]][1:n_segments]
-                            }
-
-                            return(segments)
-                      }
-)
 
 StatSegment3D <- ggproto("StatSegment3D", Stat,
                          required_aes = c("x", "y", "z", "xend", "yend", "zend"),
@@ -240,267 +265,4 @@ GeomSegment3D <- ggproto("GeomSegment3D", Geom,
                          draw_key = draw_key_path
 )
 
-#' 3D line segments with depth-based scaling and proper depth sorting
-#'
-#' `geom_segment_3d()` draws line segments in 3D space with automatic depth-based
-#' linewidth scaling and proper depth sorting. Each segment is defined by start
-#' coordinates (x, y, z) and end coordinates (xend, yend, zend).
-#'
-#' @param mapping Set of aesthetic mappings created by [aes()]. Requires x, y, z
-#'   for start coordinates and xend, yend, zend for end coordinates.
-#' @param data The data to be displayed in this layer.
-#' @param stat The statistical transformation to use on the data. Defaults to
-#'   [StatSegment3D] for proper discrete scale handling.
-#' @param position Position adjustment, defaults to "identity".
-#' @param ... Other arguments passed on to [layer()].
-#' @param na.rm If `FALSE`, missing values are removed with a warning.
-#' @param show.legend Logical indicating whether this layer should be included in legends.
-#' @param inherit.aes If `FALSE`, overrides the default aesthetics.
-#' @param scale_depth Logical indicating whether to apply depth-based scaling
-#'   to linewidth. When `TRUE` (default), segments closer to the viewer appear
-#'   thicker, and segments farther away appear thinner.
-#' @param arrow Specification for arrow heads, created by [arrow()].
-#' @param lineend Line end style, one of "round", "butt", "square".
-#'
-#' @section Aesthetics:
-#' `geom_segment_3d()` understands the following aesthetics:
-#' - **x, y, z**: Start coordinates (required)
-#' - **xend, yend, zend**: End coordinates (required)
-#' - `colour`: Line color
-#' - `linewidth`: Line width (gets depth-scaled when `scale_depth = TRUE`)
-#' - `linetype`: Line type
-#' - `alpha`: Transparency
-#'
-#' @examples
-#' library(ggplot2)
-#'
-#' # Basic 3D segments
-#' ggplot(sphere_points,
-#'       aes(x, y, z, xend = 0, yend = 0, zend = 0)) +
-#'   geom_segment_3d() +
-#'   coord_3d()
-#'
-#' # 3D vector field
-#' ggplot(data, aes(x, y, z,
-#'       xend = xend, yend = yend, zend = zend, color = x)) +
-#'   geom_segment_3d(arrow = arrow(length = unit(0.1, "inches"),
-#'                   type = "closed", angle = 15),
-#'                   linewidth = .5) +
-#'   coord_3d()
-#'
-#' @seealso [geom_path_3d()] for connected paths, [geom_segment()] for 2D segments,
-#'   [coord_3d()] for 3D coordinate systems.
-#' @export
-geom_segment_3d <- function(mapping = NULL, data = NULL,
-                            stat = StatSegment3D, position = "identity",
-                            ...,
-                            na.rm = FALSE, show.legend = NA, inherit.aes = TRUE,
-                            scale_depth = TRUE, arrow = NULL, lineend = "butt") {
 
-      layer(
-            data = data,
-            mapping = mapping,
-            stat = stat,
-            geom = GeomSegment3D,
-            position = position,
-            show.legend = show.legend,
-            inherit.aes = inherit.aes,
-            params = list(
-                  na.rm = na.rm,
-                  scale_depth = scale_depth,
-                  arrow = arrow,
-                  lineend = lineend,
-                  ...
-            )
-      )
-}
-
-#' 3D connected paths with depth-based scaling and proper depth sorting
-#'
-#' `geom_path_3d()` connects observations in 3D space in the order they appear
-#' in the data. It converts path data into individual segments for proper depth
-#' sorting while maintaining the appearance of connected paths. Each path is
-#' divided into segments that can be depth-sorted independently.
-#'
-#' @param mapping Set of aesthetic mappings created by [aes()]. Requires x, y, z
-#'   coordinates. Grouping aesthetics determine separate paths.
-#' @param data The data to be displayed in this layer.
-#' @param stat The statistical transformation to use on the data. Defaults to
-#'   [StatPath3D] which converts paths to segments.
-#' @param position Position adjustment, defaults to "identity".
-#' @param ... Other arguments passed on to [layer()].
-#' @param na.rm If `FALSE`, missing values are removed with a warning.
-#' @param show.legend Logical indicating whether this layer should be included in legends.
-#' @param inherit.aes If `FALSE`, overrides the default aesthetics.
-#' @param scale_depth Logical indicating whether to apply depth-based scaling
-#'   to linewidth. When `TRUE` (default), path segments closer to the viewer
-#'   appear thicker, and segments farther away appear thinner.
-#' @param arrow Specification for arrow heads, created by [arrow()].
-#' @param lineend Line end style, one of "round", "butt", "square".
-#'
-#' @section Aesthetics:
-#' `geom_path_3d()` understands the following aesthetics:
-#' - **x, y, z**: Coordinates (required)
-#' - `group`: Grouping variable to create separate paths
-#' - `colour`: Line color
-#' - `linewidth`: Line width (gets depth-scaled when `scale_depth = TRUE`)
-#' - `linetype`: Line type
-#' - `alpha`: Transparency
-#'
-#' @section Grouping:
-#' Multiple paths are created based on grouping aesthetics (group, colour, etc.).
-#' Each group forms a separate path, and segments from different paths can be
-#' interleaved during depth sorting for proper 3D rendering.
-#'
-#' @examples
-#' library(ggplot2)
-#'
-#' x <- seq(0, 20*pi, pi/16)
-#' spiral <- data.frame(
-#'   x = x,
-#'   y = sin(x),
-#'   z = cos(x))
-#'
-#' # Basic path
-#' ggplot(spiral, aes(x, y, z)) +
-#'   geom_path_3d() +
-#'   coord_3d()
-#'
-#' # With aesthetic coloring
-#' ggplot(spiral, aes(x, y, z, color = y)) +
-#'   geom_path_3d(linewidth = 1, lineend = "round") +
-#'   coord_3d() +
-#'   scale_color_gradientn(colors = c("red", "purple", "blue"))
-#'
-#' # With grouping
-#' ggplot(spiral, aes(x, y, z, color = x > 30)) +
-#'   geom_path_3d(linewidth = 1, lineend = "round") +
-#'   coord_3d()
-#'
-#' @seealso [geom_segment_3d()] for individual segments, [geom_path()] for 2D paths,
-#'   [coord_3d()] for 3D coordinate systems.
-#' @export
-geom_path_3d <- function(mapping = NULL, data = NULL,
-                         stat = StatPath3D, position = "identity",
-                         ...,
-                         na.rm = FALSE, show.legend = NA, inherit.aes = TRUE,
-                         scale_depth = TRUE, arrow = NULL, lineend = "butt") {
-
-      layer(
-            data = data,
-            mapping = mapping,
-            stat = stat,
-            geom = GeomSegment3D,
-            position = position,
-            show.legend = show.legend,
-            inherit.aes = inherit.aes,
-            params = list(
-                  na.rm = na.rm,
-                  scale_depth = scale_depth,
-                  arrow = arrow,
-                  lineend = lineend,
-                  ...
-            )
-      )
-}
-
-#' 3D path statistical transformation
-#'
-#' `stat_path_3d()` converts path data (connected points) into segment data
-#' for proper 3D depth sorting. Each consecutive pair of points in a path
-#' becomes a separate segment that can be depth-sorted independently.
-#'
-#' @param mapping Set of aesthetic mappings created by [aes()].
-#' @param data The data to be displayed in this layer.
-#' @param geom The geometric object to use display the data. Defaults to
-#'   [GeomSegment3D].
-#' @param position Position adjustment, defaults to "identity".
-#' @param na.rm If `FALSE`, missing values are removed with a warning.
-#' @param show.legend Logical indicating whether this layer should be included in legends.
-#' @param inherit.aes If `FALSE`, overrides the default aesthetics.
-#' @param ... Other arguments passed on to [layer()].
-#'
-#' @section Computed variables:
-#' - `x`, `y`, `z`: Start coordinates of each segment
-#' - `xend`, `yend`, `zend`: End coordinates of each segment
-#' - `group`: Hierarchical group identifier preserving original grouping
-#'
-#' @seealso [geom_segment_3d()] for the default geom associated with this stat;
-#'   [stat_segment_3d()] for individual segments rather than connected paths.
-#' @export
-stat_path_3d <- function(mapping = NULL, data = NULL,
-                         geom = GeomSegment3D, position = "identity",
-                         na.rm = FALSE, show.legend = NA, inherit.aes = TRUE,
-                         ...) {
-
-      layer(
-            stat = StatPath3D, data = data, mapping = mapping, geom = geom,
-            position = position, show.legend = show.legend, inherit.aes = inherit.aes,
-            params = list(na.rm = na.rm, ...)
-      )
-}
-
-#' 3D segment statistical transformation
-#'
-#' `stat_segment_3d()` provides 3D-aware processing for segment data, primarily
-#' handling discrete scale conversion while preserving segment structure.
-#'
-#' @param mapping Set of aesthetic mappings created by [aes()].
-#' @param data The data to be displayed in this layer.
-#' @param geom The geometric object to use display the data. Defaults to
-#'   [GeomSegment3D].
-#' @param position Position adjustment, defaults to "identity".
-#' @param na.rm If `FALSE`, missing values are removed with a warning.
-#' @param show.legend Logical indicating whether this layer should be included in legends.
-#' @param inherit.aes If `FALSE`, overrides the default aesthetics.
-#' @param ... Other arguments passed on to [layer()].
-#'
-#' @seealso [geom_segment_3d()] for the associated geom; [stat_path_3d()] for multi-point paths.
-#' @export
-stat_segment_3d <- function(mapping = NULL, data = NULL,
-                            geom = GeomSegment3D, position = "identity",
-                            na.rm = FALSE, show.legend = NA, inherit.aes = TRUE,
-                            ...) {
-
-      layer(
-            stat = StatSegment3D, data = data, mapping = mapping, geom = geom,
-            position = position, show.legend = show.legend, inherit.aes = inherit.aes,
-            params = list(na.rm = na.rm, ...)
-      )
-}
-
-
-#' Lorenz butterfly attractor generator
-#'
-#' @export
-lorenz_attractor <- function(n_points = 5000, dt = 0.01,
-                             sigma = 10, rho = 28, beta = 8/3) {
-
-      # Initialize vectors
-      x <- numeric(n_points)
-      y <- numeric(n_points)
-      z <- numeric(n_points)
-
-      # Initial conditions (slightly off the unstable equilibrium)
-      x[1] <- 1
-      y[1] <- 1
-      z[1] <- 1
-
-      # Integrate the Lorenz equations using Euler method
-      for (i in 2:n_points) {
-            # Lorenz equations:
-            # dx/dt = σ(y - x)
-            # dy/dt = x(ρ - z) - y
-            # dz/dt = xy - βz
-
-            dx_dt <- sigma * (y[i-1] - x[i-1])
-            dy_dt <- x[i-1] * (rho - z[i-1]) - y[i-1]
-            dz_dt <- x[i-1] * y[i-1] - beta * z[i-1]
-
-            x[i] <- x[i-1] + dx_dt * dt
-            y[i] <- y[i-1] + dy_dt * dt
-            z[i] <- z[i-1] + dz_dt * dt
-      }
-
-      data.frame(x = x, y = y, z = z, time = (1:n_points) * dt)
-}
