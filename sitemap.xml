@@ -14,8 +14,8 @@
 <url><loc>https://matthewkling.github.io/ggcube/reference/compute_normal_rgb_light.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/compute_surface_normals.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/compute_triangle_normals.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/convert_to_quads.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/coord_3d.html</loc></url>
-<url><loc>https://matthewkling.github.io/ggcube/reference/create_grid_quads.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/create_grid_segments.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/create_light_gradients.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/create_pillars.html</loc></url>
@@ -58,11 +58,7 @@
 <url><loc>https://matthewkling.github.io/ggcube/reference/stat_function_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/stat_hull_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/stat_identity_3d.html</loc></url>
-<url><loc>https://matthewkling.github.io/ggcube/reference/stat_path_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/stat_pillar_3d.html</loc></url>
-<url><loc>https://matthewkling.github.io/ggcube/reference/stat_point_3d.html</loc></url>
-<url><loc>https://matthewkling.github.io/ggcube/reference/stat_segment_3d.html</loc></url>
-<url><loc>https://matthewkling.github.io/ggcube/reference/stat_smooth_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/stat_surface_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/stat_voxel_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/transform_3d_standard.html</loc></url>
