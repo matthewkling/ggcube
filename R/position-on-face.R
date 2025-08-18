@@ -1,9 +1,9 @@
-#' Position for projecting 2D and 3D layers onto 3D cube faces
+#' Position for projecting 2D and 3D layers onto cube faces
 #'
-#' `position_on_face()` enables layers to be projected onto 2D faces of the 3D
-#' coordinate cube. It can be used to flatten 3D ggcube layers onto a single
-#' cube face as a way of visualizing them in 2D, or to add natively 2D ggplot2
-#' layers like `geom_density_2d()` or `geom_smooth()` to a cube face.
+#' Enables layers to be projected onto 2D faces of the 3D coordinate cube.
+#' It can be used to flatten 3D ggcube layers onto a single cube face as a way of
+#' visualizing them in 2D, or to add certain natively 2D ggplot2 layers like
+#' `geom_density_2d()` or `geom_smooth()` to a cube face.
 #'
 #' @param faces Character string or vector specifying which cube face(s) to project onto.
 #'   Valid options are: "xmin", "xmax", "ymin", "ymax", "zmin", "zmax", "3D".

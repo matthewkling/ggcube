@@ -1,20 +1,16 @@
 
 #' 3D paths connecting observations
 #'
-#' `geom_path_3d()` connects observations in 3D space in the order they appear
+#' Connects observations in 3D space in the order they appear
 #' in the data. It converts path data into individual segments for proper depth
 #' sorting while maintaining the appearance of connected paths. Each path is
 #' divided into segments that can be depth-sorted independently.
 #'
-#' `stat_path_3d()` converts path data (sequences of points) into segment data
-#' for proper 3D depth sorting. Each consecutive pair of points in a path
-#' becomes a separate segment that can be depth-sorted independently.
-#'
 #' @param mapping Set of aesthetic mappings created by [aes()]. Requires x, y, z
 #'   coordinates. Grouping aesthetics determine separate paths.
 #' @param data The data to be displayed in this layer.
-#' @param stat The statistical transformation to use on the data. Defaults to
-#'   [StatPath3D] which converts paths to segments.
+#' @param stat The statistical transformation to use on the data. Defaults to [StatPath3D].
+#' @param geom The geometric object used to display the data. Defaults to [GeomSegment3D].
 #' @param position Position adjustment, defaults to "identity".
 #' @param ... Other arguments passed on to [layer()].
 #' @param na.rm If `FALSE`, missing values are removed with a warning.
@@ -77,17 +73,11 @@
 geom_path_3d <- function(mapping = NULL, data = NULL,
                          stat = StatPath3D, position = "identity",
                          ...,
-                         na.rm = FALSE, show.legend = NA, inherit.aes = TRUE,
-                         scale_depth = TRUE, arrow = NULL, lineend = "butt") {
+                         scale_depth = TRUE, arrow = NULL, lineend = "butt",
+                         na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
 
-      layer(
-            data = data,
-            mapping = mapping,
-            stat = stat,
-            geom = GeomSegment3D,
-            position = position,
-            show.legend = show.legend,
-            inherit.aes = inherit.aes,
+      layer(data = data, mapping = mapping, stat = stat, geom = GeomSegment3D,
+            position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(
                   na.rm = na.rm,
                   scale_depth = scale_depth,
@@ -102,13 +92,19 @@ geom_path_3d <- function(mapping = NULL, data = NULL,
 #' @export
 stat_path_3d <- function(mapping = NULL, data = NULL,
                          geom = GeomSegment3D, position = "identity",
-                         na.rm = FALSE, show.legend = NA, inherit.aes = TRUE,
-                         ...) {
+                         ...,
+                         scale_depth = TRUE, arrow = NULL, lineend = "butt",
+                         na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
 
-      layer(
-            stat = StatPath3D, data = data, mapping = mapping, geom = geom,
+      layer(data = data, mapping = mapping, stat = StatPath3D, geom = geom,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
-            params = list(na.rm = na.rm, ...)
+            params = list(
+                  na.rm = na.rm,
+                  scale_depth = scale_depth,
+                  arrow = arrow,
+                  lineend = lineend,
+                  ...
+            )
       )
 }
 

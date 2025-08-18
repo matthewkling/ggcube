@@ -22,8 +22,7 @@ geom_polygon_3d(
 
 \item{data}{The data to be displayed in this layer.}
 
-\item{stat}{The statistical transformation to use on the data. Defaults to
-\link{StatIdentity3D} for proper discrete scale handling and group preservation.}
+\item{stat}{The statistical transformation to use on the data. Defaults to \link{StatIdentity3D}.}
 
 \item{sort_method}{Character indicating algorithm used to determine the order in which
 polygons are rendered.

@@ -49,22 +49,41 @@ StatHull3D <- ggproto("StatHull3D", Stat,
                             group_suffix <- sample(10000:99999, 1)
                             data$group <- rep(paste0("sh3d__hull", group_suffix, "_tri", 1:nrow(tri)), each = 3)
 
-                            return(attach_light(data, light))
+                            # add computed variables and lighting info
+                            data <- data %>%
+                                  # compute_hull_vars() %>%
+                                  attach_light(light)
+                            return(data)
                       }
 )
+
+# add computed variables, for access via after_stat(...)
+compute_hull_vars <- function(data){
+      faces <- data %>%
+            group_by(group) %>%
+            slice(1) %>%
+            ungroup()
+      normals <- compute_triangle_normals(data, faces)
+      faces$normal_x <- normals[,1]
+      faces$normal_y <- normals[,2]
+      faces$normal_z <- normals[,3]
+      data <- left_join(data, faces %>% select(group, normal_x:normal_z),
+                     by = join_by(group))
+      return(data)
+}
 
 
 #' 3D convex and alpha hulls
 #'
-#' `stat_hull_3d()` turns 3D point clouds into surface hulls consisting of triangular polygons,
+#' Turns 3D point clouds into surface hulls consisting of triangular polygons,
 #' using either convex hull or alpha shape algorithms.
 #'
 #' @param mapping Set of aesthetic mappings created by [aes()]. The required
 #'   aesthetics are `x`, `y`, and `z`. Additional aesthetics can use computed
 #'   variables with [after_stat()].
 #' @param data The data to be displayed in this layer.
-#' @param geom The geometric object to use display the data. Defaults to
-#'   [GeomPolygon3D] for proper 3D depth sorting.
+#' @param stat The statistical transformation to use on the data. Defaults to [StatHull3D].
+#' @param geom The geometric object used to display the data. Defaults to [GeomPolygon3D].
 #' @param position Position adjustment, defaults to "identity".
 #' @param method Triangulation method. Either:
 #'   - `"convex"`: Convex hull triangulation (default)
@@ -79,9 +98,9 @@ StatHull3D <- ggproto("StatHull3D", Stat,
 #'   `sort_method` and `scale_depth` as well as aesthetics like `colour`, `fill`, `linewidth`, etc.
 #'
 #' @section Grouping:
-#' `stat_hull_3d()` respects ggplot2 grouping aesthetics. To create separate hulls for different
+#' Hulls respect ggplot2 grouping aesthetics. To create separate hulls for different
 #' subsets of your data, use `aes(group = category_variable)` or similar grouping aesthetics.
-#' Each group will get its own independent hull calculation.
+#' Each group will get its own independent hull.
 #'
 #' @section Alpha scale sensitivity:
 #' **Alpha shape method is highly sensitive to coordinate scales.** The `alpha` parameter
@@ -117,44 +136,51 @@ StatHull3D <- ggproto("StatHull3D", Stat,
 #' - **y**: Y coordinate
 #' - **z**: Z coordinate
 #'
-#' Computed variables can be accessed using [after_stat()]:
-#' - `after_stat(light)`: Lighting values
-#' - `after_stat(normal_x)`: X component of surface normal
-#' - `after_stat(normal_y)`: Y component of surface normal
-#' - `after_stat(normal_z)`: Z component of surface normal
-#'
 #' @examples
 #' # Convex hull
 #' ggplot(sphere_points, aes(x, y, z)) +
-#'   stat_hull_3d(method = "convex", fill = "gray40") +
+#'   geom_hull_3d(method = "convex", fill = "gray40") +
 #'   coord_3d()
 #'
 #' # Alpha shape (for sphere data, gives similar result to convex)
 #' ggplot(sphere_points, aes(x, y, z)) +
-#'   stat_hull_3d(method = "alpha", radius = 2, fill = "gray40") +
+#'   geom_hull_3d(method = "alpha", radius = 2, fill = "gray40") +
 #'   coord_3d()
 #'
 #' # Use grouping to build separate hulls for data subsets
 #' ggplot(iris, aes(Petal.Length, Sepal.Length, Sepal.Width,
 #'                  color = Species, fill = Species)) +
-#'       stat_hull_3d() +
+#'       geom_hull_3d() +
 #'       coord_3d(scales = "fixed")
 #'
 #' @seealso [coord_3d()] for 3D coordinate systems, [geom_polygon_3d] for the
 #'   default geometry with depth sorting, [light()] for lighting specifications.
-#'
+#' @rdname geom_hull_3d
+#' @export
+geom_hull_3d <- function(mapping = NULL, data = NULL,
+                         stat = StatHull3D,
+                         position = "identity",
+                         ...,
+                         method = "convex", radius = NULL, light = ggcube::light(),
+                         inherit.aes = TRUE, show.legend = TRUE) {
+
+      layer(data = data, mapping = mapping, stat = stat, geom = GeomPolygon3D,
+            position = position, inherit.aes = inherit.aes, show.legend = show.legend,
+            params = list(method = method, radius = radius, light = light, ...)
+      )
+}
+
+#' @rdname geom_hull_3d
 #' @export
 stat_hull_3d <- function(mapping = NULL, data = NULL,
                          geom = GeomPolygon3D,
                          position = "identity",
-                         method = "convex", radius = NULL,
-                         light = ggcube::light(),
-                         inherit.aes = TRUE,
-                         ...) {
+                         ...,
+                         method = "convex", radius = NULL, light = ggcube::light(),
+                         inherit.aes = TRUE, show.legend = TRUE) {
 
-      layer(
-            stat = StatHull3D, data = data, mapping = mapping, geom = geom,
-            position = position, inherit.aes = inherit.aes,
+      layer(data = data, mapping = mapping, stat = StatHull3D, geom = geom,
+            position = position, inherit.aes = inherit.aes, show.legend = show.legend,
             params = list(method = method, radius = radius, light = light, ...)
       )
 }

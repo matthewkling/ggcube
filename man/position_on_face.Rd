@@ -2,7 +2,7 @@
 % Please edit documentation in R/position-on-face.R
 \name{position_on_face}
 \alias{position_on_face}
-\title{Position for projecting 2D and 3D layers onto 3D cube faces}
+\title{Position for projecting 2D and 3D layers onto cube faces}
 \usage{
 position_on_face(faces = "zmin", axes = NULL)
 }
@@ -19,10 +19,10 @@ maps to the 3D z-axis. For 3D layers, use \code{NULL} (default) to preserve
 the existing x,y,z mapping.}
 }
 \description{
-\code{position_on_face()} enables layers to be projected onto 2D faces of the 3D
-coordinate cube. It can be used to flatten 3D ggcube layers onto a single
-cube face as a way of visualizing them in 2D, or to add natively 2D ggplot2
-layers like \code{geom_density_2d()} or \code{geom_smooth()} to a cube face.
+Enables layers to be projected onto 2D faces of the 3D coordinate cube.
+It can be used to flatten 3D ggcube layers onto a single cube face as a way of
+visualizing them in 2D, or to add certain natively 2D ggplot2 layers like
+\code{geom_density_2d()} or \code{geom_smooth()} to a cube face.
 }
 \details{
 This position adjustment supports both 2D and 3D layers:

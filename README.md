@@ -6,12 +6,11 @@
 <!-- badges: start -->
 <!-- badges: end -->
 
-**ggcube** is an R package that extends ggplot2 to support 3D data
-visualization. Use it to create 3D scatter plots, surfaces, volumes, and
-complex layered visualizations using familiar ggplot2 syntax with
-`aes(x, y, z)` and `coord_3d()`.
+**ggcube** extends ggplot2 to support 3D figures. Use it to create 3D
+scatter plots, surfaces, volumes, and complex layered visualizations
+using familiar ggplot2 syntax with `aes(x, y, z)` and `coord_3d()`.
 
-The package provides a variety of 3D-specific layer functions to render
+The package provides a variety of 3D-specific `geom` functions to render
 surfaces, prisms, points, and paths in 3D. You can control plot geometry
 with 3D projection parameters, can apply a range of 3D lighting models,
 and can mix 3D layers with 2D layers rendered on cube faces.
@@ -51,34 +50,36 @@ ggplot(mpg, aes(x = displ, y = hwy, z = drv, color = class)) +
 
 <img src="man/figures/README-quickstart-1.png" width="100%" />
 
-You control plot rotation and perspective via parameters to
-`coord_3d()`:
+You can control plot rotation and perspective, as well as axis label
+placement and panel selection, via parameters to `coord_3d()`:
 
 ``` r
 ggplot(mpg, aes(displ, hwy, drv, color = class)) +
       geom_point() +
-      coord_3d(pitch = 0, roll = 60, yaw = 0, dist = 1.4)
+      coord_3d(pitch = 0, roll = 60, yaw = 0, dist = 1.4, panels = "all") +
+      theme(panel.border = element_rect(color = "black"),
+            panel.foreground = element_rect(alpha = .1))
 ```
 
 <img src="man/figures/README-rotation-1.png" width="100%" />
 
 ## 3D surfaces
 
-- `stat_hull_3d()` plots triangulated volumes based on convex or alpha
+- `geom_hull_3d()` plots triangulated volumes based on convex or alpha
   hulls of 3D points
-- `stat_function()` visualizes mathematical functions
-- `stat_surface_3d()` renders surfaces based on existing grid data such
+- `geom_function()` visualizes mathematical functions
+- `geom_surface_3d()` renders surfaces based on existing grid data such
   as terrain data
-- `stat_smooth_3d()` fits statistical models with two predictors and
+- `geom_smooth_3d()` fits statistical models with two predictors and
   visualizes fitted surfaces with confidence intervals
-- `stat_density_3d()` creates perspective visualizations of 2D kernel
+- `geom_density_3d()` creates perspective visualizations of 2D kernel
   density estimates
 
-Example: a terrain surface using `stat_function_3d()`:
+Example: a terrain surface using `geom_surface_3d()`:
 
 ``` r
 ggplot(mountain, aes(x, y, z)) +
-      stat_surface_3d(aes(fill = z, color = z),
+      geom_surface_3d(aes(fill = z, color = z),
                       light = light(direction = c(1, 0, 0))) +
       scale_fill_viridis_c() + scale_color_viridis_c() +
       coord_3d(ratio = c(1.5, 2, 1), expand = FALSE, panels = "zmin") +
@@ -88,11 +89,11 @@ ggplot(mountain, aes(x, y, z)) +
 
 <img src="man/figures/README-surfaces-1.png" width="100%" />
 
-Example: a mathematical surface using `stat_function_3d()`:
+Example: a mathematical surface using `geom_function_3d()`:
 
 ``` r
 ggplot() +
-      stat_function_3d(
+      geom_function_3d(
             fun = function(x, y) cos(x) * sin(y),
             xlim = c(-pi, pi), ylim = c(-pi, pi),
             color = "black", grid = "hex"
@@ -102,7 +103,7 @@ ggplot() +
 ```
 
 <img src="man/figures/README-functions-1.png" width="100%" /> Example: a
-fitted model surface using `stat_smooth_3d()`:
+fitted model surface using `geom_smooth_3d()`:
 
 ``` r
 # Generate scattered 3D data
@@ -124,18 +125,18 @@ ggplot(d, aes(x, y, z)) +
 
 ## 3D prisms
 
-- `stat_pillar_3d()` produces 3D column charts
-- `stat_voxel_3d()` renders sparse 3D pixel data as arrays of cubes
-- `stat_histogram_3d()` (coming soon)
-- `stat_prism_3d()` (coming soon)
+- `geom_pillar_3d()` produces 3D column charts
+- `geom_voxel_3d()` renders sparse 3D pixel data as arrays of cubes
+- `geom_histogram_3d()` (coming soon)
+- `geom_prism_3d()` (coming soon)
 
-Example: a 3D bar chart using `stat_pillar_3d()`:
+Example: a 3D bar chart using `geom_pillar_3d()`:
 
 ``` r
 # 3D pillar visualization
 ggplot(mountain[mountain$z > 90, ], 
        aes(x, y, z, zmin = 90, fill = z)) +
-    stat_pillar_3d(color = "black", linewidth = 0.1, width = .9,
+    geom_pillar_3d(color = "black", linewidth = 0.1, width = .9,
                    light = light(direction = c(1, -.25, 0), color = FALSE),
                    sort_method = "pairwise") +
     coord_3d() +
@@ -195,14 +196,14 @@ ggplot(sphere_points, aes(x, y, z)) +
       theme(legend.position = "none") +
       
       # add shading to solid color/fill
-      stat_hull_3d(fill = "gray50", color = "gray50",
+      geom_hull_3d(fill = "#8a2900", color = "#8a2900",
                    light = light(method = "direct", mode = "hsl", 
-                                 direction = c(-1, 0, 0))) +
+                                 direction = c(0, 0, 1))) +
       
       # add shading to aesthetic color/fill
-      stat_hull_3d(aes(x = x + 2.5, fill = z, color = z),
-                   light = light(method = "diffuse", mode = "hsl", 
-                                 direction = c(1, 0, 0)))
+      geom_hull_3d(aes(x = x + 2.5, fill = x, color = x),
+                   light = light(method = "diffuse", mode = "hsv", 
+                                 direction = c(0, 0, 1), contrast = 2))
 ```
 
 <img src="man/figures/README-lighting-1.png" width="100%" />
@@ -225,10 +226,10 @@ ggplot(iris, aes(Sepal.Length, Sepal.Width, Petal.Length,
             geom = "polygon", alpha = .1, linewidth = .25) +
       
       # flatten 3D hull layer onto ymax face
-      stat_hull_3d(position = position_on_face("ymax"), alpha = .5) +
+      geom_hull_3d(position = position_on_face("ymax"), alpha = .5) +
       
       # flatten 3D voxels onto xmax face to create 2D bins
-      stat_voxel_3d(aes(round(Sepal.Length), round(Sepal.Width), round(Petal.Length)),
+      geom_voxel_3d(aes(round(Sepal.Length), round(Sepal.Width), round(Petal.Length)),
             position = position_on_face("xmax"), alpha = .15, light = NULL) +
       
       # 3D scatter plot (added last so it renders in front)

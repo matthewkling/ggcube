@@ -69,10 +69,147 @@ GeomSmooth3D <- ggproto("GeomSmooth3D", Geom,
                         draw_key = draw_key_polygon
 )
 
+#' 3D surface from smoothed conditional means
+#'
+#' A 3D version of `ggplot2::geom_smooth()`.
+#' Creates surfaces by fitting smoothing models to scattered (x,y,z) data points.
+#' The fitted statistical model is evaluated on a regular grid and rendered as a
+#' 3D surface with optional standard error surfaces.
+#'
+#' @param mapping Set of aesthetic mappings created by [aes()]. This stat
+#'   requires `x`, `y`, and `z` aesthetics from the input data. By default, fill is
+#'   mapped to `after_stat(fitted)`.
+#' @param data The data to be displayed in this layer. Must contain x, y, z columns.
+#' @param stat The statistical transformation to use on the data. Defaults to [StatSmooth3D].
+#' @param geom The geometric object used to display the data. Defaults to [GeomPolygon3D].
+#' @param position Position adjustment, defaults to "identity".
+#' @param na.rm If `TRUE`, removes missing values before fitting the model.
+#'   If `FALSE`, missing values will cause an error. Default is `FALSE`.
+#' @param show.legend Logical indicating whether this layer should be included in legends.
+#' @param inherit.aes If `FALSE`, overrides the default aesthetics.
+#' @param method Smoothing method to use. Currently supported:
+#'   \itemize{
+#'     \item \code{"loess"} (default): Local polynomial regression
+#'     \item \code{"lm"}: Linear model
+#'     \item \code{"glm"}: Generalized linear model
+#'     \item \code{"gam"}: Generalized additive model (requires \code{mgcv} package)
+#'   }
+#' @param formula Model formula. If `NULL` (default), uses method-appropriate defaults:
+#'   `z ~ x + y` for lm and glm, `z ~ s(x) + s(y)` for gam, auto for loess.
+#' @param method.args List of additional arguments passed to the fitting function.
+#'   For loess, this might include `span` or `degree`. For lm, this might include `weights`.
+#'   For glm, this might include `family` (defaults to `gaussian()`). For gam, this might
+#'   include smoothing parameters or basis specifications.
+#' @param domain Character indicating the x-y domain over which to visualize the surface.
+#'   The default, `"bbox"`, shows predictions over the full rectangular bounding box of
+#'   the predictors.The alternative, `"chull"`, shows predictions only within the convex
+#'   hull of the input data, which prevents extrapolation into unoccupied corners of predictor space.
+#' @param xlim,ylim Numeric vectors of length 2 giving the range for prediction grid.
+#'   If `NULL` (default), uses the exact data range with no extrapolation, following
+#'   [geom_smooth()] conventions.
+#' @param grid,n,direction Arguments passed to `make_tile_grid()` specifying the geometry,
+#'   resolution, and orientation of the surface grid. See `?make_tile_grid()` for details.
+#' @param se Logical indicating whether to display confidence interval bands around
+#'   the smooth; if `TRUE`, these are rendered as additional surfaces; they inherit
+#'   aesthetics from the primary smooth layer unless otherwise specified.
+#'   Defaults to `FALSE`.
+#' @param level Level of confidence interval to use (0.95 by default).
+#' @param se.fill Fill colour for confidence interval bands. If `NULL`, inherits from
+#'   the main surface `fill` aesthetic.
+#' @param se.colour,se.color Colour for confidence interval band borders. If `NULL`,
+#'   inherits from the main surface `colour` aesthetic.
+#' @param se.alpha Alpha transparency for confidence interval bands. Defaults to 0.5.
+#' @param se.linewidth Line width for confidence interval band borders. If `NULL`,
+#'   inherits from the main surface `linewidth` aesthetic.
+#' @param light A lighting specification object created by [light()], or NULL to disable shading.
+#' @param ... Other arguments passed on to the geom (typically `geom_smooth_3d()`), such as
+#'   `sort_method` and `scale_depth` as well as aesthetics like `colour`, `fill`, `linewidth`, etc.
+#'
+#' @section Aesthetics:
+#' `stat_smooth_3d()` requires the following aesthetics from input data:
+#' - **x**: X coordinate
+#' - **y**: Y coordinate
+#' - **z**: Z coordinate (response variable to be smoothed)
+#'
+#' @section Computed variables:
+#' - `x`, `y`, `z`: Grid coordinates and smoothed predictions
+#' - `fitted`: Smoothed predictions (same as `z` when `level == "fitted"`)
+#' - `se`: Standard errors of the fitted values (available when `se = TRUE`)
+#' - `level`: Type of surface ("fitted", "upper CI", or "lower CI" for confidence bands)
+#' - `light`: Computed lighting value (numeric for most methods, hex color for `normal_rgb`)
+#' - `normal_x`, `normal_y`, `normal_z`: Surface normal components
+#' - `slope`: Gradient magnitude from surface calculations
+#' - `aspect`: Direction of steepest slope from surface calculations
+#' - `dzdx`, `dzdy`: Partial derivatives from surface calculations
+#'
+#' @examples
+#' # Generate scattered 3D data
+#' set.seed(123)
+#' d <- data.frame(
+#'   x = runif(100, -1, 3),
+#'   y = runif(100, -3, 3)
+#' )
+#' d$z <- abs(1 + d$x^2 - d$y^2 + rnorm(100, 0, 1))
+#'
+#' # Base plot
+#' p <- ggplot(d, aes(x, y, z)) +
+#'   coord_3d() +
+#'   scale_fill_viridis_c()
+#'
+#' # Basic smooth surface with default loess model
+#' p + geom_smooth_3d()
+#'
+#' # Linear model surface with 90% confidence intervals
+#' p + geom_smooth_3d(aes(fill = after_stat(level)),
+#'       method = "lm", color = "black", se = TRUE,
+#'       level = 0.99, se.alpha = .7, n = 10) +
+#'       scale_fill_manual(values = c("red", "darkorchid4", "steelblue"))
+#'
+#' # Linear model surface with custom model formula
+#' p + geom_smooth_3d(method = "lm", n = 10,
+#'       formula = z ~ poly(x, 2) + poly(y, 2) + x:y)
+#'
+#' # Loess with custom span parameter, and lighting aesthetics
+#' p + geom_smooth_3d(
+#'       method = "loess", method.args = list(span = 0.3),
+#'       fill = "steelblue", color = "white", n = 20,
+#'       light = light(direction = c(0, -1, 0)))
+#'
+#' # GLM with gamma family and log link
+#' p + geom_smooth_3d(
+#'       method = "glm", n = 10,
+#'       method.args = list(family = Gamma(link = "log")),
+#'       formula = z ~ poly(x, 2) + poly(y, 2))
+#'
+#' # Visualize uncertainty with computed "standard error" variable
+#' p + geom_smooth_3d(aes(fill = after_stat(se * 2))) +
+#'   scale_fill_viridis_c()
+#'
+#' # Extend surface beyond training data range (explicit extrapolation)
+#' p + geom_smooth_3d(method = "lm", xlim = c(-5, 5), ylim = c(-5, 5))
+
+#' # Clip surface to predictor convex hull
+#' # to prevent extrapolation into corner areas
+#' p + geom_smooth_3d(method = "lm", domain = "chull")
+#'
+#' # Specify alternative grid geometry
+#' p + geom_smooth_3d(grid = "hex", n = 30, direction = "y")
+#'
+#' # Separate fits for data subgroups
+#' ggplot(mtcars, aes(wt, mpg, qsec, fill = factor(cyl))) +
+#'   geom_smooth_3d(method = "lm", alpha = .7,
+#'     xlim = c(0, 5), ylim = c(0, 40)) + # specify shared domain
+#'   coord_3d() + theme_light()
+#'
+#' @seealso [stat_surface_3d()] for surfaces from existing grid data,
+#'   [stat_function_3d()] for mathematical function surfaces,
+#'   [make_tile_grid()] for details about grid geometry options,
+#'   [light()] for lighting specifications, [coord_3d()] for 3D coordinate systems.
 #' @rdname geom_smooth_3d
 #' @export
 geom_smooth_3d <- function(mapping = NULL, data = NULL, stat = StatSmooth3D,
                            position = "identity",
+                           ...,
                            method = "loess",
                            formula = NULL,
                            method.args = list(),
@@ -90,9 +227,9 @@ geom_smooth_3d <- function(mapping = NULL, data = NULL, stat = StatSmooth3D,
                            se.alpha = 0.5,
                            se.linewidth = NULL,
                            light = NULL,
-                           ...,
                            na.rm = FALSE,
-                           show.legend = NA, inherit.aes = TRUE) {
+                           show.legend = NA,
+                           inherit.aes = TRUE) {
 
       # Handle both American and British spellings
       if(is.null(se.colour)) se.colour <- se.color
@@ -120,7 +257,7 @@ StatSmooth3D <- ggproto("StatSmooth3D", Stat,
                                           z = after_stat(z),
                                           fill = after_stat(fitted)),
 
-                        compute_panel = function(data, scales, method = "loess", formula = NULL,
+                        compute_group = function(data, scales, method = "loess", formula = NULL,
                                                  method.args = list(),
                                                  xlim = NULL, ylim = NULL, n = NULL, grid = NULL, direction = NULL,
                                                  light = NULL, na.rm = FALSE, domain = "chull",
@@ -174,7 +311,7 @@ StatSmooth3D <- ggproto("StatSmooth3D", Stat,
                               if(is.null(xlim)) xlim <- range(data$x, na.rm = TRUE)
                               if(is.null(ylim)) ylim <- range(data$y, na.rm = TRUE)
                               polys <- make_tile_grid(grid, n, direction, xlim, ylim)
-                              polys$group <- paste0("surface__tile", polys$group)
+                              polys$group <- paste0("surface__tile", polys$group, "::grp", data$group[1])
 
                               # Clip to hull if applicable
                               if(domain == "chull") polys <- clip_polys_to_chull(polys, data)
@@ -363,146 +500,12 @@ gam_model <- function(){
       )
 }
 
-
-#' 3D surface from smoothed conditional means
-#'
-#' The 3D analog to `ggplot2::geom_smooth()` and `ggplot2::stat_smooth()`.
-#' Creates surfaces by fitting smoothing models to scattered (x,y,z) data points.
-#' The fitted statistical model is evaluated on a regular grid and rendered as a
-#' 3D surface with optional standard error surfaces.
-#'
-#' @param mapping Set of aesthetic mappings created by [aes()]. This stat
-#'   requires `x`, `y`, and `z` aesthetics from the input data. By default, fill is
-#'   mapped to `after_stat(fitted)`.
-#' @param data The data to be displayed in this layer. Must contain x, y, z columns.
-#' @param geom The geometric object to use display the data. Defaults to
-#'   [GeomPolygon3D] for proper 3D depth sorting.
-#' @param position Position adjustment, defaults to "identity".
-#' @param na.rm If `TRUE`, removes missing values before fitting the model.
-#'   If `FALSE`, missing values will cause an error. Default is `FALSE`.
-#' @param show.legend Logical indicating whether this layer should be included in legends.
-#' @param inherit.aes If `FALSE`, overrides the default aesthetics.
-#' @param method Smoothing method to use. Currently supported:
-#'   \itemize{
-#'     \item \code{"loess"} (default): Local polynomial regression
-#'     \item \code{"lm"}: Linear model
-#'     \item \code{"glm"}: Generalized linear model
-#'     \item \code{"gam"}: Generalized additive model (requires \code{mgcv} package)
-#'   }
-#' @param formula Model formula. If `NULL` (default), uses method-appropriate defaults:
-#'   `z ~ x + y` for lm and glm, `z ~ s(x) + s(y)` for gam, auto for loess.
-#' @param method.args List of additional arguments passed to the fitting function.
-#'   For loess, this might include `span` or `degree`. For lm, this might include `weights`.
-#'   For glm, this might include `family` (defaults to `gaussian()`). For gam, this might
-#'   include smoothing parameters or basis specifications.
-#' @param domain Character indicating the x-y domain over which to visualize the surface.
-#'   The default, `"bbox"`, shows predictions over the full rectangular bounding box of
-#'   the predictors.The alternative, `"chull"`, shows predictions only within the convex
-#'   hull of the input data, which prevents extrapolation into unoccupied corners of predictor space.
-#' @param xlim,ylim Numeric vectors of length 2 giving the range for prediction grid.
-#'   If `NULL` (default), uses the exact data range with no extrapolation, following
-#'   [geom_smooth()] conventions.
-#' @param grid,n,direction Arguments passed to `make_tile_grid()` specifying the geometry,
-#'   resolution, and orientation of the surface grid. See `?make_tile_grid()` for details.
-#' @param se Logical indicating whether to display confidence interval bands around
-#'   the smooth; if `TRUE`, these are rendered as additional surfaces; they inherit
-#'   aesthetics from the primary smooth layer unless otherwise specified.
-#'   Defaults to `FALSE`.
-#' @param level Level of confidence interval to use (0.95 by default).
-#' @param se.fill Fill colour for confidence interval bands. If `NULL`, inherits from
-#'   the main surface `fill` aesthetic.
-#' @param se.colour,se.color Colour for confidence interval band borders. If `NULL`,
-#'   inherits from the main surface `colour` aesthetic.
-#' @param se.alpha Alpha transparency for confidence interval bands. Defaults to 0.5.
-#' @param se.linewidth Line width for confidence interval band borders. If `NULL`,
-#'   inherits from the main surface `linewidth` aesthetic.
-#' @param light A lighting specification object created by [light()], or NULL to disable shading.
-#' @param ... Other arguments passed on to the geom (typically `geom_smooth_3d()`), such as
-#'   `sort_method` and `scale_depth` as well as aesthetics like `colour`, `fill`, `linewidth`, etc.
-#'
-#' @section Aesthetics:
-#' `stat_smooth_3d()` requires the following aesthetics from input data:
-#' - **x**: X coordinate
-#' - **y**: Y coordinate
-#' - **z**: Z coordinate (response variable to be smoothed)
-#'
-#' @section Computed variables:
-#' - `x`, `y`, `z`: Grid coordinates and smoothed predictions
-#' - `fitted`: Smoothed predictions (same as `z` when `level == "fitted"`)
-#' - `se`: Standard errors of the fitted values (available when `se = TRUE`)
-#' - `level`: Type of surface ("fitted", "upper CI", or "lower CI" for confidence bands)
-#' - `light`: Computed lighting value (numeric for most methods, hex color for `normal_rgb`)
-#' - `normal_x`, `normal_y`, `normal_z`: Surface normal components
-#' - `slope`: Gradient magnitude from surface calculations
-#' - `aspect`: Direction of steepest slope from surface calculations
-#' - `dzdx`, `dzdy`: Partial derivatives from surface calculations
-#'
-#' @examples
-#' library(ggplot2)
-#'
-#' # Generate scattered 3D data
-#' set.seed(123)
-#' d <- data.frame(
-#'   x = runif(100, -1, 3),
-#'   y = runif(100, -3, 3)
-#' )
-#' d$z <- abs(1 + d$x^2 - d$y^2 + rnorm(100, 0, 1))
-#'
-#' # Base plot
-#' p <- ggplot(d, aes(x, y, z)) + coord_3d()
-#'
-#' # Basic smooth surface with default loess model
-#' p + stat_smooth_3d()
-#'
-#' # Linear model surface with 90% confidence intervals
-#' p + stat_smooth_3d(method = "lm", color = "black", se = TRUE,
-#'                    level = 0.9, se.alpha = .8)
-#'
-#' # Linear model surface with custom model formula
-#' p + stat_smooth_3d(method = "lm",
-#'        formula = z ~ poly(x, 2) + poly(y, 2) + x:y)
-#'
-#' # Loess with custom span parameter, and lighting aesthetics
-#' p + stat_smooth_3d(
-#'       method = "loess", method.args = list(span = 0.3),
-#'       fill = "steelblue", color = "white",
-#'       light = light(direction = c(-1, 0, 0)))
-#'
-#' # GLM with gamma family and log link
-#' p + stat_smooth_3d(
-#'       method = "glm",
-#'       method.args = list(family = Gamma(link = "log")),
-#'       formula = z ~ poly(x, 2) + poly(y, 2)) +
-#'   scale_fill_viridis_c()
-#'
-#' # GAM with default smoothers, with fill colored by confidence interval
-#' p + stat_smooth_3d(aes(fill = after_stat(level)),
-#'                    method = "gam", se = TRUE, color = "black") +
-#'   scale_fill_manual(values = c("red", "darkorchid4", "steelblue"))
-#'
-#' # Visualize uncertainty with computed "standard error" variable
-#' p + stat_smooth_3d(aes(fill = after_stat(se * 2))) +
-#'   scale_fill_viridis_c()
-#'
-#' # Extend surface beyond training data range (explicit extrapolation)
-#' p + stat_smooth_3d(method = "lm", xlim = c(-5, 5), ylim = c(-5, 5))
-
-#' # Clip surface to predictor convex hull
-#' # to prevent extrapolation into corner areas
-#' p + stat_smooth_3d(method = "lm", domain = "chull")
-#'
-#' # Specify alternative grid geometry
-#' p + stat_smooth_3d(grid = "hex", n = 30, direction = "y")
-#'
-#' @seealso [stat_surface_3d()] for surfaces from existing grid data,
-#'   [stat_function_3d()] for mathematical function surfaces,
-#'   [make_tile_grid()] for details about grid geometry options,
-#'   [light()] for lighting specifications, [coord_3d()] for 3D coordinate systems.
 #' @rdname geom_smooth_3d
 #' @export
 stat_smooth_3d <- function(mapping = NULL, data = NULL,
                            geom = GeomSmooth3D,
                            position = "identity",
+                           ...,
                            method = "loess",
                            formula = NULL,
                            method.args = list(),
@@ -522,8 +525,7 @@ stat_smooth_3d <- function(mapping = NULL, data = NULL,
                            light = NULL,
                            na.rm = FALSE,
                            show.legend = NA,
-                           inherit.aes = TRUE,
-                           ...) {
+                           inherit.aes = TRUE) {
 
       # Handle both American and British spellings
       if(is.null(se.colour)) se.colour <- se.color

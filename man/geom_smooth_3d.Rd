@@ -10,6 +10,7 @@ geom_smooth_3d(
   data = NULL,
   stat = StatSmooth3D,
   position = "identity",
+  ...,
   method = "loess",
   formula = NULL,
   method.args = list(),
@@ -27,7 +28,6 @@ geom_smooth_3d(
   se.alpha = 0.5,
   se.linewidth = NULL,
   light = NULL,
-  ...,
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE
@@ -38,6 +38,7 @@ stat_smooth_3d(
   data = NULL,
   geom = GeomSmooth3D,
   position = "identity",
+  ...,
   method = "loess",
   formula = NULL,
   method.args = list(),
@@ -57,8 +58,7 @@ stat_smooth_3d(
   light = NULL,
   na.rm = FALSE,
   show.legend = NA,
-  inherit.aes = TRUE,
-  ...
+  inherit.aes = TRUE
 )
 }
 \arguments{
@@ -68,7 +68,12 @@ mapped to \code{after_stat(fitted)}.}
 
 \item{data}{The data to be displayed in this layer. Must contain x, y, z columns.}
 
+\item{stat}{The statistical transformation to use on the data. Defaults to \link{StatSmooth3D}.}
+
 \item{position}{Position adjustment, defaults to "identity".}
+
+\item{...}{Other arguments passed on to the geom (typically \code{geom_smooth_3d()}), such as
+\code{sort_method} and \code{scale_depth} as well as aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc.}
 
 \item{method}{Smoothing method to use. Currently supported:
 \itemize{
@@ -118,9 +123,6 @@ inherits from the main surface \code{linewidth} aesthetic.}
 
 \item{light}{A lighting specification object created by \code{\link[=light]{light()}}, or NULL to disable shading.}
 
-\item{...}{Other arguments passed on to the geom (typically \code{geom_smooth_3d()}), such as
-\code{sort_method} and \code{scale_depth} as well as aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc.}
-
 \item{na.rm}{If \code{TRUE}, removes missing values before fitting the model.
 If \code{FALSE}, missing values will cause an error. Default is \code{FALSE}.}
 
@@ -128,11 +130,10 @@ If \code{FALSE}, missing values will cause an error. Default is \code{FALSE}.}
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics.}
 
-\item{geom}{The geometric object to use display the data. Defaults to
-\link{GeomPolygon3D} for proper 3D depth sorting.}
+\item{geom}{The geometric object used to display the data. Defaults to \link{GeomPolygon3D}.}
 }
 \description{
-The 3D analog to \code{ggplot2::geom_smooth()} and \code{ggplot2::stat_smooth()}.
+A 3D version of \code{ggplot2::geom_smooth()}.
 Creates surfaces by fitting smoothing models to scattered (x,y,z) data points.
 The fitted statistical model is evaluated on a regular grid and rendered as a
 3D surface with optional standard error surfaces.
@@ -163,8 +164,6 @@ The fitted statistical model is evaluated on a regular grid and rendered as a
 }
 
 \examples{
-library(ggplot2)
-
 # Generate scattered 3D data
 set.seed(123)
 d <- data.frame(
@@ -174,49 +173,53 @@ d <- data.frame(
 d$z <- abs(1 + d$x^2 - d$y^2 + rnorm(100, 0, 1))
 
 # Base plot
-p <- ggplot(d, aes(x, y, z)) + coord_3d()
-
-# Basic smooth surface with default loess model
-p + stat_smooth_3d()
-
-# Linear model surface with 90\% confidence intervals
-p + stat_smooth_3d(method = "lm", color = "black", se = TRUE,
-                   level = 0.9, se.alpha = .8)
-
-# Linear model surface with custom model formula
-p + stat_smooth_3d(method = "lm",
-       formula = z ~ poly(x, 2) + poly(y, 2) + x:y)
-
-# Loess with custom span parameter, and lighting aesthetics
-p + stat_smooth_3d(
-      method = "loess", method.args = list(span = 0.3),
-      fill = "steelblue", color = "white",
-      light = light(direction = c(-1, 0, 0)))
-
-# GLM with gamma family and log link
-p + stat_smooth_3d(
-      method = "glm",
-      method.args = list(family = Gamma(link = "log")),
-      formula = z ~ poly(x, 2) + poly(y, 2)) +
+p <- ggplot(d, aes(x, y, z)) +
+  coord_3d() +
   scale_fill_viridis_c()
 
-# GAM with default smoothers, with fill colored by confidence interval
-p + stat_smooth_3d(aes(fill = after_stat(level)),
-                   method = "gam", se = TRUE, color = "black") +
-  scale_fill_manual(values = c("red", "darkorchid4", "steelblue"))
+# Basic smooth surface with default loess model
+p + geom_smooth_3d()
+
+# Linear model surface with 90\% confidence intervals
+p + geom_smooth_3d(aes(fill = after_stat(level)),
+      method = "lm", color = "black", se = TRUE,
+      level = 0.99, se.alpha = .7, n = 10) +
+      scale_fill_manual(values = c("red", "darkorchid4", "steelblue"))
+
+# Linear model surface with custom model formula
+p + geom_smooth_3d(method = "lm", n = 10,
+      formula = z ~ poly(x, 2) + poly(y, 2) + x:y)
+
+# Loess with custom span parameter, and lighting aesthetics
+p + geom_smooth_3d(
+      method = "loess", method.args = list(span = 0.3),
+      fill = "steelblue", color = "white", n = 20,
+      light = light(direction = c(0, -1, 0)))
+
+# GLM with gamma family and log link
+p + geom_smooth_3d(
+      method = "glm", n = 10,
+      method.args = list(family = Gamma(link = "log")),
+      formula = z ~ poly(x, 2) + poly(y, 2))
 
 # Visualize uncertainty with computed "standard error" variable
-p + stat_smooth_3d(aes(fill = after_stat(se * 2))) +
+p + geom_smooth_3d(aes(fill = after_stat(se * 2))) +
   scale_fill_viridis_c()
 
 # Extend surface beyond training data range (explicit extrapolation)
-p + stat_smooth_3d(method = "lm", xlim = c(-5, 5), ylim = c(-5, 5))
+p + geom_smooth_3d(method = "lm", xlim = c(-5, 5), ylim = c(-5, 5))
 # Clip surface to predictor convex hull
 # to prevent extrapolation into corner areas
-p + stat_smooth_3d(method = "lm", domain = "chull")
+p + geom_smooth_3d(method = "lm", domain = "chull")
 
 # Specify alternative grid geometry
-p + stat_smooth_3d(grid = "hex", n = 30, direction = "y")
+p + geom_smooth_3d(grid = "hex", n = 30, direction = "y")
+
+# Separate fits for data subgroups
+ggplot(mtcars, aes(wt, mpg, qsec, fill = factor(cyl))) +
+  geom_smooth_3d(method = "lm", alpha = .7,
+    xlim = c(0, 5), ylim = c(0, 40)) + # specify shared domain
+  coord_3d() + theme_light()
 
 }
 \seealso{

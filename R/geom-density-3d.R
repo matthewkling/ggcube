@@ -46,7 +46,7 @@ StatDensity3D <- ggproto("StatDensity3D", Stat,
 
                                # Generate grid
                                d <- make_tile_grid(grid, n, direction, xlim, ylim)
-                               d$group <- paste0("surface__tile", d$group)
+                               d$group <- paste0("surface__tile", d$group, "::grp", data$group[1])
 
                                # Compute kernel density
                                d$z <- kde2d(data$x, data$y, d$x, d$y, h)
@@ -127,7 +127,7 @@ kde2d <- function(x, y, eval_x, eval_y, h) {
 
 #' 3D surface from 2D density estimate
 #'
-#' A 3D version of `ggplot2::stat_density_2d()`.
+#' A 3D version of `ggplot2::geom_density_2d()`.
 #' Creates surfaces from 2D point data using kernel density estimation.
 #' The density values become the z-coordinates of the surface, allowing
 #' visualization of data concentration as peaks and valleys in 3D space.
@@ -137,8 +137,8 @@ kde2d <- function(x, y, eval_x, eval_y, h) {
 #'   `after_stat(density)` and `z` is mapped to `after_stat(density)`.
 #' @param data The data to be displayed in this layer. Must contain x and y columns
 #'   with point coordinates.
-#' @param geom The geometric object to use display the data. Defaults to
-#'   [GeomPolygon3D] for proper 3D depth sorting.
+#' @param stat The statistical transformation to use on the data. Defaults to [StatDensity3D].
+#' @param geom The geometric object used to display the data. Defaults to [GeomPolygon3D].
 #' @param position Position adjustment, defaults to "identity".
 #' @param na.rm If `TRUE`, removes missing values before computing density.
 #'   If `FALSE`, missing values will cause an error. Default is `FALSE`.
@@ -198,32 +198,32 @@ kde2d <- function(x, y, eval_x, eval_y, h) {
 #'   coord_3d() +
 #'   scale_fill_viridis_c()
 #'
-#' p + stat_density_3d() + guides(fill = guide_colorbar_3d())
+#' p + geom_density_3d() + guides(fill = guide_colorbar_3d())
 #'
 #' # Color by alternative density values
-#' p + stat_density_3d(aes(fill = after_stat(count)))
+#' p + geom_density_3d(aes(fill = after_stat(count)))
 #'
 #' # Adjust bandwidth for smoother or more detailed surfaces
-#' p + stat_density_3d(adjust = 0.5, color = "white")  # More detail
-#' p + stat_density_3d(adjust = 2, color = "white")   # Smoother
+#' p + geom_density_3d(adjust = 0.5, color = "white")  # More detail
+#' p + geom_density_3d(adjust = 2, color = "white")   # Smoother
 #'
 #' # Multiple density surfaces by group,
 #' # using normalized density to equalize peak heights
 #' ggplot(iris, aes(Petal.Length, Sepal.Length, fill = Species)) +
-#'   stat_density_3d(aes(z = after_stat(ndensity)),
+#'   geom_density_3d(aes(z = after_stat(ndensity), group = Species),
 #'                   color = "black", alpha = .7, light = NULL) +
 #'   coord_3d()
 #'
 #' # Same, but with extra padding to remove edge effects and
 #' # with density filtering to remove rectangular artifacts
 #' ggplot(iris, aes(Petal.Length, Sepal.Length, fill = Species)) +
-#'   stat_density_3d(aes(z = after_stat(ndensity)),
+#'   geom_density_3d(aes(z = after_stat(ndensity)),
 #'                   pad = .3, min_ndensity = .001,
 #'                   color = "black", alpha = .7, light = NULL) +
 #'   coord_3d(ratio = c(3, 3, 1))
 #'
 #' # Specify alternative grid geometry and light model
-#' p + stat_density_3d(grid = "hex", n = 30, direction = "y",
+#' p + geom_density_3d(grid = "hex", n = 30, direction = "y",
 #'                     light = light("direct"),
 #'                     color = "white", linewidth = .1) +
 #'   guides(fill = guide_colorbar_3d())
@@ -232,22 +232,41 @@ kde2d <- function(x, y, eval_x, eval_y, h) {
 #'   surfaces from existing grid data, [light()] for lighting specifications,
 #'   [make_tile_grid()] for details about grid geometry options,
 #'   [coord_3d()] for 3D coordinate systems.
+#' @rdname geom_density_3d
 #' @export
-stat_density_3d <- function(mapping = NULL, data = NULL,
-                            geom = GeomPolygon3D,
+geom_density_3d <- function(mapping = NULL, data = NULL,
+                            stat = StatDensity3D,
                             position = "identity",
+                            ...,
                             n = NULL, grid = NULL, direction = NULL,
                             h = NULL, adjust = 1,
                             pad = 0.1,
                             min_ndensity = 0,
                             light = ggcube::light(),
-                            na.rm = FALSE,
-                            show.legend = NA,
-                            inherit.aes = TRUE,
-                            ...) {
+                            na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
 
-      layer(
-            stat = StatDensity3D, data = data, mapping = mapping, geom = geom,
+      layer(data = data, mapping = mapping, stat = stat, geom = GeomPolygon3D,
+            position = position, show.legend = show.legend, inherit.aes = inherit.aes,
+            params = list(n = n, grid = grid, direction = direction,
+                          h = h, adjust = adjust, pad = pad, min_ndensity = min_ndensity,
+                          light = light, na.rm = na.rm, ...)
+      )
+}
+
+#' @rdname geom_density_3d
+#' @export
+stat_density_3d <- function(mapping = NULL, data = NULL,
+                            geom = GeomPolygon3D,
+                            position = "identity",
+                            ...,
+                            n = NULL, grid = NULL, direction = NULL,
+                            h = NULL, adjust = 1,
+                            pad = 0.1,
+                            min_ndensity = 0,
+                            light = ggcube::light(),
+                            na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
+
+      layer(data = data, mapping = mapping, stat = StatDensity3D, geom = geom,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(n = n, grid = grid, direction = direction,
                           h = h, adjust = adjust, pad = pad, min_ndensity = min_ndensity,

@@ -10,8 +10,8 @@ reference:
   - position_on_face
 - title: 3D layers
 - contents:
-  - starts_with("stat_")
   - starts_with("geom_")
+  - starts_with("stat_")
 - title: Visual styling
 - contents:
   - light

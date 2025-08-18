@@ -473,7 +473,6 @@ compute_light_in_coord <- function(data, standardized_coords, scale_ranges, scal
             # Voxel/pillar data: axis-aligned normals
             normals <- compute_axis_aligned_normals(faces)
       } else {
-
             # Surface-like data: normals from fitted plane gradients
             gradients <- compute_surface_gradients_from_vertices(data)
             normals <- compute_surface_normals(gradients)

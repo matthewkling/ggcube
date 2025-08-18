@@ -124,8 +124,8 @@ convert_to_quads <- function(data) {
 #'   requires the `x`, `y`, and `z` aesthetics.
 #' @param data The data to be displayed in this layer. Must contain x, y, z columns
 #'   representing coordinates on a regular grid.
-#' @param geom The geometric object to use display the data. Defaults to
-#'   [GeomPolygon3D] for proper 3D depth sorting.
+#' @param stat The statistical transformation to use on the data. Defaults to [StatSurface3D].
+#' @param geom The geometric object used to display the data. Defaults to [GeomPolygon3D].
 #' @param position Position adjustment, defaults to "identity".
 #' @param na.rm If `FALSE`, missing values are removed with a warning.
 #' @param show.legend Logical indicating whether this layer should be included in legends.
@@ -135,7 +135,7 @@ convert_to_quads <- function(data) {
 #'   `sort_method` and `scale_depth` as well as aesthetics like `colour`, `fill`, `linewidth`, etc.
 #'
 #' @section Aesthetics:
-#' `stat_surface_3d()` requires the following aesthetics:
+#' Requires the following aesthetics:
 #' - **x**: X coordinate
 #' - **y**: Y coordinate
 #' - **z**: Z coordinate (elevation/height)
@@ -153,14 +153,14 @@ convert_to_quads <- function(data) {
 #' p <- ggplot(d, aes(x, y, z)) + coord_3d()
 #'
 #' # surface with 3d lighting
-#' p + stat_surface_3d(fill = "steelblue", color = "steelblue", linewidth = .2,
+#' p + geom_surface_3d(fill = "steelblue", color = "steelblue", linewidth = .2,
 #'       light = light(mode = "hsl", direction = c(1, 0, 0)))
 #'
 #' # mesh wireframe, without fill, with aes line color
-#' p + stat_surface_3d(aes(color = z), fill = NA)
+#' p + geom_surface_3d(aes(color = z), fill = NA)
 #'
 #' # use after_stat to access computed surface-orientation variables
-#' p + stat_surface_3d(aes(fill = after_stat(aspect))) +
+#' p + geom_surface_3d(aes(fill = after_stat(aspect))) +
 #'       scale_fill_gradientn(colors = rainbow(20))
 #'
 #' # use `group` to plot data for multiple surfaces
@@ -172,11 +172,11 @@ convert_to_quads <- function(data) {
 #' d2$g <- "b"
 #' ggplot(rbind(d, d2), aes(x, y, z, group = g, fill = g)) +
 #'   coord_3d() +
-#'   stat_surface_3d(color = "black", alpha = .5, light = NULL)
+#'   geom_surface_3d(color = "black", alpha = .5, light = NULL)
 #'
 #' # terrain surface with topographic hillshade and elevational fill
 #' ggplot(mountain, aes(x, y, z, fill = z, color = z)) +
-#'   stat_surface_3d(light = light(direction = c(1, 0, .5),
+#'   geomsurface_3d(light = light(direction = c(1, 0, .5),
 #'                            mode = "hsv", contrast = 1.5),
 #'                linewidth = .2) +
 #'   coord_3d(ratio = c(1, 1.5, .75)) +
@@ -188,16 +188,32 @@ convert_to_quads <- function(data) {
 #' @seealso [stat_function_3d()] for surfaces representing mathematical functions;
 #'   [stat_smooth_3d()] for surfaces based on fitted statistical models;
 #'   [stat_pillar_3d()] for terraced column-like surfaces;
-#'   [geom_polygon_3d()] for the default geom associated with `stat_surface_3d()`.
+#'   [geom_polygon_3d()] for the default geom associated with this layer.
+#' @rdname geom_surface_3d
 #' @export
-stat_surface_3d <- function(mapping = NULL, data = NULL, geom = GeomPolygon3D,
-                            position = "identity", ..., na.rm = FALSE,
-                            show.legend = NA, inherit.aes = TRUE,
-                            light = ggcube::light()) {
+geom_surface_3d <- function(mapping = NULL, data = NULL, stat = StatSurface3D,
+                            position = "identity",
+                            ...,
+                            light = ggcube::light(),
+                            na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
 
-      layer(
-            geom = geom, mapping = mapping, data = data, stat = StatSurface3D,
+      layer(mapping = mapping, data = data, stat = stat, geom = GeomPolygon3D,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(na.rm = na.rm, light = light, ...)
       )
 }
+
+#' @rdname geom_surface_3d
+#' @export
+stat_surface_3d <- function(mapping = NULL, data = NULL, geom = GeomPolygon3D,
+                            position = "identity",
+                            ...,
+                            light = ggcube::light(),
+                            na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
+
+      layer(mapping = mapping, data = data, stat = StatSurface3D, geom = geom,
+            position = position, show.legend = show.legend, inherit.aes = inherit.aes,
+            params = list(na.rm = na.rm, light = light, ...)
+      )
+}
+

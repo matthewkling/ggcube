@@ -1,5 +1,6 @@
 StatPillar3D <- ggproto("StatPillar3D", Stat,
                       required_aes = c("x", "y", "z"),
+                      default_aes = aes(group = after_stat(group)),
 
                       compute_panel = function(data, scales, na.rm = FALSE,
                                                width = 1.0, faces = "all",
@@ -201,21 +202,17 @@ create_pillars <- function(data, x_spacing, y_spacing, width, selected_faces) {
 }
 
 
-#' 3D pillar visualization from grid data
+#' 3D pillars from grid data
 #'
-#' Creates 3D pillar visualizations from grid data (regular or sparse).
-#' Each data point becomes a rectangular 3D column extending from a base level
-#' to the data value. Perfect for 3D bar charts, architectural visualization, and terrain layers.
-#' Works with both complete regular grids and sparse point data.
+#' Creates 3D pillars from regular grid data in which x and y fall on a regular grid.
+#' Works with both complete and sparse grid data. Each data point becomes a rectangular
+#' 3D column extending from a base level to the data value.
 #'
 #' @param mapping Set of aesthetic mappings created by [aes()].
 #' @param data The data to be displayed in this layer.
-#' @param geom The geometric object to use display the data. Defaults to
-#'   [GeomPolygon3D] for proper 3D depth sorting.
+#' @param stat The statistical transformation to use on the data. Defaults to [StatPillar3D].
+#' @param geom The geometric object used to display the data. Defaults to [GeomPolygon3D].
 #' @param position Position adjustment, defaults to "identity".
-#' @param na.rm If `FALSE`, missing values are removed with a warning.
-#' @param show.legend Logical indicating whether this layer should be included in legends.
-#' @param inherit.aes If `FALSE`, overrides the default aesthetics.
 #' @param width Numeric value controlling pillar width as a fraction of grid spacing.
 #'   Default is 1.0 (pillars touch each other). Use 0.8 for small gaps, 1.2 for overlap.
 #'   Grid spacing is determined automatically using [resolution()].
@@ -226,16 +223,19 @@ create_pillars <- function(data, x_spacing, y_spacing, width, selected_faces) {
 #'     \item Vector of face names: \code{c("zmax", "xmin", "ymax")}, etc.
 #'   }
 #'   Valid face names: "xmin", "xmax", "ymin", "ymax", "zmin", "zmax".
-#' @param light A lighting specification object created by \code{light()}, or NULL to disable shading.
 #' @param zmin Base level for all pillars. When provided as a parameter, overrides any
 #'   \code{zmin} aesthetic mapping. If \code{NULL} (default), uses the \code{zmin} aesthetic
 #'   if mapped, otherwise defaults to the minimum \code{z} value in the data.
+#' @param light A lighting specification object created by \code{light()}, or NULL to disable shading.
+#' @param na.rm If `FALSE`, missing values are removed with a warning.
+#' @param show.legend Logical indicating whether this layer should be included in legends.
+#' @param inherit.aes If `FALSE`, overrides the default aesthetics.
 #' @param ... Other arguments passed on to the geom (typically `geom_polygon_3d()`), such as
 #'   `sort_method` and `scale_depth` as well as aesthetics like `colour`, `fill`, `linewidth`, etc.
 #'
 #' Note that pillar geometries often require pairwise depth sorting for correct rendering.
 #' This is the default for smaller data sets, but not for larger data sets due to compute speed;
-#' in those cases you may wish to manually specify `sort_method = "pairwise"`.
+#' in those cases you may wish to manually specify `sort_method = "pairwise"` for good results.
 #'
 #' @section Aesthetics:
 #' `stat_pillar_3d()` requires the following aesthetics:
@@ -257,71 +257,63 @@ create_pillars <- function(data, x_spacing, y_spacing, width, selected_faces) {
 #' # Basic 3D bar chart from regular grid
 #' d <- expand.grid(x = 1:5, y = 1:5)
 #' d$z <- d$x + d$y + rnorm(25, 0, 0.5)
-#'
 #' ggplot(d, aes(x, y, z)) +
-#'   stat_pillar_3d(aes(fill = after_stat(light))) +
-#'   coord_3d()
-#'
-#' # Sparse data (only some points)
-#' sparse_data <- data.frame(
-#'   x = c(1, 3, 2, 4, 1),
-#'   y = c(1, 2, 3, 1, 4),
-#'   z = c(2, 5, 3, 4, 6)
-#' )
-#' ggplot(sparse_data, aes(x, y, z)) +
-#'   stat_pillar_3d(aes(fill = z), color = "white") +
+#'   geom_pillar_3d() +
 #'   coord_3d()
 #'
 #' # Set base level for all pillars using parameter
-#' ggplot(sparse_data, aes(x, y, z)) +
-#'   stat_pillar_3d(aes(fill = z), color = "white",
+#' ggplot(d, aes(x, y, z)) +
+#'   geom_pillar_3d(aes(fill = z), color = "white",
 #'                 zmin = 0) +
-#'   coord_3d()
+#'   coord_3d(roll = 90)
 #'
 #' # Variable base levels using aesthetic
 #' d$base_level <- runif(nrow(d), -1, 1)
 #' ggplot(d, aes(x, y, z = z, zmin = base_level)) +
-#'   stat_pillar_3d(aes(fill = after_stat(light))) +
-#'   coord_3d()
+#'   geom_pillar_3d(color = "black") +
+#'   coord_3d(roll = 90)
 #'
-#' # Show only top and front faces
-#' ggplot(sparse_data, aes(x, y, z)) +
-#'   stat_pillar_3d(aes(fill = after_stat(light)),
-#'               faces = c("zmax", "ymin")) +
+#' # Show only a subset of pillar faces
+#' ggplot(d, aes(x, y, z)) +
+#'   geom_pillar_3d(faces = c("zmax", "ymin"),
+#'     fill = "steelblue", color = "black") +
 #'   coord_3d()
 #'
 #' # With gaps between pillars
 #' ggplot(d, aes(x, y, z)) +
-#'   stat_pillar_3d(color = "black", width = 0.6) +
+#'   geom_pillar_3d(color = "black", width = 0.6) +
 #'   coord_3d()
 #'
 #' @seealso [stat_surface_3d()] for smooth surface rendering, [coord_3d()] for 3D coordinate systems,
 #'   [light()] for lighting specifications, [GeomPolygon3D] for the default geometry.
+#' @rdname geom_pillar_3d
+#' @export
+geom_pillar_3d <- function(mapping = NULL, data = NULL,
+                           stat = StatPillar3D,
+                           position = "identity",
+                           ...,
+                           width = 1.0, faces = "all", zmin = NULL,
+                           light = ggcube::light(),
+                           na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
+
+      layer(data = data, mapping = mapping, stat = stat, geom = GeomPolygon3D,
+            position = position, show.legend = show.legend, inherit.aes = inherit.aes,
+            params = list(na.rm = na.rm, width = width, faces = faces, light = light, zmin = zmin, ...)
+      )
+}
+
+
+#' @rdname geom_pillar_3d
 #' @export
 stat_pillar_3d <- function(mapping = NULL, data = NULL,
                         geom = GeomPolygon3D,
                         position = "identity",
-                        width = 1.0,
-                        faces = "all",
+                        ...,
+                        width = 1.0, faces = "all", zmin = NULL,
                         light = ggcube::light(),
-                        zmin = NULL,
-                        na.rm = FALSE, show.legend = NA, inherit.aes = TRUE,
-                        ...) {
+                        na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
 
-      # Set default group mapping using the new hierarchical group
-      default_mapping <- aes(group = after_stat(group))
-
-      if (!is.null(mapping)) {
-            mapping_names <- names(mapping)
-            if (!"group" %in% mapping_names) {
-                  mapping <- modifyList(default_mapping, mapping)
-            }
-      } else {
-            mapping <- default_mapping
-      }
-
-      layer(
-            stat = StatPillar3D, data = data, mapping = mapping, geom = geom,
+      layer(data = data, mapping = mapping, stat = StatPillar3D, geom = geom,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(na.rm = na.rm, width = width, faces = faces, light = light, zmin = zmin, ...)
       )

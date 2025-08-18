@@ -75,8 +75,7 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
 #'
 #' @param mapping Set of aesthetic mappings created by [aes()].
 #' @param data The data to be displayed in this layer.
-#' @param stat The statistical transformation to use on the data. Defaults to
-#'   [StatIdentity3D] for proper discrete scale handling and group preservation.
+#' @param stat The statistical transformation to use on the data. Defaults to [StatIdentity3D].
 #' @param sort_method Character indicating algorithm used to determine the order in which
 #'   polygons are rendered.
 #'   \itemize{

@@ -9,10 +9,8 @@
 #' @param mapping Set of aesthetic mappings created by [aes()]. Requires x, y, z
 #'   for start coordinates and xend, yend, zend for end coordinates.
 #' @param data The data to be displayed in this layer.
-#' @param stat The statistical transformation to use on the data. Defaults to
-#'   [StatSegment3D] for proper discrete scale handling.
-#' @param geom The geom object used to display the data. Defaults to
-#'   [GeomSegment3D].
+#' @param stat The statistical transformation to use on the data. Defaults to [StatSegment3D].
+#' @param geom The geometric object used to display the data. Defaults to [GeomSegment3D].
 #' @param position Position adjustment, defaults to "identity".
 #' @param ... Other arguments passed on to [layer()].
 #' @param na.rm If `FALSE`, missing values are removed with a warning.
@@ -34,8 +32,6 @@
 #' - `alpha`: Transparency
 #'
 #' @examples
-#' library(ggplot2)
-#'
 #' # Basic 3D segments
 #' ggplot(sphere_points,
 #'       aes(x, y, z, xend = 0, yend = 0, zend = 0)) +
@@ -43,8 +39,11 @@
 #'   coord_3d()
 #'
 #' # 3D vector field
+#' data <- expand.grid(x = -1:2, y = -1:2, z = -1:2)
+#' data2 <- data + seq(-.5, .5, length.out = length(as.matrix(data)))
+#' data <- cbind(data, setNames(data2, c("x2", "y2", "z2")))
 #' ggplot(data, aes(x, y, z,
-#'       xend = xend, yend = yend, zend = zend, color = x)) +
+#'       xend = x2, yend = y2, zend = z2, color = x)) +
 #'   geom_segment_3d(arrow = arrow(length = unit(0.1, "inches"),
 #'                   type = "closed", angle = 15),
 #'                   linewidth = .5) +
@@ -57,17 +56,11 @@
 geom_segment_3d <- function(mapping = NULL, data = NULL,
                             stat = StatSegment3D, position = "identity",
                             ...,
-                            na.rm = FALSE, show.legend = NA, inherit.aes = TRUE,
-                            scale_depth = TRUE, arrow = NULL, lineend = "butt") {
+                            scale_depth = TRUE, arrow = NULL, lineend = "butt",
+                            na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
 
-      layer(
-            data = data,
-            mapping = mapping,
-            stat = stat,
-            geom = GeomSegment3D,
-            position = position,
-            show.legend = show.legend,
-            inherit.aes = inherit.aes,
+      layer(data = data, mapping = mapping, stat = stat, geom = GeomSegment3D,
+            position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(
                   na.rm = na.rm,
                   scale_depth = scale_depth,
@@ -82,13 +75,19 @@ geom_segment_3d <- function(mapping = NULL, data = NULL,
 #' @export
 stat_segment_3d <- function(mapping = NULL, data = NULL,
                             geom = GeomSegment3D, position = "identity",
-                            na.rm = FALSE, show.legend = NA, inherit.aes = TRUE,
-                            ...) {
+                            ...,
+                            scale_depth = TRUE, arrow = NULL, lineend = "butt",
+                            na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
 
-      layer(
-            stat = StatSegment3D, data = data, mapping = mapping, geom = geom,
+      layer(data = data, mapping = mapping, stat = StatSegment3D, geom = geom,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
-            params = list(na.rm = na.rm, ...)
+            params = list(
+                  na.rm = na.rm,
+                  scale_depth = scale_depth,
+                  arrow = arrow,
+                  lineend = lineend,
+                  ...
+            )
       )
 }
 

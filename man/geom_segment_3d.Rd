@@ -11,12 +11,12 @@ geom_segment_3d(
   stat = StatSegment3D,
   position = "identity",
   ...,
-  na.rm = FALSE,
-  show.legend = NA,
-  inherit.aes = TRUE,
   scale_depth = TRUE,
   arrow = NULL,
-  lineend = "butt"
+  lineend = "butt",
+  na.rm = FALSE,
+  show.legend = NA,
+  inherit.aes = TRUE
 )
 
 stat_segment_3d(
@@ -24,10 +24,13 @@ stat_segment_3d(
   data = NULL,
   geom = GeomSegment3D,
   position = "identity",
+  ...,
+  scale_depth = TRUE,
+  arrow = NULL,
+  lineend = "butt",
   na.rm = FALSE,
   show.legend = NA,
-  inherit.aes = TRUE,
-  ...
+  inherit.aes = TRUE
 )
 }
 \arguments{
@@ -36,18 +39,11 @@ for start coordinates and xend, yend, zend for end coordinates.}
 
 \item{data}{The data to be displayed in this layer.}
 
-\item{stat}{The statistical transformation to use on the data. Defaults to
-\link{StatSegment3D} for proper discrete scale handling.}
+\item{stat}{The statistical transformation to use on the data. Defaults to \link{StatSegment3D}.}
 
 \item{position}{Position adjustment, defaults to "identity".}
 
 \item{...}{Other arguments passed on to \code{\link[=layer]{layer()}}.}
-
-\item{na.rm}{If \code{FALSE}, missing values are removed with a warning.}
-
-\item{show.legend}{Logical indicating whether this layer should be included in legends.}
-
-\item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics.}
 
 \item{scale_depth}{Logical indicating whether to apply depth-based scaling
 to linewidth. When \code{TRUE} (default), segments closer to the viewer appear
@@ -57,8 +53,13 @@ thicker, and segments farther away appear thinner.}
 
 \item{lineend}{Line end style, one of "round", "butt", "square".}
 
-\item{geom}{The geom object used to display the data. Defaults to
-\link{GeomSegment3D}.}
+\item{na.rm}{If \code{FALSE}, missing values are removed with a warning.}
+
+\item{show.legend}{Logical indicating whether this layer should be included in legends.}
+
+\item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics.}
+
+\item{geom}{The geometric object used to display the data. Defaults to \link{GeomSegment3D}.}
 }
 \description{
 \code{geom_segment_3d()} and \code{stat_segment_3d()} drawe line segments in 3D space
@@ -80,8 +81,6 @@ coordinates (xend, yend, zend).
 }
 
 \examples{
-library(ggplot2)
-
 # Basic 3D segments
 ggplot(sphere_points,
       aes(x, y, z, xend = 0, yend = 0, zend = 0)) +
@@ -89,8 +88,11 @@ ggplot(sphere_points,
   coord_3d()
 
 # 3D vector field
+data <- expand.grid(x = -1:2, y = -1:2, z = -1:2)
+data2 <- data + seq(-.5, .5, length.out = length(as.matrix(data)))
+data <- cbind(data, setNames(data2, c("x2", "y2", "z2")))
 ggplot(data, aes(x, y, z,
-      xend = xend, yend = yend, zend = zend, color = x)) +
+      xend = x2, yend = y2, zend = z2, color = x)) +
   geom_segment_3d(arrow = arrow(length = unit(0.1, "inches"),
                   type = "closed", angle = 15),
                   linewidth = .5) +

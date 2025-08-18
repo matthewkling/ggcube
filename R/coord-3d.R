@@ -93,12 +93,13 @@
 #'
 #' @examples
 #' p <- ggplot() +
-#'   stat_function_3d(
+#'   geom_function_3d(
 #'     aes(fill = after_stat(z), color = after_stat(z)),
 #'     fun = function(x, y) sin(x) * cos(y),
 #'     xlim = c(-pi, pi), ylim = c(-pi, pi),
 #'     n = 50, light = light(contrast = 1.5)) +
-#'   scale_fill_viridis_c() + scale_color_viridis_c() +
+#'   scale_fill_gradientn(colors = c("#344a91", "#753491", "#913434", "#915b34")) +
+#'   scale_color_gradientn(colors = c("#344a91", "#753491", "#913434", "#915b34")) +
 #'   theme(legend.position = "none")
 #'
 #' # 3D plot with default coord settings

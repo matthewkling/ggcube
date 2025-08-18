@@ -118,8 +118,8 @@ ensure_nonempty_data <- function(data) {
 #' to x and y axis values) and return a numeric vector of z values. Required parameter.
 #' @param data The data to be displayed in this layer. Usually not needed since
 #'   the stat generates its own data from the function.
-#' @param geom The geometric object to use display the data. Defaults to
-#'   [GeomPolygon3D] for proper 3D depth sorting.
+#' @param stat The statistical transformation to use on the data. Defaults to [StatFunction3D].
+#' @param geom The geometric object used to display the data. Defaults to [GeomPolygon3D].
 #' @param position Position adjustment, defaults to "identity". To collapse the result
 #'   onto one 2D surface, use `position_on_face()`.
 #' @param na.rm If `TRUE`, removes missing values from function evaluation results.
@@ -153,7 +153,7 @@ ensure_nonempty_data <- function(data) {
 #'
 #' # Basic function surface
 #' ggplot() +
-#'   stat_function_3d(fun = function(a, b) exp(-(a^2 + b^2)),
+#'   geom_function_3d(fun = function(a, b) exp(-(a^2 + b^2)),
 #'                    xlim = c(-2, 2), ylim = c(-2, 2),
 #'                    light = NULL, color = "white") +
 #'   coord_3d() +
@@ -162,7 +162,7 @@ ensure_nonempty_data <- function(data) {
 #' # Wave function with lighting
 #' wave_fun <- function(x, y) cos(x) + cos(y) + cos(x+y) + cos(sqrt(x^2 + y^2))
 #' ggplot() +
-#'   stat_function_3d(fun = wave_fun, fill = "steelblue",
+#'   geom_function_3d(fun = wave_fun, fill = "steelblue",
 #'                    xlim = c(-3*pi, 3*pi), ylim = c(-3*pi, 3*pi),
 #'                    light = light(method = "direct", mode = "hsl",
 #'                           contrast = .8, direction = c(1, -1, 1))) +
@@ -170,7 +170,7 @@ ensure_nonempty_data <- function(data) {
 #'
 #' # Use after_stat to access computed surface-orientation variables
 #' ggplot() +
-#'   stat_function_3d(aes(fill = after_stat(dzdx),
+#'   geom_function_3d(aes(fill = after_stat(dzdx),
 #'                        color = after_stat(dzdx)),
 #'                    fun = function(x, y) sin(x) * cos(y),
 #'                    xlim = c(-pi, pi), ylim = c(-pi, pi),
@@ -181,7 +181,7 @@ ensure_nonempty_data <- function(data) {
 #'
 #' # Use "filtering" functions to constrain output domain
 #' ggplot() +
-#'   stat_function_3d(fun = function(a, b) {
+#'   geom_function_3d(fun = function(a, b) {
 #'     ifelse(sqrt(a^2 + b^2) < 2, exp(-(a^2 + b^2)), NA)},
 #'     xlim = c(-2, 2), ylim = c(-2, 2), color = "white") +
 #'   coord_3d() +
@@ -190,7 +190,7 @@ ensure_nonempty_data <- function(data) {
 #'
 #' # Specify alternative grid geometry
 #' ggplot() +
-#'   stat_function_3d(fun = function(a, b) exp(-(a^2 + b^2)),
+#'   geom_function_3d(fun = function(a, b) exp(-(a^2 + b^2)),
 #'     xlim = c(-2, 2), ylim = c(-2, 2), color = "white",
 #'     grid = "tri", n = 30, direction = "y") +
 #'   coord_3d() +
@@ -201,43 +201,55 @@ ensure_nonempty_data <- function(data) {
 #'   [make_tile_grid()] for details about grid geometry options,
 #'   [light()] for lighting specifications,
 #'   [coord_3d()] for 3D coordinate systems.
+#' @rdname geom_function_3d
 #' @export
-stat_function_3d <- function(mapping = NULL,
-                             fun = NULL,
+geom_function_3d <- function(mapping = NULL,
                              data = NULL,
-                             geom = GeomPolygon3D,
+                             stat = StatFunction3D,
                              position = "identity",
-                             xlim = NULL,
-                             ylim = NULL,
-                             n = NULL,
-                             grid = NULL,
-                             direction = NULL,
+                             ...,
+                             fun = NULL,
+                             xlim = NULL, ylim = NULL,
+                             n = NULL, grid = NULL, direction = NULL,
                              light = ggcube::light(),
                              na.rm = FALSE,
                              show.legend = NA,
-                             inherit.aes = TRUE,
-                             color = NULL,
-                             colour = NULL,
-                             ...) {
+                             inherit.aes = TRUE) {
 
       # Ensure non-empty data like ggplot2::stat_function does
       data <- data %||% ensure_nonempty_data
 
-      # Normalize to British spelling
-      colour <- colour %||% color
-
-      # Build params list, only including colour if not NULL
-      params <- list(fun = fun, xlim = xlim, ylim = ylim,
-                     n = n, grid = grid, direction = direction,
-                     light = light, na.rm = na.rm, ...)
-
-      if (!is.null(colour)) {
-            params$colour <- colour
-      }
-
-      layer(
-            stat = StatFunction3D, data = data, mapping = mapping, geom = geom,
+      layer(data = data, mapping = mapping, stat = stat, geom = GeomPolygon3D,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
-            params = params
+            params = list(fun = fun, xlim = xlim, ylim = ylim,
+                          n = n, grid = grid, direction = direction,
+                          light = light, na.rm = na.rm, ...)
+      )
+}
+
+
+#' @rdname geom_function_3d
+#' @export
+stat_function_3d <- function(mapping = NULL,
+                             data = NULL,
+                             geom = GeomPolygon3D,
+                             position = "identity",
+                             ...,
+                             fun = NULL,
+                             xlim = NULL, ylim = NULL,
+                             n = NULL, grid = NULL, direction = NULL,
+                             light = ggcube::light(),
+                             na.rm = FALSE,
+                             show.legend = NA,
+                             inherit.aes = TRUE) {
+
+      # Ensure non-empty data like ggplot2::stat_function does
+      data <- data %||% ensure_nonempty_data
+
+      layer(data = data, mapping = mapping, stat = StatFunction3D, geom = geom,
+            position = position, show.legend = show.legend, inherit.aes = inherit.aes,
+            params = list(fun = fun, xlim = xlim, ylim = ylim,
+                          n = n, grid = grid, direction = direction,
+                          light = light, na.rm = na.rm, ...)
       )
 }

@@ -12,8 +12,6 @@ geom_point_3d(
   position = "identity",
   ...,
   na.rm = FALSE,
-  show.legend = NA,
-  inherit.aes = TRUE,
   scale_depth = TRUE,
   raw_points = TRUE,
   ref_lines = FALSE,
@@ -32,24 +30,39 @@ geom_point_3d(
   ref_point_size = NULL,
   ref_point_alpha = NULL,
   ref_point_stroke = NULL,
-  ref_point_shape = NULL
+  ref_point_shape = NULL,
+  inherit.aes = TRUE,
+  show.legend = NA
 )
 
 stat_point_3d(
   mapping = NULL,
   data = NULL,
-  geom = "point_3d",
+  geom = GeomPoint3D,
   position = "identity",
+  ...,
   na.rm = FALSE,
-  show.legend = NA,
-  inherit.aes = TRUE,
+  scale_depth = TRUE,
   raw_points = TRUE,
   ref_lines = FALSE,
-  ref_points = "circles",
+  ref_points = FALSE,
   ref_faces = "zmin",
-  ref_circle_radius = 0.02,
+  ref_circle_radius = 1.5,
   ref_circle_vertices = 16,
-  ...
+  ref_line_color = NULL,
+  ref_line_colour = NULL,
+  ref_line_linewidth = 0.25,
+  ref_line_linetype = NULL,
+  ref_line_alpha = NULL,
+  ref_point_color = NULL,
+  ref_point_colour = NULL,
+  ref_point_fill = NULL,
+  ref_point_size = NULL,
+  ref_point_alpha = NULL,
+  ref_point_stroke = NULL,
+  ref_point_shape = NULL,
+  inherit.aes = TRUE,
+  show.legend = NA
 )
 }
 \arguments{
@@ -58,18 +71,13 @@ the standard point aesthetics, \code{geom_point_3d()} requires x, y, and z coord
 
 \item{data}{The data to be displayed in this layer.}
 
-\item{stat}{The statistical transformation to use on the data. Defaults to
-\link{StatPoint3D} for proper discrete scale handling and reference line support.}
+\item{stat}{The statistical transformation to use on the data. Defaults to \link{StatPoint3D}.}
 
 \item{position}{Position adjustment, defaults to "identity".}
 
 \item{...}{Other arguments passed on to \code{\link[=layer]{layer()}}.}
 
 \item{na.rm}{If \code{FALSE}, missing values are removed with a warning.}
-
-\item{show.legend}{Logical indicating whether this layer should be included in legends.}
-
-\item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics.}
 
 \item{scale_depth}{Logical indicating whether to apply depth-based scaling
 to point sizes, point stroke widths, and reference line widths.
@@ -104,6 +112,12 @@ Both American (\code{ref_line_color}) and British (\code{ref_line_colour}) spell
 \item{ref_point_color, ref_point_colour, ref_point_fill, ref_point_size, ref_point_alpha, ref_point_stroke, ref_point_shape}{Styling overrides for reference points and circles. When NULL, inherits from raw point aesthetics
 with shape-aware logic (complex shapes 21-25 vs simple shapes 0-20/characters).
 Both American (\code{ref_point_color}) and British (\code{ref_point_colour}) spellings are accepted.}
+
+\item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics.}
+
+\item{show.legend}{Logical indicating whether this layer should be included in legends.}
+
+\item{geom}{The geometric object used to display the data. Defaults to \link{GeomPoint3D}.}
 }
 \description{
 \code{geom_point_3d()} creates scatter plots in 3D space with automatic depth-based
@@ -231,7 +245,7 @@ ggplot(mtcars, aes(mpg, wt, qsec)) +
 # Project to multiple faces with custom circle styling
 ggplot(mtcars, aes(mpg, wt, qsec, color = factor(cyl))) +
   geom_point_3d(ref_points = "circles", ref_lines = TRUE,
-                ref_faces = c("zmin", "ymin", "xmax"),
+                ref_faces = c("zmin", "ymax", "xmax"),
                 ref_line_color = "grey50", ref_line_alpha = 0.3,
                 ref_point_fill = "white", ref_point_stroke = 0.8,
                 ref_circle_radius = 1) +

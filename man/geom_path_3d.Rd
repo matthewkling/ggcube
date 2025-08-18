@@ -11,12 +11,12 @@ geom_path_3d(
   stat = StatPath3D,
   position = "identity",
   ...,
-  na.rm = FALSE,
-  show.legend = NA,
-  inherit.aes = TRUE,
   scale_depth = TRUE,
   arrow = NULL,
-  lineend = "butt"
+  lineend = "butt",
+  na.rm = FALSE,
+  show.legend = NA,
+  inherit.aes = TRUE
 )
 
 stat_path_3d(
@@ -24,10 +24,13 @@ stat_path_3d(
   data = NULL,
   geom = GeomSegment3D,
   position = "identity",
+  ...,
+  scale_depth = TRUE,
+  arrow = NULL,
+  lineend = "butt",
   na.rm = FALSE,
   show.legend = NA,
-  inherit.aes = TRUE,
-  ...
+  inherit.aes = TRUE
 )
 }
 \arguments{
@@ -36,18 +39,11 @@ coordinates. Grouping aesthetics determine separate paths.}
 
 \item{data}{The data to be displayed in this layer.}
 
-\item{stat}{The statistical transformation to use on the data. Defaults to
-\link{StatPath3D} which converts paths to segments.}
+\item{stat}{The statistical transformation to use on the data. Defaults to \link{StatPath3D}.}
 
 \item{position}{Position adjustment, defaults to "identity".}
 
 \item{...}{Other arguments passed on to \code{\link[=layer]{layer()}}.}
-
-\item{na.rm}{If \code{FALSE}, missing values are removed with a warning.}
-
-\item{show.legend}{Logical indicating whether this layer should be included in legends.}
-
-\item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics.}
 
 \item{scale_depth}{Logical indicating whether to apply depth-based scaling
 to linewidth. When \code{TRUE} (default), path segments closer to the viewer
@@ -56,17 +52,20 @@ appear thicker, and segments farther away appear thinner.}
 \item{arrow}{Specification for arrow heads, created by \code{\link[=arrow]{arrow()}}.}
 
 \item{lineend}{Line end style, one of "round", "butt", "square".}
+
+\item{na.rm}{If \code{FALSE}, missing values are removed with a warning.}
+
+\item{show.legend}{Logical indicating whether this layer should be included in legends.}
+
+\item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics.}
+
+\item{geom}{The geometric object used to display the data. Defaults to \link{GeomSegment3D}.}
 }
 \description{
-\code{geom_path_3d()} connects observations in 3D space in the order they appear
+Connects observations in 3D space in the order they appear
 in the data. It converts path data into individual segments for proper depth
 sorting while maintaining the appearance of connected paths. Each path is
 divided into segments that can be depth-sorted independently.
-}
-\details{
-\code{stat_path_3d()} converts path data (sequences of points) into segment data
-for proper 3D depth sorting. Each consecutive pair of points in a path
-becomes a separate segment that can be depth-sorted independently.
 }
 \section{Aesthetics}{
 

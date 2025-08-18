@@ -2,6 +2,7 @@
 
 StatVoxel3D <- ggproto("StatVoxel3D", Stat,
                      required_aes = c("x", "y", "z"),
+                     default_aes = aes(group = after_stat(group)),
 
                      compute_panel = function(data, scales, na.rm = FALSE,
                                               width = 1.0, faces = "all",
@@ -193,8 +194,8 @@ convert_to_numeric <- function(data) {
 #'
 #' @param mapping Set of aesthetic mappings created by [aes()].
 #' @param data The data to be displayed in this layer.
-#' @param geom The geometric object to use display the data. Defaults to
-#'   [GeomPolygon3D] for proper 3D depth sorting.
+#' @param stat The statistical transformation to use on the data. Defaults to [StatVoxel3D].
+#' @param geom The geometric object used to display the data. Defaults to [GeomPolygon3D].
 #' @param position Position adjustment, defaults to "identity".
 #' @param na.rm If `FALSE`, missing values are removed with a warning.
 #' @param show.legend Logical indicating whether this layer should be included in legends.
@@ -218,7 +219,7 @@ convert_to_numeric <- function(data) {
 #' in those cases you may wish to manually specify `sort_method = "pairwise"`.
 #'
 #' @section Aesthetics:
-#' `stat_voxel_3d()` requires the following aesthetics:
+#' Voxel 3D requires the following aesthetics:
 #' - **x**: X coordinate (voxel center position)
 #' - **y**: Y coordinate (voxel center position)
 #' - **z**: Z coordinate (voxel center position)
@@ -246,43 +247,47 @@ convert_to_numeric <- function(data) {
 #' p <- ggplot(voxel_data, aes(x, y, z)) + coord_3d()
 #'
 #' # Basic 3D voxel plot
-#' p + stat_voxel_3d(fill = "steelblue")
+#' p + geom_voxel_3d(fill = "steelblue")
 #'
 #' # With aesthetic fill
 #' p + stat_voxel_3d(aes(fill = z)) +
-#'   scale_fill_viridis_c() + guides(fill = guide_colorbar_3d())
+#'   geom_fill_viridis_c() + guides(fill = guide_colorbar_3d())
 #'
 #' # Show only visible faces for performance
-#' p + stat_voxel_3d(faces = c("zmax", "ymin", "xmin"))
+#' p + geom_voxel_3d(faces = c("zmax", "ymin", "xmin"))
 #'
 #' @seealso [stat_pillar_3d()] for variable-height columns, [stat_surface_3d()] for smooth surfaces,
 #'   [coord_3d()] for 3D coordinate systems, [light()] for lighting specifications,
 #'   [GeomPolygon3D] for the default geometry.
+#' @rdname geom_voxel_3d
 #' @export
-stat_voxel_3d <- function(mapping = NULL, data = NULL,
-                       geom = GeomPolygon3D,
-                       position = "identity",
-                       width = 1.0,
-                       faces = "all",
-                       light = ggcube::light(),
-                       na.rm = FALSE, show.legend = NA, inherit.aes = TRUE,
-                       ...) {
+geom_voxel_3d <- function(mapping = NULL, data = NULL,
+                          stat = StatVoxel3D,
+                          position = "identity",
+                          ...,
+                          width = 1.0, faces = "all",
+                          light = ggcube::light(),
+                          na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
 
-      # Set default group mapping using the new hierarchical group
-      default_mapping <- aes(group = after_stat(group))
-
-      if (!is.null(mapping)) {
-            mapping_names <- names(mapping)
-            if (!"group" %in% mapping_names) {
-                  mapping <- modifyList(default_mapping, mapping)
-            }
-      } else {
-            mapping <- default_mapping
-      }
-
-      layer(
-            stat = StatVoxel3D, data = data, mapping = mapping, geom = geom,
+      layer(data = data, mapping = mapping, stat = stat, geom = GeomPolygon3D,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(na.rm = na.rm, width = width, faces = faces, light = light, ...)
       )
 }
+
+#' @rdname geom_voxel_3d
+#' @export
+stat_voxel_3d <- function(mapping = NULL, data = NULL,
+                          geom = GeomPolygon3D,
+                          position = "identity",
+                          ...,
+                          width = 1.0, faces = "all",
+                          light = ggcube::light(),
+                          na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
+
+      layer(data = data, mapping = mapping, stat = StatVoxel3D, geom = geom,
+            position = position, show.legend = show.legend, inherit.aes = inherit.aes,
+            params = list(na.rm = na.rm, width = width, faces = faces, light = light, ...)
+      )
+}
+
