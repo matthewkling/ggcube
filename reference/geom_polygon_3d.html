@@ -48,10 +48,11 @@ from <code><a href="geom_hull_3d.html">stat_hull_3d()</a></code> and <code><a hr
 <span>  mapping <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  data <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  stat <span class="op">=</span> <span class="va">StatIdentity3D</span>,</span>
-<span>  sort_method <span class="op">=</span> <span class="st">"auto"</span>,</span>
-<span>  scale_depth <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  position <span class="op">=</span> <span class="st">"identity"</span>,</span>
 <span>  <span class="va">...</span>,</span>
+<span>  sort_method <span class="op">=</span> <span class="st">"auto"</span>,</span>
+<span>  scale_depth <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  force_convex <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  na.rm <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  show.legend <span class="op">=</span> <span class="cn">NA</span>,</span>
 <span>  inherit.aes <span class="op">=</span> <span class="cn">TRUE</span></span>
@@ -74,6 +75,14 @@ from <code><a href="geom_hull_3d.html">stat_hull_3d()</a></code> and <code><a hr
 <dd><p>The statistical transformation to use on the data. Defaults to StatIdentity3D.</p></dd>
 
 
+<dt id="arg-position">position<a class="anchor" aria-label="anchor" href="#arg-position"></a></dt>
+<dd><p>Position adjustment, defaults to "identity".</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>Other arguments passed on to <code><a href="https://ggplot2.tidyverse.org/reference/layer.html" class="external-link">layer()</a></code>.</p></dd>
+
+
 <dt id="arg-sort-method">sort_method<a class="anchor" aria-label="anchor" href="#arg-sort-method"></a></dt>
 <dd><p>Character indicating algorithm used to determine the order in which
 polygons are rendered.</p><ul><li><p><code>"painter"</code>: Polygons are sorted by the mean depth (distance from viewer after
@@ -91,12 +100,10 @@ than 500 rows and painter otherwise.</p></li>
 wider and farther lines narrower. Default is TRUE. Scaling is based on the mean depth of a polygon.</p></dd>
 
 
-<dt id="arg-position">position<a class="anchor" aria-label="anchor" href="#arg-position"></a></dt>
-<dd><p>Position adjustment, defaults to "identity".</p></dd>
-
-
-<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Other arguments passed on to <code><a href="https://ggplot2.tidyverse.org/reference/layer.html" class="external-link">layer()</a></code>.</p></dd>
+<dt id="arg-force-convex">force_convex<a class="anchor" aria-label="anchor" href="#arg-force-convex"></a></dt>
+<dd><p>Logical indicating whether to remove polygon vertices that are not part of the
+convex hull. Default is FALSE. Specifying TRUE can be useful for preventing artifacts in surfaces
+that have polygon tiles that wrap over a visible horizon.</p></dd>
 
 
 <dt id="arg-na-rm">na.rm<a class="anchor" aria-label="anchor" href="#arg-na-rm"></a></dt>
