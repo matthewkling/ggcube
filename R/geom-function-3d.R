@@ -221,7 +221,7 @@ geom_function_3d <- function(mapping = NULL,
 
       layer(data = data, mapping = mapping, stat = stat, geom = GeomPolygon3D,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
-            params = list(fun = fun, xlim = xlim, ylim = ylim,
+            params = list(fun = fun, xlim = xlim, ylim = ylim, force_convex = TRUE,
                           n = n, grid = grid, direction = direction,
                           light = light, na.rm = na.rm, ...)
       )
@@ -248,7 +248,7 @@ stat_function_3d <- function(mapping = NULL,
 
       layer(data = data, mapping = mapping, stat = StatFunction3D, geom = geom,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
-            params = list(fun = fun, xlim = xlim, ylim = ylim,
+            params = list(fun = fun, xlim = xlim, ylim = ylim, force_convex = TRUE,
                           n = n, grid = grid, direction = direction,
                           light = light, na.rm = na.rm, ...)
       )

@@ -199,7 +199,7 @@ geom_surface_3d <- function(mapping = NULL, data = NULL, stat = StatSurface3D,
 
       layer(mapping = mapping, data = data, stat = stat, geom = GeomPolygon3D,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
-            params = list(na.rm = na.rm, light = light, ...)
+            params = list(na.rm = na.rm, force_convex = TRUE, light = light, ...)
       )
 }
 
@@ -213,7 +213,7 @@ stat_surface_3d <- function(mapping = NULL, data = NULL, geom = GeomPolygon3D,
 
       layer(mapping = mapping, data = data, stat = StatSurface3D, geom = geom,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
-            params = list(na.rm = na.rm, light = light, ...)
+            params = list(na.rm = na.rm, force_convex = TRUE, light = light, ...)
       )
 }
 

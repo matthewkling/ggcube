@@ -247,7 +247,7 @@ geom_density_3d <- function(mapping = NULL, data = NULL,
 
       layer(data = data, mapping = mapping, stat = stat, geom = GeomPolygon3D,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
-            params = list(n = n, grid = grid, direction = direction,
+            params = list(n = n, grid = grid, direction = direction, force_convex = TRUE,
                           h = h, adjust = adjust, pad = pad, min_ndensity = min_ndensity,
                           light = light, na.rm = na.rm, ...)
       )
@@ -268,7 +268,7 @@ stat_density_3d <- function(mapping = NULL, data = NULL,
 
       layer(data = data, mapping = mapping, stat = StatDensity3D, geom = geom,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
-            params = list(n = n, grid = grid, direction = direction,
+            params = list(n = n, grid = grid, direction = direction, force_convex = TRUE,
                           h = h, adjust = adjust, pad = pad, min_ndensity = min_ndensity,
                           light = light, na.rm = na.rm, ...)
       )

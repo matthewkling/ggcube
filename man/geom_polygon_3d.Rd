@@ -8,10 +8,11 @@ geom_polygon_3d(
   mapping = NULL,
   data = NULL,
   stat = StatIdentity3D,
-  sort_method = "auto",
-  scale_depth = TRUE,
   position = "identity",
   ...,
+  sort_method = "auto",
+  scale_depth = TRUE,
+  force_convex = FALSE,
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE
@@ -23,6 +24,10 @@ geom_polygon_3d(
 \item{data}{The data to be displayed in this layer.}
 
 \item{stat}{The statistical transformation to use on the data. Defaults to \link{StatIdentity3D}.}
+
+\item{position}{Position adjustment, defaults to "identity".}
+
+\item{...}{Other arguments passed on to \code{\link[=layer]{layer()}}.}
 
 \item{sort_method}{Character indicating algorithm used to determine the order in which
 polygons are rendered.
@@ -39,9 +44,9 @@ than 500 rows and painter otherwise.
 \item{scale_depth}{Logical indicating whether polygon linewidths should be scaled to make closer lines
 wider and farther lines narrower. Default is TRUE. Scaling is based on the mean depth of a polygon.}
 
-\item{position}{Position adjustment, defaults to "identity".}
-
-\item{...}{Other arguments passed on to \code{\link[=layer]{layer()}}.}
+\item{force_convex}{Logical indicating whether to remove polygon vertices that are not part of the
+convex hull. Default is FALSE. Specifying TRUE can be useful for preventing artifacts in surfaces
+that have polygon tiles that wrap over a visible horizon.}
 
 \item{na.rm}{If \code{FALSE}, missing values are removed with a warning.}
 

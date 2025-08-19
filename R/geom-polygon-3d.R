@@ -7,7 +7,9 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                          ),
 
                          draw_panel = function(data, panel_params, coord,
-                                               sort_method = "auto", scale_depth = TRUE) {
+                                               sort_method = "auto",
+                                               scale_depth = TRUE,
+                                               force_convex = FALSE) {
 
                                # Parameter validation
                                validate_coord3d(coord)
@@ -16,6 +18,9 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                                # Transform data
                                data$.sort_method <- sort_method
                                coords <- coord$transform(data, panel_params)
+
+                               # Enforce convexity if requested
+                               coords <- drop_nonconvex_vertices(coords, force_convex)
 
                                # Scale linewidths by depth
                                coords <- scale_depth(coords, scale_depth)
@@ -88,7 +93,10 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
 #'     than 500 rows and painter otherwise.
 #'   }
 #' @param scale_depth Logical indicating whether polygon linewidths should be scaled to make closer lines
-#'    wider and farther lines narrower. Default is TRUE. Scaling is based on the mean depth of a polygon.
+#'   wider and farther lines narrower. Default is TRUE. Scaling is based on the mean depth of a polygon.
+#' @param force_convex Logical indicating whether to remove polygon vertices that are not part of the
+#'   convex hull. Default is FALSE. Specifying TRUE can be useful for preventing artifacts in surfaces
+#'   that have polygon tiles that wrap over a visible horizon.
 #' @param position Position adjustment, defaults to "identity".
 #' @param ... Other arguments passed on to [layer()].
 #' @param na.rm If `FALSE`, missing values are removed with a warning.
@@ -145,13 +153,31 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
 #'
 #' @export
 geom_polygon_3d <- function(mapping = NULL, data = NULL, stat = StatIdentity3D,
-                            sort_method = "auto", scale_depth = TRUE,
-                            position = "identity", ..., na.rm = FALSE,
-                            show.legend = NA, inherit.aes = TRUE) {
+                            position = "identity",
+                            ...,
+                            sort_method = "auto", scale_depth = TRUE, force_convex = FALSE,
+                            na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
 
       layer(
             geom = GeomPolygon3D, mapping = mapping, data = data, stat = stat,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
-            params = list(sort_method = sort_method, scale_depth = scale_depth, na.rm = na.rm, ...)
+            params = list(sort_method = sort_method,
+                          scale_depth = scale_depth,
+                          force_convex = force_convex,
+                          na.rm = na.rm, ...)
       )
 }
+
+# force polygons to be convex, to prevent artifacts in surfaces that wrap beyond visible horizon
+drop_nonconvex_vertices <- function(data, force_convex){
+      if(!force_convex) return(data)
+      data %>%
+            group_by(group) %>%
+            mutate(simple = n() <= 3,
+                   keep = simple[1] | 1:n() %in% chull(x, y)) %>%
+            ungroup() %>%
+            filter(keep) %>%
+            select(-keep, -simple) %>%
+            return()
+}
+

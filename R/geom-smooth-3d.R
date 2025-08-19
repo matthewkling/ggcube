@@ -241,7 +241,7 @@ geom_smooth_3d <- function(mapping = NULL, data = NULL, stat = StatSmooth3D,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(method = method, formula = formula, method.args = method.args,
                           xlim = xlim, ylim = ylim, domain = domain, n = n, se = se, level = level,
-                          grid = grid, direction = direction,
+                          grid = grid, direction = direction, force_convex = TRUE,
                           se.fill = se.fill, se.colour = se.colour, se.alpha = se.alpha,
                           se.linewidth = se.linewidth, light = light, na.rm = na.rm, ...)
       )
@@ -537,7 +537,7 @@ stat_smooth_3d <- function(mapping = NULL, data = NULL,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(method = method, formula = formula, method.args = method.args,
                           xlim = xlim, ylim = ylim, domain = domain, n = n, se = se, level = level,
-                          grid = grid, direction = direction,
+                          grid = grid, direction = direction, force_convex = TRUE,
                           se.fill = se.fill, se.colour = se.colour, se.alpha = se.alpha,
                           se.linewidth = se.linewidth, light = light, na.rm = na.rm, ...)
       )
