@@ -98,6 +98,7 @@ for 3D plots.</p>
 <span class="r-in"><span><span class="co"># 3D plots can use positional syntax, or explicitly map to z</span></span></span>
 <span class="r-in"><span><span class="co"># same as: ggplot(mtcars, aes(mpg, wt, z = qsec)) + geom_point() + coord_3d()</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mtcars</span>, <span class="fu">aes</span><span class="op">(</span><span class="va">mpg</span>, <span class="va">wt</span>, <span class="va">qsec</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Unknown or uninitialised column: `cull_backfaces`.</span>
 <span class="r-plt img"><img src="aes-2.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Also works with non-ggcube z-aesthetic geoms</span></span></span>

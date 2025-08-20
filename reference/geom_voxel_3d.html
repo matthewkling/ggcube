@@ -53,6 +53,9 @@ Useful for volumetric data and 3D pixel art.</p>
 <span>  width <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  faces <span class="op">=</span> <span class="st">"all"</span>,</span>
 <span>  light <span class="op">=</span> <span class="fu">ggcube</span><span class="fu">::</span><span class="fu"><a href="light.html">light</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  cull_backfaces <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  sort_method <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  scale_depth <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  na.rm <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  show.legend <span class="op">=</span> <span class="cn">NA</span>,</span>
 <span>  inherit.aes <span class="op">=</span> <span class="cn">TRUE</span></span>
@@ -67,6 +70,9 @@ Useful for volumetric data and 3D pixel art.</p>
 <span>  width <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  faces <span class="op">=</span> <span class="st">"all"</span>,</span>
 <span>  light <span class="op">=</span> <span class="fu">ggcube</span><span class="fu">::</span><span class="fu"><a href="light.html">light</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  cull_backfaces <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  sort_method <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  scale_depth <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  na.rm <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  show.legend <span class="op">=</span> <span class="cn">NA</span>,</span>
 <span>  inherit.aes <span class="op">=</span> <span class="cn">TRUE</span></span>
@@ -86,32 +92,33 @@ Useful for volumetric data and 3D pixel art.</p>
 
 
 <dt id="arg-stat">stat<a class="anchor" aria-label="anchor" href="#arg-stat"></a></dt>
-<dd><p>The statistical transformation to use on the data. Defaults to StatVoxel3D.</p></dd>
+<dd><p>The statistical transformation to use on the data. Defaults to <code>StatVoxel3D</code>.</p></dd>
 
 
 <dt id="arg-position">position<a class="anchor" aria-label="anchor" href="#arg-position"></a></dt>
-<dd><p>Position adjustment, defaults to "identity".</p></dd>
+<dd><p>Position adjustment, defaults to "identity". To collapse the result
+onto one 2D surface, use <code><a href="position_on_face.html">position_on_face()</a></code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Other arguments passed on to the geom (typically <code><a href="geom_polygon_3d.html">geom_polygon_3d()</a></code>), such as
-<code>sort_method</code> and <code>scale_depth</code> as well as aesthetics like <code>colour</code>, <code>fill</code>, <code>linewidth</code>, etc.</p>
-<p>Note that voxel geometries sometimes require pairwise depth sorting for correct rendering.
-This is the default for smaller data sets, but not for larger data sets due to compute speed;
-in those cases you may wish to manually specify <code>sort_method = "pairwise"</code>.</p></dd>
+<dd><p>Other arguments passed on to the the layer function (typically GeomPolygon3D), such as
+aesthetics like <code>colour</code>, <code>fill</code>, <code>linewidth</code>, etc.</p></dd>
 
 
 <dt id="arg-width">width<a class="anchor" aria-label="anchor" href="#arg-width"></a></dt>
-<dd><p>Numeric value controlling voxel size as a fraction of grid spacing.
-Default is 1.0 (voxels touch each other). Use 0.8 for small gaps, 1.2 for overlap.
-Grid spacing is determined automatically using <code><a href="https://ggplot2.tidyverse.org/reference/resolution.html" class="external-link">resolution()</a></code> for each dimension.</p></dd>
+<dd><p>Numeric value controlling box width as a fraction of grid spacing.
+Default is 1.0 (volumes touch each other). Use 0.8 for small gaps, 1.2 for overlap.
+Grid spacing is determined automatically using <code><a href="https://ggplot2.tidyverse.org/reference/resolution.html" class="external-link">resolution()</a></code>.</p></dd>
 
 
 <dt id="arg-faces">faces<a class="anchor" aria-label="anchor" href="#arg-faces"></a></dt>
 <dd><p>Character vector specifying which faces to render. Options:</p><ul><li><p><code>"all"</code> (default): Render all 6 faces</p></li>
 <li><p><code>"none"</code>: Render no faces</p></li>
 <li><p>Vector of face names: <code>c("zmax", "xmin", "ymax")</code>, etc.</p></li>
-</ul><p>Valid face names: "xmin", "xmax", "ymin", "ymax", "zmin", "zmax".</p></dd>
+</ul><p>Valid face names: "xmin", "xmax", "ymin", "ymax", "zmin", "zmax".
+Note that this setting acts jointly with backface culling, which removes faces whose
+interior faces the viewer – e.g., when <code>cull_backfaces = TRUE</code> and <code>faces = "all"</code>
+(the default), only front faces are rendered.</p></dd>
 
 
 <dt id="arg-light">light<a class="anchor" aria-label="anchor" href="#arg-light"></a></dt>
@@ -119,7 +126,7 @@ Grid spacing is determined automatically using <code><a href="https://ggplot2.ti
 
 
 <dt id="arg-na-rm">na.rm<a class="anchor" aria-label="anchor" href="#arg-na-rm"></a></dt>
-<dd><p>If <code>FALSE</code>, missing values are removed with a warning.</p></dd>
+<dd><p>If <code>FALSE</code>, missing values are removed.</p></dd>
 
 
 <dt id="arg-show-legend">show.legend<a class="anchor" aria-label="anchor" href="#arg-show-legend"></a></dt>
@@ -131,9 +138,15 @@ Grid spacing is determined automatically using <code><a href="https://ggplot2.ti
 
 
 <dt id="arg-geom">geom<a class="anchor" aria-label="anchor" href="#arg-geom"></a></dt>
-<dd><p>The geometric object used to display the data. Defaults to GeomPolygon3D.</p></dd>
+<dd><p>The geometric object used to display the data. Defaults to <code>GeomPolygon3D</code>.</p></dd>
 
 </dl></div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>Note that voxel geometries sometimes require pairwise depth sorting for correct rendering.
+This is the default for smaller data sets, but not for larger data sets due to compute speed;
+in those cases you may wish to manually specify <code>sort_method = "pairwise"</code>.</p>
+    </div>
     <div class="section level2">
     <h2 id="aesthetics">Aesthetics<a class="anchor" aria-label="anchor" href="#aesthetics"></a></h2>
 
@@ -141,17 +154,12 @@ Grid spacing is determined automatically using <code><a href="https://ggplot2.ti
 <p>Voxel 3D requires the following aesthetics:</p><ul><li><p><strong>x</strong>: X coordinate (voxel center position)</p></li>
 <li><p><strong>y</strong>: Y coordinate (voxel center position)</p></li>
 <li><p><strong>z</strong>: Z coordinate (voxel center position)</p></li>
-</ul><p>And understands these additional aesthetics:</p><ul><li><p><strong>fill</strong>: Voxel fill color</p></li>
-<li><p><strong>colour</strong>: Voxel border color</p></li>
-<li><p><strong>alpha</strong>: Voxel transparency</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="computed-variables">Computed variables<a class="anchor" aria-label="anchor" href="#computed-variables"></a></h2>
 
 
-<ul><li><p><code>light</code>: Computed lighting value (numeric for most methods, hex color for <code>normal_rgb</code>)</p></li>
-<li><p><code>normal_x</code>, <code>normal_y</code>, <code>normal_z</code>: Face normal components</p></li>
-<li><p><code>group</code>: Hierarchical group identifier with format "voxel_XXXX__face_type" for proper depth sorting</p></li>
+<ul><li><p><code>normal_x</code>, <code>normal_y</code>, <code>normal_z</code>: Face normal components</p></li>
 <li><p><code>voxel_id</code>: Sequential voxel number</p></li>
 <li><p><code>face_type</code>: Face name ("zmax", "xmin", etc.)</p></li>
 </ul></div>

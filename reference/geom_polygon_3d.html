@@ -76,38 +76,17 @@ from <code><a href="geom_hull_3d.html">stat_hull_3d()</a></code> and <code><a hr
 
 
 <dt id="arg-position">position<a class="anchor" aria-label="anchor" href="#arg-position"></a></dt>
-<dd><p>Position adjustment, defaults to "identity".</p></dd>
+<dd><p>Position adjustment, defaults to "identity". To collapse the result
+onto one 2D surface, use <code><a href="position_on_face.html">position_on_face()</a></code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Other arguments passed on to <code><a href="https://ggplot2.tidyverse.org/reference/layer.html" class="external-link">layer()</a></code>.</p></dd>
-
-
-<dt id="arg-sort-method">sort_method<a class="anchor" aria-label="anchor" href="#arg-sort-method"></a></dt>
-<dd><p>Character indicating algorithm used to determine the order in which
-polygons are rendered.</p><ul><li><p><code>"painter"</code>: Polygons are sorted by the mean depth (distance from viewer after
-rotation) of their vertices. This is fast, but can give incorrect results in certain cases.</p></li>
-<li><p><code>"pairwise"</code>: A more intensive sorting algorithm that compares every pair of
-polygons in 3D to determine which face should be rendered behind the other;
-slower but more accurate.</p></li>
-<li><p><code>"auto"</code>: The default. Uses pairwise if polygon data has less
-than 500 rows and painter otherwise.</p></li>
-</ul></dd>
-
-
-<dt id="arg-scale-depth">scale_depth<a class="anchor" aria-label="anchor" href="#arg-scale-depth"></a></dt>
-<dd><p>Logical indicating whether polygon linewidths should be scaled to make closer lines
-wider and farther lines narrower. Default is TRUE. Scaling is based on the mean depth of a polygon.</p></dd>
-
-
-<dt id="arg-force-convex">force_convex<a class="anchor" aria-label="anchor" href="#arg-force-convex"></a></dt>
-<dd><p>Logical indicating whether to remove polygon vertices that are not part of the
-convex hull. Default is FALSE. Specifying TRUE can be useful for preventing artifacts in surfaces
-that have polygon tiles that wrap over a visible horizon.</p></dd>
+<dd><p>Other arguments passed on to the the layer function (typically GeomPolygon3D), such as
+aesthetics like <code>colour</code>, <code>fill</code>, <code>linewidth</code>, etc.</p></dd>
 
 
 <dt id="arg-na-rm">na.rm<a class="anchor" aria-label="anchor" href="#arg-na-rm"></a></dt>
-<dd><p>If <code>FALSE</code>, missing values are removed with a warning.</p></dd>
+<dd><p>If <code>FALSE</code>, missing values are removed.</p></dd>
 
 
 <dt id="arg-show-legend">show.legend<a class="anchor" aria-label="anchor" href="#arg-show-legend"></a></dt>
@@ -151,6 +130,7 @@ that have polygon tiles that wrap over a visible horizon.</p></dd>
 <span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">triangles</span>, <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span>, fill <span class="op">=</span> <span class="va">shape</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu">geom_polygon_3d</span><span class="op">(</span>color <span class="op">=</span> <span class="st">"black"</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Unknown or uninitialised column: `cull_backfaces`.</span>
 <span class="r-plt img"><img src="geom_polygon_3d-2.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Use `sort_method` to choose between depth sorting algorithms</span></span></span>
@@ -165,11 +145,13 @@ that have polygon tiles that wrap over a visible horizon.</p></dd>
 <span class="r-in"><span><span class="co"># fast, but rendering order is incorrect in this particular example</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu">geom_polygon_3d</span><span class="op">(</span>color <span class="op">=</span> <span class="st">"black"</span>, linewidth <span class="op">=</span> <span class="fl">1</span>, alpha <span class="op">=</span> <span class="fl">.75</span>,</span></span>
 <span class="r-in"><span>      sort_method <span class="op">=</span> <span class="st">"painter"</span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Unknown or uninitialised column: `cull_backfaces`.</span>
 <span class="r-plt img"><img src="geom_polygon_3d-3.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># correct rendering order (but slower for large data sets)</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu">geom_polygon_3d</span><span class="op">(</span>color <span class="op">=</span> <span class="st">"black"</span>, linewidth <span class="op">=</span> <span class="fl">1</span>, alpha <span class="op">=</span> <span class="fl">.75</span>,</span></span>
 <span class="r-in"><span>      sort_method <span class="op">=</span> <span class="st">"pairwise"</span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Unknown or uninitialised column: `cull_backfaces`.</span>
 <span class="r-plt img"><img src="geom_polygon_3d-4.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
