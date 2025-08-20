@@ -19,6 +19,10 @@ geom_density_3d(
   pad = 0.1,
   min_ndensity = 0,
   light = ggcube::light(),
+  cull_backfaces = FALSE,
+  sort_method = NULL,
+  force_convex = TRUE,
+  scale_depth = TRUE,
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE
@@ -38,6 +42,10 @@ stat_density_3d(
   pad = 0.1,
   min_ndensity = 0,
   light = ggcube::light(),
+  cull_backfaces = FALSE,
+  sort_method = NULL,
+  force_convex = TRUE,
+  scale_depth = TRUE,
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE
@@ -51,15 +59,16 @@ requires \code{x} and \code{y} aesthetics. By default, \code{fill} is mapped to
 \item{data}{The data to be displayed in this layer. Must contain x and y columns
 with point coordinates.}
 
-\item{stat}{The statistical transformation to use on the data. Defaults to \link{StatDensity3D}.}
+\item{stat}{The statistical transformation to use on the data. Defaults to \code{StatDensity3D}.}
 
-\item{position}{Position adjustment, defaults to "identity".}
+\item{position}{Position adjustment, defaults to "identity". To collapse the result
+onto one 2D surface, use \code{position_on_face()}.}
 
-\item{...}{Other arguments passed on to the geom (typically \code{geom_polygon_3d()}), such as
-\code{sort_method} and \code{scale_depth} as well as aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc.}
+\item{...}{Other arguments passed on to the the layer function (typically GeomPolygon3D), such as
+aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc.}
 
-\item{grid, n, direction}{Arguments passed to \code{make_tile_grid()} specifying the geometry,
-resolution, and orientation of the surface grid. See \code{?make_tile_grid()} for details.}
+\item{grid, n, direction}{Parameters determining the geometry, resolution, and
+orientation of the surface grid. See \link{grid_generation} for details.}
 
 \item{h}{Bandwidth vector. If \code{NULL} (default), uses automatic bandwidth selection
 via \code{MASS::bandwidth.nrd()}. Can be a single number (used for both dimensions)
@@ -79,14 +88,16 @@ shown for multiple groups, as in the example below. Default is 0 (no filtering).
 
 \item{light}{A lighting specification object created by \code{\link[=light]{light()}}, or NULL to disable shading.}
 
-\item{na.rm}{If \code{TRUE}, removes missing values before computing density.
-If \code{FALSE}, missing values will cause an error. Default is \code{FALSE}.}
+\item{cull_backfaces, sort_method, force_convex, scale_depth}{Advanced polygon
+rendering parameters. See \link{polygon_rendering} for details.}
+
+\item{na.rm}{If \code{FALSE}, missing values are removed.}
 
 \item{show.legend}{Logical indicating whether this layer should be included in legends.}
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics.}
 
-\item{geom}{The geometric object used to display the data. Defaults to \link{GeomPolygon3D}.}
+\item{geom}{The geometric object used to display the data. Defaults to \code{GeomPolygon3D}.}
 }
 \description{
 A 3D version of \code{ggplot2::geom_density_2d()}.
@@ -109,20 +120,13 @@ And optionally understands:
 }
 }
 
-\section{Computed variables}{
+\section{Computed variables specific to StatDensity3D}{
 
 \itemize{
-\item \code{x}, \code{y}: Grid coordinates for the density surface
-\item \code{z}: Same as \code{density} (for 3D surface height)
 \item \code{density}: The kernel density estimate at each grid point
 \item \code{ndensity}: Density estimate scaled to maximum of 1 within each group
 \item \code{count}: Density estimate × number of observations in group (expected count)
 \item \code{n}: Number of observations in each group
-\item \code{light}: Computed lighting value (numeric for most methods, hex color for \code{normal_rgb})
-\item \code{normal_x}, \code{normal_y}, \code{normal_z}: Surface normal components
-\item \code{slope}: Gradient magnitude from surface calculations
-\item \code{aspect}: Direction of steepest slope from surface calculations
-\item \code{dzdx}, \code{dzdy}: Partial derivatives from surface calculations
 }
 }
 
@@ -132,6 +136,18 @@ When aesthetics like \code{colour} or \code{fill} are mapped to categorical vari
 \code{stat_density_3d()} computes separate density surfaces for each group, just
 like \code{stat_density_2d()}. Each group gets its own density calculation with
 proper \code{count} and \code{n} values.
+}
+
+\section{Computed variables}{
+
+The following computed variables are available via \code{after_stat()}:
+\itemize{
+\item \code{x}, \code{y}, \code{z}: Grid coordinates and function values
+\item \code{normal_x}, \code{normal_y}, \code{normal_z}: Surface normal components
+\item \code{slope}: Gradient magnitude from surface calculations
+\item \code{aspect}: Direction of steepest slope from surface calculations
+\item \code{dzdx}, \code{dzdy}: Partial derivatives from surface calculation
+}
 }
 
 \examples{

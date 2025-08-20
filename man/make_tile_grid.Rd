@@ -29,7 +29,8 @@ generate the grid.}
 }
 \value{
 A data frame with the following columns: \code{x}, \code{y}, \code{group} (integer denoting
-unique polygon id), and \code{order} (integer giving vertex order, for plotting).
+unique polygon id), and \code{order} (integer giving vertex order for plotting; vertices
+are in counter-clockwise winding order).
 }
 \description{
 Creates a regular grid of tiles of specified resolution and geometry.

@@ -22,6 +22,10 @@
 #'     \item \code{"hsv"}: The default. Modifies _value_ component of HSV color (fades to bright colors at high end, black at low end)
 #'     \item \code{"hsl"}: Modifies _lightness_ component of HSL color (fades to white at high end, black at low end)
 #'   }
+#' @param fill Logical indicating whether to apply lighting to fill colors.
+#'   Default is TRUE.
+#' @param color Logical indicating whether to apply lighting to border/line colors.
+#'   Default is TRUE.
 #' @param contrast Numeric value greater than zero controlling the intensity of lighting effects.
 #'   1.0 (the default) gives full black-to-white range. Values less than 1 give subtler effects, while
 #'   values greater than 1 give more dramatic effects.
@@ -41,10 +45,12 @@
 #'   intensity falloff for positional lighting using inverse square law
 #'   (intensity ∝ 1/distance²). Only used when \code{position} is specified.
 #'   Default is FALSE.
-#' @param fill Logical indicating whether to apply lighting to fill colors.
-#'   Default is TRUE.
-#' @param color Logical indicating whether to apply lighting to border/line colors.
-#'   Default is TRUE.
+#' @param backface_scale,backface_offset Numeric values that determine how "frontface" light values get
+#'   modified (scaled and then offset) to derive "backface" light values. A backface is the side of a
+#'   polygon that faces the underside of a surface or the inside of a volume. Frontface light values are
+#'   typically in the range `[-1, 1]` (unless `contrast` is boosted). The default scale of -1 gives
+#'   backfaces highly contrasting lighting to frontfaces. To light backfaces the same as frontfaces,
+#'   set scale to 1. To uniformly darken (brighten) all backfaces, use a negative (positive) offset.
 #'
 #' @return A \code{lighting} object that can be passed to 3D surface stats.
 #' @examples
@@ -52,7 +58,7 @@
 #' p <- ggplot(mountain, aes(x, y, z)) + coord_3d(ratio = c(1, 1.5, 1))
 #'
 #'
-#' # Light qualities ------------------------
+#' # Light qualities ----------------------------------------------------------
 #'
 #' # default diffuse lighting
 #' p + stat_surface_3d(fill = "steelblue", color = "black")
@@ -70,10 +76,10 @@
 #'                     light = light(method = "direct", contrast = .75))
 #'
 #' # use "rgb" to plot each face orientation in a unique color
-#' p + stat_surface_3d(light = light(method = "normal_rgb"))
+#' # p + stat_surface_3d(light = light(method = "normal_rgb"))
 #'
 #'
-#' # Lighting targets -----------------------
+#' # Lighting targets ---------------------------------------------------------
 #'
 #' # use `fill` and `color` to select which aesthetics get lighting
 #' p + stat_surface_3d(fill = "steelblue", color = "black",
@@ -91,7 +97,7 @@
 #'       guides(fill = guide_colorbar_3d())
 #'
 #'
-#' # Light sources -----------------------
+#' # Light sources ------------------------------------------------------------
 #'
 #' # set directional light as horizontal from back left corner
 #' # (left = negative x, back = positive y, horizontal = neutral z)
@@ -104,16 +110,41 @@
 #'                                   distance_falloff = TRUE,
 #'                                   mode = "hsl", contrast = .9))
 #'
+#'
+#' # Backface lighting --------------------------------------------------------
+#'
+#' # backfaces get "opposite" lighting by default (backface_scale = -1)
+#' p <- ggplot() + coord_3d(pitch = 0, roll = -70, yaw = 0)
+#' p + geom_function_3d(fun = function(x, y) x^2 + y^2,
+#'     xlim = c(-3, 3), ylim = c(-3, 3),
+#'     fill = "steelblue", color = "steelblue",
+#'     light = light(mode = "hsl"))
+#'
+#' # use backface_scale = 1 to light backfaces as if they're fontfaces
+#' p + geom_function_3d(fun = function(x, y) x^2 + y^2,
+#'     xlim = c(-3, 3), ylim = c(-3, 3),
+#'     fill = "steelblue", color = "steelblue",
+#'     light = light(backface_scale = 1, mode = "hsl"))
+#'
+#' # use backface_offset to uniformly darken (or lighten) backfaces
+#' p + geom_function_3d(fun = function(x, y) x^2 + y^2,
+#'     xlim = c(-3, 3), ylim = c(-3, 3),
+#'     fill = "steelblue", color = "steelblue",
+#'     light = light(backface_scale = 1, mode = "hsl",
+#'                   backface_offset = -.5))
+#'
 #' @seealso \code{\link{stat_surface_3d}}, \code{\link{stat_voxel_3d}}, \code{\link{stat_pillar_3d}}, \code{\link{scale_colorbar_shade}}
 #' @export
 light <- function(method = "diffuse",
-                     direction = c(1, 0, 1),
-                     position = NULL,
-                     distance_falloff = FALSE,
-                     fill = TRUE,
-                     color = TRUE,
-                     mode = "hsv",
-                     contrast = 1.0) {
+                  direction = c(1, 0, 1),
+                  position = NULL,
+                  distance_falloff = FALSE,
+                  fill = TRUE,
+                  color = TRUE,
+                  mode = "hsv",
+                  contrast = 1.0,
+                  backface_scale = -1,
+                  backface_offset = 0) {
 
       # Validate method
       valid_methods <- c("direct", "diffuse", "normal_rgb")
@@ -181,7 +212,9 @@ light <- function(method = "diffuse",
                   distance_falloff = distance_falloff,
                   shade = shade,
                   shade_strength = contrast,
-                  shade_mode = mode
+                  shade_mode = mode,
+                  backface_scale = backface_scale,
+                  backface_offset = backface_offset
             ),
             class = "light"
       )
@@ -497,9 +530,6 @@ compute_light_in_coord <- function(data, standardized_coords, scale_ranges, scal
       data$shade_mode <- light$shade_mode
       data$lighting_method <- light$method
 
-      # Remove lighting column (no longer needed)
-      data$lighting_spec <- NULL
-
       return(data)
 }
 
@@ -540,63 +570,34 @@ compute_surface_gradients_from_vertices <- function(data) {
 
 #' Compute triangle normals from vertex coordinates
 #'
-#' @param data Face vertex data
-#' @param face_data Unique face data
+#' @param data Face vertex data with standardized CCW winding order
+#' @param face_data Unique face data (unused, kept for compatibility)
 #' @return Matrix with normalized normal vectors (one row per face, 3 columns)
 #' @keywords internal
 compute_triangle_normals <- function(data, face_data) {
 
-      # Extract hull ID from hierarchical names (e.g., "hulls__hull53629_tri333" -> "hull53629")
-      data <- data %>%
-            mutate(hull_id = sub(".*__(hull[0-9]+)_.*", "\\1", group))
-
-      # Compute hull center per hull group
-      hull_centers <- data %>%
-            group_by(hull_id) %>%
-            summarise(
-                  hull_center_x = mean(x),
-                  hull_center_y = mean(y),
-                  hull_center_z = mean(z),
-                  .groups = "drop"
-            )
-
-      # Rest of computation using hull_id instead of top_group
       normals_data <- data %>%
             group_by(group) %>%
             summarise(
-                  hull_id = first(hull_id),
-                  # Cross product computation (same as before)
+                  # Get triangle vertices
                   x1 = x[1], y1 = y[1], z1 = z[1],
                   x2 = x[2], y2 = y[2], z2 = z[2],
                   x3 = x[3], y3 = y[3], z3 = z[3],
                   .groups = "drop"
             ) %>%
-            # Join with appropriate hull center
-            left_join(hull_centers, by = "hull_id") %>%
             mutate(
-                  # [rest of normal computation same as before]
+                  # Cross product: (v2-v1) × (v3-v1)
                   v1_x = x2 - x1, v1_y = y2 - y1, v1_z = z2 - z1,
                   v2_x = x3 - x1, v2_y = y3 - y1, v2_z = z3 - z1,
                   normal_x = v1_y * v2_z - v1_z * v2_y,
                   normal_y = v1_z * v2_x - v1_x * v2_z,
                   normal_z = v1_x * v2_y - v1_y * v2_x,
+
+                  # Normalize
                   normal_length = sqrt(normal_x^2 + normal_y^2 + normal_z^2),
                   normal_x = ifelse(normal_length > 0, normal_x / normal_length, 0),
                   normal_y = ifelse(normal_length > 0, normal_y / normal_length, 0),
-                  normal_z = ifelse(normal_length > 0, normal_z / normal_length, 1),
-
-                  face_center_x = (x1 + x2 + x3) / 3,
-                  face_center_y = (y1 + y2 + y3) / 3,
-                  face_center_z = (z1 + z2 + z3) / 3,
-
-                  to_face_x = face_center_x - hull_center_x,
-                  to_face_y = face_center_y - hull_center_y,
-                  to_face_z = face_center_z - hull_center_z,
-
-                  dot_product = normal_x * to_face_x + normal_y * to_face_y + normal_z * to_face_z,
-                  normal_x = ifelse(dot_product < 0, -normal_x, normal_x),
-                  normal_y = ifelse(dot_product < 0, -normal_y, normal_y),
-                  normal_z = ifelse(dot_product < 0, -normal_z, normal_z)
+                  normal_z = ifelse(normal_length > 0, normal_z / normal_length, 1)
             )
 
       return(as.matrix(normals_data[, c("normal_x", "normal_y", "normal_z")]))

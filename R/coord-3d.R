@@ -92,6 +92,7 @@
 #' and grid elements, you can use `panel.background`, etc. to style both background and foreground faces simultaneously.
 #'
 #' @examples
+#' # base plot used in all examples
 #' p <- ggplot() +
 #'   geom_function_3d(
 #'     aes(fill = after_stat(z), color = after_stat(z)),
@@ -133,10 +134,10 @@
 #' # orthographic projection, effectively dist = Inf
 #' p + coord_3d(persp = FALSE)
 #'
-#' # Use `scales` and `ratio` to modify aspect ratio --------------------------
+#' # Use `scales` and `ratio` to control aspect ratio -------------------------
 #'
-#' # Default "free" scales shown above give maximum visual range
-#' # Fixed scales (proportions match data scales, like coord_fixed)
+#' # The default "free" scales shown above give cube with maximum visual range.
+#' # Use "fixed" scales to make figure match data scales, like coord_fixed.
 #' p + coord_3d(scales = "fixed")
 #'
 #' # Custom aspect ratios: make y twice as long visually
@@ -566,7 +567,7 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                          # Project data onto cube face, if applicable
                          result <- project_to_face(data, result, panel_params$proj)
 
-                         # Expand ref_circle points to circular polygons
+                         # Expand ref_circle points to circular polygons, if applicable
                          data <- points_to_circles(data, result)
 
                          # Apply 3D transformation (returns x, y, z, depth, depth_scale)
@@ -578,6 +579,9 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
 
                          # Apply final coordinate transformation to fit plot bounds
                          result <- scale_to_npc_coordinates(result, plot_bounds = panel_params$plot_bounds)
+
+                         # Backface culling and light modification
+                         result <- process_backfaces(result)
 
                          # Hierarchical depth sorting
                          result <- sort_by_depth(result)
@@ -992,6 +996,57 @@ scale_to_npc_coordinates <- function(result, plot_bounds) {
 
 validate_coord3d <- function(coord){
       stopifnot("Did you forget to add `coord_3d()` to your plot?" = inherits(coord, "Coord3D"))
+}
+
+process_backfaces <- function(data) {
+
+      # Compute back_face mask
+      data <- data %>%
+            group_by(group) %>%
+            mutate(
+                  n_vertices = n(),
+
+                  # Simple test (old method)
+                  back_face_simple = ((x[2] - x[1]) * (y[3] - y[1]) - (x[3] - x[1]) * (y[2] - y[1])) < 0,
+
+                  # Complex test (new method)
+                  back_face = case_when(
+                        n_vertices != 4 ~ back_face_simple,
+                        n_vertices == 4 ~ {
+                              # Test all 4 triangulations
+                              tri_123 <- (x[2] - x[1]) * (y[3] - y[1]) - (x[3] - x[1]) * (y[2] - y[1]) < 0
+                              tri_134 <- (x[3] - x[1]) * (y[4] - y[1]) - (x[4] - x[1]) * (y[3] - y[1]) < 0
+                              tri_124 <- (x[2] - x[1]) * (y[4] - y[1]) - (x[4] - x[1]) * (y[2] - y[1]) < 0
+                              tri_234 <- (x[3] - x[2]) * (y[4] - y[2]) - (x[4] - x[2]) * (y[3] - y[2]) < 0
+
+                              # # Print debug info for first few groups
+                              # if (cur_group_id() <= 3) {
+                              #       cat("Group", cur_group_id(), "triangulations:", tri_123, tri_134, tri_124, tri_234, "\n")
+                              # }
+
+                              # Both triangulations must be consistently negative
+                              (tri_123 & tri_134) & (tri_124 & tri_234)
+                        }
+                  )
+            )
+
+
+      # Apply culling if requested
+      cull_backfaces <- data$cull_backfaces[1] %||% FALSE
+      if(cull_backfaces) {
+            data <- filter(data, !back_face)
+      }
+
+      # Apply lighting effects if present
+      if("lighting_spec" %in% names(data)) {
+            scl <- data$lighting_spec[[1]]$backface_scale %||% 1
+            off <- data$lighting_spec[[1]]$backface_offset %||% 0
+            if(scl != 1 || off != 0) {
+                  data <- mutate(data, light = ifelse(back_face, light * scl + off, light))
+            }
+      }
+
+      return(select(data, -back_face))
 }
 
 

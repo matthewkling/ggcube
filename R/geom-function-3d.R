@@ -14,7 +14,9 @@ StatFunction3D <- ggproto("StatFunction3D", Stat,
                           },
 
                           compute_panel = function(data, scales, fun = NULL, xlim = NULL, ylim = NULL,
-                                                   n = NULL, grid = NULL, direction = NULL, light = NULL, na.rm = FALSE) {
+                                                   n = NULL, grid = NULL, direction = NULL,
+                                                   cull_backfaces = FALSE,
+                                                   light = NULL, na.rm = FALSE) {
 
                                 # Validate function
                                 if (is.null(fun)) {
@@ -90,6 +92,7 @@ StatFunction3D <- ggproto("StatFunction3D", Stat,
                                 # Add computed variables and light info
                                 grid_data <- grid_data %>%
                                       compute_surface_vars() %>%
+                                      mutate(cull_backfaces = cull_backfaces) %>%
                                       attach_light(light)
 
                                 return(grid_data)
@@ -109,44 +112,34 @@ ensure_nonempty_data <- function(data) {
 #' A 3D version of `ggplot2::stat_function()`.
 #' Creates surfaces by evaluating a function f(x,y) = z over a regular grid.
 #' The function is evaluated at each grid point and the resulting surface is rendered
-#' as in [stat_surface_3d()].
+#' as a 3D surface.
 #'
 #' @param mapping Set of aesthetic mappings created by [aes()]. Since this stat
 #'   generates its own data, typically only used for additional aesthetics like
 #'   `fill` or `color` based on computed variables. Fill is mapped to `after_stat(z)` by default.
-#' @param fun Function to evaluate. Must accept two arguments (vectors corresponding
-#' to x and y axis values) and return a numeric vector of z values. Required parameter.
 #' @param data The data to be displayed in this layer. Usually not needed since
 #'   the stat generates its own data from the function.
-#' @param stat The statistical transformation to use on the data. Defaults to [StatFunction3D].
-#' @param geom The geometric object used to display the data. Defaults to [GeomPolygon3D].
-#' @param position Position adjustment, defaults to "identity". To collapse the result
-#'   onto one 2D surface, use `position_on_face()`.
-#' @param na.rm If `TRUE`, removes missing values from function evaluation results.
-#'   If `FALSE`, missing values will cause an error. Default is `FALSE`.
-#' @param show.legend Logical indicating whether this layer should be included in legends.
-#' @param inherit.aes If `FALSE`, overrides the default aesthetics.
+#' @param stat The statistical transformation to use on the data. Defaults to `StatFunction3D`.
+#' @param geom The geometric object used to display the data. Defaults to `GeomPolygon3D`.
+#'
+#' @param fun Function to evaluate. Must accept two arguments (vectors corresponding
+#' to x and y axis values) and return a numeric vector of z values. Required parameter.
 #' @param xlim,ylim Numeric vectors of length 2 giving the range for x and y values.
 #'   If `NULL` (default), uses the scale ranges from the plot, which can be set via
 #'   `xlim()` and `ylim()`, or trained by supplying data to the plot.
-#' @param grid,n,direction Arguments passed to `make_tile_grid()` specifying the geometry,
-#'   resolution, and orientation of the surface grid. See `?make_tile_grid()` for details.
-#' @param light A lighting specification object created by \code{light()}, or NULL to disable shading.
-#' @param ... Other arguments passed on to the geom (typically `geom_polygon_3d()`), such as
-#'   `sort_method` and `scale_depth` as well as aesthetics like `colour`, `fill`, `linewidth`, etc.
+#'
+#' @inheritParams grid_params
+#' @inheritParams polygon_params
+#' @inheritParams light_param
+#' @inheritParams position_param
+#'
 #'
 #' @section Aesthetics:
 #' `stat_function_3d()` generates its own x, y, z coordinates, so typically no
 #' positional aesthetics are needed in the mapping. However, you can use computed
-#' variables with [after_stat()]:
+#' variables with [after_stat()].
 #'
-#' @section Computed variables:
-#' - `x`, `y`, `z`: Grid coordinates and function values
-#' - `light`: Computed lighting value (numeric for most methods, hex color for `normal_rgb`)
-#' - `normal_x`, `normal_y`, `normal_z`: Surface normal components
-#' - `slope`: Gradient magnitude from surface calculations
-#' - `aspect`: Direction of steepest slope from surface calculations
-#' - `dzdx`, `dzdy`: Partial derivatives from surface calculations
+#' @inheritSection surface_computed_vars Computed variables
 #'
 #' @examples
 #' library(ggplot2)
@@ -212,6 +205,8 @@ geom_function_3d <- function(mapping = NULL,
                              xlim = NULL, ylim = NULL,
                              n = NULL, grid = NULL, direction = NULL,
                              light = ggcube::light(),
+                             cull_backfaces = FALSE, sort_method = NULL,
+                             force_convex = TRUE, scale_depth = TRUE,
                              na.rm = FALSE,
                              show.legend = NA,
                              inherit.aes = TRUE) {
@@ -221,9 +216,12 @@ geom_function_3d <- function(mapping = NULL,
 
       layer(data = data, mapping = mapping, stat = stat, geom = GeomPolygon3D,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
-            params = list(fun = fun, xlim = xlim, ylim = ylim, force_convex = TRUE,
+            params = list(fun = fun, xlim = xlim, ylim = ylim,
                           n = n, grid = grid, direction = direction,
-                          light = light, na.rm = na.rm, ...)
+                          light = light,
+                          force_convex = force_convex, cull_backfaces = cull_backfaces,
+                          sort_method = sort_method, scale_depth = scale_depth,
+                          na.rm = na.rm, ...)
       )
 }
 
@@ -238,6 +236,8 @@ stat_function_3d <- function(mapping = NULL,
                              fun = NULL,
                              xlim = NULL, ylim = NULL,
                              n = NULL, grid = NULL, direction = NULL,
+                             cull_backfaces = FALSE, sort_method = NULL,
+                             force_convex = TRUE, scale_depth = TRUE,
                              light = ggcube::light(),
                              na.rm = FALSE,
                              show.legend = NA,
@@ -248,8 +248,11 @@ stat_function_3d <- function(mapping = NULL,
 
       layer(data = data, mapping = mapping, stat = StatFunction3D, geom = geom,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
-            params = list(fun = fun, xlim = xlim, ylim = ylim, force_convex = TRUE,
+            params = list(fun = fun, xlim = xlim, ylim = ylim,
                           n = n, grid = grid, direction = direction,
-                          light = light, na.rm = na.rm, ...)
+                          light = light,
+                          force_convex = force_convex, cull_backfaces = cull_backfaces,
+                          sort_method = sort_method, scale_depth = scale_depth,
+                          na.rm = na.rm, ...)
       )
 }

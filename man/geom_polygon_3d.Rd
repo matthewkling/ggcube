@@ -25,30 +25,13 @@ geom_polygon_3d(
 
 \item{stat}{The statistical transformation to use on the data. Defaults to \link{StatIdentity3D}.}
 
-\item{position}{Position adjustment, defaults to "identity".}
+\item{position}{Position adjustment, defaults to "identity". To collapse the result
+onto one 2D surface, use \code{position_on_face()}.}
 
-\item{...}{Other arguments passed on to \code{\link[=layer]{layer()}}.}
+\item{...}{Other arguments passed on to the the layer function (typically GeomPolygon3D), such as
+aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc.}
 
-\item{sort_method}{Character indicating algorithm used to determine the order in which
-polygons are rendered.
-\itemize{
-\item \code{"painter"}: Polygons are sorted by the mean depth (distance from viewer after
-rotation) of their vertices. This is fast, but can give incorrect results in certain cases.
-\item \code{"pairwise"}: A more intensive sorting algorithm that compares every pair of
-polygons in 3D to determine which face should be rendered behind the other;
-slower but more accurate.
-\item \code{"auto"}: The default. Uses pairwise if polygon data has less
-than 500 rows and painter otherwise.
-}}
-
-\item{scale_depth}{Logical indicating whether polygon linewidths should be scaled to make closer lines
-wider and farther lines narrower. Default is TRUE. Scaling is based on the mean depth of a polygon.}
-
-\item{force_convex}{Logical indicating whether to remove polygon vertices that are not part of the
-convex hull. Default is FALSE. Specifying TRUE can be useful for preventing artifacts in surfaces
-that have polygon tiles that wrap over a visible horizon.}
-
-\item{na.rm}{If \code{FALSE}, missing values are removed with a warning.}
+\item{na.rm}{If \code{FALSE}, missing values are removed.}
 
 \item{show.legend}{Logical indicating whether this layer should be included in legends.}
 

@@ -80,13 +80,9 @@ GeomSmooth3D <- ggproto("GeomSmooth3D", Geom,
 #'   requires `x`, `y`, and `z` aesthetics from the input data. By default, fill is
 #'   mapped to `after_stat(fitted)`.
 #' @param data The data to be displayed in this layer. Must contain x, y, z columns.
-#' @param stat The statistical transformation to use on the data. Defaults to [StatSmooth3D].
-#' @param geom The geometric object used to display the data. Defaults to [GeomPolygon3D].
-#' @param position Position adjustment, defaults to "identity".
-#' @param na.rm If `TRUE`, removes missing values before fitting the model.
-#'   If `FALSE`, missing values will cause an error. Default is `FALSE`.
-#' @param show.legend Logical indicating whether this layer should be included in legends.
-#' @param inherit.aes If `FALSE`, overrides the default aesthetics.
+#' @param stat The statistical transformation to use on the data. Defaults to `StatSmooth3D`.
+#' @param geom The geometric object used to display the data. Defaults to `GeomPolygon3D`.
+#'
 #' @param method Smoothing method to use. Currently supported:
 #'   \itemize{
 #'     \item \code{"loess"} (default): Local polynomial regression
@@ -105,10 +101,7 @@ GeomSmooth3D <- ggproto("GeomSmooth3D", Geom,
 #'   the predictors.The alternative, `"chull"`, shows predictions only within the convex
 #'   hull of the input data, which prevents extrapolation into unoccupied corners of predictor space.
 #' @param xlim,ylim Numeric vectors of length 2 giving the range for prediction grid.
-#'   If `NULL` (default), uses the exact data range with no extrapolation, following
-#'   [geom_smooth()] conventions.
-#' @param grid,n,direction Arguments passed to `make_tile_grid()` specifying the geometry,
-#'   resolution, and orientation of the surface grid. See `?make_tile_grid()` for details.
+#'   If `NULL` (default), uses the exact data range with no extrapolation.
 #' @param se Logical indicating whether to display confidence interval bands around
 #'   the smooth; if `TRUE`, these are rendered as additional surfaces; they inherit
 #'   aesthetics from the primary smooth layer unless otherwise specified.
@@ -121,9 +114,11 @@ GeomSmooth3D <- ggproto("GeomSmooth3D", Geom,
 #' @param se.alpha Alpha transparency for confidence interval bands. Defaults to 0.5.
 #' @param se.linewidth Line width for confidence interval band borders. If `NULL`,
 #'   inherits from the main surface `linewidth` aesthetic.
-#' @param light A lighting specification object created by [light()], or NULL to disable shading.
-#' @param ... Other arguments passed on to the geom (typically `geom_smooth_3d()`), such as
-#'   `sort_method` and `scale_depth` as well as aesthetics like `colour`, `fill`, `linewidth`, etc.
+#'
+#' @inheritParams grid_params
+#' @inheritParams polygon_params
+#' @inheritParams light_param
+#' @inheritParams position_param
 #'
 #' @section Aesthetics:
 #' `stat_smooth_3d()` requires the following aesthetics from input data:
@@ -131,16 +126,12 @@ GeomSmooth3D <- ggproto("GeomSmooth3D", Geom,
 #' - **y**: Y coordinate
 #' - **z**: Z coordinate (response variable to be smoothed)
 #'
-#' @section Computed variables:
-#' - `x`, `y`, `z`: Grid coordinates and smoothed predictions
+#' @inheritSection surface_computed_vars Computed variables
+#'
+#' @section Computed variables specific to StatSmooth3D:
+#' - `level`: Type of surface ("fitted", "upper CI", or "lower CI" for confidence bands)
 #' - `fitted`: Smoothed predictions (same as `z` when `level == "fitted"`)
 #' - `se`: Standard errors of the fitted values (available when `se = TRUE`)
-#' - `level`: Type of surface ("fitted", "upper CI", or "lower CI" for confidence bands)
-#' - `light`: Computed lighting value (numeric for most methods, hex color for `normal_rgb`)
-#' - `normal_x`, `normal_y`, `normal_z`: Surface normal components
-#' - `slope`: Gradient magnitude from surface calculations
-#' - `aspect`: Direction of steepest slope from surface calculations
-#' - `dzdx`, `dzdy`: Partial derivatives from surface calculations
 #'
 #' @examples
 #' # Generate scattered 3D data
@@ -227,6 +218,8 @@ geom_smooth_3d <- function(mapping = NULL, data = NULL, stat = StatSmooth3D,
                            se.alpha = 0.5,
                            se.linewidth = NULL,
                            light = NULL,
+                           cull_backfaces = FALSE, sort_method = NULL,
+                           force_convex = TRUE, scale_depth = TRUE,
                            na.rm = FALSE,
                            show.legend = NA,
                            inherit.aes = TRUE) {
@@ -241,7 +234,9 @@ geom_smooth_3d <- function(mapping = NULL, data = NULL, stat = StatSmooth3D,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(method = method, formula = formula, method.args = method.args,
                           xlim = xlim, ylim = ylim, domain = domain, n = n, se = se, level = level,
-                          grid = grid, direction = direction, force_convex = TRUE,
+                          grid = grid, direction = direction,
+                          force_convex = force_convex, cull_backfaces = cull_backfaces,
+                          sort_method = sort_method, scale_depth = scale_depth,
                           se.fill = se.fill, se.colour = se.colour, se.alpha = se.alpha,
                           se.linewidth = se.linewidth, light = light, na.rm = na.rm, ...)
       )
@@ -258,7 +253,7 @@ StatSmooth3D <- ggproto("StatSmooth3D", Stat,
                                           fill = after_stat(fitted)),
 
                         compute_group = function(data, scales, method = "loess", formula = NULL,
-                                                 method.args = list(),
+                                                 method.args = list(), cull_backfaces = FALSE,
                                                  xlim = NULL, ylim = NULL, n = NULL, grid = NULL, direction = NULL,
                                                  light = NULL, na.rm = FALSE, domain = "chull",
                                                  se = FALSE, level = 0.95, se.fill = NULL, se.colour = NULL,
@@ -357,6 +352,7 @@ StatSmooth3D <- ggproto("StatSmooth3D", Stat,
                               # Add computed variables and light info
                               surfaces <- surfaces %>%
                                     compute_surface_vars() %>%
+                                    mutate(cull_backfaces = cull_backfaces) %>%
                                     attach_light(light)
 
                               return(surfaces)
@@ -523,6 +519,8 @@ stat_smooth_3d <- function(mapping = NULL, data = NULL,
                            se.alpha = 0.5,
                            se.linewidth = NULL,
                            light = NULL,
+                           cull_backfaces = FALSE, sort_method = NULL,
+                           force_convex = TRUE, scale_depth = TRUE,
                            na.rm = FALSE,
                            show.legend = NA,
                            inherit.aes = TRUE) {
@@ -537,7 +535,9 @@ stat_smooth_3d <- function(mapping = NULL, data = NULL,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(method = method, formula = formula, method.args = method.args,
                           xlim = xlim, ylim = ylim, domain = domain, n = n, se = se, level = level,
-                          grid = grid, direction = direction, force_convex = TRUE,
+                          grid = grid, direction = direction,
+                          force_convex = force_convex, cull_backfaces = cull_backfaces,
+                          sort_method = sort_method, scale_depth = scale_depth,
                           se.fill = se.fill, se.colour = se.colour, se.alpha = se.alpha,
                           se.linewidth = se.linewidth, light = light, na.rm = na.rm, ...)
       )

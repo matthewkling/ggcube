@@ -12,7 +12,9 @@ light(
   fill = TRUE,
   color = TRUE,
   mode = "hsv",
-  contrast = 1
+  contrast = 1,
+  backface_scale = -1,
+  backface_offset = 0
 )
 }
 \arguments{
@@ -59,6 +61,13 @@ Default is TRUE.}
 \item{contrast}{Numeric value greater than zero controlling the intensity of lighting effects.
 1.0 (the default) gives full black-to-white range. Values less than 1 give subtler effects, while
 values greater than 1 give more dramatic effects.}
+
+\item{backface_scale, backface_offset}{Numeric values that determine how "frontface" light values get
+modified (scaled and then offset) to derive "backface" light values. A backface is the side of a
+polygon that faces the underside of a surface or the inside of a volume. Frontface light values are
+typically in the range \verb{[-1, 1]} (unless \code{contrast} is boosted). The default scale of -1 gives
+backfaces highly contrasting lighting to frontfaces. To light backfaces the same as frontfaces,
+set scale to 1. To uniformly darken (brighten) all backfaces, use a negative (positive) offset.}
 }
 \value{
 A \code{lighting} object that can be passed to 3D surface stats.
@@ -79,7 +88,7 @@ for examples.
 p <- ggplot(mountain, aes(x, y, z)) + coord_3d(ratio = c(1, 1.5, 1))
 
 
-# Light qualities ------------------------
+# Light qualities ----------------------------------------------------------
 
 # default diffuse lighting
 p + stat_surface_3d(fill = "steelblue", color = "black")
@@ -97,10 +106,10 @@ p + stat_surface_3d(fill = "steelblue", color = "black",
                     light = light(method = "direct", contrast = .75))
 
 # use "rgb" to plot each face orientation in a unique color
-p + stat_surface_3d(light = light(method = "normal_rgb"))
+# p + stat_surface_3d(light = light(method = "normal_rgb"))
 
 
-# Lighting targets -----------------------
+# Lighting targets ---------------------------------------------------------
 
 # use `fill` and `color` to select which aesthetics get lighting
 p + stat_surface_3d(fill = "steelblue", color = "black",
@@ -118,7 +127,7 @@ p + stat_surface_3d(aes(fill = z, color = z),
       guides(fill = guide_colorbar_3d())
 
 
-# Light sources -----------------------
+# Light sources ------------------------------------------------------------
 
 # set directional light as horizontal from back left corner
 # (left = negative x, back = positive y, horizontal = neutral z)
@@ -130,6 +139,29 @@ p + stat_surface_3d(fill = "red", color = "red",
                     light = light(position = c(.5, .7, 95),
                                   distance_falloff = TRUE,
                                   mode = "hsl", contrast = .9))
+
+
+# Backface lighting --------------------------------------------------------
+
+# backfaces get "opposite" lighting by default (backface_scale = -1)
+p <- ggplot() + coord_3d(pitch = 0, roll = -70, yaw = 0)
+p + geom_function_3d(fun = function(x, y) x^2 + y^2,
+    xlim = c(-3, 3), ylim = c(-3, 3),
+    fill = "steelblue", color = "steelblue",
+    light = light(mode = "hsl"))
+
+# use backface_scale = 1 to light backfaces as if they're fontfaces
+p + geom_function_3d(fun = function(x, y) x^2 + y^2,
+    xlim = c(-3, 3), ylim = c(-3, 3),
+    fill = "steelblue", color = "steelblue",
+    light = light(backface_scale = 1, mode = "hsl"))
+
+# use backface_offset to uniformly darken (or lighten) backfaces
+p + geom_function_3d(fun = function(x, y) x^2 + y^2,
+    xlim = c(-3, 3), ylim = c(-3, 3),
+    fill = "steelblue", color = "steelblue",
+    light = light(backface_scale = 1, mode = "hsl",
+                  backface_offset = -.5))
 
 }
 \seealso{

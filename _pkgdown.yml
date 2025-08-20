@@ -17,7 +17,9 @@ reference:
   - light
   - guide_3d
   - make_tile_grid
+  - grid_generation
   - element_rect
+  - polygon_rendering
 - title: Z axis scales
 - contents:
   - scale_z_continuous

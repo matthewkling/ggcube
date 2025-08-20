@@ -1,8 +1,13 @@
 StatHull3D <- ggproto("StatHull3D", Stat,
                       required_aes = c("x", "y", "z"),
-
-                      compute_group = function(data, scales, method = "convex", radius = NA, light = NULL) {
+                      compute_group = function(data, scales,
+                                               method = "convex", radius = NA,
+                                               cull_backfaces = NULL,
+                                               light = NULL) {
                             coords <- as.matrix(data[, c("x", "y", "z")])
+
+                            # Compute hull center in original data space
+                            hull_center <- colMeans(coords)
 
                             # Get triangle indices
                             tri <- switch(method,
@@ -14,7 +19,6 @@ StatHull3D <- ggproto("StatHull3D", Stat,
                                                 ashape <- alphashape3d::ashape3d(coords, alpha = radius^2)
                                                 tri <- ashape$triang
                                                 alpha_triangles <- tri[tri[,ncol(tri)] %in% c(2, 3), 1:3]
-
                                                 if (nrow(alpha_triangles) > 0) {
                                                       alpha_triangles
                                                 } else {
@@ -41,7 +45,45 @@ StatHull3D <- ggproto("StatHull3D", Stat,
                                   stop("No triangles generated - try adjusting alpha parameter or check data")
                             }
 
-                            # Assemble triangle vertices
+                            # Standardize triangle winding order and compute normals
+                            normals <- matrix(nrow = nrow(tri), ncol = 3)
+                            for (i in 1:nrow(tri)) {
+                                  # Get triangle vertices
+                                  v1 <- coords[tri[i, 1], ]
+                                  v2 <- coords[tri[i, 2], ]
+                                  v3 <- coords[tri[i, 3], ]
+
+                                  # Compute face normal using cross product (v2-v1) × (v3-v1)
+                                  edge1 <- v2 - v1
+                                  edge2 <- v3 - v1
+                                  normal <- c(
+                                        edge1[2] * edge2[3] - edge1[3] * edge2[2],  # x component
+                                        edge1[3] * edge2[1] - edge1[1] * edge2[3],  # y component
+                                        edge1[1] * edge2[2] - edge1[2] * edge2[1]   # z component
+                                  )
+
+                                  # Compute face center and vector to hull center
+                                  face_center <- (v1 + v2 + v3) / 3
+                                  to_hull_center <- hull_center - face_center
+
+                                  # Check if normal points inward (toward hull center)
+                                  if (sum(normal * to_hull_center) > 0) {
+                                        # Normal points inward, swap v2 and v3 to flip it outward
+                                        tri[i, c(2, 3)] <- tri[i, c(3, 2)]
+                                        # Flip normal as well since we flipped the winding
+                                        normal <- -normal
+                                  }
+
+                                  # Normalize and store the final outward-facing normal
+                                  normal_length <- sqrt(sum(normal^2))
+                                  if (normal_length > 0) {
+                                        normals[i, ] <- normal / normal_length
+                                  } else {
+                                        normals[i, ] <- c(0, 0, 1)  # fallback
+                                  }
+                            }
+
+                            # Assemble triangle vertices with corrected winding order
                             data <- data[as.vector(t(tri)), ]
 
                             # Create unique face IDs that won't collide across groups,
@@ -49,28 +91,18 @@ StatHull3D <- ggproto("StatHull3D", Stat,
                             group_suffix <- sample(10000:99999, 1)
                             data$group <- rep(paste0("sh3d__hull", group_suffix, "_tri", 1:nrow(tri)), each = 3)
 
+                            # Add computed normal variables (replicated for each vertex in triangle)
+                            data$normal_x <- rep(normals[, 1], each = 3)
+                            data$normal_y <- rep(normals[, 2], each = 3)
+                            data$normal_z <- rep(normals[, 3], each = 3)
+
                             # add computed variables and lighting info
                             data <- data %>%
-                                  # compute_hull_vars() %>%
+                                  mutate(cull_backfaces = cull_backfaces) %>%
                                   attach_light(light)
                             return(data)
                       }
 )
-
-# add computed variables, for access via after_stat(...)
-compute_hull_vars <- function(data){
-      faces <- data %>%
-            group_by(group) %>%
-            slice(1) %>%
-            ungroup()
-      normals <- compute_triangle_normals(data, faces)
-      faces$normal_x <- normals[,1]
-      faces$normal_y <- normals[,2]
-      faces$normal_z <- normals[,3]
-      data <- left_join(data, faces %>% select(group, normal_x:normal_z),
-                     by = join_by(group))
-      return(data)
-}
 
 
 #' 3D convex and alpha hulls
@@ -82,9 +114,9 @@ compute_hull_vars <- function(data){
 #'   aesthetics are `x`, `y`, and `z`. Additional aesthetics can use computed
 #'   variables with [after_stat()].
 #' @param data The data to be displayed in this layer.
-#' @param stat The statistical transformation to use on the data. Defaults to [StatHull3D].
-#' @param geom The geometric object used to display the data. Defaults to [GeomPolygon3D].
-#' @param position Position adjustment, defaults to "identity".
+#' @param stat The statistical transformation to use on the data. Defaults to `StatHull3D`.
+#' @param geom The geometric object used to display the data. Defaults to `GeomPolygon3D.`
+#'
 #' @param method Triangulation method. Either:
 #'   - `"convex"`: Convex hull triangulation (default)
 #'   - `"alpha"`: Alpha shape triangulation (can capture non-convex topologies)
@@ -92,10 +124,10 @@ compute_hull_vars <- function(data){
 #'   A face is included in the resulting alpha shape if it can be "exposed" by a sphere of this radius.
 #'   If NULL (the default), a simple heuristic based on the data scale is used to calculate a radius value.
 #'   Note that alpha shapes are quite sensitive to the coordinate scales of your data. See Details section.
-#' @param light A lighting specification object created by \code{light()}, or NULL to disable shading.
-#' @param inherit.aes If `FALSE`, overrides the default aesthetics.
-#' @param ... Other arguments passed on to the geom (typically `geom_polygon_3d()`), such as
-#'   `sort_method` and `scale_depth` as well as aesthetics like `colour`, `fill`, `linewidth`, etc.
+#'
+#' @inheritParams light_param
+#' @inheritParams polygon_params
+#' @inheritParams position_param
 #'
 #' @section Grouping:
 #' Hulls respect ggplot2 grouping aesthetics. To create separate hulls for different
@@ -103,10 +135,9 @@ compute_hull_vars <- function(data){
 #' Each group will get its own independent hull.
 #'
 #' @section Alpha scale sensitivity:
-#' **Alpha shape method is highly sensitive to coordinate scales.** The `alpha` parameter
+#' Alpha shape method is highly sensitive to coordinate scales. The `alpha` parameter
 #' that works for data scaled 0-1 will likely fail for data scaled 0-1000.
-#'
-#' **Guidelines for choosing radius:**
+#' Guidelines for choosing radius:
 #' - Start with `alpha = 1.0` and adjust based on results
 #' - For data with mixed scales (e.g., x: 0-1, y: 0-1000), consider rescaling your data first
 #' - Larger alpha values → smoother, more connected surfaces
@@ -114,27 +145,14 @@ compute_hull_vars <- function(data){
 #' - If you get no triangles, try increasing alpha by 10x
 #' - If surface fills unwanted holes, try decreasing alpha by 10x
 #'
-#' **Example scale effects:**
-#' ```r
-#' # These require very different alpha values:
-#' data_small <- data.frame(x = runif(100, 0, 1), y = runif(100, 0, 1), z = runif(100, 0, 1))
-#' data_large <- data.frame(x = runif(100, 0, 100), y = runif(100, 0, 100), z = runif(100, 0, 100))
-#'
-#' stat_hull_3d(data = data_small, alpha = 0.5)    # Might work well
-#' stat_hull_3d(data = data_large, alpha = 50)     # Might need much larger alpha
-#' ```
-#'
-#' @section Computed variables:
-#' - `light`: Computed lighting value (numeric for most methods, hex color for `normal_rgb`)
-#' - `normal_x`, `normal_y`, `normal_z`: Surface normal components
-#' - `triangle_index`: Sequential triangle number (useful for debugging)
-#' - `face_id`: Triangle group identifier
-#'
 #' @section Aesthetics:
 #' `stat_hull_3d()` requires the following aesthetics:
 #' - **x**: X coordinate
 #' - **y**: Y coordinate
 #' - **z**: Z coordinate
+#'
+#' @section Computed variables:
+#' - `normal_x`, `normal_y`, `normal_z`: Surface normal components
 #'
 #' @examples
 #' # Convex hull
@@ -146,6 +164,17 @@ compute_hull_vars <- function(data){
 #' ggplot(sphere_points, aes(x, y, z)) +
 #'   geom_hull_3d(method = "alpha", radius = 2, fill = "gray40") +
 #'   coord_3d()
+#'
+#' # Use `cull_backfaces = FALSE` to render far side of hull
+#' ggplot(sphere_points, aes(x, y, z)) +
+#'   geom_hull_3d( # default culling for comparison
+#'     method = "convex", light = NULL,
+#'     fill = "steelblue", color = "darkred", linewidth = .5, alpha = .5) +
+#'   geom_hull_3d( # culling disabled
+#'     aes(x = x + 2.5), cull_backfaces = FALSE,
+#'     method = "convex", light = NULL,
+#'     fill = "steelblue", color = "darkred", linewidth = .5, alpha = .5) +
+#'   coord_3d(scales = "fixed")
 #'
 #' # Use grouping to build separate hulls for data subsets
 #' ggplot(iris, aes(Petal.Length, Sepal.Length, Sepal.Width,
@@ -162,11 +191,14 @@ geom_hull_3d <- function(mapping = NULL, data = NULL,
                          position = "identity",
                          ...,
                          method = "convex", radius = NULL, light = ggcube::light(),
+                         cull_backfaces = TRUE, sort_method = NULL, scale_depth = TRUE,
                          inherit.aes = TRUE, show.legend = TRUE) {
 
       layer(data = data, mapping = mapping, stat = stat, geom = GeomPolygon3D,
             position = position, inherit.aes = inherit.aes, show.legend = show.legend,
-            params = list(method = method, radius = radius, light = light, ...)
+            params = list(method = method, radius = radius, light = light,
+                          cull_backfaces = cull_backfaces, sort_method = sort_method, scale_depth = scale_depth,
+                          ...)
       )
 }
 
@@ -177,10 +209,13 @@ stat_hull_3d <- function(mapping = NULL, data = NULL,
                          position = "identity",
                          ...,
                          method = "convex", radius = NULL, light = ggcube::light(),
+                         cull_backfaces = TRUE, sort_method = NULL, scale_depth = TRUE,
                          inherit.aes = TRUE, show.legend = TRUE) {
 
       layer(data = data, mapping = mapping, stat = StatHull3D, geom = geom,
             position = position, inherit.aes = inherit.aes, show.legend = show.legend,
-            params = list(method = method, radius = radius, light = light, ...)
+            params = list(method = method, radius = radius, light = light,
+                          cull_backfaces = cull_backfaces, sort_method = sort_method, scale_depth = scale_depth,
+                          ...)
       )
 }

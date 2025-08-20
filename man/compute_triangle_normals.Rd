@@ -7,9 +7,9 @@
 compute_triangle_normals(data, face_data)
 }
 \arguments{
-\item{data}{Face vertex data}
+\item{data}{Face vertex data with standardized CCW winding order}
 
-\item{face_data}{Unique face data}
+\item{face_data}{Unique face data (unused, kept for compatibility)}
 }
 \value{
 Matrix with normalized normal vectors (one row per face, 3 columns)

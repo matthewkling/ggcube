@@ -14,6 +14,9 @@ geom_hull_3d(
   method = "convex",
   radius = NULL,
   light = ggcube::light(),
+  cull_backfaces = TRUE,
+  sort_method = NULL,
+  scale_depth = TRUE,
   inherit.aes = TRUE,
   show.legend = TRUE
 )
@@ -27,6 +30,9 @@ stat_hull_3d(
   method = "convex",
   radius = NULL,
   light = ggcube::light(),
+  cull_backfaces = TRUE,
+  sort_method = NULL,
+  scale_depth = TRUE,
   inherit.aes = TRUE,
   show.legend = TRUE
 )
@@ -38,12 +44,13 @@ variables with \code{\link[=after_stat]{after_stat()}}.}
 
 \item{data}{The data to be displayed in this layer.}
 
-\item{stat}{The statistical transformation to use on the data. Defaults to \link{StatHull3D}.}
+\item{stat}{The statistical transformation to use on the data. Defaults to \code{StatHull3D}.}
 
-\item{position}{Position adjustment, defaults to "identity".}
+\item{position}{Position adjustment, defaults to "identity". To collapse the result
+onto one 2D surface, use \code{position_on_face()}.}
 
-\item{...}{Other arguments passed on to the geom (typically \code{geom_polygon_3d()}), such as
-\code{sort_method} and \code{scale_depth} as well as aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc.}
+\item{...}{Other arguments passed on to the the layer function (typically GeomPolygon3D), such as
+aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc.}
 
 \item{method}{Triangulation method. Either:
 \itemize{
@@ -56,11 +63,13 @@ A face is included in the resulting alpha shape if it can be "exposed" by a sphe
 If NULL (the default), a simple heuristic based on the data scale is used to calculate a radius value.
 Note that alpha shapes are quite sensitive to the coordinate scales of your data. See Details section.}
 
-\item{light}{A lighting specification object created by \code{light()}, or NULL to disable shading.}
+\item{light}{A lighting specification object created by \code{\link[=light]{light()}}, or NULL to disable shading.}
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics.}
 
-\item{geom}{The geometric object used to display the data. Defaults to \link{GeomPolygon3D}.}
+\item{show.legend}{Logical indicating whether this layer should be included in legends.}
+
+\item{geom}{The geometric object used to display the data. Defaults to \code{GeomPolygon3D.}}
 }
 \description{
 Turns 3D point clouds into surface hulls consisting of triangular polygons,
@@ -75,10 +84,9 @@ Each group will get its own independent hull.
 
 \section{Alpha scale sensitivity}{
 
-\strong{Alpha shape method is highly sensitive to coordinate scales.} The \code{alpha} parameter
+Alpha shape method is highly sensitive to coordinate scales. The \code{alpha} parameter
 that works for data scaled 0-1 will likely fail for data scaled 0-1000.
-
-\strong{Guidelines for choosing radius:}
+Guidelines for choosing radius:
 \itemize{
 \item Start with \code{alpha = 1.0} and adjust based on results
 \item For data with mixed scales (e.g., x: 0-1, y: 0-1000), consider rescaling your data first
@@ -86,26 +94,6 @@ that works for data scaled 0-1 will likely fail for data scaled 0-1000.
 \item Smaller alpha values → more detailed surfaces, but may fragment
 \item If you get no triangles, try increasing alpha by 10x
 \item If surface fills unwanted holes, try decreasing alpha by 10x
-}
-
-\strong{Example scale effects:}
-
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{# These require very different alpha values:
-data_small <- data.frame(x = runif(100, 0, 1), y = runif(100, 0, 1), z = runif(100, 0, 1))
-data_large <- data.frame(x = runif(100, 0, 100), y = runif(100, 0, 100), z = runif(100, 0, 100))
-
-stat_hull_3d(data = data_small, alpha = 0.5)    # Might work well
-stat_hull_3d(data = data_large, alpha = 50)     # Might need much larger alpha
-}\if{html}{\out{</div>}}
-}
-
-\section{Computed variables}{
-
-\itemize{
-\item \code{light}: Computed lighting value (numeric for most methods, hex color for \code{normal_rgb})
-\item \code{normal_x}, \code{normal_y}, \code{normal_z}: Surface normal components
-\item \code{triangle_index}: Sequential triangle number (useful for debugging)
-\item \code{face_id}: Triangle group identifier
 }
 }
 
@@ -119,6 +107,13 @@ stat_hull_3d(data = data_large, alpha = 50)     # Might need much larger alpha
 }
 }
 
+\section{Computed variables}{
+
+\itemize{
+\item \code{normal_x}, \code{normal_y}, \code{normal_z}: Surface normal components
+}
+}
+
 \examples{
 # Convex hull
 ggplot(sphere_points, aes(x, y, z)) +
@@ -129,6 +124,17 @@ ggplot(sphere_points, aes(x, y, z)) +
 ggplot(sphere_points, aes(x, y, z)) +
   geom_hull_3d(method = "alpha", radius = 2, fill = "gray40") +
   coord_3d()
+
+# Use `cull_backfaces = FALSE` to render far side of hull
+ggplot(sphere_points, aes(x, y, z)) +
+  geom_hull_3d( # default culling for comparison
+    method = "convex", light = NULL,
+    fill = "steelblue", color = "darkred", linewidth = .5, alpha = .5) +
+  geom_hull_3d( # culling disabled
+    aes(x = x + 2.5), cull_backfaces = FALSE,
+    method = "convex", light = NULL,
+    fill = "steelblue", color = "darkred", linewidth = .5, alpha = .5) +
+  coord_3d(scales = "fixed")
 
 # Use grouping to build separate hulls for data subsets
 ggplot(iris, aes(Petal.Length, Sepal.Length, Sepal.Width,

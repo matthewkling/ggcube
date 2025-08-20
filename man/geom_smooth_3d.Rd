@@ -28,6 +28,10 @@ geom_smooth_3d(
   se.alpha = 0.5,
   se.linewidth = NULL,
   light = NULL,
+  cull_backfaces = FALSE,
+  sort_method = NULL,
+  force_convex = TRUE,
+  scale_depth = TRUE,
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE
@@ -56,6 +60,10 @@ stat_smooth_3d(
   se.alpha = 0.5,
   se.linewidth = NULL,
   light = NULL,
+  cull_backfaces = FALSE,
+  sort_method = NULL,
+  force_convex = TRUE,
+  scale_depth = TRUE,
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE
@@ -68,12 +76,13 @@ mapped to \code{after_stat(fitted)}.}
 
 \item{data}{The data to be displayed in this layer. Must contain x, y, z columns.}
 
-\item{stat}{The statistical transformation to use on the data. Defaults to \link{StatSmooth3D}.}
+\item{stat}{The statistical transformation to use on the data. Defaults to \code{StatSmooth3D}.}
 
-\item{position}{Position adjustment, defaults to "identity".}
+\item{position}{Position adjustment, defaults to "identity". To collapse the result
+onto one 2D surface, use \code{position_on_face()}.}
 
-\item{...}{Other arguments passed on to the geom (typically \code{geom_smooth_3d()}), such as
-\code{sort_method} and \code{scale_depth} as well as aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc.}
+\item{...}{Other arguments passed on to the the layer function (typically GeomPolygon3D), such as
+aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc.}
 
 \item{method}{Smoothing method to use. Currently supported:
 \itemize{
@@ -92,11 +101,10 @@ For glm, this might include \code{family} (defaults to \code{gaussian()}). For g
 include smoothing parameters or basis specifications.}
 
 \item{xlim, ylim}{Numeric vectors of length 2 giving the range for prediction grid.
-If \code{NULL} (default), uses the exact data range with no extrapolation, following
-\code{\link[=geom_smooth]{geom_smooth()}} conventions.}
+If \code{NULL} (default), uses the exact data range with no extrapolation.}
 
-\item{grid, n, direction}{Arguments passed to \code{make_tile_grid()} specifying the geometry,
-resolution, and orientation of the surface grid. See \code{?make_tile_grid()} for details.}
+\item{grid, n, direction}{Parameters determining the geometry, resolution, and
+orientation of the surface grid. See \link{grid_generation} for details.}
 
 \item{domain}{Character indicating the x-y domain over which to visualize the surface.
 The default, \code{"bbox"}, shows predictions over the full rectangular bounding box of
@@ -123,14 +131,16 @@ inherits from the main surface \code{linewidth} aesthetic.}
 
 \item{light}{A lighting specification object created by \code{\link[=light]{light()}}, or NULL to disable shading.}
 
-\item{na.rm}{If \code{TRUE}, removes missing values before fitting the model.
-If \code{FALSE}, missing values will cause an error. Default is \code{FALSE}.}
+\item{cull_backfaces, sort_method, force_convex, scale_depth}{Advanced polygon
+rendering parameters. See \link{polygon_rendering} for details.}
+
+\item{na.rm}{If \code{FALSE}, missing values are removed.}
 
 \item{show.legend}{Logical indicating whether this layer should be included in legends.}
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics.}
 
-\item{geom}{The geometric object used to display the data. Defaults to \link{GeomPolygon3D}.}
+\item{geom}{The geometric object used to display the data. Defaults to \code{GeomPolygon3D}.}
 }
 \description{
 A 3D version of \code{ggplot2::geom_smooth()}.
@@ -148,18 +158,24 @@ The fitted statistical model is evaluated on a regular grid and rendered as a
 }
 }
 
-\section{Computed variables}{
+\section{Computed variables specific to StatSmooth3D}{
 
 \itemize{
-\item \code{x}, \code{y}, \code{z}: Grid coordinates and smoothed predictions
+\item \code{level}: Type of surface ("fitted", "upper CI", or "lower CI" for confidence bands)
 \item \code{fitted}: Smoothed predictions (same as \code{z} when \code{level == "fitted"})
 \item \code{se}: Standard errors of the fitted values (available when \code{se = TRUE})
-\item \code{level}: Type of surface ("fitted", "upper CI", or "lower CI" for confidence bands)
-\item \code{light}: Computed lighting value (numeric for most methods, hex color for \code{normal_rgb})
+}
+}
+
+\section{Computed variables}{
+
+The following computed variables are available via \code{after_stat()}:
+\itemize{
+\item \code{x}, \code{y}, \code{z}: Grid coordinates and function values
 \item \code{normal_x}, \code{normal_y}, \code{normal_z}: Surface normal components
 \item \code{slope}: Gradient magnitude from surface calculations
 \item \code{aspect}: Direction of steepest slope from surface calculations
-\item \code{dzdx}, \code{dzdy}: Partial derivatives from surface calculations
+\item \code{dzdx}, \code{dzdy}: Partial derivatives from surface calculation
 }
 }
 

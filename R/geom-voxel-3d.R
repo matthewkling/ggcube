@@ -6,7 +6,8 @@ StatVoxel3D <- ggproto("StatVoxel3D", Stat,
 
                      compute_panel = function(data, scales, na.rm = FALSE,
                                               width = 1.0, faces = "all",
-                                              light = NULL) {
+                                              light = NULL,
+                                              cull_backfaces = NULL) {
 
                            # Remove missing values if requested
                            if (na.rm) {
@@ -26,24 +27,16 @@ StatVoxel3D <- ggproto("StatVoxel3D", Stat,
                            y_spacing <- resolution(data$y, zero = FALSE)
                            z_spacing <- resolution(data$z, zero = FALSE)
 
-                           # Fallback for edge cases (single point or identical coordinates)
-                           if (is.na(x_spacing) || x_spacing <= 0) {
-                                 x_spacing <- 1.0
-                           }
-                           if (is.na(y_spacing) || y_spacing <= 0) {
-                                 y_spacing <- 1.0
-                           }
-                           if (is.na(z_spacing) || z_spacing <= 0) {
-                                 z_spacing <- 1.0
-                           }
-
                            # Validate and process faces parameter
                            selected_faces <- select_faces(faces)
 
                            # Create voxels
                            voxel_faces <- create_voxels(data, x_spacing, y_spacing, z_spacing, width, selected_faces)
 
-                           return(attach_light(voxel_faces, light))
+                           voxel_faces %>%
+                                 mutate(cull_backfaces = cull_backfaces) %>%
+                                 attach_light(light) %>%
+                                 return()
                      }
 )
 
@@ -85,28 +78,33 @@ create_voxels <- function(data, x_spacing, y_spacing, z_spacing, width, selected
             cy <- point$y  # Center y
             cz <- point$z  # Center z
 
-            # Define the 8 corners of the voxel (fixed-size cube centered on point)
+            l <- cx - half_x
+            r <- cx + half_x
+            f <- cy - half_y
+            k <- cy + half_y
+            t <- cz + half_z
+            b <- cz - half_z
+
+            # Define the 8 corners of the pillar
             corners <- list(
-                  # Bottom face (z = cz - half_z)
-                  c(cx - half_x, cy - half_y, cz - half_z),  # 1: left-back-bottom
-                  c(cx + half_x, cy - half_y, cz - half_z),  # 2: right-back-bottom
-                  c(cx + half_x, cy + half_y, cz - half_z),  # 3: right-front-bottom
-                  c(cx - half_x, cy + half_y, cz - half_z),  # 4: left-front-bottom
-                  # Top face (z = cz + half_z)
-                  c(cx - half_x, cy - half_y, cz + half_z),  # 5: left-back-top
-                  c(cx + half_x, cy - half_y, cz + half_z),  # 6: right-back-top
-                  c(cx + half_x, cy + half_y, cz + half_z),  # 7: right-front-top
-                  c(cx - half_x, cy + half_y, cz + half_z)   # 8: left-front-top
+                  c(l, k, b),  # 1: left-back-bottom
+                  c(r, k, b),  # 2: right-back
+                  c(r, f, b),  # 3: right-front
+                  c(l, f, b),  # 4: left-front
+                  c(l, k, t),  # 5: left-back-top
+                  c(r, k, t),  # 6: right-back
+                  c(r, f, t),  # 7: right-front
+                  c(l, f, t)  # 8: left-front
             )
 
-            # Define faces using corner indices (ordered to form proper rectangles)
+            # Define faces using corner indices (order: ccw from outside)
             face_definitions <- list(
-                  zmin = c(1, 2, 3, 4),  # Bottom face
-                  zmax = c(5, 6, 7, 8),  # Top face
-                  xmin = c(1, 4, 8, 5),  # Left face
-                  xmax = c(2, 6, 7, 3),  # Right face
-                  ymin = c(1, 5, 6, 2),  # Back face
-                  ymax = c(4, 3, 7, 8)   # Front face
+                  zmin = c(1, 2, 3, 4),  # Bottom
+                  zmax = c(5, 8, 7, 6),  # Top
+                  xmin = c(1, 4, 8, 5),  # Left
+                  xmax = c(3, 2, 6, 7),  # Right
+                  ymin = c(1, 5, 6, 2),  # Back
+                  ymax = c(4, 3, 7, 8)   # Front
             )
 
             # Create requested faces
@@ -192,31 +190,19 @@ convert_to_numeric <- function(data) {
 #' Each data point becomes a fixed-size cube centered on its coordinates.
 #' Useful for volumetric data and 3D pixel art.
 #'
-#' @param mapping Set of aesthetic mappings created by [aes()].
-#' @param data The data to be displayed in this layer.
-#' @param stat The statistical transformation to use on the data. Defaults to [StatVoxel3D].
-#' @param geom The geometric object used to display the data. Defaults to [GeomPolygon3D].
-#' @param position Position adjustment, defaults to "identity".
-#' @param na.rm If `FALSE`, missing values are removed with a warning.
-#' @param show.legend Logical indicating whether this layer should be included in legends.
-#' @param inherit.aes If `FALSE`, overrides the default aesthetics.
-#' @param width Numeric value controlling voxel size as a fraction of grid spacing.
-#'   Default is 1.0 (voxels touch each other). Use 0.8 for small gaps, 1.2 for overlap.
-#'   Grid spacing is determined automatically using [resolution()] for each dimension.
-#' @param faces Character vector specifying which faces to render. Options:
-#'   \itemize{
-#'     \item \code{"all"} (default): Render all 6 faces
-#'     \item \code{"none"}: Render no faces
-#'     \item Vector of face names: \code{c("zmax", "xmin", "ymax")}, etc.
-#'   }
-#'   Valid face names: "xmin", "xmax", "ymin", "ymax", "zmin", "zmax".
-#' @param light A lighting specification object created by \code{light()}, or NULL to disable shading.
-#' @param ... Other arguments passed on to the geom (typically `geom_polygon_3d()`), such as
-#'   `sort_method` and `scale_depth` as well as aesthetics like `colour`, `fill`, `linewidth`, etc.
-#'
 #' Note that voxel geometries sometimes require pairwise depth sorting for correct rendering.
 #' This is the default for smaller data sets, but not for larger data sets due to compute speed;
 #' in those cases you may wish to manually specify `sort_method = "pairwise"`.
+#'
+#' @param mapping Set of aesthetic mappings created by [aes()].
+#' @param data The data to be displayed in this layer.
+#' @param stat The statistical transformation to use on the data. Defaults to `StatVoxel3D`.
+#' @param geom The geometric object used to display the data. Defaults to `GeomPolygon3D`.
+#'
+#' @inheritParams pillar_params
+#' @inheritParams polygon_params
+#' @inheritParams light_param
+#' @inheritParams position_param
 #'
 #' @section Aesthetics:
 #' Voxel 3D requires the following aesthetics:
@@ -224,15 +210,8 @@ convert_to_numeric <- function(data) {
 #' - **y**: Y coordinate (voxel center position)
 #' - **z**: Z coordinate (voxel center position)
 #'
-#' And understands these additional aesthetics:
-#' - **fill**: Voxel fill color
-#' - **colour**: Voxel border color
-#' - **alpha**: Voxel transparency
-#'
 #' @section Computed variables:
-#' - `light`: Computed lighting value (numeric for most methods, hex color for `normal_rgb`)
 #' - `normal_x`, `normal_y`, `normal_z`: Face normal components
-#' - `group`: Hierarchical group identifier with format "voxel_XXXX__face_type" for proper depth sorting
 #' - `voxel_id`: Sequential voxel number
 #' - `face_type`: Face name ("zmax", "xmin", etc.)
 #'
@@ -267,11 +246,15 @@ geom_voxel_3d <- function(mapping = NULL, data = NULL,
                           ...,
                           width = 1.0, faces = "all",
                           light = ggcube::light(),
+                          cull_backfaces = TRUE, sort_method = NULL, scale_depth = TRUE,
                           na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
 
       layer(data = data, mapping = mapping, stat = stat, geom = GeomPolygon3D,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
-            params = list(na.rm = na.rm, width = width, faces = faces, light = light, ...)
+            params = list(na.rm = na.rm, width = width, faces = faces, light = light,
+                          force_convex = FALSE, cull_backfaces = cull_backfaces,
+                          sort_method = sort_method, scale_depth = scale_depth,
+                          ...)
       )
 }
 
@@ -283,11 +266,15 @@ stat_voxel_3d <- function(mapping = NULL, data = NULL,
                           ...,
                           width = 1.0, faces = "all",
                           light = ggcube::light(),
+                          cull_backfaces = TRUE, sort_method = NULL, scale_depth = TRUE,
                           na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
 
       layer(data = data, mapping = mapping, stat = StatVoxel3D, geom = geom,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
-            params = list(na.rm = na.rm, width = width, faces = faces, light = light, ...)
+            params = list(na.rm = na.rm, width = width, faces = faces, light = light,
+                          force_convex = FALSE, cull_backfaces = cull_backfaces,
+                          sort_method = sort_method, scale_depth = scale_depth,
+                          ...)
       )
 }
 

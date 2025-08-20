@@ -1,7 +1,8 @@
 StatSurface3D <- ggproto("StatSurface3D", Stat,
                          required_aes = c("x", "y", "z"),
 
-                         compute_group = function(data, scales, na.rm = FALSE, light = NULL) {
+                         compute_group = function(data, scales, na.rm = FALSE,
+                                                  cull_backfaces = NULL, light = NULL) {
 
                                # Remove missing values if requested
                                if (na.rm) {
@@ -28,6 +29,7 @@ StatSurface3D <- ggproto("StatSurface3D", Stat,
                                data <- data %>%
                                      convert_to_quads() %>%
                                      compute_surface_vars() %>%
+                                     mutate(cull_backfaces = cull_backfaces) %>%
                                      attach_light(light)
 
                                return(data)
@@ -104,9 +106,9 @@ convert_to_quads <- function(data) {
             group_by(quad_id) %>%
             filter(n() == 4) %>%
             arrange(x, y) %>%
-            mutate(vertex_order = c(1, 2, 4, 3)) %>%
+            mutate(order = c(4, 3, 1, 2)) %>% # ccw order
             ungroup() %>%
-            arrange(quad_id, vertex_order) %>%
+            arrange(quad_id, order) %>%
             mutate(group = paste0("surface__quad", quad_id, "::", group)) %>%
             as.data.frame()
 
@@ -124,15 +126,12 @@ convert_to_quads <- function(data) {
 #'   requires the `x`, `y`, and `z` aesthetics.
 #' @param data The data to be displayed in this layer. Must contain x, y, z columns
 #'   representing coordinates on a regular grid.
-#' @param stat The statistical transformation to use on the data. Defaults to [StatSurface3D].
-#' @param geom The geometric object used to display the data. Defaults to [GeomPolygon3D].
-#' @param position Position adjustment, defaults to "identity".
-#' @param na.rm If `FALSE`, missing values are removed with a warning.
-#' @param show.legend Logical indicating whether this layer should be included in legends.
-#' @param inherit.aes If `FALSE`, overrides the default aesthetics.
-#' @param light A lighting specification object created by \code{light()}, or NULL to disable shading.
-#' @param ... Other arguments passed on to the geom (typically `geom_polygon_3d()`), such as
-#'   `sort_method` and `scale_depth` as well as aesthetics like `colour`, `fill`, `linewidth`, etc.
+#' @param stat The statistical transformation to use on the data. Defaults to `StatSurface3D`.
+#' @param geom The geometric object used to display the data. Defaults to `GeomPolygon3D`.
+#'
+#' @inheritParams position_param
+#' @inheritParams light_param
+#' @inheritParams polygon_params
 #'
 #' @section Aesthetics:
 #' Requires the following aesthetics:
@@ -140,10 +139,7 @@ convert_to_quads <- function(data) {
 #' - **y**: Y coordinate
 #' - **z**: Z coordinate (elevation/height)
 #'
-#' @section Computed variables:
-#' - `slope`: Gradient magnitude from surface calculations
-#' - `aspect`: Direction of steepest slope from surface calculations
-#' - `dzdx`, `dzdy`: Partial derivatives from surface calculations
+#' @inheritSection surface_computed_vars Computed variables
 #'
 #' @examples
 #' # data and base plot for basic surface
@@ -195,11 +191,16 @@ geom_surface_3d <- function(mapping = NULL, data = NULL, stat = StatSurface3D,
                             position = "identity",
                             ...,
                             light = ggcube::light(),
+                            cull_backfaces = FALSE, sort_method = NULL,
+                            force_convex = TRUE, scale_depth = TRUE,
                             na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
 
       layer(mapping = mapping, data = data, stat = stat, geom = GeomPolygon3D,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
-            params = list(na.rm = na.rm, force_convex = TRUE, light = light, ...)
+            params = list(na.rm = na.rm,
+                          force_convex = force_convex, cull_backfaces = cull_backfaces,
+                          sort_method = sort_method, scale_depth = scale_depth,
+                          light = light, ...)
       )
 }
 
@@ -209,11 +210,16 @@ stat_surface_3d <- function(mapping = NULL, data = NULL, geom = GeomPolygon3D,
                             position = "identity",
                             ...,
                             light = ggcube::light(),
+                            cull_backfaces = FALSE, sort_method = NULL,
+                            force_convex = TRUE, scale_depth = TRUE,
                             na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
 
       layer(mapping = mapping, data = data, stat = StatSurface3D, geom = geom,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
-            params = list(na.rm = na.rm, force_convex = TRUE, light = light, ...)
+            params = list(na.rm = na.rm,
+                          force_convex = force_convex, cull_backfaces = cull_backfaces,
+                          sort_method = sort_method, scale_depth = scale_depth,
+                          light = light, ...)
       )
 }
 

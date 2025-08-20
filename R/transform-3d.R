@@ -100,7 +100,7 @@ transform_3d_standard <- function(data, proj = list(pitch = 0, roll = 0, yaw = 0
                   x = rotated[, 1],
                   y = rotated[, 2],
                   z = rotated[, 3],      # Keep z for face visibility
-                  depth = -rotated[, 3], # Use for sorting (farther = larger depth)
+                  depth = rotated[, 3], # Use for sorting (farther = larger depth)
                   depth_scale = reference_depth / point_depths  # Scaling factor
             ))
       }

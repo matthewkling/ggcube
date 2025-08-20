@@ -132,6 +132,7 @@ and grid elements, you can use \code{panel.background}, etc. to style both backg
 }
 
 \examples{
+# base plot used in all examples
 p <- ggplot() +
   geom_function_3d(
     aes(fill = after_stat(z), color = after_stat(z)),
@@ -173,10 +174,10 @@ p + coord_3d(dist = 3)
 # orthographic projection, effectively dist = Inf
 p + coord_3d(persp = FALSE)
 
-# Use `scales` and `ratio` to modify aspect ratio --------------------------
+# Use `scales` and `ratio` to control aspect ratio -------------------------
 
-# Default "free" scales shown above give maximum visual range
-# Fixed scales (proportions match data scales, like coord_fixed)
+# The default "free" scales shown above give cube with maximum visual range.
+# Use "fixed" scales to make figure match data scales, like coord_fixed.
 p + coord_3d(scales = "fixed")
 
 # Custom aspect ratios: make y twice as long visually

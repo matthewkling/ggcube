@@ -14,6 +14,9 @@ geom_voxel_3d(
   width = 1,
   faces = "all",
   light = ggcube::light(),
+  cull_backfaces = TRUE,
+  sort_method = NULL,
+  scale_depth = TRUE,
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE
@@ -28,6 +31,9 @@ stat_voxel_3d(
   width = 1,
   faces = "all",
   light = ggcube::light(),
+  cull_backfaces = TRUE,
+  sort_method = NULL,
+  scale_depth = TRUE,
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE
@@ -38,20 +44,17 @@ stat_voxel_3d(
 
 \item{data}{The data to be displayed in this layer.}
 
-\item{stat}{The statistical transformation to use on the data. Defaults to \link{StatVoxel3D}.}
+\item{stat}{The statistical transformation to use on the data. Defaults to \code{StatVoxel3D}.}
 
-\item{position}{Position adjustment, defaults to "identity".}
+\item{position}{Position adjustment, defaults to "identity". To collapse the result
+onto one 2D surface, use \code{position_on_face()}.}
 
-\item{...}{Other arguments passed on to the geom (typically \code{geom_polygon_3d()}), such as
-\code{sort_method} and \code{scale_depth} as well as aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc.
+\item{...}{Other arguments passed on to the the layer function (typically GeomPolygon3D), such as
+aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc.}
 
-Note that voxel geometries sometimes require pairwise depth sorting for correct rendering.
-This is the default for smaller data sets, but not for larger data sets due to compute speed;
-in those cases you may wish to manually specify \code{sort_method = "pairwise"}.}
-
-\item{width}{Numeric value controlling voxel size as a fraction of grid spacing.
-Default is 1.0 (voxels touch each other). Use 0.8 for small gaps, 1.2 for overlap.
-Grid spacing is determined automatically using \code{\link[=resolution]{resolution()}} for each dimension.}
+\item{width}{Numeric value controlling box width as a fraction of grid spacing.
+Default is 1.0 (volumes touch each other). Use 0.8 for small gaps, 1.2 for overlap.
+Grid spacing is determined automatically using \code{\link[=resolution]{resolution()}}.}
 
 \item{faces}{Character vector specifying which faces to render. Options:
 \itemize{
@@ -59,22 +62,30 @@ Grid spacing is determined automatically using \code{\link[=resolution]{resoluti
 \item \code{"none"}: Render no faces
 \item Vector of face names: \code{c("zmax", "xmin", "ymax")}, etc.
 }
-Valid face names: "xmin", "xmax", "ymin", "ymax", "zmin", "zmax".}
+Valid face names: "xmin", "xmax", "ymin", "ymax", "zmin", "zmax".
+Note that this setting acts jointly with backface culling, which removes faces whose
+interior faces the viewer -- e.g., when \code{cull_backfaces = TRUE} and \code{faces = "all"}
+(the default), only front faces are rendered.}
 
-\item{light}{A lighting specification object created by \code{light()}, or NULL to disable shading.}
+\item{light}{A lighting specification object created by \code{\link[=light]{light()}}, or NULL to disable shading.}
 
-\item{na.rm}{If \code{FALSE}, missing values are removed with a warning.}
+\item{na.rm}{If \code{FALSE}, missing values are removed.}
 
 \item{show.legend}{Logical indicating whether this layer should be included in legends.}
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics.}
 
-\item{geom}{The geometric object used to display the data. Defaults to \link{GeomPolygon3D}.}
+\item{geom}{The geometric object used to display the data. Defaults to \code{GeomPolygon3D}.}
 }
 \description{
 Creates 3D voxel visualizations from sparse 3D point data.
 Each data point becomes a fixed-size cube centered on its coordinates.
 Useful for volumetric data and 3D pixel art.
+}
+\details{
+Note that voxel geometries sometimes require pairwise depth sorting for correct rendering.
+This is the default for smaller data sets, but not for larger data sets due to compute speed;
+in those cases you may wish to manually specify \code{sort_method = "pairwise"}.
 }
 \section{Aesthetics}{
 
@@ -84,21 +95,12 @@ Voxel 3D requires the following aesthetics:
 \item \strong{y}: Y coordinate (voxel center position)
 \item \strong{z}: Z coordinate (voxel center position)
 }
-
-And understands these additional aesthetics:
-\itemize{
-\item \strong{fill}: Voxel fill color
-\item \strong{colour}: Voxel border color
-\item \strong{alpha}: Voxel transparency
-}
 }
 
 \section{Computed variables}{
 
 \itemize{
-\item \code{light}: Computed lighting value (numeric for most methods, hex color for \code{normal_rgb})
 \item \code{normal_x}, \code{normal_y}, \code{normal_z}: Face normal components
-\item \code{group}: Hierarchical group identifier with format "voxel_XXXX__face_type" for proper depth sorting
 \item \code{voxel_id}: Sequential voxel number
 \item \code{face_type}: Face name ("zmax", "xmin", etc.)
 }

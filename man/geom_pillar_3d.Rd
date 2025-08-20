@@ -15,6 +15,9 @@ geom_pillar_3d(
   faces = "all",
   zmin = NULL,
   light = ggcube::light(),
+  cull_backfaces = TRUE,
+  sort_method = NULL,
+  scale_depth = TRUE,
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE
@@ -30,6 +33,9 @@ stat_pillar_3d(
   faces = "all",
   zmin = NULL,
   light = ggcube::light(),
+  cull_backfaces = TRUE,
+  sort_method = NULL,
+  scale_depth = TRUE,
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE
@@ -40,19 +46,16 @@ stat_pillar_3d(
 
 \item{data}{The data to be displayed in this layer.}
 
-\item{stat}{The statistical transformation to use on the data. Defaults to \link{StatPillar3D}.}
+\item{stat}{The statistical transformation to use on the data. Defaults to \code{StatPillar3D}.}
 
-\item{position}{Position adjustment, defaults to "identity".}
+\item{position}{Position adjustment, defaults to "identity". To collapse the result
+onto one 2D surface, use \code{position_on_face()}.}
 
-\item{...}{Other arguments passed on to the geom (typically \code{geom_polygon_3d()}), such as
-\code{sort_method} and \code{scale_depth} as well as aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc.
+\item{...}{Other arguments passed on to the the layer function (typically GeomPolygon3D), such as
+aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc.}
 
-Note that pillar geometries often require pairwise depth sorting for correct rendering.
-This is the default for smaller data sets, but not for larger data sets due to compute speed;
-in those cases you may wish to manually specify \code{sort_method = "pairwise"} for good results.}
-
-\item{width}{Numeric value controlling pillar width as a fraction of grid spacing.
-Default is 1.0 (pillars touch each other). Use 0.8 for small gaps, 1.2 for overlap.
+\item{width}{Numeric value controlling box width as a fraction of grid spacing.
+Default is 1.0 (volumes touch each other). Use 0.8 for small gaps, 1.2 for overlap.
 Grid spacing is determined automatically using \code{\link[=resolution]{resolution()}}.}
 
 \item{faces}{Character vector specifying which faces to render. Options:
@@ -61,26 +64,34 @@ Grid spacing is determined automatically using \code{\link[=resolution]{resoluti
 \item \code{"none"}: Render no faces
 \item Vector of face names: \code{c("zmax", "xmin", "ymax")}, etc.
 }
-Valid face names: "xmin", "xmax", "ymin", "ymax", "zmin", "zmax".}
+Valid face names: "xmin", "xmax", "ymin", "ymax", "zmin", "zmax".
+Note that this setting acts jointly with backface culling, which removes faces whose
+interior faces the viewer -- e.g., when \code{cull_backfaces = TRUE} and \code{faces = "all"}
+(the default), only front faces are rendered.}
 
 \item{zmin}{Base level for all pillars. When provided as a parameter, overrides any
 \code{zmin} aesthetic mapping. If \code{NULL} (default), uses the \code{zmin} aesthetic
 if mapped, otherwise defaults to the minimum \code{z} value in the data.}
 
-\item{light}{A lighting specification object created by \code{light()}, or NULL to disable shading.}
+\item{light}{A lighting specification object created by \code{\link[=light]{light()}}, or NULL to disable shading.}
 
-\item{na.rm}{If \code{FALSE}, missing values are removed with a warning.}
+\item{na.rm}{If \code{FALSE}, missing values are removed.}
 
 \item{show.legend}{Logical indicating whether this layer should be included in legends.}
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics.}
 
-\item{geom}{The geometric object used to display the data. Defaults to \link{GeomPolygon3D}.}
+\item{geom}{The geometric object used to display the data. Defaults to \code{GeomPolygon3D}.}
 }
 \description{
 Creates 3D pillars from regular grid data in which x and y fall on a regular grid.
 Works with both complete and sparse grid data. Each data point becomes a rectangular
 3D column extending from a base level to the data value.
+}
+\details{
+Note that pillar geometries often require pairwise depth sorting for correct rendering.
+This is the default for smaller data sets, but not for larger data sets due to compute speed;
+in those cases you may wish to manually specify \code{sort_method = "pairwise"} for good results.
 }
 \section{Aesthetics}{
 
@@ -100,9 +111,7 @@ And optionally understands:
 \section{Computed variables}{
 
 \itemize{
-\item \code{light}: Computed lighting value (numeric for most methods, hex color for \code{normal_rgb})
 \item \code{normal_x}, \code{normal_y}, \code{normal_z}: Face normal components
-\item \code{group}: Hierarchical group identifier with format "pillarX__face_type" for proper depth sorting
 \item \code{pillar_id}: Sequential pillar number
 \item \code{face_type}: Face name ("zmax", "xmin", etc.)
 }
@@ -116,13 +125,13 @@ ggplot(d, aes(x, y, z)) +
   geom_pillar_3d() +
   coord_3d()
 
-# Set base level for all pillars using parameter
+# Set uniform base level using `zmin` parameter
 ggplot(d, aes(x, y, z)) +
   geom_pillar_3d(aes(fill = z), color = "white",
                 zmin = 0) +
   coord_3d(roll = 90)
 
-# Variable base levels using aesthetic
+# Set variable base levels using `zmin` aesthetic
 d$base_level <- runif(nrow(d), -1, 1)
 ggplot(d, aes(x, y, z = z, zmin = base_level)) +
   geom_pillar_3d(color = "black") +
@@ -131,6 +140,7 @@ ggplot(d, aes(x, y, z = z, zmin = base_level)) +
 # Show only a subset of pillar faces
 ggplot(d, aes(x, y, z)) +
   geom_pillar_3d(faces = c("zmax", "ymin"),
+    cull_backfaces = FALSE,
     fill = "steelblue", color = "black") +
   coord_3d()
 

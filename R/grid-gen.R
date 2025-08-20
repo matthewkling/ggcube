@@ -6,16 +6,9 @@
 #' also be used directly. Returns tile vertex data formatted for geoms like
 #' `geom_poygon()` and `geom_poygon_3d()`.
 #'
-#' @param grid Character argument specifying geometry of grid to generate.
-#'   Options include `"rect"` (the default) for rectangular grid, `"tri"` for
-#'   triangular grid, or `"hex"` for hexagonal grid.
-#' @param n Either a single integer specifying grid resolution in both dimensions,
-#'   or a vector of length 2 specifying `c(nx, ny)` for separate x and y resolutions.
-#'   Default is `40`. Higher values create smoother surfaces but slower rendering.
-#' @param direction Either `"x"` (the default) or `"y"`, specifying the orientation
-#'   of tile rows. Ignored for rectangular grids.
 #' @param xlim,ylim Length-two numeric vectors defining bounding box over which to
 #'   generate the grid.
+#' @inheritParams grid_generation
 #'
 #' @details Grids are constructed such that tiles are approximately equilateral
 #'   when scaled to a square domain, unless `n` gives separate resolution values
@@ -23,7 +16,8 @@
 #'   `n` is only approximate.
 #'
 #' @return A data frame with the following columns: `x`, `y`, `group` (integer denoting
-#'   unique polygon id), and `order` (integer giving vertex order, for plotting).
+#'   unique polygon id), and `order` (integer giving vertex order for plotting; vertices
+#'   are in counter-clockwise winding order).
 #'
 #' @examples
 #' # direct use
@@ -78,8 +72,8 @@ make_rect_tiles <- function(n) {
       d <- d %>%
             mutate(group = 1:nrow(.)) %>%
             group_by(group) %>%
-            reframe(x = c(x+dx, x+dx, x-dx, x-dx),
-                    y = c(y+dy, y-dy, y-dy, y+dy),
+            reframe(x = c(x+dx, x-dx, x-dx, x+dx), # ccw order
+                    y = c(y+dy, y+dy, y-dy, y-dy),
                     group = group,
                     order = 1:4) %>%
             ungroup() %>%
@@ -118,7 +112,7 @@ make_tri_tiles <- function(n) {
       tri <- tri %>%
             mutate(group = 1:nrow(.)) %>%
             group_by(group) %>%
-            reframe(x = c(x - dx, x + dx, x),
+            reframe(x = c(x - dx, x + dx, x), # ccw order
                     y = c(y - dy * drn, y - dy * drn, y + dy * drn),
                     group = group,
                     order = if(drn == 1) 1:3 else 3:1) %>%
@@ -154,7 +148,7 @@ make_hex_tiles <- function(n) {
             reframe(x = c(x+dx, x+2*dx, x+dx, x-dx, x-2*dx, x-dx),
                     y = c(y+dy, y, y-dy, y-dy, y, y+dy),
                     group = group,
-                    order = 1:6) %>%
+                    order = 6:1) %>% # ccw order
             ungroup() %>%
             arrange(group, order) %>%
             select(x, y, group, order)

@@ -4,6 +4,7 @@ StatDensity3D <- ggproto("StatDensity3D", Stat,
 
                          compute_group = function(data, scales, n = NULL, grid = NULL, direction = NULL,
                                                   h = NULL, adjust = 1, pad = 0.1, min_ndensity = 0,
+                                                  cull_backfaces = NULL,
                                                   light = NULL, na.rm = FALSE) {
 
                                # Remove missing values if requested
@@ -73,6 +74,7 @@ StatDensity3D <- ggproto("StatDensity3D", Stat,
                                # Add computed variables and light info
                                d <- d %>%
                                      compute_surface_vars() %>%
+                                     mutate(cull_backfaces = cull_backfaces) %>%
                                      attach_light(light)
 
                                return(d)
@@ -137,15 +139,9 @@ kde2d <- function(x, y, eval_x, eval_y, h) {
 #'   `after_stat(density)` and `z` is mapped to `after_stat(density)`.
 #' @param data The data to be displayed in this layer. Must contain x and y columns
 #'   with point coordinates.
-#' @param stat The statistical transformation to use on the data. Defaults to [StatDensity3D].
-#' @param geom The geometric object used to display the data. Defaults to [GeomPolygon3D].
-#' @param position Position adjustment, defaults to "identity".
-#' @param na.rm If `TRUE`, removes missing values before computing density.
-#'   If `FALSE`, missing values will cause an error. Default is `FALSE`.
-#' @param show.legend Logical indicating whether this layer should be included in legends.
-#' @param inherit.aes If `FALSE`, overrides the default aesthetics.
-#' @param grid,n,direction Arguments passed to `make_tile_grid()` specifying the geometry,
-#'   resolution, and orientation of the surface grid. See `?make_tile_grid()` for details.
+#' @param stat The statistical transformation to use on the data. Defaults to `StatDensity3D`.
+#' @param geom The geometric object used to display the data. Defaults to `GeomPolygon3D`.
+#'
 #' @param h Bandwidth vector. If `NULL` (default), uses automatic bandwidth selection
 #'   via `MASS::bandwidth.nrd()`. Can be a single number (used for both dimensions)
 #'   or a vector of length 2 for different bandwidths in x and y directions.
@@ -158,9 +154,11 @@ kde2d <- function(x, y, eval_x, eval_y, h) {
 #'   described below), below which to filter out results. This is particularly useful for
 #'   removing low-density corners of rectangular density grids when density surfaces are
 #'   shown for multiple groups, as in the example below. Default is 0 (no filtering).
-#' @param light A lighting specification object created by [light()], or NULL to disable shading.
-#' @param ... Other arguments passed on to the geom (typically `geom_polygon_3d()`), such as
-#'   `sort_method` and `scale_depth` as well as aesthetics like `colour`, `fill`, `linewidth`, etc.
+#'
+#' @inheritParams grid_params
+#' @inheritParams polygon_params
+#' @inheritParams light_param
+#' @inheritParams position_param
 #'
 #' @section Aesthetics:
 #' `stat_density_3d()` requires the following aesthetics from input data:
@@ -171,18 +169,13 @@ kde2d <- function(x, y, eval_x, eval_y, h) {
 #' - **group**: Grouping variable for computing separate density surfaces
 #' - Additional aesthetics are passed through for surface styling
 #'
-#' @section Computed variables:
-#' - `x`, `y`: Grid coordinates for the density surface
-#' - `z`: Same as `density` (for 3D surface height)
+#' @inheritSection surface_computed_vars Computed variables
+#'
+#' @section Computed variables specific to StatDensity3D:
 #' - `density`: The kernel density estimate at each grid point
 #' - `ndensity`: Density estimate scaled to maximum of 1 within each group
 #' - `count`: Density estimate × number of observations in group (expected count)
 #' - `n`: Number of observations in each group
-#' - `light`: Computed lighting value (numeric for most methods, hex color for `normal_rgb`)
-#' - `normal_x`, `normal_y`, `normal_z`: Surface normal components
-#' - `slope`: Gradient magnitude from surface calculations
-#' - `aspect`: Direction of steepest slope from surface calculations
-#' - `dzdx`, `dzdy`: Partial derivatives from surface calculations
 #'
 #' @section Grouping:
 #' When aesthetics like `colour` or `fill` are mapped to categorical variables,
@@ -243,11 +236,15 @@ geom_density_3d <- function(mapping = NULL, data = NULL,
                             pad = 0.1,
                             min_ndensity = 0,
                             light = ggcube::light(),
+                            cull_backfaces = FALSE, sort_method = NULL,
+                            force_convex = TRUE, scale_depth = TRUE,
                             na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
 
       layer(data = data, mapping = mapping, stat = stat, geom = GeomPolygon3D,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
-            params = list(n = n, grid = grid, direction = direction, force_convex = TRUE,
+            params = list(n = n, grid = grid, direction = direction,
+                          force_convex = force_convex, cull_backfaces = cull_backfaces,
+                          sort_method = sort_method, scale_depth = scale_depth,
                           h = h, adjust = adjust, pad = pad, min_ndensity = min_ndensity,
                           light = light, na.rm = na.rm, ...)
       )
@@ -264,11 +261,15 @@ stat_density_3d <- function(mapping = NULL, data = NULL,
                             pad = 0.1,
                             min_ndensity = 0,
                             light = ggcube::light(),
+                            cull_backfaces = FALSE, sort_method = NULL,
+                            force_convex = TRUE, scale_depth = TRUE,
                             na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
 
       layer(data = data, mapping = mapping, stat = StatDensity3D, geom = geom,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
-            params = list(n = n, grid = grid, direction = direction, force_convex = TRUE,
+            params = list(n = n, grid = grid, direction = direction,
+                          force_convex = force_convex, cull_backfaces = cull_backfaces,
+                          sort_method = sort_method, scale_depth = scale_depth,
                           h = h, adjust = adjust, pad = pad, min_ndensity = min_ndensity,
                           light = light, na.rm = na.rm, ...)
       )
