@@ -6,22 +6,19 @@
 <!-- badges: start -->
 <!-- badges: end -->
 
-**ggcube** extends ggplot2 to support 3D figures. Use it to create 3D
-scatter plots, surfaces, volumes, and complex layered visualizations
+**ggcube** lets you build 3D figures using ggplot2. Use it to create 3D
+surfaces, volumes, scatter plots, and complex layered visualizations
 using familiar ggplot2 syntax with `aes(x, y, z)` and `coord_3d()`.
 
-The package provides a variety of 3D-specific `geom` functions to render
-surfaces, prisms, points, and paths in 3D. You can control plot geometry
-with 3D projection parameters, can apply a range of 3D lighting models,
-and can mix 3D layers with 2D layers rendered on cube faces.
-
-**ggcube** aims for seamless integration with ggplot2. Standard ggplot2
-features work as expected, including faceting, themes, scales, legends,
-and layering. In addition to the 3D-specific functions, it also works
-with many existing ggplot2 stats and geoms.
+The package provides a variety of 3D-specific `geoms` to render
+surfaces, prisms, points, and paths in 3D; it also works with some
+standard ggplot2 layer functions. You can control plot geometry with 3D
+projection parameters, can apply a range of 3D lighting models, and can
+mix 3D layers with 2D layers rendered on cube faces. Standard ggplot2
+features like faceting, themes, scales, and legends work as expected.
 
 WARNING: This package is in development and has not yet been officially
-released. Bugs and breaking changes are not unlikely.
+released. There are bugs, and future API changes are possible.
 
 ## Installation
 
@@ -50,13 +47,15 @@ ggplot(mpg, aes(x = displ, y = hwy, z = drv, color = class)) +
 
 <img src="man/figures/README-quickstart-1.png" width="100%" />
 
-You can control plot rotation and perspective, as well as axis label
-placement and panel selection, via parameters to `coord_3d()`:
+You can control plot rotation, perspective, and dimensions, as well as
+axis label placement and panel selection, via parameters to
+`coord_3d()`:
 
 ``` r
 ggplot(mpg, aes(displ, hwy, drv, color = class)) +
       geom_point() +
-      coord_3d(pitch = 0, roll = 60, yaw = 0, dist = 1.4, panels = "all") +
+      coord_3d(pitch = 0, roll = 60, yaw = 0, dist = 1.4, 
+               ratio = c(2, 1, 1), panels = "all") +
       theme(panel.border = element_rect(color = "black"),
             panel.foreground = element_rect(alpha = .1))
 ```
@@ -195,15 +194,19 @@ ggplot(sphere_points, aes(x, y, z)) +
       theme_dark() +
       theme(legend.position = "none") +
       
-      # add shading to solid color/fill
+      # apply shading to solid color/fill
       geom_hull_3d(fill = "#8a2900", color = "#8a2900",
                    light = light(method = "direct", mode = "hsl", 
                                  direction = c(0, 0, 1))) +
       
-      # add shading to aesthetic color/fill
+      # apply shading to aesthetic color/fill
       geom_hull_3d(aes(x = x + 2.5, fill = x, color = x),
                    light = light(method = "diffuse", mode = "hsv", 
-                                 direction = c(0, 0, 1), contrast = 2))
+                                 direction = c(0, 0, 1), contrast = 2)) +
+      
+      # map surface orientation to 3D RGB color channels
+      geom_hull_3d(aes(x = x + 5),
+                   light = light(method = "rgb", direction = c(0, 0, 1)))
 ```
 
 <img src="man/figures/README-lighting-1.png" width="100%" />

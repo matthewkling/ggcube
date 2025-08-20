@@ -24,8 +24,10 @@ light(
 directly away from light source are fully dark; base color occurs on surfaces perpendicular to light)
 \item \code{"direct"}: Direct lighting with hard shadows (all surfaces angled beyond 90 degrees from
 light source are fully dark; base color occurs on surfaces angled 45 degrees toward light)
-\item \code{"rgb"}: Map surface orientation to three dimensional color space. If this option is selected,
-parameters like \code{mode} and \code{contrast} are ignored.
+\item \code{"rgb"}: Map surface orientation to three dimensional color space. Rather than the light model
+darkening or brightening base colors as in the other models, this model generates a wholly new set of
+colors. If this option is selected, parameters like \code{mode} and \code{contrast} are ignored, but
+\code{fill}, \code{color}, and \code{direction} still apply.
 }}
 
 \item{direction}{Numeric vector of length 3 specifying direction in 3D space that
@@ -47,16 +49,16 @@ intensity falloff for positional lighting using inverse square law
 (intensity ∝ 1/distance²). Only used when \code{position} is specified.
 Default is FALSE.}
 
-\item{fill}{Logical indicating whether to apply lighting to fill colors.
-Default is TRUE.}
+\item{fill}{Logical indicating whether to apply lighting to fill colors. Default is TRUE.}
 
-\item{color}{Logical indicating whether to apply lighting to border/line colors.
-Default is TRUE.}
+\item{color}{Logical indicating whether to apply lighting to border/line colors. Default is TRUE.}
 
 \item{mode}{Character string specifying color lighting mode:
 \itemize{
-\item \code{"hsv"}: The default. Modifies \emph{value} component of HSV color (fades to bright colors at high end, black at low end)
-\item \code{"hsl"}: Modifies \emph{lightness} component of HSL color (fades to white at high end, black at low end)
+\item \code{"hsv"}: The default. Modifies \emph{value} component of \emph{HSV} color
+(fades to bright colors at high end, black at low end)
+\item \code{"hsl"}: Modifies \emph{lightness} component of \emph{HSL} color
+(fades to white at high end, black at low end)
 }}
 
 \item{contrast}{Numeric value greater than zero controlling the intensity of lighting effects.
@@ -81,7 +83,7 @@ Various options are available to control light qualities and light source locati
 }
 \details{
 Note that light-like effects can also be achieved in some stats by mapping color
-aesthestics to computed variables such as \code{after_stat(dzdx)}; see \code{\link[=stat_surface_3d]{stat_surface_3d()}}
+aesthestics to computed variables such as \code{after_stat(dzdx)}; see \code{\link[=geom_surface_3d]{geom_surface_3d()}}
 for examples.
 }
 \examples{
@@ -106,7 +108,7 @@ p + stat_surface_3d(fill = "steelblue", color = "black",
                     light = light(method = "direct", contrast = .75))
 
 # use `"rgb"` lighting to map face orientation to 3D color space
-# p + stat_surface_3d(light = light(method = "normal_rgb"))
+# p + stat_surface_3d(light = light(method = "rgb"))
 
 
 # Lighting targets ---------------------------------------------------------

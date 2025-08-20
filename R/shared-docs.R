@@ -23,7 +23,7 @@
 #' @param scale_depth Logical indicating whether polygon linewidths should be scaled to make closer lines
 #'   wider and farther lines narrower. Default is TRUE. Scaling is based on the mean depth of a polygon.
 #' @param force_convex Logical indicating whether to remove polygon vertices that are not part of the
-#'   convex hull. Default is FALSE. Specifying TRUE can be useful for preventing artifacts in surfaces
+#'   convex hull. Default value varies by geom. Specifying TRUE can help reduce artifacts in surfaces
 #'   that have polygon tiles that wrap over a visible horizon.
 #' @name polygon_rendering
 NULL

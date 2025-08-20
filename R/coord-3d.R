@@ -1050,7 +1050,7 @@ process_backfaces <- function(data) {
             scl <- data$lighting_spec[[1]]$backface_scale %||% 1
             off <- data$lighting_spec[[1]]$backface_offset %||% 0
             if((scl != 1 || off != 0) &
-               data$lighting_spec[[1]]$method != "normal_rgb") {
+               data$lighting_spec[[1]]$method != "rgb") {
                   data <- mutate(data, light = ifelse(back_face, light * scl + off, light))
             }
       }

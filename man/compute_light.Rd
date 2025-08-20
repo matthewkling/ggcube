@@ -18,7 +18,7 @@ positional lighting, optional for directional lighting.}
 }
 \value{
 Vector of lighting values. For most methods, returns numeric values.
-For \code{method = "normal_rgb"}, returns hex color strings with \code{I()}
+For \code{method = "rgb"}, returns hex color strings with \code{I()}
 class for identity scaling.
 }
 \description{

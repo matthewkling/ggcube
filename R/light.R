@@ -6,7 +6,7 @@
 #' Various options are available to control light qualities and light source location.
 #'
 #' Note that light-like effects can also be achieved in some stats by mapping color
-#' aesthestics to computed variables such as `after_stat(dzdx)`; see [stat_surface_3d()]
+#' aesthestics to computed variables such as `after_stat(dzdx)`; see [geom_surface_3d()]
 #' for examples.
 #'
 #' @param method Character string specifying lighting model:
@@ -15,18 +15,20 @@
 #'          directly away from light source are fully dark; base color occurs on surfaces perpendicular to light)
 #'     \item \code{"direct"}: Direct lighting with hard shadows (all surfaces angled beyond 90 degrees from
 #'          light source are fully dark; base color occurs on surfaces angled 45 degrees toward light)
-#'     \item \code{"rgb"}: Map surface orientation to three dimensional color space. If this option is selected,
-#'          parameters like `mode` and `contrast` are ignored.
+#'     \item \code{"rgb"}: Map surface orientation to three dimensional color space. Rather than the light model
+#'          darkening or brightening base colors as in the other models, this model generates a wholly new set of
+#'           colors. If this option is selected, parameters like `mode` and `contrast` are ignored, but
+#'           `fill`, `color`, and `direction` still apply.
 #'   }
 #' @param mode Character string specifying color lighting mode:
 #'   \itemize{
-#'     \item \code{"hsv"}: The default. Modifies _value_ component of HSV color (fades to bright colors at high end, black at low end)
-#'     \item \code{"hsl"}: Modifies _lightness_ component of HSL color (fades to white at high end, black at low end)
+#'     \item \code{"hsv"}: The default. Modifies _value_ component of _HSV_ color
+#'          (fades to bright colors at high end, black at low end)
+#'     \item \code{"hsl"}: Modifies _lightness_ component of _HSL_ color
+#'          (fades to white at high end, black at low end)
 #'   }
-#' @param fill Logical indicating whether to apply lighting to fill colors.
-#'   Default is TRUE.
-#' @param color Logical indicating whether to apply lighting to border/line colors.
-#'   Default is TRUE.
+#' @param fill Logical indicating whether to apply lighting to fill colors. Default is TRUE.
+#' @param color Logical indicating whether to apply lighting to border/line colors. Default is TRUE.
 #' @param contrast Numeric value greater than zero controlling the intensity of lighting effects.
 #'   1.0 (the default) gives full black-to-white range. Values less than 1 give subtler effects, while
 #'   values greater than 1 give more dramatic effects.
@@ -76,7 +78,7 @@
 #'                     light = light(method = "direct", contrast = .75))
 #'
 #' # use `"rgb"` lighting to map face orientation to 3D color space
-#' # p + stat_surface_3d(light = light(method = "normal_rgb"))
+#' # p + stat_surface_3d(light = light(method = "rgb"))
 #'
 #'
 #' # Lighting targets ---------------------------------------------------------
@@ -147,7 +149,7 @@ light <- function(method = "diffuse",
                   backface_offset = 0) {
 
       # Validate method
-      valid_methods <- c("direct", "diffuse", "normal_rgb")
+      valid_methods <- c("direct", "diffuse", "rgb")
       if (!method %in% valid_methods) {
             stop("method must be one of: ", paste(valid_methods, collapse = ", "))
       }
@@ -265,7 +267,7 @@ print.light <- function(x, ...) {
 #'   the center position of each face in data coordinate space. Required for
 #'   positional lighting, optional for directional lighting.
 #' @return Vector of lighting values. For most methods, returns numeric values.
-#'   For \code{method = "normal_rgb"}, returns hex color strings with \code{I()}
+#'   For \code{method = "rgb"}, returns hex color strings with \code{I()}
 #'   class for identity scaling.
 #' @keywords internal
 compute_light <- function(normals, lighting, face_centers = NULL) {
@@ -278,7 +280,7 @@ compute_light <- function(normals, lighting, face_centers = NULL) {
       params <- lighting
 
       # Validate resolved parameters
-      valid_light <- c("direct", "diffuse", "normal_rgb", "normal_x", "normal_y", "normal_z")
+      valid_light <- c("direct", "diffuse", "rgb", "normal_x", "normal_y", "normal_z")
       if (!params$method %in% valid_light) {
             stop("lighting method must be one of: ", paste(valid_light, collapse = ", "))
       }
@@ -343,14 +345,14 @@ compute_light <- function(normals, lighting, face_centers = NULL) {
       light <- switch(params$method,
                       direct = pmax(0, dot_products),             # Direct lighting with hard shadows
                       diffuse = dot_products,                     # Atmospheric lighting: full -1 to +1 range
-                      normal_rgb = {                              # Map normals to RGB hex colors
+                      rgb = {                              # Map normals to RGB hex colors
                             if (use_positional) {
                                   # For positional lighting, use average light direction for RGB mapping
                                   avg_light_dir <- colMeans(light_directions)
-                                  compute_normal_rgb_light(normals, avg_light_dir)
+                                  compute_rgb_light(normals, avg_light_dir)
                             } else {
                                   light_dir_norm <- normalize_light_direction(params$direction)
-                                  compute_normal_rgb_light(normals, light_dir_norm)
+                                  compute_rgb_light(normals, light_dir_norm)
                             }
                       },
                       normal_x = (normals[,1] + 1) / 2,           # X-normal as color (0-1 range)
@@ -360,12 +362,12 @@ compute_light <- function(normals, lighting, face_centers = NULL) {
       )
 
       # Apply quantization if requested
-      if (!is.null(params$quanta) && !params$method %in% c("normal_rgb", "normal_x", "normal_y", "normal_z")) {
+      if (!is.null(params$quanta) && !params$method %in% c("rgb", "normal_x", "normal_y", "normal_z")) {
             light <- apply_quantization(light, params$method, params$quanta)
       }
 
       # Auto-wrap RGB colors with I() for identity scaling
-      if (params$method == "normal_rgb") {
+      if (params$method == "rgb") {
             light <- I(light)
       }
 
@@ -421,7 +423,7 @@ compute_light_dot_products <- function(normals, light_dir_norm) {
 #' @param light_dir_norm Normalized light direction vector
 #' @return Character vector of hex color codes
 #' @keywords internal
-compute_normal_rgb_light <- function(normals, light_dir_norm) {
+compute_rgb_light <- function(normals, light_dir_norm) {
 
       # Target direction for white color in RGB space
       white_dir <- c(1, 1, 1) / sqrt(3)
@@ -520,7 +522,7 @@ compute_light_in_coord <- function(data, standardized_coords, scale_ranges, scal
       # Merge face-level lighting vars back into vertex-level data set
       data <- left_join(data, faces, by = join_by(group))
 
-      if (light$method == "normal_rgb") {
+      if (light$method == "rgb") {
             data$light <- I(data$light)
       }
 
@@ -810,7 +812,7 @@ hue2rgb <- function(p, q, t) {
 # Blend lighting values with base colors using HSV or HSL color spaces
 blend_light_with_colors <- function(base_colors, light_values, lighting) {
 
-      if (lighting$method == "normal_rgb") {
+      if (lighting$method == "rgb") {
             return(I(light_values))
       }
 
