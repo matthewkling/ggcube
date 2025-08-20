@@ -57,6 +57,7 @@ Works with both complete and sparse grid data. Each data point becomes a rectang
 <span>  cull_backfaces <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  sort_method <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  scale_depth <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  force_convex <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  na.rm <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  show.legend <span class="op">=</span> <span class="cn">NA</span>,</span>
 <span>  inherit.aes <span class="op">=</span> <span class="cn">TRUE</span></span>
@@ -75,6 +76,7 @@ Works with both complete and sparse grid data. Each data point becomes a rectang
 <span>  cull_backfaces <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  sort_method <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  scale_depth <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  force_convex <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  na.rm <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  show.legend <span class="op">=</span> <span class="cn">NA</span>,</span>
 <span>  inherit.aes <span class="op">=</span> <span class="cn">TRUE</span></span>
@@ -131,6 +133,11 @@ if mapped, otherwise defaults to the minimum <code>z</code> value in the data.</
 
 <dt id="arg-light">light<a class="anchor" aria-label="anchor" href="#arg-light"></a></dt>
 <dd><p>A lighting specification object created by <code><a href="light.html">light()</a></code>, or NULL to disable shading.</p></dd>
+
+
+<dt id="arg-cull-backfaces-sort-method-force-convex-scale-depth">cull_backfaces, sort_method, force_convex, scale_depth<a class="anchor" aria-label="anchor" href="#arg-cull-backfaces-sort-method-force-convex-scale-depth"></a></dt>
+<dd><p>Advanced polygon
+rendering parameters. See <a href="polygon_rendering.html">polygon_rendering</a> for details.</p></dd>
 
 
 <dt id="arg-na-rm">na.rm<a class="anchor" aria-label="anchor" href="#arg-na-rm"></a></dt>
