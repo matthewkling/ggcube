@@ -61,6 +61,9 @@ thicker, and segments farther away appear thinner.}
 
 \item{geom}{The geometric object used to display the data. Defaults to \link{GeomSegment3D}.}
 }
+\value{
+A \code{Layer} object that can be added to a ggplot.
+}
 \description{
 \code{geom_segment_3d()} and \code{stat_segment_3d()} drawe line segments in 3D space
 with automatic depth-based linewidth scaling and proper depth sorting.

@@ -88,6 +88,9 @@ rendering parameters. See \link{polygon_rendering} for details.}
 
 \item{geom}{The geometric object used to display the data. Defaults to \code{GeomPolygon3D}.}
 }
+\value{
+A \code{Layer} object that can be added to a ggplot.
+}
 \description{
 A 3D version of \code{ggplot2::stat_function()}.
 Creates surfaces by evaluating a function f(x,y) = z over a regular grid.

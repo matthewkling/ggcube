@@ -87,6 +87,8 @@
 #'
 #' @seealso [coord_3d()] for 3D coordinate systems, [stat_density_2d()] and other
 #'   2D statistical transformations that can be projected onto faces.
+#' @return A ggplot position object that can be supplied to the `position` argument
+#'   to layer functions.
 #' @export
 position_on_face <- function(faces = "zmin", axes = NULL) {
       # Validate faces parameter

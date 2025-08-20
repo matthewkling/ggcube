@@ -1,7 +1,8 @@
 StatIdentity3D <- ggproto("StatIdentity3D", Stat,
                           required_aes = c("x", "y"),  # Require at least x and y like geom_point
 
-                          compute_panel = function(data, scales, na.rm = FALSE, light = NULL) {
+                          compute_panel = function(data, scales, na.rm = FALSE, light = NULL,
+                                                   cull_backfaces = FALSE) {
 
                                 # Remove missing values if requested
                                 if (na.rm) {
@@ -48,6 +49,8 @@ StatIdentity3D <- ggproto("StatIdentity3D", Stat,
                                       }
                                 }
 
+                                if(!is.null(cull_backfaces)) data$cull_backfaces <- cull_backfaces
+
                                 return(attach_light(data, light))
                           }
 )
@@ -66,11 +69,10 @@ StatIdentity3D <- ggproto("StatIdentity3D", Stat,
 #' @param data The data to be displayed in this layer.
 #' @param geom The geometric object to use display the data.
 #' @param position Position adjustment, defaults to "identity".
+#' @inheritParams light_param
 #' @param na.rm If `FALSE`, missing values are removed with a warning.
 #' @param show.legend Logical indicating whether this layer should be included in legends.
 #' @param inherit.aes If `FALSE`, overrides the default aesthetics.
-#' @param light A lighting specification object created by \code{light()},
-#'   or NULL (the default) to disable shading.
 #' @param ... Other arguments passed on to geom layer.
 #'
 #' @section Computed variables:
@@ -78,6 +80,7 @@ StatIdentity3D <- ggproto("StatIdentity3D", Stat,
 #' - `group`: Converted to hierarchical format (e.g., "1__group", "2__group") for proper depth sorting.
 #'
 #' @seealso [geom_point_3d()], [geom_polygon_3d()] which use this stat for discrete scale support.
+#' @return A `Layer` object that can be added to a ggplot.
 #' @export
 stat_identity_3d <- function(mapping = NULL, data = NULL,
                              geom = "point", position = "identity",

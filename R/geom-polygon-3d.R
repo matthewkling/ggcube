@@ -79,7 +79,9 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
 #' from [stat_hull_3d()] and [stat_surface_3d()], as well as regular polygon data like maps.
 #'
 #' @param mapping Set of aesthetic mappings created by [aes()].
-#' @param data The data to be displayed in this layer.
+#' @param data The data to be displayed in this layer. Note that if you specify `light` or
+#'   `cull_backfaces`, behavior will depend on the "winding order" of polygon vertices, with
+#'   the counter-clockwise face considered the "front".
 #' @param stat The statistical transformation to use on the data. Defaults to [StatIdentity3D].
 #' @inheritParams polygon_params
 #' @inheritParams position_param
@@ -132,11 +134,14 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
 #' p + geom_polygon_3d(color = "black", linewidth = 1, alpha = .75,
 #'       sort_method = "pairwise")
 #'
+#' @return A `Layer` object that can be added to a ggplot.
 #' @export
 geom_polygon_3d <- function(mapping = NULL, data = NULL, stat = StatIdentity3D,
                             position = "identity",
                             ...,
                             sort_method = "auto", scale_depth = TRUE, force_convex = FALSE,
+                            cull_backfaces = FALSE,
+                            light = NULL,
                             na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
 
       layer(
@@ -145,6 +150,8 @@ geom_polygon_3d <- function(mapping = NULL, data = NULL, stat = StatIdentity3D,
             params = list(sort_method = sort_method,
                           scale_depth = scale_depth,
                           force_convex = force_convex,
+                          cull_backfaces = cull_backfaces,
+                          light = light,
                           na.rm = na.rm, ...)
       )
 }

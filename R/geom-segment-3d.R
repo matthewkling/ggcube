@@ -51,6 +51,7 @@
 #'
 #' @seealso [geom_path_3d()] for connected paths, [geom_segment()] for 2D segments,
 #'   [coord_3d()] for 3D coordinate systems.
+#' @return A `Layer` object that can be added to a ggplot.
 #' @rdname geom_segment_3d
 #' @export
 geom_segment_3d <- function(mapping = NULL, data = NULL,

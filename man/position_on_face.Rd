@@ -18,6 +18,10 @@ Multiple faces and "3D" are only supported for 3D layers (when \code{axes = NULL
 maps to the 3D z-axis. For 3D layers, use \code{NULL} (default) to preserve
 the existing x,y,z mapping.}
 }
+\value{
+A ggplot position object that can be supplied to the \code{position} argument
+to layer functions.
+}
 \description{
 Enables layers to be projected onto 2D faces of the 3D coordinate cube.
 It can be used to flatten 3D ggcube layers onto a single cube face as a way of

@@ -15,7 +15,8 @@
 #'          directly away from light source are fully dark; base color occurs on surfaces perpendicular to light)
 #'     \item \code{"direct"}: Direct lighting with hard shadows (all surfaces angled beyond 90 degrees from
 #'          light source are fully dark; base color occurs on surfaces angled 45 degrees toward light)
-#'     \item \code{"normal_rgb"}: Map surface normals to RGB colors
+#'     \item \code{"rgb"}: Map surface orientation to three dimensional color space. If this option is selected,
+#'          parameters like `mode` and `contrast` are ignored.
 #'   }
 #' @param mode Character string specifying color lighting mode:
 #'   \itemize{
@@ -52,18 +53,17 @@
 #'   backfaces highly contrasting lighting to frontfaces. To light backfaces the same as frontfaces,
 #'   set scale to 1. To uniformly darken (brighten) all backfaces, use a negative (positive) offset.
 #'
-#' @return A \code{lighting} object that can be passed to 3D surface stats.
+#' @return A \code{lighting} object that can be passed to polygon-based 3D stats.
 #' @examples
 #' # base plot used in examples
 #' p <- ggplot(mountain, aes(x, y, z)) + coord_3d(ratio = c(1, 1.5, 1))
 #'
-#'
 #' # Light qualities ----------------------------------------------------------
 #'
-#' # default diffuse lighting
+#' # default `"diffuse"` lighting
 #' p + stat_surface_3d(fill = "steelblue", color = "black")
 #'
-#' # use "hsl" mode to fade highlights to white
+#' # use `"hsl"` mode to fade highlights to white
 #' p + stat_surface_3d(fill = "steelblue", color = "black",
 #'                     light = light(mode = "hsl"))
 #'
@@ -71,11 +71,11 @@
 #' p + stat_surface_3d(fill = "steelblue", color = "black",
 #'                     light = light(mode = "hsl", contrast = 2))
 #'
-#' # use "direct" lighting to apply full shade to unlit surfaces
+#' # use `"direct"` lighting to apply full shade to unlit surfaces
 #' p + stat_surface_3d(fill = "steelblue", color = "black",
 #'                     light = light(method = "direct", contrast = .75))
 #'
-#' # use "rgb" to plot each face orientation in a unique color
+#' # use `"rgb"` lighting to map face orientation to 3D color space
 #' # p + stat_surface_3d(light = light(method = "normal_rgb"))
 #'
 #'
@@ -89,7 +89,7 @@
 #' # (equivalent to specifying `light(fill = FALSE, color = FALSE`))
 #' p + stat_surface_3d(fill = "steelblue", color = "black", light = NULL)
 #'
-#' # apply lighting on top of aesthetic mapping, with shaded guide
+#' # apply lighting on top of aesthetic mapping, with shaded guide to match
 #' p + stat_surface_3d(aes(fill = z, color = z),
 #'                     light = light(contrast = 2)) +
 #'       scale_fill_viridis_c() +
@@ -113,20 +113,20 @@
 #'
 #' # Backface lighting --------------------------------------------------------
 #'
-#' # backfaces get "opposite" lighting by default (backface_scale = -1)
+#' # backfaces get "opposite" lighting by default (`backface_scale = -1`)
 #' p <- ggplot() + coord_3d(pitch = 0, roll = -70, yaw = 0)
 #' p + geom_function_3d(fun = function(x, y) x^2 + y^2,
 #'     xlim = c(-3, 3), ylim = c(-3, 3),
 #'     fill = "steelblue", color = "steelblue",
 #'     light = light(mode = "hsl"))
 #'
-#' # use backface_scale = 1 to light backfaces as if they're fontfaces
+#' # use `backface_scale = 1` to light backfaces as if they're fontfaces
 #' p + geom_function_3d(fun = function(x, y) x^2 + y^2,
 #'     xlim = c(-3, 3), ylim = c(-3, 3),
 #'     fill = "steelblue", color = "steelblue",
 #'     light = light(backface_scale = 1, mode = "hsl"))
 #'
-#' # use backface_offset to uniformly darken (or lighten) backfaces
+#' # use `backface_offset` to uniformly darken (or lighten) backfaces
 #' p + geom_function_3d(fun = function(x, y) x^2 + y^2,
 #'     xlim = c(-3, 3), ylim = c(-3, 3),
 #'     fill = "steelblue", color = "steelblue",
@@ -810,13 +810,8 @@ hue2rgb <- function(p, q, t) {
 # Blend lighting values with base colors using HSV or HSL color spaces
 blend_light_with_colors <- function(base_colors, light_values, lighting) {
 
-      if (length(base_colors) != length(light_values)) {
-            stop("base_colors and light_values must have the same length")
-      }
-
       if (lighting$method == "normal_rgb") {
-            warning("Color shading is not supported with normal_rgb lighting method")
-            return(base_colors)
+            return(I(light_values))
       }
 
       # Handle any invalid values

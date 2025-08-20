@@ -71,6 +71,9 @@ Note that alpha shapes are quite sensitive to the coordinate scales of your data
 
 \item{geom}{The geometric object used to display the data. Defaults to \code{GeomPolygon3D.}}
 }
+\value{
+A \code{Layer} object that can be added to a ggplot.
+}
 \description{
 Turns 3D point clouds into surface hulls consisting of triangular polygons,
 using either convex hull or alpha shape algorithms.

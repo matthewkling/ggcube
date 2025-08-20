@@ -254,6 +254,7 @@ create_pillars <- function(data, x_spacing, y_spacing, width, selected_faces) {
 #'
 #' @seealso [stat_surface_3d()] for smooth surface rendering, [coord_3d()] for 3D coordinate systems,
 #'   [light()] for lighting specifications, [GeomPolygon3D] for the default geometry.
+#' @return A `Layer` object that can be added to a ggplot.
 #' @rdname geom_pillar_3d
 #' @export
 geom_pillar_3d <- function(mapping = NULL, data = NULL,

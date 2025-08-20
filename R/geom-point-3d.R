@@ -549,6 +549,7 @@ generate_point_elements <- function(data, raw_points,
 #'
 #' @seealso [geom_point()] for 2D scatter plots, [coord_3d()] for 3D coordinate systems,
 #'   [stat_point_3d()] for the underlying statistical transformation.
+#' @return A `Layer` object that can be added to a ggplot.
 #' @rdname geom_point_3d
 #' @export
 geom_point_3d <- function(mapping = NULL, data = NULL,

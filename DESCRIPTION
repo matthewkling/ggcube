@@ -5,7 +5,7 @@ Version: 0.1.0.9000
 Author: Matthew Kling
 Maintainer: Matthew Kling <mattkling@berkeley.edu>
 Description: Use ggplot2 to create 3d visualizations
-License: What license is it under?
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 URL: https://github.com/matthewkling/ggcube, https://matthewkling.github.io/ggcube/

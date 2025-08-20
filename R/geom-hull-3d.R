@@ -185,6 +185,7 @@ StatHull3D <- ggproto("StatHull3D", Stat,
 #' @seealso [coord_3d()] for 3D coordinate systems, [geom_polygon_3d] for the
 #'   default geometry with depth sorting, [light()] for lighting specifications.
 #' @rdname geom_hull_3d
+#' @return A `Layer` object that can be added to a ggplot.
 #' @export
 geom_hull_3d <- function(mapping = NULL, data = NULL,
                          stat = StatHull3D,

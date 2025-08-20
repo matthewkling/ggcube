@@ -13,6 +13,8 @@ geom_polygon_3d(
   sort_method = "auto",
   scale_depth = TRUE,
   force_convex = FALSE,
+  cull_backfaces = FALSE,
+  light = NULL,
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE
@@ -21,7 +23,9 @@ geom_polygon_3d(
 \arguments{
 \item{mapping}{Set of aesthetic mappings created by \code{\link[=aes]{aes()}}.}
 
-\item{data}{The data to be displayed in this layer.}
+\item{data}{The data to be displayed in this layer. Note that if you specify \code{light} or
+\code{cull_backfaces}, behavior will depend on the "winding order" of polygon vertices, with
+the counter-clockwise face considered the "front".}
 
 \item{stat}{The statistical transformation to use on the data. Defaults to \link{StatIdentity3D}.}
 
@@ -31,11 +35,17 @@ onto one 2D surface, use \code{position_on_face()}.}
 \item{...}{Other arguments passed on to the the layer function (typically GeomPolygon3D), such as
 aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc.}
 
+\item{cull_backfaces, sort_method, force_convex, scale_depth}{Advanced polygon
+rendering parameters. See \link{polygon_rendering} for details.}
+
 \item{na.rm}{If \code{FALSE}, missing values are removed.}
 
 \item{show.legend}{Logical indicating whether this layer should be included in legends.}
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics.}
+}
+\value{
+A \code{Layer} object that can be added to a ggplot.
 }
 \description{
 \code{geom_polygon_3d()} renders 3D polygons with proper depth sorting for realistic

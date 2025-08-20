@@ -119,6 +119,9 @@ Both American (\code{ref_point_color}) and British (\code{ref_point_colour}) spe
 
 \item{geom}{The geometric object used to display the data. Defaults to \link{GeomPoint3D}.}
 }
+\value{
+A \code{Layer} object that can be added to a ggplot.
+}
 \description{
 \code{geom_point_3d()} creates scatter plots in 3D space with automatic depth-based
 size scaling. Points closer to the viewer appear larger, while points farther

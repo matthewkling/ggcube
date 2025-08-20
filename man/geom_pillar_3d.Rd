@@ -83,6 +83,9 @@ if mapped, otherwise defaults to the minimum \code{z} value in the data.}
 
 \item{geom}{The geometric object used to display the data. Defaults to \code{GeomPolygon3D}.}
 }
+\value{
+A \code{Layer} object that can be added to a ggplot.
+}
 \description{
 Creates 3D pillars from regular grid data in which x and y fall on a regular grid.
 Works with both complete and sparse grid data. Each data point becomes a rectangular

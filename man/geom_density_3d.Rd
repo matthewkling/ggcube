@@ -99,6 +99,9 @@ rendering parameters. See \link{polygon_rendering} for details.}
 
 \item{geom}{The geometric object used to display the data. Defaults to \code{GeomPolygon3D}.}
 }
+\value{
+A \code{Layer} object that can be added to a ggplot.
+}
 \description{
 A 3D version of \code{ggplot2::geom_density_2d()}.
 Creates surfaces from 2D point data using kernel density estimation.

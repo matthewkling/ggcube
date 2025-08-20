@@ -172,7 +172,7 @@ convert_to_quads <- function(data) {
 #'
 #' # terrain surface with topographic hillshade and elevational fill
 #' ggplot(mountain, aes(x, y, z, fill = z, color = z)) +
-#'   geomsurface_3d(light = light(direction = c(1, 0, .5),
+#'   geom_surface_3d(light = light(direction = c(1, 0, .5),
 #'                            mode = "hsv", contrast = 1.5),
 #'                linewidth = .2) +
 #'   coord_3d(ratio = c(1, 1.5, .75)) +
@@ -185,6 +185,7 @@ convert_to_quads <- function(data) {
 #'   [stat_smooth_3d()] for surfaces based on fitted statistical models;
 #'   [stat_pillar_3d()] for terraced column-like surfaces;
 #'   [geom_polygon_3d()] for the default geom associated with this layer.
+#' @return A `Layer` object that can be added to a ggplot.
 #' @rdname geom_surface_3d
 #' @export
 geom_surface_3d <- function(mapping = NULL, data = NULL, stat = StatSurface3D,

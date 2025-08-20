@@ -61,6 +61,9 @@ appear thicker, and segments farther away appear thinner.}
 
 \item{geom}{The geometric object used to display the data. Defaults to \link{GeomSegment3D}.}
 }
+\value{
+A \code{Layer} object that can be added to a ggplot.
+}
 \description{
 Connects observations in 3D space in the order they appear
 in the data. It converts path data into individual segments for proper depth

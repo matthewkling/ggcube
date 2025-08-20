@@ -238,6 +238,7 @@ convert_to_numeric <- function(data) {
 #' @seealso [stat_pillar_3d()] for variable-height columns, [stat_surface_3d()] for smooth surfaces,
 #'   [coord_3d()] for 3D coordinate systems, [light()] for lighting specifications,
 #'   [GeomPolygon3D] for the default geometry.
+#' @return A `Layer` object that can be added to a ggplot.
 #' @rdname geom_voxel_3d
 #' @export
 geom_voxel_3d <- function(mapping = NULL, data = NULL,

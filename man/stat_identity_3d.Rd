@@ -31,10 +31,12 @@ stat_identity_3d(
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics.}
 
-\item{light}{A lighting specification object created by \code{light()},
-or NULL (the default) to disable shading.}
+\item{light}{A lighting specification object created by \code{\link[=light]{light()}}, or NULL to disable shading.}
 
 \item{...}{Other arguments passed on to geom layer.}
+}
+\value{
+A \code{Layer} object that can be added to a ggplot.
 }
 \description{
 This stat performs identity transformation (passes data through unchanged) while

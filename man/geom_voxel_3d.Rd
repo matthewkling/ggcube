@@ -77,6 +77,9 @@ interior faces the viewer -- e.g., when \code{cull_backfaces = TRUE} and \code{f
 
 \item{geom}{The geometric object used to display the data. Defaults to \code{GeomPolygon3D}.}
 }
+\value{
+A \code{Layer} object that can be added to a ggplot.
+}
 \description{
 Creates 3D voxel visualizations from sparse 3D point data.
 Each data point becomes a fixed-size cube centered on its coordinates.

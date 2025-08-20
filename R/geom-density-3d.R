@@ -226,6 +226,7 @@ kde2d <- function(x, y, eval_x, eval_y, h) {
 #'   [make_tile_grid()] for details about grid geometry options,
 #'   [coord_3d()] for 3D coordinate systems.
 #' @rdname geom_density_3d
+#' @return A `Layer` object that can be added to a ggplot.
 #' @export
 geom_density_3d <- function(mapping = NULL, data = NULL,
                             stat = StatDensity3D,

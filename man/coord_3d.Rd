@@ -90,6 +90,9 @@ as scaled by \code{ratio}. Similar to \code{coord_fixed()} but for 3D
 \item With \code{scales = "fixed"}: Ratios apply to original data coordinates
 }}
 }
+\value{
+A \code{Coord} object that can be added to a ggplot.
+}
 \description{
 \code{coord_3d} is a 3D coordinate system that creates a 2D view of 3D data.
 This is the essential core component of any plot made with \code{ggcube}.
@@ -132,7 +135,7 @@ and grid elements, you can use \code{panel.background}, etc. to style both backg
 }
 
 \examples{
-# base plot used in all examples
+# base plot used in examples
 p <- ggplot() +
   geom_function_3d(
     aes(fill = after_stat(z), color = after_stat(z)),
@@ -145,6 +148,7 @@ p <- ggplot() +
 
 # 3D plot with default coord settings
 p + coord_3d()
+
 
 # Use `pitch`, `roll`, `yaw` to control plot rotation ----------------------
 
@@ -163,6 +167,7 @@ p + coord_3d(pitch = 0, roll = 0, yaw = 30)
 # combine them to achieve arbitrary rotations
 p + coord_3d(pitch = 20, roll = 40, yaw = 60)
 
+
 # Use `persp` and `dist` to control perspective effects --------------------
 
 # strong perspective effect as if seen from very close
@@ -171,8 +176,9 @@ p + coord_3d(dist = 1)
 # weaker perspective effects as if seen from far away
 p + coord_3d(dist = 3)
 
-# orthographic projection, effectively dist = Inf
+# orthographic projection (`dist = Inf` would be equivalent but it errors)
 p + coord_3d(persp = FALSE)
+
 
 # Use `scales` and `ratio` to control aspect ratio -------------------------
 
@@ -185,6 +191,7 @@ p + coord_3d(scales = "free", ratio = c(1, 2, 1))
 
 # Custom aspect ratios: fix scales but make y twice long
 p + coord_3d(scales = "fixed", ratio = c(1, 2, 1))
+
 
 # Use `panels` to select which cube faces to render ------------------------
 
@@ -201,9 +208,12 @@ p + coord_3d(panels = "all") +
           axis.title = element_text(margin = margin(t = 30)),
           axis.title.x = element_text(color = "magenta"))
 
+
 # Use label params to control axis text placement and rotation -------------
+
 p + coord_3d(xlabels = c("ymax", "zmax"),
              zlabels = c("xmax", "ymin"))
+
 p + coord_3d(rotate_labels = FALSE)
 
 }

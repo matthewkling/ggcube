@@ -92,7 +92,7 @@
 #' and grid elements, you can use `panel.background`, etc. to style both background and foreground faces simultaneously.
 #'
 #' @examples
-#' # base plot used in all examples
+#' # base plot used in examples
 #' p <- ggplot() +
 #'   geom_function_3d(
 #'     aes(fill = after_stat(z), color = after_stat(z)),
@@ -105,6 +105,7 @@
 #'
 #' # 3D plot with default coord settings
 #' p + coord_3d()
+#'
 #'
 #' # Use `pitch`, `roll`, `yaw` to control plot rotation ----------------------
 #'
@@ -123,6 +124,7 @@
 #' # combine them to achieve arbitrary rotations
 #' p + coord_3d(pitch = 20, roll = 40, yaw = 60)
 #'
+#'
 #' # Use `persp` and `dist` to control perspective effects --------------------
 #'
 #' # strong perspective effect as if seen from very close
@@ -131,8 +133,9 @@
 #' # weaker perspective effects as if seen from far away
 #' p + coord_3d(dist = 3)
 #'
-#' # orthographic projection, effectively dist = Inf
+#' # orthographic projection (`dist = Inf` would be equivalent but it errors)
 #' p + coord_3d(persp = FALSE)
+#'
 #'
 #' # Use `scales` and `ratio` to control aspect ratio -------------------------
 #'
@@ -145,6 +148,7 @@
 #'
 #' # Custom aspect ratios: fix scales but make y twice long
 #' p + coord_3d(scales = "fixed", ratio = c(1, 2, 1))
+#'
 #'
 #' # Use `panels` to select which cube faces to render ------------------------
 #'
@@ -161,11 +165,15 @@
 #'           axis.title = element_text(margin = margin(t = 30)),
 #'           axis.title.x = element_text(color = "magenta"))
 #'
+#'
 #' # Use label params to control axis text placement and rotation -------------
+#'
 #' p + coord_3d(xlabels = c("ymax", "zmax"),
 #'              zlabels = c("xmax", "ymin"))
+#'
 #' p + coord_3d(rotate_labels = FALSE)
 #'
+#' @return A `Coord` object that can be added to a ggplot.
 #' @export
 coord_3d <- function(pitch = 0, roll = -60, yaw = -30,
                      persp = TRUE, dist = 2,
@@ -1041,7 +1049,8 @@ process_backfaces <- function(data) {
       if("lighting_spec" %in% names(data)) {
             scl <- data$lighting_spec[[1]]$backface_scale %||% 1
             off <- data$lighting_spec[[1]]$backface_offset %||% 0
-            if(scl != 1 || off != 0) {
+            if((scl != 1 || off != 0) &
+               data$lighting_spec[[1]]$method != "normal_rgb") {
                   data <- mutate(data, light = ifelse(back_face, light * scl + off, light))
             }
       }

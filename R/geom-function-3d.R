@@ -195,6 +195,7 @@ ensure_nonempty_data <- function(data) {
 #'   [light()] for lighting specifications,
 #'   [coord_3d()] for 3D coordinate systems.
 #' @rdname geom_function_3d
+#' @return A `Layer` object that can be added to a ggplot.
 #' @export
 geom_function_3d <- function(mapping = NULL,
                              data = NULL,

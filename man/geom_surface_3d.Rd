@@ -65,6 +65,9 @@ rendering parameters. See \link{polygon_rendering} for details.}
 
 \item{geom}{The geometric object used to display the data. Defaults to \code{GeomPolygon3D}.}
 }
+\value{
+A \code{Layer} object that can be added to a ggplot.
+}
 \description{
 Creates 3D surfaces from regularly gridded data (like elevation maps).
 The data must be on a regular, complete grid where every combination
@@ -123,7 +126,7 @@ ggplot(rbind(d, d2), aes(x, y, z, group = g, fill = g)) +
 
 # terrain surface with topographic hillshade and elevational fill
 ggplot(mountain, aes(x, y, z, fill = z, color = z)) +
-  geomsurface_3d(light = light(direction = c(1, 0, .5),
+  geom_surface_3d(light = light(direction = c(1, 0, .5),
                            mode = "hsv", contrast = 1.5),
                linewidth = .2) +
   coord_3d(ratio = c(1, 1.5, .75)) +
