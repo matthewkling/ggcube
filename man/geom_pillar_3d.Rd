@@ -18,6 +18,7 @@ geom_pillar_3d(
   cull_backfaces = TRUE,
   sort_method = NULL,
   scale_depth = TRUE,
+  force_convex = FALSE,
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE
@@ -36,6 +37,7 @@ stat_pillar_3d(
   cull_backfaces = TRUE,
   sort_method = NULL,
   scale_depth = TRUE,
+  force_convex = FALSE,
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE
@@ -74,6 +76,9 @@ interior faces the viewer -- e.g., when \code{cull_backfaces = TRUE} and \code{f
 if mapped, otherwise defaults to the minimum \code{z} value in the data.}
 
 \item{light}{A lighting specification object created by \code{\link[=light]{light()}}, or NULL to disable shading.}
+
+\item{cull_backfaces, sort_method, force_convex, scale_depth}{Advanced polygon
+rendering parameters. See \link{polygon_rendering} for details.}
 
 \item{na.rm}{If \code{FALSE}, missing values are removed.}
 

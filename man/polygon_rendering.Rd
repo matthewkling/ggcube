@@ -25,8 +25,9 @@ than 500 rows and painter otherwise.
 wider and farther lines narrower. Default is TRUE. Scaling is based on the mean depth of a polygon.}
 
 \item{force_convex}{Logical indicating whether to remove polygon vertices that are not part of the
-convex hull. Default is FALSE. Specifying TRUE can be useful for preventing artifacts in surfaces
-that have polygon tiles that wrap over a visible horizon.}
+convex hull. Default value varies by geom. Specifying TRUE can help reduce artifacts in surfaces
+that have polygon tiles that wrap over a visible horizon. For prism-type geoms like pillars and
+voxels, FALSE is safe because polygons fill always be convex.}
 }
 \description{
 Polygon rendering parameters

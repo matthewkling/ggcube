@@ -186,7 +186,7 @@ ggplot(sphere_points, aes(x, y, z)) +
       
       # map surface orientation to 3D RGB color channels
       geom_hull_3d(aes(x = x + 5),
-                   light = light(method = "rgb", direction = c(0, 0, 1)))
+                   light = light(method = "rgb", direction = c(1, 0, -1)))
 ```
 
 

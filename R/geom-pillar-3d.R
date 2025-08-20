@@ -263,13 +263,14 @@ geom_pillar_3d <- function(mapping = NULL, data = NULL,
                            ...,
                            width = 1.0, faces = "all", zmin = NULL,
                            light = ggcube::light(),
-                           cull_backfaces = TRUE, sort_method = NULL, scale_depth = TRUE,
+                           cull_backfaces = TRUE, sort_method = NULL,
+                           scale_depth = TRUE, force_convex = FALSE,
                            na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
 
       layer(data = data, mapping = mapping, stat = stat, geom = GeomPolygon3D,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(na.rm = na.rm, width = width, faces = faces, light = light, zmin = zmin,
-                          force_convex = FALSE, cull_backfaces = cull_backfaces,
+                          force_convex = force_convex, cull_backfaces = cull_backfaces,
                           sort_method = sort_method, scale_depth = scale_depth,
                           ...)
       )
@@ -284,13 +285,14 @@ stat_pillar_3d <- function(mapping = NULL, data = NULL,
                            ...,
                            width = 1.0, faces = "all", zmin = NULL,
                            light = ggcube::light(),
-                           cull_backfaces = TRUE, sort_method = NULL, scale_depth = TRUE,
+                           cull_backfaces = TRUE, sort_method = NULL,
+                           scale_depth = TRUE, force_convex = FALSE,
                            na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
 
       layer(data = data, mapping = mapping, stat = StatPillar3D, geom = geom,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(na.rm = na.rm, width = width, faces = faces, light = light, zmin = zmin,
-                          force_convex = FALSE, cull_backfaces = cull_backfaces,
+                          force_convex = force_convex, cull_backfaces = cull_backfaces,
                           sort_method = sort_method, scale_depth = scale_depth,
                           ...)
       )
