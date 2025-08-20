@@ -70,7 +70,8 @@ Various options are available to control light qualities and light source locati
 directly away from light source are fully dark; base color occurs on surfaces perpendicular to light)</p></li>
 <li><p><code>"direct"</code>: Direct lighting with hard shadows (all surfaces angled beyond 90 degrees from
 light source are fully dark; base color occurs on surfaces angled 45 degrees toward light)</p></li>
-<li><p><code>"normal_rgb"</code>: Map surface normals to RGB colors</p></li>
+<li><p><code>"rgb"</code>: Map surface orientation to three dimensional color space. If this option is selected,
+parameters like <code>mode</code> and <code>contrast</code> are ignored.</p></li>
 </ul></dd>
 
 
@@ -132,7 +133,7 @@ set scale to 1. To uniformly darken (brighten) all backfaces, use a negative (po
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A <code>lighting</code> object that can be passed to 3D surface stats.</p>
+    <p>A <code>lighting</code> object that can be passed to polygon-based 3D stats.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -150,14 +151,13 @@ for examples.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># base plot used in examples</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mountain</span>, <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span>ratio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1.5</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Light qualities ----------------------------------------------------------</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># default diffuse lighting</span></span></span>
+<span class="r-in"><span><span class="co"># default `"diffuse"` lighting</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="geom_surface_3d.html">stat_surface_3d</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="st">"steelblue"</span>, color <span class="op">=</span> <span class="st">"black"</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="light-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># use "hsl" mode to fade highlights to white</span></span></span>
+<span class="r-in"><span><span class="co"># use `"hsl"` mode to fade highlights to white</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="geom_surface_3d.html">stat_surface_3d</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="st">"steelblue"</span>, color <span class="op">=</span> <span class="st">"black"</span>,</span></span>
 <span class="r-in"><span>                    light <span class="op">=</span> <span class="fu">light</span><span class="op">(</span>mode <span class="op">=</span> <span class="st">"hsl"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="light-2.png" alt="" width="700" height="433"></span>
@@ -167,12 +167,12 @@ for examples.</p>
 <span class="r-in"><span>                    light <span class="op">=</span> <span class="fu">light</span><span class="op">(</span>mode <span class="op">=</span> <span class="st">"hsl"</span>, contrast <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="light-3.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># use "direct" lighting to apply full shade to unlit surfaces</span></span></span>
+<span class="r-in"><span><span class="co"># use `"direct"` lighting to apply full shade to unlit surfaces</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="geom_surface_3d.html">stat_surface_3d</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="st">"steelblue"</span>, color <span class="op">=</span> <span class="st">"black"</span>,</span></span>
 <span class="r-in"><span>                    light <span class="op">=</span> <span class="fu">light</span><span class="op">(</span>method <span class="op">=</span> <span class="st">"direct"</span>, contrast <span class="op">=</span> <span class="fl">.75</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="light-4.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># use "rgb" to plot each face orientation in a unique color</span></span></span>
+<span class="r-in"><span><span class="co"># use `"rgb"` lighting to map face orientation to 3D color space</span></span></span>
 <span class="r-in"><span><span class="co"># p + stat_surface_3d(light = light(method = "normal_rgb"))</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span></span></span>
@@ -188,7 +188,7 @@ for examples.</p>
 <span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="geom_surface_3d.html">stat_surface_3d</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="st">"steelblue"</span>, color <span class="op">=</span> <span class="st">"black"</span>, light <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="light-6.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># apply lighting on top of aesthetic mapping, with shaded guide</span></span></span>
+<span class="r-in"><span><span class="co"># apply lighting on top of aesthetic mapping, with shaded guide to match</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="geom_surface_3d.html">stat_surface_3d</a></span><span class="op">(</span><span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="va">z</span>, color <span class="op">=</span> <span class="va">z</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                    light <span class="op">=</span> <span class="fu">light</span><span class="op">(</span>contrast <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_c</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span></span>
@@ -215,7 +215,7 @@ for examples.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Backface lighting --------------------------------------------------------</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># backfaces get "opposite" lighting by default (backface_scale = -1)</span></span></span>
+<span class="r-in"><span><span class="co"># backfaces get "opposite" lighting by default (`backface_scale = -1`)</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span>pitch <span class="op">=</span> <span class="fl">0</span>, roll <span class="op">=</span> <span class="op">-</span><span class="fl">70</span>, yaw <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="geom_function_3d.html">geom_function_3d</a></span><span class="op">(</span>fun <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span> <span class="va">x</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span> <span class="va">y</span><span class="op">^</span><span class="fl">2</span>,</span></span>
 <span class="r-in"><span>    xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3</span>, <span class="fl">3</span><span class="op">)</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3</span>, <span class="fl">3</span><span class="op">)</span>,</span></span>
@@ -223,14 +223,14 @@ for examples.</p>
 <span class="r-in"><span>    light <span class="op">=</span> <span class="fu">light</span><span class="op">(</span>mode <span class="op">=</span> <span class="st">"hsl"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="light-10.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># use backface_scale = 1 to light backfaces as if they're fontfaces</span></span></span>
+<span class="r-in"><span><span class="co"># use `backface_scale = 1` to light backfaces as if they're fontfaces</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="geom_function_3d.html">geom_function_3d</a></span><span class="op">(</span>fun <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span> <span class="va">x</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span> <span class="va">y</span><span class="op">^</span><span class="fl">2</span>,</span></span>
 <span class="r-in"><span>    xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3</span>, <span class="fl">3</span><span class="op">)</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3</span>, <span class="fl">3</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>    fill <span class="op">=</span> <span class="st">"steelblue"</span>, color <span class="op">=</span> <span class="st">"steelblue"</span>,</span></span>
 <span class="r-in"><span>    light <span class="op">=</span> <span class="fu">light</span><span class="op">(</span>backface_scale <span class="op">=</span> <span class="fl">1</span>, mode <span class="op">=</span> <span class="st">"hsl"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="light-11.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># use backface_offset to uniformly darken (or lighten) backfaces</span></span></span>
+<span class="r-in"><span><span class="co"># use `backface_offset` to uniformly darken (or lighten) backfaces</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="geom_function_3d.html">geom_function_3d</a></span><span class="op">(</span>fun <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span> <span class="va">x</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span> <span class="va">y</span><span class="op">^</span><span class="fl">2</span>,</span></span>
 <span class="r-in"><span>    xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3</span>, <span class="fl">3</span><span class="op">)</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3</span>, <span class="fl">3</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>    fill <span class="op">=</span> <span class="st">"steelblue"</span>, color <span class="op">=</span> <span class="st">"steelblue"</span>,</span></span>
