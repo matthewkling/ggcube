@@ -61,6 +61,7 @@ The fitted statistical model is evaluated on a regular grid and rendered as a
 <span>  n <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  grid <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  direction <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  trim <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  domain <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"bbox"</span>, <span class="st">"chull"</span><span class="op">)</span>,</span>
 <span>  se <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  level <span class="op">=</span> <span class="fl">0.95</span>,</span>
@@ -93,6 +94,7 @@ The fitted statistical model is evaluated on a regular grid and rendered as a
 <span>  n <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  grid <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  direction <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  trim <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  domain <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"bbox"</span>, <span class="st">"chull"</span><span class="op">)</span>,</span>
 <span>  se <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  level <span class="op">=</span> <span class="fl">0.95</span>,</span>
@@ -165,7 +167,7 @@ include smoothing parameters or basis specifications.</p></dd>
 If <code>NULL</code> (default), uses the exact data range with no extrapolation.</p></dd>
 
 
-<dt id="arg-grid-n-direction">grid, n, direction<a class="anchor" aria-label="anchor" href="#arg-grid-n-direction"></a></dt>
+<dt id="arg-grid-n-direction-trim">grid, n, direction, trim<a class="anchor" aria-label="anchor" href="#arg-grid-n-direction-trim"></a></dt>
 <dd><p>Parameters determining the geometry, resolution, and
 orientation of the surface grid. See <a href="grid_generation.html">grid_generation</a> for details.</p></dd>
 

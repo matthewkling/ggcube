@@ -46,8 +46,10 @@ of tiles, as used by various ggcube layer functions.</p>
 
 <dl><dt id="arg-grid">grid<a class="anchor" aria-label="anchor" href="#arg-grid"></a></dt>
 <dd><p>Character argument specifying geometry of grid to generate.
-Options include <code>"rect"</code> (the default) for rectangular grid, <code>"tri"</code> for
-triangular grid, or <code>"hex"</code> for hexagonal grid.</p></dd>
+Options include <code>"tri"</code> (the default) for triangular grid, <code>"rect"</code> for
+rectangular grid, or <code>"hex"</code> for hexagonal grid. Triangles produce a proper 3D
+surface that can prevent lighting artifacts in places where a surface curves past
+parallel with the sight line.</p></dd>
 
 
 <dt id="arg-n">n<a class="anchor" aria-label="anchor" href="#arg-n"></a></dt>
@@ -59,6 +61,13 @@ Default is <code>40</code>. Higher values create smoother surfaces but slower re
 <dt id="arg-direction">direction<a class="anchor" aria-label="anchor" href="#arg-direction"></a></dt>
 <dd><p>Either <code>"x"</code> (the default) or <code>"y"</code>, specifying the orientation
 of tile rows. Ignored for rectangular grids.</p></dd>
+
+
+<dt id="arg-trim">trim<a class="anchor" aria-label="anchor" href="#arg-trim"></a></dt>
+<dd><p>Logical. Only relevant for triangular and hexagonal grids. If TRUE
+(default), trims edge tiles to so that grid boundaries are straight lines. If
+FALSE, preserves the full shape of all tiles, resulting in a grid with
+irregular edges.</p></dd>
 
 </dl></div>
     <div class="section level2">
