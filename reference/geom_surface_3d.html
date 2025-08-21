@@ -50,7 +50,7 @@ of x and y values appears exactly once.</p>
 <span>  stat <span class="op">=</span> <span class="va">StatSurface3D</span>,</span>
 <span>  position <span class="op">=</span> <span class="st">"identity"</span>,</span>
 <span>  <span class="va">...</span>,</span>
-<span>  light <span class="op">=</span> <span class="fu">ggcube</span><span class="fu">::</span><span class="fu"><a href="light.html">light</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  light <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  cull_backfaces <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  sort_method <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  force_convex <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -66,7 +66,7 @@ of x and y values appears exactly once.</p>
 <span>  geom <span class="op">=</span> <span class="va">GeomPolygon3D</span>,</span>
 <span>  position <span class="op">=</span> <span class="st">"identity"</span>,</span>
 <span>  <span class="va">...</span>,</span>
-<span>  light <span class="op">=</span> <span class="fu">ggcube</span><span class="fu">::</span><span class="fu"><a href="light.html">light</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  light <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  cull_backfaces <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  sort_method <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  force_convex <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -106,7 +106,9 @@ aesthetics like <code>colour</code>, <code>fill</code>, <code>linewidth</code>, 
 
 
 <dt id="arg-light">light<a class="anchor" aria-label="anchor" href="#arg-light"></a></dt>
-<dd><p>A lighting specification object created by <code><a href="light.html">light()</a></code>, or NULL to disable shading.</p></dd>
+<dd><p>A lighting specification object created by <code><a href="light.html">light()</a></code> (see that function for details),
+or <code>NULL</code> to disable shading. Specify plot-level lighting in <code><a href="coord_3d.html">coord_3d()</a></code> and layer-specific
+lighting in <code>geom_*3d()</code> functions.</p></dd>
 
 
 <dt id="arg-cull-backfaces-sort-method-force-convex-scale-depth">cull_backfaces, sort_method, force_convex, scale_depth<a class="anchor" aria-label="anchor" href="#arg-cull-backfaces-sort-method-force-convex-scale-depth"></a></dt>

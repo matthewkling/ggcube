@@ -43,9 +43,12 @@
 
 <dl><dt id="arg-cull-backfaces">cull_backfaces<a class="anchor" aria-label="anchor" href="#arg-cull-backfaces"></a></dt>
 <dd><p>Logical indicating whether to remove back-facing polygons
-from rendering for performance optimization. Back faces are determined using
+from rendering. This is primarily for performance optimization but may be useful
+for aesthetic reasons in some situations. Backfaces are determined using
 screen-space winding order after 3D transformation. Defaults vary by geometry
-type: TRUE for solid objects (hulls, voxels), FALSE for surfaces and wireframes.</p></dd>
+type: FALSE for open surface-type geometries, TRUE for solid objects (hulls,
+voxels, etc. where backfaces are generally hidden unless frontfaces are transparent
+or explicitly disabled).</p></dd>
 
 
 <dt id="arg-sort-method">sort_method<a class="anchor" aria-label="anchor" href="#arg-sort-method"></a></dt>

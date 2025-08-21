@@ -208,7 +208,9 @@ inherits from the main surface <code>linewidth</code> aesthetic.</p></dd>
 
 
 <dt id="arg-light">light<a class="anchor" aria-label="anchor" href="#arg-light"></a></dt>
-<dd><p>A lighting specification object created by <code><a href="light.html">light()</a></code>, or NULL to disable shading.</p></dd>
+<dd><p>A lighting specification object created by <code><a href="light.html">light()</a></code> (see that function for details),
+or <code>NULL</code> to disable shading. Specify plot-level lighting in <code><a href="coord_3d.html">coord_3d()</a></code> and layer-specific
+lighting in <code>geom_*3d()</code> functions.</p></dd>
 
 
 <dt id="arg-cull-backfaces-sort-method-force-convex-scale-depth">cull_backfaces, sort_method, force_convex, scale_depth<a class="anchor" aria-label="anchor" href="#arg-cull-backfaces-sort-method-force-convex-scale-depth"></a></dt>
@@ -282,7 +284,7 @@ rendering parameters. See <a href="polygon_rendering.html">polygon_rendering</a>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Base plot</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">d</span>, <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span>light <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_c</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Basic smooth surface with default loess model</span></span></span>
@@ -306,7 +308,7 @@ rendering parameters. See <a href="polygon_rendering.html">polygon_rendering</a>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Ignoring unknown parameters: `force_convex` and `sort_method`</span>
 <span class="r-plt img"><img src="geom_smooth_3d-3.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Loess with custom span parameter, and lighting aesthetics</span></span></span>
+<span class="r-in"><span><span class="co"># Loess with custom span parameter, and lighting effects</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu">geom_smooth_3d</span><span class="op">(</span></span></span>
 <span class="r-in"><span>      method <span class="op">=</span> <span class="st">"loess"</span>, method.args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>span <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>      fill <span class="op">=</span> <span class="st">"steelblue"</span>, color <span class="op">=</span> <span class="st">"white"</span>, n <span class="op">=</span> <span class="fl">20</span>,</span></span>
