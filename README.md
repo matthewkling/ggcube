@@ -92,12 +92,13 @@ Example: a mathematical surface using `geom_function_3d()`:
 
 ``` r
 ggplot() +
-      geom_function_3d(
-            fun = function(x, y) cos(x) * sin(y),
-            xlim = c(-pi, pi), ylim = c(-pi, pi),
-            color = "black", grid = "hex"
-      ) +
-      coord_3d(yaw = 150) +
+      geom_function_3d(fun = function(x, y) cos(x) * sin(y),
+                       xlim = c(-pi, pi), ylim = c(-2*pi, 2*pi),
+                       fill = "#7a2100", color = "#b3725b", 
+                       grid = "tri") +
+      coord_3d(yaw = 160, roll = -70, 
+               scales = "fixed", ratio = c(1, 1, 2)) +
+      labs(z = "cos(x) * sin(y)") +
       theme_minimal()
 ```
 
@@ -115,7 +116,8 @@ d$z <- d$x + d$x^2 - d$y^2 + rnorm(50)
 ggplot(d, aes(x, y, z)) + 
       geom_smooth_3d(aes(fill = after_stat(level)),
                      method = "gam", formula = z ~ te(x, y),
-                     se = TRUE, level = 0.99, color = "black") +
+                     se = TRUE, level = 0.99, 
+                     color = "black", grid = "hex") +
       scale_fill_manual(values = c("red", "darkorchid4", "steelblue")) +
       coord_3d(light = NULL)
 ```
@@ -135,13 +137,13 @@ Example: a 3D bar chart using `geom_pillar_3d()`:
 # 3D pillar visualization
 ggplot(mountain[mountain$z > 90, ], 
        aes(x, y, z, zmin = 90, fill = z)) +
-    geom_pillar_3d(color = "black", linewidth = 0.1, width = .9,
-                   light = light(direction = c(1, -.25, 0), color = FALSE),
-                   sort_method = "pairwise") +
-    coord_3d() +
-    scale_fill_viridis_c(option = "B") + 
-    guides(fill = guide_colorbar_3d()) +
-    theme(panel.border = element_rect(color = "black", linewidth = .25))
+      geom_pillar_3d(color = "black", linewidth = 0.1, width = .9,
+                     light = light(direction = c(1, -.25, 0), color = FALSE),
+                     sort_method = "pairwise") +
+      coord_3d() +
+      scale_fill_viridis_c(option = "B") + 
+      guides(fill = guide_colorbar_3d()) +
+      theme(panel.border = element_rect(color = "black", linewidth = .25))
 ```
 
 <img src="man/figures/README-volumes-1.png" width="100%" />
@@ -184,7 +186,7 @@ ggplot(mpg, aes(x = displ, y = hwy, z = drv, fill = class)) +
 ## Lighting effects
 
 Lighting of 3D polygon layers is controlled by providing a `light()`
-specification to the layer or the coord.
+specification to the layer function or to `coord_3d()`.
 
 ``` r
 ggplot(sphere_points, aes(x, y, z)) +
@@ -214,8 +216,8 @@ ggplot(sphere_points, aes(x, y, z)) +
 ## Face projection
 
 3D and 2D layers can be mixed by using `position_on_face()` to project
-data onto cube faces. We saw this in the `geom_path_3d()` example above,
-but here’s another example that mixes different geoms, including
+data onto 2D cube faces. We saw this in the `geom_path_3d()` example
+above, but here’s another example that mixes different geoms, including
 natively-2D layers like `ggplot2::stat_density_2d()`:
 
 ``` r
@@ -226,14 +228,14 @@ ggplot(iris, aes(Sepal.Length, Sepal.Width, Petal.Length,
       
       # place 2D density plot on zmin face
       stat_density_2d(position = position_on_face(faces = "zmin", axes = c("x", "y")),
-            geom = "polygon", alpha = .1, linewidth = .25) +
+                      geom = "polygon", alpha = .1, linewidth = .25) +
       
       # flatten 3D hull layer onto ymax face
       geom_hull_3d(position = position_on_face("ymax"), alpha = .5) +
       
       # flatten 3D voxels onto xmax face to create 2D bins
       geom_voxel_3d(aes(round(Sepal.Length), round(Sepal.Width), round(Petal.Length)),
-            position = position_on_face("xmax"), alpha = .15, light = NULL) +
+                    position = position_on_face("xmax"), alpha = .15, light = NULL) +
       
       # 3D scatter plot (added last so it renders in front)
       geom_point_3d( shape = 21, color = "black", stroke = .25)

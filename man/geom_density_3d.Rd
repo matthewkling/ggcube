@@ -14,6 +14,7 @@ geom_density_3d(
   n = NULL,
   grid = NULL,
   direction = NULL,
+  trim = NULL,
   h = NULL,
   adjust = 1,
   pad = 0.1,
@@ -37,6 +38,7 @@ stat_density_3d(
   n = NULL,
   grid = NULL,
   direction = NULL,
+  trim = NULL,
   h = NULL,
   adjust = 1,
   pad = 0.1,
@@ -67,7 +69,7 @@ onto one 2D surface, use \code{position_on_face()}.}
 \item{...}{Other arguments passed on to the the layer function (typically GeomPolygon3D), such as
 aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc.}
 
-\item{grid, n, direction}{Parameters determining the geometry, resolution, and
+\item{grid, n, direction, trim}{Parameters determining the geometry, resolution, and
 orientation of the surface grid. See \link{grid_generation} for details.}
 
 \item{h}{Bandwidth vector. If \code{NULL} (default), uses automatic bandwidth selection

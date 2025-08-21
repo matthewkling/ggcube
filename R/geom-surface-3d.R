@@ -2,7 +2,9 @@ StatSurface3D <- ggproto("StatSurface3D", Stat,
                          required_aes = c("x", "y", "z"),
 
                          compute_group = function(data, scales, na.rm = FALSE,
-                                                  cull_backfaces = NULL, light = NULL) {
+                                                  cull_backfaces = NULL,
+                                                  grid = NULL,
+                                                  light = NULL) {
 
                                # Remove missing values if requested
                                if (na.rm) {
@@ -27,7 +29,7 @@ StatSurface3D <- ggproto("StatSurface3D", Stat,
 
                                # Create quadrilateral faces from grid cells
                                data <- data %>%
-                                     convert_to_quads() %>%
+                                     convert_to_tiles(grid) %>%
                                      compute_surface_vars() %>%
                                      average_aesthetics() %>%
                                      mutate(cull_backfaces = cull_backfaces) %>%
@@ -75,15 +77,18 @@ detect_grid_structure <- function(data) {
       )
 }
 
-#' Create quadrilateral faces from grid data
+#' Create quads or triangles from grid data
 #'
 #' @param data Regular grid data frame
 #' @return Data frame with quad faces and computed gradients
 #' @keywords internal
-convert_to_quads <- function(data) {
+convert_to_tiles <- function(data, grid = c("tri1", "tri2", "quad")) {
+
+      grid <- match.arg(grid)
+
       data <- data %>%
             ungroup() %>%
-            mutate(quad_id = 1:nrow(.))
+            mutate(tile_id = 1:nrow(.))
 
       dy <- data %>%
             group_by(x) %>%
@@ -100,18 +105,39 @@ convert_to_quads <- function(data) {
       dxy <- data.frame(x = dx$x,
                         y = dy$y) %>%
             left_join(data, by = join_by(x, y)) %>%
-            mutate(quad_id = dx$quad_id)
+            mutate(tile_id = dx$tile_id)
 
       d <- bind_rows(data, dx, dxy, dy) %>%
             na.omit() %>%
-            group_by(quad_id) %>%
+            group_by(tile_id) %>%
             filter(n() == 4) %>%
             arrange(x, y) %>%
             mutate(order = c(4, 3, 1, 2)) %>% # ccw order
             ungroup() %>%
-            arrange(quad_id, order) %>%
-            mutate(group = paste0("surface__quad", quad_id, "::", group)) %>%
+            arrange(tile_id, order) %>%
             as.data.frame()
+
+      if(grid != "quad"){
+            i <- switch(grid,
+                        tri1 = c(1,2,3,  3,4,1),
+                        tri2 = c(2,3,4,  4,1,2))
+            d$row_id <- 1:nrow(d)
+
+            # split into triangles
+            dt <- d %>%
+                  group_by(tile_id) %>%
+                  reframe(row_id = row_id[i],
+                          x = x[i], y = y[i], z = z[i],
+                          tile_id = tile_id[1] + rep(c(.1, .2), each = 3),
+                          order = rep(1:3, 2))
+
+            # preserve additional columns
+            d <- left_join(dt,
+                      d[, c("row_id", setdiff(names(d), names(dt)))],
+                      by = join_by("row_id"))
+      }
+
+      d <- d %>% mutate(group = paste0("surface__quad", tile_id, "::", group))
 
       return(d)
 }
@@ -129,7 +155,11 @@ convert_to_quads <- function(data) {
 #'   representing coordinates on a regular grid.
 #' @param stat The statistical transformation to use on the data. Defaults to `StatSurface3D`.
 #' @param geom The geometric object used to display the data. Defaults to `GeomPolygon3D`.
-#'
+#' @param grid Character specifying desired surface grid geometry: either `"quad"` (the default)
+#'   for a rectangular grid, `"tri1"` for a grid of right triangles with diagonals running
+#'   in one direction, or `"tri2"` for a grid of right triangles with the opposite orientation.
+#'   Triangles produce a proper 3D surface that can prevent lighting artifacts in places where
+#'   a surface curves past parallel with the sight line.
 #' @inheritParams position_param
 #' @inheritParams light_param
 #' @inheritParams polygon_params
@@ -143,8 +173,8 @@ convert_to_quads <- function(data) {
 #' @inheritSection surface_computed_vars Computed variables
 #'
 #' @examples
-#' # data and base plot for basic surface
-#' d <- dplyr::mutate(tidyr::expand_grid(x = -20:20, y = -20:20),
+#' # simulated data and base plot for basic surface
+#' d <- dplyr::mutate(tidyr::expand_grid(x = -10:10, y = -10:10),
 #'       z = sqrt(x^2 + y^2) / 1.5,
 #'       z = cos(z) - z)
 #' p <- ggplot(d, aes(x, y, z)) + coord_3d()
@@ -153,12 +183,17 @@ convert_to_quads <- function(data) {
 #' p + geom_surface_3d(fill = "steelblue", color = "steelblue", linewidth = .2,
 #'       light = light(mode = "hsl", direction = c(1, 0, 0)))
 #'
-#' # mesh wireframe, without fill, with aes line color
-#' p + geom_surface_3d(aes(color = z), fill = NA)
+#' # mesh wireframe (`fill = NULL`) with aes line color
+#' p + geom_surface_3d(aes(color = z), fill = NA,
+#'       linewidth = .5, light = light(color = FALSE)) +
+#'   scale_color_gradientn(colors = c("black", "blue", "red"))
 #'
 #' # use after_stat to access computed surface-orientation variables
 #' p + geom_surface_3d(aes(fill = after_stat(aspect))) +
 #'       scale_fill_gradientn(colors = rainbow(20))
+#'
+#' # triangulated surface (can prevent lighting flaws)
+#' p + geom_surface_3d(fill = "#9e2602", color = "black", grid = "tri1")
 #'
 #' # use `group` to plot data for multiple surfaces
 #' d <- expand.grid(x = -5:5, y = -5:5)
@@ -192,6 +227,7 @@ convert_to_quads <- function(data) {
 geom_surface_3d <- function(mapping = NULL, data = NULL, stat = StatSurface3D,
                             position = "identity",
                             ...,
+                            grid = "quad",
                             light = NULL,
                             cull_backfaces = FALSE, sort_method = NULL,
                             force_convex = TRUE, scale_depth = TRUE,
@@ -199,7 +235,7 @@ geom_surface_3d <- function(mapping = NULL, data = NULL, stat = StatSurface3D,
 
       layer(mapping = mapping, data = data, stat = stat, geom = GeomPolygon3D,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
-            params = list(na.rm = na.rm,
+            params = list(na.rm = na.rm, grid = grid,
                           force_convex = force_convex, cull_backfaces = cull_backfaces,
                           sort_method = sort_method, scale_depth = scale_depth,
                           light = light, ...)
@@ -211,6 +247,7 @@ geom_surface_3d <- function(mapping = NULL, data = NULL, stat = StatSurface3D,
 stat_surface_3d <- function(mapping = NULL, data = NULL, geom = GeomPolygon3D,
                             position = "identity",
                             ...,
+                            grid = "quad",
                             light = NULL,
                             cull_backfaces = FALSE, sort_method = NULL,
                             force_convex = TRUE, scale_depth = TRUE,
@@ -218,7 +255,7 @@ stat_surface_3d <- function(mapping = NULL, data = NULL, geom = GeomPolygon3D,
 
       layer(mapping = mapping, data = data, stat = StatSurface3D, geom = geom,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
-            params = list(na.rm = na.rm,
+            params = list(na.rm = na.rm, grid = grid,
                           force_convex = force_convex, cull_backfaces = cull_backfaces,
                           sort_method = sort_method, scale_depth = scale_depth,
                           light = light, ...)

@@ -17,6 +17,7 @@ geom_function_3d(
   n = NULL,
   grid = NULL,
   direction = NULL,
+  trim = NULL,
   light = NULL,
   cull_backfaces = FALSE,
   sort_method = NULL,
@@ -39,6 +40,7 @@ stat_function_3d(
   n = NULL,
   grid = NULL,
   direction = NULL,
+  trim = NULL,
   cull_backfaces = FALSE,
   sort_method = NULL,
   force_convex = TRUE,
@@ -72,7 +74,7 @@ to x and y axis values) and return a numeric vector of z values. Required parame
 If \code{NULL} (default), uses the scale ranges from the plot, which can be set via
 \code{xlim()} and \code{ylim()}, or trained by supplying data to the plot.}
 
-\item{grid, n, direction}{Parameters determining the geometry, resolution, and
+\item{grid, n, direction, trim}{Parameters determining the geometry, resolution, and
 orientation of the surface grid. See \link{grid_generation} for details.}
 
 \item{light}{A lighting specification object created by \code{\link[=light]{light()}} (see that function for details),

@@ -5,8 +5,10 @@
 \title{Grid generation parameters}
 \arguments{
 \item{grid}{Character argument specifying geometry of grid to generate.
-Options include \code{"rect"} (the default) for rectangular grid, \code{"tri"} for
-triangular grid, or \code{"hex"} for hexagonal grid.}
+Options include \code{"tri"} (the default) for triangular grid, \code{"rect"} for
+rectangular grid, or \code{"hex"} for hexagonal grid. Triangles produce a proper 3D
+surface that can prevent lighting artifacts in places where a surface curves past
+parallel with the sight line.}
 
 \item{n}{Either a single integer specifying grid resolution in both dimensions,
 or a vector of length 2 specifying \code{c(nx, ny)} for separate x and y resolutions.
@@ -14,6 +16,11 @@ Default is \code{40}. Higher values create smoother surfaces but slower renderin
 
 \item{direction}{Either \code{"x"} (the default) or \code{"y"}, specifying the orientation
 of tile rows. Ignored for rectangular grids.}
+
+\item{trim}{Logical. Only relevant for triangular and hexagonal grids. If TRUE
+(default), trims edge tiles to so that grid boundaries are straight lines. If
+FALSE, preserves the full shape of all tiles, resulting in a grid with
+irregular edges.}
 }
 \description{
 Parameters defining the geometry, resolution, and orientation of a regular grid

@@ -11,6 +11,7 @@ geom_surface_3d(
   stat = StatSurface3D,
   position = "identity",
   ...,
+  grid = "quad",
   light = NULL,
   cull_backfaces = FALSE,
   sort_method = NULL,
@@ -27,6 +28,7 @@ stat_surface_3d(
   geom = GeomPolygon3D,
   position = "identity",
   ...,
+  grid = "quad",
   light = NULL,
   cull_backfaces = FALSE,
   sort_method = NULL,
@@ -51,6 +53,12 @@ onto one 2D surface, use \code{position_on_face()}.}
 
 \item{...}{Other arguments passed on to the the layer function (typically GeomPolygon3D), such as
 aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc.}
+
+\item{grid}{Character specifying desired surface grid geometry: either \code{"quad"} (the default)
+for a rectangular grid, \code{"tri1"} for a grid of right triangles with diagonals running
+in one direction, or \code{"tri2"} for a grid of right triangles with the opposite orientation.
+Triangles produce a proper 3D surface that can prevent lighting artifacts in places where
+a surface curves past parallel with the sight line.}
 
 \item{light}{A lighting specification object created by \code{\link[=light]{light()}} (see that function for details),
 or \code{NULL} to disable shading. Specify plot-level lighting in \code{coord_3d()} and layer-specific
@@ -98,8 +106,8 @@ The following computed variables are available via \code{after_stat()}:
 }
 
 \examples{
-# data and base plot for basic surface
-d <- dplyr::mutate(tidyr::expand_grid(x = -20:20, y = -20:20),
+# simulated data and base plot for basic surface
+d <- dplyr::mutate(tidyr::expand_grid(x = -10:10, y = -10:10),
       z = sqrt(x^2 + y^2) / 1.5,
       z = cos(z) - z)
 p <- ggplot(d, aes(x, y, z)) + coord_3d()
@@ -108,12 +116,17 @@ p <- ggplot(d, aes(x, y, z)) + coord_3d()
 p + geom_surface_3d(fill = "steelblue", color = "steelblue", linewidth = .2,
       light = light(mode = "hsl", direction = c(1, 0, 0)))
 
-# mesh wireframe, without fill, with aes line color
-p + geom_surface_3d(aes(color = z), fill = NA)
+# mesh wireframe (`fill = NULL`) with aes line color
+p + geom_surface_3d(aes(color = z), fill = NA,
+      linewidth = .5, light = light(color = FALSE)) +
+  scale_color_gradientn(colors = c("black", "blue", "red"))
 
 # use after_stat to access computed surface-orientation variables
 p + geom_surface_3d(aes(fill = after_stat(aspect))) +
       scale_fill_gradientn(colors = rainbow(20))
+
+# triangulated surface (can prevent lighting flaws)
+p + geom_surface_3d(fill = "#9e2602", color = "black", grid = "tri1")
 
 # use `group` to plot data for multiple surfaces
 d <- expand.grid(x = -5:5, y = -5:5)

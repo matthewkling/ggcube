@@ -5,17 +5,20 @@
 \title{Generate rectangular, triangular, or hexagonal grids}
 \usage{
 make_tile_grid(
-  grid = c("rect", "tri", "hex"),
+  grid = c("triangle", "rectangle", "hexagon"),
   n = 40,
   direction = c("x", "y"),
   xlim,
-  ylim
+  ylim,
+  trim = TRUE
 )
 }
 \arguments{
 \item{grid}{Character argument specifying geometry of grid to generate.
-Options include \code{"rect"} (the default) for rectangular grid, \code{"tri"} for
-triangular grid, or \code{"hex"} for hexagonal grid.}
+Options include \code{"tri"} (the default) for triangular grid, \code{"rect"} for
+rectangular grid, or \code{"hex"} for hexagonal grid. Triangles produce a proper 3D
+surface that can prevent lighting artifacts in places where a surface curves past
+parallel with the sight line.}
 
 \item{n}{Either a single integer specifying grid resolution in both dimensions,
 or a vector of length 2 specifying \code{c(nx, ny)} for separate x and y resolutions.
@@ -26,6 +29,11 @@ of tile rows. Ignored for rectangular grids.}
 
 \item{xlim, ylim}{Length-two numeric vectors defining bounding box over which to
 generate the grid.}
+
+\item{trim}{Logical. Only relevant for triangular and hexagonal grids. If TRUE
+(default), trims edge tiles to so that grid boundaries are straight lines. If
+FALSE, preserves the full shape of all tiles, resulting in a grid with
+irregular edges.}
 }
 \value{
 A data frame with the following columns: \code{x}, \code{y}, \code{group} (integer denoting

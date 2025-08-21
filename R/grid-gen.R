@@ -35,10 +35,11 @@
 #' @seealso [stat_function_3d()], [stat_smooth_3d()], and [stat_density_3d()] for ggcube layers that
 #'   use `make_tile_grid()` to generate gridded surfaces.
 #' @export
-make_tile_grid <- function(grid = c("rect", "tri", "hex"),
+make_tile_grid <- function(grid = c("triangle", "rectangle", "hexagon"),
                            n = 40,
                            direction = c("x", "y"),
-                           xlim, ylim) {
+                           xlim, ylim,
+                           trim = TRUE) {
 
       grid <- match.arg(grid)
       direction <- match.arg(direction)
@@ -50,16 +51,46 @@ make_tile_grid <- function(grid = c("rect", "tri", "hex"),
       if(direction == "y") n <- rev(n)
 
       tiles <- switch(grid,
-             rect = make_rect_tiles(n),
-             tri = make_tri_tiles(n),
-             hex = make_hex_tiles(n))
+             rectangle = make_rect_tiles(n),
+             triangle = make_tri_tiles(n),
+             hexagon = make_hex_tiles(n))
 
       tiles <- tiles %>%
+            trim_grid_edges(grid, trim) %>%
             transpose_grid(direction) %>%
             rescale_grid(xlim, ylim)
 
       return(tiles)
 }
+
+trim_grid_edges <- function(tiles, grid, trim){
+
+      if(trim && grid == "triangle"){
+            # move errant vertices
+            tiles <- mutate(tiles,
+                            x = case_when(x == min(x) ~ min(x[x > min(x)]),
+                                          x == max(x) ~ max(x[x < max(x)]),
+                                          TRUE ~ x))
+      }
+
+      if(trim && grid == "hexagon"){
+             # move or remove errant vertices
+            tiles <- tiles %>%
+                  filter(! x %in% range(x)) %>%
+                  group_by(group) %>%
+                  filter((! y %in% range(tiles$y)) | length(group) == 5)
+            tiles <- tiles %>%
+                  mutate(y = ifelse(x %in% range(tiles$x) &
+                                          y %in% range(tiles$y),
+                                    mean(range(y)), y)) %>%
+                  ungroup() %>%
+                  filter(! y %in% range(y))
+      }
+
+      # (no clipping needed for rectangles)
+      return(tiles)
+}
+
 
 make_rect_tiles <- function(n) {
 

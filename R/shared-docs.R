@@ -73,13 +73,19 @@ NULL
 #' of tiles, as used by various ggcube layer functions.
 #'
 #' @param grid Character argument specifying geometry of grid to generate.
-#'   Options include `"rect"` (the default) for rectangular grid, `"tri"` for
-#'   triangular grid, or `"hex"` for hexagonal grid.
+#'   Options include `"tri"` (the default) for triangular grid, `"rect"` for
+#'   rectangular grid, or `"hex"` for hexagonal grid. Triangles produce a proper 3D
+#'   surface that can prevent lighting artifacts in places where a surface curves past
+#'   parallel with the sight line.
 #' @param n Either a single integer specifying grid resolution in both dimensions,
 #'   or a vector of length 2 specifying `c(nx, ny)` for separate x and y resolutions.
 #'   Default is `40`. Higher values create smoother surfaces but slower rendering.
 #' @param direction Either `"x"` (the default) or `"y"`, specifying the orientation
 #'   of tile rows. Ignored for rectangular grids.
+#' @param trim Logical. Only relevant for triangular and hexagonal grids. If TRUE
+#'   (default), trims edge tiles to so that grid boundaries are straight lines. If
+#'   FALSE, preserves the full shape of all tiles, resulting in a grid with
+#'   irregular edges.
 #'
 #' @details Grids are constructed such that tiles are approximately equilateral
 #'   when scaled to a square domain, unless `n` gives separate resolution values
@@ -91,7 +97,7 @@ NULL
 
 #' Grid generation parameters
 #'
-#' @param grid,n,direction Parameters determining the geometry, resolution, and
+#' @param grid,n,direction,trim Parameters determining the geometry, resolution, and
 #'   orientation of the surface grid. See [grid_generation] for details.
 #' @name grid_params
 #' @keywords internal

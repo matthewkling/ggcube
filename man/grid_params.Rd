@@ -4,7 +4,7 @@
 \alias{grid_params}
 \title{Grid generation parameters}
 \arguments{
-\item{grid, n, direction}{Parameters determining the geometry, resolution, and
+\item{grid, n, direction, trim}{Parameters determining the geometry, resolution, and
 orientation of the surface grid. See \link{grid_generation} for details.}
 }
 \description{

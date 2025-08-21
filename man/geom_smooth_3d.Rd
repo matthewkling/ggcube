@@ -19,6 +19,7 @@ geom_smooth_3d(
   n = NULL,
   grid = NULL,
   direction = NULL,
+  trim = NULL,
   domain = c("bbox", "chull"),
   se = FALSE,
   level = 0.95,
@@ -51,6 +52,7 @@ stat_smooth_3d(
   n = NULL,
   grid = NULL,
   direction = NULL,
+  trim = NULL,
   domain = c("bbox", "chull"),
   se = FALSE,
   level = 0.95,
@@ -103,7 +105,7 @@ include smoothing parameters or basis specifications.}
 \item{xlim, ylim}{Numeric vectors of length 2 giving the range for prediction grid.
 If \code{NULL} (default), uses the exact data range with no extrapolation.}
 
-\item{grid, n, direction}{Parameters determining the geometry, resolution, and
+\item{grid, n, direction, trim}{Parameters determining the geometry, resolution, and
 orientation of the surface grid. See \link{grid_generation} for details.}
 
 \item{domain}{Character indicating the x-y domain over which to visualize the surface.
