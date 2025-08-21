@@ -78,10 +78,10 @@ Example: a terrain surface using `geom_surface_3d()`:
 
 ``` r
 ggplot(mountain, aes(x, y, z)) +
-      geom_surface_3d(aes(fill = z, color = z),
-                      light = light(direction = c(1, 0, 0))) +
+      geom_surface_3d(aes(fill = z, color = z)) +
       scale_fill_viridis_c() + scale_color_viridis_c() +
-      coord_3d(ratio = c(1.5, 2, 1), expand = FALSE, panels = "zmin") +
+      coord_3d(ratio = c(1.5, 2, 1), expand = FALSE, panels = "zmin",
+               light = light(direction = c(1, 0, 0))) +
       guides(fill = guide_colorbar_3d()) +
       theme_light()
 ```
@@ -117,7 +117,7 @@ ggplot(d, aes(x, y, z)) +
                      method = "gam", formula = z ~ te(x, y),
                      se = TRUE, level = 0.99, color = "black") +
       scale_fill_manual(values = c("red", "darkorchid4", "steelblue")) +
-      coord_3d()
+      coord_3d(light = NULL)
 ```
 
 <img src="man/figures/README-smooth-1.png" width="100%" />
@@ -184,7 +184,7 @@ ggplot(mpg, aes(x = displ, y = hwy, z = drv, fill = class)) +
 ## Lighting effects
 
 Lighting of 3D polygon layers is controlled by providing a `light()`
-specification.
+specification to the layer or the coord.
 
 ``` r
 ggplot(sphere_points, aes(x, y, z)) +

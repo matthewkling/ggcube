@@ -118,7 +118,6 @@ guide_legend_3d <- function(reverse_shade = FALSE, shade_range = c(-.5, .5), ...
 #' @return List with lighting specification or NULL if none found
 #' @keywords internal
 extract_light_from_plot <- function() {
-
       # Walk up the call stack to find the plot object
       for (i in 1:20) {
             tryCatch({
@@ -128,7 +127,7 @@ extract_light_from_plot <- function() {
                         plot_obj <- get("plot", envir = env)
                         if (inherits(plot_obj, "ggplot")) {
 
-                              # Look for layers with lighting
+                              # Look for layers with lighting (existing behavior)
                               lighting_layers <- list()
                               for (j in seq_along(plot_obj$layers)) {
                                     layer <- plot_obj$layers[[j]]
@@ -138,16 +137,26 @@ extract_light_from_plot <- function() {
                                     }
                               }
 
-                              # Handle results
-                              if (length(lighting_layers) == 0) {
-                                    return(NULL)
-                              } else if (length(lighting_layers) == 1) {
-                                    return(lighting_layers[[1]])
-                              } else {
-                                    # Multiple lighting specs - warn and use first
-                                    warning("Multiple layers with different lighting found. Using first layer's lighting.")
-                                    return(lighting_layers[[1]])
+                              # If layer lighting found, use it (maintains precedence)
+                              if (length(lighting_layers) > 0) {
+                                    if (length(lighting_layers) == 1) {
+                                          return(lighting_layers[[1]])
+                                    } else {
+                                          warning("Multiple layers with different lighting found. Using first layer's lighting.")
+                                          return(lighting_layers[[1]])
+                                    }
                               }
+
+                              # No layer lighting found - check coord for lighting
+                              if (!is.null(plot_obj$coordinates) && "light" %in% names(plot_obj$coordinates)) {
+                                    coord_light <- plot_obj$coordinates$light
+                                    if (!is.null(coord_light)) {
+                                          return(coord_light)
+                                    }
+                              }
+
+                              # No lighting found anywhere
+                              return(NULL)
                         }
                   }
             }, error = function(e) {

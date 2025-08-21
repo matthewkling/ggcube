@@ -34,6 +34,7 @@ StatVoxel3D <- ggproto("StatVoxel3D", Stat,
                            voxel_faces <- create_voxels(data, x_spacing, y_spacing, z_spacing, width, selected_faces)
 
                            voxel_faces %>%
+                                 average_aesthetics() %>%
                                  mutate(cull_backfaces = cull_backfaces) %>%
                                  attach_light(light) %>%
                                  return()
@@ -246,7 +247,7 @@ geom_voxel_3d <- function(mapping = NULL, data = NULL,
                           position = "identity",
                           ...,
                           width = 1.0, faces = "all",
-                          light = ggcube::light(),
+                          light = NULL,
                           cull_backfaces = TRUE, sort_method = NULL,
                           scale_depth = TRUE, force_convex = FALSE,
                           na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
@@ -267,7 +268,7 @@ stat_voxel_3d <- function(mapping = NULL, data = NULL,
                           position = "identity",
                           ...,
                           width = 1.0, faces = "all",
-                          light = ggcube::light(),
+                          light = NULL,
                           cull_backfaces = TRUE, sort_method = NULL,
                           scale_depth = TRUE, force_convex = FALSE,
                           na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {

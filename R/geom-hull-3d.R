@@ -98,6 +98,7 @@ StatHull3D <- ggproto("StatHull3D", Stat,
 
                             # add computed variables and lighting info
                             data <- data %>%
+                                  average_aesthetics() %>%
                                   mutate(cull_backfaces = cull_backfaces) %>%
                                   attach_light(light)
                             return(data)
@@ -191,7 +192,7 @@ geom_hull_3d <- function(mapping = NULL, data = NULL,
                          stat = StatHull3D,
                          position = "identity",
                          ...,
-                         method = "convex", radius = NULL, light = ggcube::light(),
+                         method = "convex", radius = NULL, light = NULL,
                          cull_backfaces = TRUE, sort_method = NULL, scale_depth = TRUE,
                          inherit.aes = TRUE, show.legend = TRUE) {
 
@@ -209,7 +210,7 @@ stat_hull_3d <- function(mapping = NULL, data = NULL,
                          geom = GeomPolygon3D,
                          position = "identity",
                          ...,
-                         method = "convex", radius = NULL, light = ggcube::light(),
+                         method = "convex", radius = NULL, light = NULL,
                          cull_backfaces = TRUE, sort_method = NULL, scale_depth = TRUE,
                          inherit.aes = TRUE, show.legend = TRUE) {
 

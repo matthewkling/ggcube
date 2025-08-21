@@ -144,7 +144,7 @@ GeomSmooth3D <- ggproto("GeomSmooth3D", Geom,
 #'
 #' # Base plot
 #' p <- ggplot(d, aes(x, y, z)) +
-#'   coord_3d() +
+#'   coord_3d(light = NULL) +
 #'   scale_fill_viridis_c()
 #'
 #' # Basic smooth surface with default loess model
@@ -160,7 +160,7 @@ GeomSmooth3D <- ggproto("GeomSmooth3D", Geom,
 #' p + geom_smooth_3d(method = "lm", n = 10,
 #'       formula = z ~ poly(x, 2) + poly(y, 2) + x:y)
 #'
-#' # Loess with custom span parameter, and lighting aesthetics
+#' # Loess with custom span parameter, and lighting effects
 #' p + geom_smooth_3d(
 #'       method = "loess", method.args = list(span = 0.3),
 #'       fill = "steelblue", color = "white", n = 20,
@@ -353,6 +353,7 @@ StatSmooth3D <- ggproto("StatSmooth3D", Stat,
                               # Add computed variables and light info
                               surfaces <- surfaces %>%
                                     compute_surface_vars() %>%
+                                    average_aesthetics() %>%
                                     mutate(cull_backfaces = cull_backfaces) %>%
                                     attach_light(light)
 

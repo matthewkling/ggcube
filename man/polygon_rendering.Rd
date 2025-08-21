@@ -5,9 +5,12 @@
 \title{Polygon rendering parameters}
 \arguments{
 \item{cull_backfaces}{Logical indicating whether to remove back-facing polygons
-from rendering for performance optimization. Back faces are determined using
+from rendering. This is primarily for performance optimization but may be useful
+for aesthetic reasons in some situations. Backfaces are determined using
 screen-space winding order after 3D transformation. Defaults vary by geometry
-type: TRUE for solid objects (hulls, voxels), FALSE for surfaces and wireframes.}
+type: FALSE for open surface-type geometries, TRUE for solid objects (hulls,
+voxels, etc. where backfaces are generally hidden unless frontfaces are transparent
+or explicitly disabled).}
 
 \item{sort_method}{Character indicating algorithm used to determine the order in which
 polygons are rendered.

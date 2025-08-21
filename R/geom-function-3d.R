@@ -92,6 +92,7 @@ StatFunction3D <- ggproto("StatFunction3D", Stat,
                                 # Add computed variables and light info
                                 grid_data <- grid_data %>%
                                       compute_surface_vars() %>%
+                                      average_aesthetics() %>%
                                       mutate(cull_backfaces = cull_backfaces) %>%
                                       attach_light(light)
 
@@ -205,7 +206,7 @@ geom_function_3d <- function(mapping = NULL,
                              fun = NULL,
                              xlim = NULL, ylim = NULL,
                              n = NULL, grid = NULL, direction = NULL,
-                             light = ggcube::light(),
+                             light = NULL,
                              cull_backfaces = FALSE, sort_method = NULL,
                              force_convex = TRUE, scale_depth = TRUE,
                              na.rm = FALSE,
@@ -239,7 +240,7 @@ stat_function_3d <- function(mapping = NULL,
                              n = NULL, grid = NULL, direction = NULL,
                              cull_backfaces = FALSE, sort_method = NULL,
                              force_convex = TRUE, scale_depth = TRUE,
-                             light = ggcube::light(),
+                             light = NULL,
                              na.rm = FALSE,
                              show.legend = NA,
                              inherit.aes = TRUE) {

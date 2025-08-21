@@ -71,6 +71,7 @@ StatPillar3D <- ggproto("StatPillar3D", Stat,
                               }
 
                               pillar_faces %>%
+                                    average_aesthetics() %>%
                                     mutate(cull_backfaces = cull_backfaces) %>%
                                     attach_light(light) %>%
                                     return()
@@ -262,7 +263,7 @@ geom_pillar_3d <- function(mapping = NULL, data = NULL,
                            position = "identity",
                            ...,
                            width = 1.0, faces = "all", zmin = NULL,
-                           light = ggcube::light(),
+                           light = NULL,
                            cull_backfaces = TRUE, sort_method = NULL,
                            scale_depth = TRUE, force_convex = FALSE,
                            na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
@@ -284,7 +285,7 @@ stat_pillar_3d <- function(mapping = NULL, data = NULL,
                            position = "identity",
                            ...,
                            width = 1.0, faces = "all", zmin = NULL,
-                           light = ggcube::light(),
+                           light = NULL,
                            cull_backfaces = TRUE, sort_method = NULL,
                            scale_depth = TRUE, force_convex = FALSE,
                            na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {

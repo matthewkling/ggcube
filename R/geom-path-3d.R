@@ -175,6 +175,8 @@ StatPath3D <- ggproto("StatPath3D", Stat,
                                   segments[[col_name]] <- data[[col_name]][1:n_segments]
                             }
 
+                            segments <- average_aesthetics(segments)
+
                             return(segments)
                       }
 )

@@ -13,7 +13,7 @@ geom_hull_3d(
   ...,
   method = "convex",
   radius = NULL,
-  light = ggcube::light(),
+  light = NULL,
   cull_backfaces = TRUE,
   sort_method = NULL,
   scale_depth = TRUE,
@@ -29,7 +29,7 @@ stat_hull_3d(
   ...,
   method = "convex",
   radius = NULL,
-  light = ggcube::light(),
+  light = NULL,
   cull_backfaces = TRUE,
   sort_method = NULL,
   scale_depth = TRUE,
@@ -63,7 +63,9 @@ A face is included in the resulting alpha shape if it can be "exposed" by a sphe
 If NULL (the default), a simple heuristic based on the data scale is used to calculate a radius value.
 Note that alpha shapes are quite sensitive to the coordinate scales of your data. See Details section.}
 
-\item{light}{A lighting specification object created by \code{\link[=light]{light()}}, or NULL to disable shading.}
+\item{light}{A lighting specification object created by \code{\link[=light]{light()}} (see that function for details),
+or \code{NULL} to disable shading. Specify plot-level lighting in \code{coord_3d()} and layer-specific
+lighting in \verb{geom_*3d()} functions.}
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics.}
 

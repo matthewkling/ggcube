@@ -4,7 +4,9 @@
 \alias{light_param}
 \title{Light param}
 \arguments{
-\item{light}{A lighting specification object created by \code{\link[=light]{light()}}, or NULL to disable shading.}
+\item{light}{A lighting specification object created by \code{\link[=light]{light()}} (see that function for details),
+or \code{NULL} to disable shading. Specify plot-level lighting in \code{coord_3d()} and layer-specific
+lighting in \verb{geom_*3d()} functions.}
 }
 \description{
 Light param

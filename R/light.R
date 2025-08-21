@@ -4,6 +4,8 @@
 #' Lighting modifies the brightness of fill and/or base color aesthetics based on surface
 #' orientation (i.e., it implements form shadows but not cast shadows).
 #' Various options are available to control light qualities and light source location.
+#' The result can be passed `coord_3d()` to for application to the whole plot, or to individual
+#' `geom_*_3d()` layer functions (which take precedence over plot-level lighting).
 #'
 #' Note that light-like effects can also be achieved in some stats by mapping color
 #' aesthestics to computed variables such as `after_stat(dzdx)`; see [geom_surface_3d()]
@@ -23,10 +25,11 @@
 #' @param mode Character string specifying color lighting mode:
 #'   \itemize{
 #'     \item \code{"hsv"}: The default. Modifies _value_ component of _HSV_ color
-#'          (fades to bright colors at high end, black at low end)
+#'          (fades to bright colors at high end, black at low end).
 #'     \item \code{"hsl"}: Modifies _lightness_ component of _HSL_ color
-#'          (fades to white at high end, black at low end)
+#'          (fades to white at high end, black at low end).
 #'   }
+#'   These two options give identical results for grayscale colors.
 #' @param fill Logical indicating whether to apply lighting to fill colors. Default is TRUE.
 #' @param color Logical indicating whether to apply lighting to border/line colors. Default is TRUE.
 #' @param contrast Numeric value greater than zero controlling the intensity of lighting effects.
@@ -55,90 +58,89 @@
 #'   backfaces highly contrasting lighting to frontfaces. To light backfaces the same as frontfaces,
 #'   set scale to 1. To uniformly darken (brighten) all backfaces, use a negative (positive) offset.
 #'
-#' @return A \code{lighting} object that can be passed to polygon-based 3D stats.
+#' @return A \code{lighting} object that can be passed to polygon-based 3D layers or to `coord_3d()`.
 #' @examples
 #' # base plot used in examples
-#' p <- ggplot(mountain, aes(x, y, z)) + coord_3d(ratio = c(1, 1.5, 1))
+#' p <- ggplot(sphere_points, aes(x, y, z)) +
+#'   geom_hull_3d(fill = "#9e2602", color = "#5e1600")
 #'
 #' # Light qualities ----------------------------------------------------------
 #'
 #' # default `"diffuse"` lighting
-#' p + stat_surface_3d(fill = "steelblue", color = "black")
-#'
-#' # use `"hsl"` mode to fade highlights to white
-#' p + stat_surface_3d(fill = "steelblue", color = "black",
-#'                     light = light(mode = "hsl"))
-#'
-#' # adjust lighting intensity with `contrast`
-#' p + stat_surface_3d(fill = "steelblue", color = "black",
-#'                     light = light(mode = "hsl", contrast = 2))
+#' p + coord_3d()
 #'
 #' # use `"direct"` lighting to apply full shade to unlit surfaces
-#' p + stat_surface_3d(fill = "steelblue", color = "black",
-#'                     light = light(method = "direct", contrast = .75))
+#' p + coord_3d(light = light(method = "direct"))
+#'
+#' # use `"hsl"` mode to fade highlights to white
+#' p + coord_3d(light = light(mode = "hsl"))
+#'
+#' # adjust lighting intensity with `contrast`
+#' p + coord_3d(light = light(mode = "hsl", contrast = 1.5))
 #'
 #' # use `"rgb"` lighting to map face orientation to 3D color space
-#' # p + stat_surface_3d(light = light(method = "rgb"))
+#' p + coord_3d(light = light(method = "rgb"))
 #'
 #'
 #' # Lighting targets ---------------------------------------------------------
 #'
-#' # use `fill` and `color` to select which aesthetics get lighting
-#' p + stat_surface_3d(fill = "steelblue", color = "black",
-#'                     light = light(fill = TRUE, color = FALSE))
+#' # use `fill` and `color` to select which aesthetics get modified by light
+#' p + coord_3d(light = light(fill = TRUE, color = FALSE))
+#'
+#' # apply lighting to aesthetically mapped colors, with shaded guide to match
+#' p + geom_hull_3d(aes(fill = x, color = x)) +
+#'       scale_fill_viridis_c() +
+#'       scale_color_viridis_c() +
+#'       guides(fill = guide_colorbar_3d()) +
+#'       coord_3d(light = light(mode = "hsl", contrast = .9))
 #'
 #' # disable lighting entirely
 #' # (equivalent to specifying `light(fill = FALSE, color = FALSE`))
-#' p + stat_surface_3d(fill = "steelblue", color = "black", light = NULL)
+#' p + coord_3d(light = NULL)
 #'
-#' # apply lighting on top of aesthetic mapping, with shaded guide to match
-#' p + stat_surface_3d(aes(fill = z, color = z),
-#'                     light = light(contrast = 2)) +
-#'       scale_fill_viridis_c() +
-#'       scale_color_viridis_c() +
-#'       guides(fill = guide_colorbar_3d())
+#' # if provided, layer-level lighting overrides plot-level (coord_3d) lighting
+#' p + coord_3d(light = light("direct"), # plot-level: affects original layer
+#'       scales = "fixed") +
+#'   geom_hull_3d(aes(x = x + 2.5), fill = "#9e2602", color = "#5e1600",
+#'       light = light("direct", mode = "hsl", direction = c(0, -1, 0)))
 #'
 #'
 #' # Light sources ------------------------------------------------------------
 #'
 #' # set directional light as horizontal from back left corner
 #' # (left = negative x, back = positive y, horizontal = neutral z)
-#' p + stat_surface_3d(fill = "steelblue", color = "black",
-#'                     light = light(direction = c(-1, 1, 0)))
+#' p + coord_3d(light = light(direction = c(-1, 1, 0)))
 #'
 #' # specify positional light source within plot
-#' p + stat_surface_3d(fill = "red", color = "red",
-#'                     light = light(position = c(.5, .7, 95),
-#'                                   distance_falloff = TRUE,
-#'                                   mode = "hsl", contrast = .9))
+#' ggplot(mountain, aes(x, y, z)) +
+#'   stat_surface_3d(fill = "red", color = "red") +
+#'   coord_3d(light = light(position = c(.5, .7, 95),
+#'     distance_falloff = TRUE, mode = "hsl", contrast = .9))
 #'
 #'
 #' # Backface lighting --------------------------------------------------------
 #'
 #' # backfaces get "opposite" lighting by default (`backface_scale = -1`)
-#' p <- ggplot() + coord_3d(pitch = 0, roll = -70, yaw = 0)
-#' p + geom_function_3d(fun = function(x, y) x^2 + y^2,
+#' p <- ggplot() +
+#'   geom_function_3d(fun = function(x, y) x^2 + y^2,
 #'     xlim = c(-3, 3), ylim = c(-3, 3),
-#'     fill = "steelblue", color = "steelblue",
-#'     light = light(mode = "hsl"))
+#'     fill = "steelblue", color = "steelblue")
+#' p + coord_3d(pitch = 0, roll = -70, yaw = 0,
+#'              light = light(mode = "hsl"))
 #'
-#' # use `backface_scale = 1` to light backfaces as if they're fontfaces
-#' p + geom_function_3d(fun = function(x, y) x^2 + y^2,
-#'     xlim = c(-3, 3), ylim = c(-3, 3),
-#'     fill = "steelblue", color = "steelblue",
-#'     light = light(backface_scale = 1, mode = "hsl"))
+#' # use `backface_scale = 1` to light backfaces as if they're frontfaces
+#' p + coord_3d(pitch = 0, roll = -70, yaw = 0,
+#'              light = light(backface_scale = 1, mode = "hsl"))
 #'
 #' # use `backface_offset` to uniformly darken (or lighten) backfaces
-#' p + geom_function_3d(fun = function(x, y) x^2 + y^2,
-#'     xlim = c(-3, 3), ylim = c(-3, 3),
-#'     fill = "steelblue", color = "steelblue",
-#'     light = light(backface_scale = 1, mode = "hsl",
-#'                   backface_offset = -.5))
+#' p + coord_3d(pitch = 0, roll = -70, yaw = 0,
+#'              light = light(backface_scale = 1, mode = "hsl",
+#'                            backface_offset = -.5))
 #'
 #' @seealso \code{\link{stat_surface_3d}}, \code{\link{stat_voxel_3d}}, \code{\link{stat_pillar_3d}}, \code{\link{scale_colorbar_shade}}
 #' @export
 light <- function(method = "diffuse",
-                  direction = c(1, 0, 1),
+                  direction = c(-.5, 0, 1),
                   position = NULL,
                   distance_falloff = FALSE,
                   fill = TRUE,
@@ -951,8 +953,8 @@ transform_light_position <- function(position, scale_ranges, scales, ratio) {
       return(c(standardized$x, standardized$y, standardized$z))
 }
 
-# store lighting specification to data frame for downstream use
+# store lighting specification to data frame for downstream use,
 attach_light <- function(data, light){
-      if(!is.null(light)) data$lighting_spec <- I(list(light))
+      if(!is.null(light) && ! "lighting_spec" %in% names(data)) data$lighting_spec <- I(list(light))
       data
 }

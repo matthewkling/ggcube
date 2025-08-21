@@ -129,7 +129,9 @@ inherits from the main surface \code{colour} aesthetic.}
 \item{se.linewidth}{Line width for confidence interval band borders. If \code{NULL},
 inherits from the main surface \code{linewidth} aesthetic.}
 
-\item{light}{A lighting specification object created by \code{\link[=light]{light()}}, or NULL to disable shading.}
+\item{light}{A lighting specification object created by \code{\link[=light]{light()}} (see that function for details),
+or \code{NULL} to disable shading. Specify plot-level lighting in \code{coord_3d()} and layer-specific
+lighting in \verb{geom_*3d()} functions.}
 
 \item{cull_backfaces, sort_method, force_convex, scale_depth}{Advanced polygon
 rendering parameters. See \link{polygon_rendering} for details.}
@@ -193,7 +195,7 @@ d$z <- abs(1 + d$x^2 - d$y^2 + rnorm(100, 0, 1))
 
 # Base plot
 p <- ggplot(d, aes(x, y, z)) +
-  coord_3d() +
+  coord_3d(light = NULL) +
   scale_fill_viridis_c()
 
 # Basic smooth surface with default loess model
@@ -209,7 +211,7 @@ p + geom_smooth_3d(aes(fill = after_stat(level)),
 p + geom_smooth_3d(method = "lm", n = 10,
       formula = z ~ poly(x, 2) + poly(y, 2) + x:y)
 
-# Loess with custom span parameter, and lighting aesthetics
+# Loess with custom span parameter, and lighting effects
 p + geom_smooth_3d(
       method = "loess", method.args = list(span = 0.3),
       fill = "steelblue", color = "white", n = 20,

@@ -29,6 +29,7 @@ StatSurface3D <- ggproto("StatSurface3D", Stat,
                                data <- data %>%
                                      convert_to_quads() %>%
                                      compute_surface_vars() %>%
+                                     average_aesthetics() %>%
                                      mutate(cull_backfaces = cull_backfaces) %>%
                                      attach_light(light)
 
@@ -191,7 +192,7 @@ convert_to_quads <- function(data) {
 geom_surface_3d <- function(mapping = NULL, data = NULL, stat = StatSurface3D,
                             position = "identity",
                             ...,
-                            light = ggcube::light(),
+                            light = NULL,
                             cull_backfaces = FALSE, sort_method = NULL,
                             force_convex = TRUE, scale_depth = TRUE,
                             na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
@@ -210,7 +211,7 @@ geom_surface_3d <- function(mapping = NULL, data = NULL, stat = StatSurface3D,
 stat_surface_3d <- function(mapping = NULL, data = NULL, geom = GeomPolygon3D,
                             position = "identity",
                             ...,
-                            light = ggcube::light(),
+                            light = NULL,
                             cull_backfaces = FALSE, sort_method = NULL,
                             force_convex = TRUE, scale_depth = TRUE,
                             na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {

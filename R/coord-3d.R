@@ -63,6 +63,7 @@
 #'     \item With \code{scales = "free"}: Ratios apply to scaled cube coordinates
 #'     \item With \code{scales = "fixed"}: Ratios apply to original data coordinates
 #'   }
+#' @inheritParams light_param
 #'
 #' @section 3D Theming:
 #' 3D plots support additional theme elements beyond standard ggplot2 themes:
@@ -98,9 +99,11 @@
 #'     aes(fill = after_stat(z), color = after_stat(z)),
 #'     fun = function(x, y) sin(x) * cos(y),
 #'     xlim = c(-pi, pi), ylim = c(-pi, pi),
-#'     n = 50, light = light(contrast = 1.5)) +
-#'   scale_fill_gradientn(colors = c("#344a91", "#753491", "#913434", "#915b34")) +
-#'   scale_color_gradientn(colors = c("#344a91", "#753491", "#913434", "#915b34")) +
+#'     n = 50, light = light("direct", contrast = .7)) +
+#'   #scale_fill_gradientn(colors = c("#344a91", "#753491", "#913434", "#915b34")) +
+#'   #scale_color_gradientn(colors = c("#344a91", "#753491", "#913434", "#915b34")) +
+#'   scale_fill_viridis_c() +
+#'   scale_color_viridis_c() +
 #'   theme(legend.position = "none")
 #'
 #' # 3D plot with default coord settings
@@ -146,13 +149,13 @@
 #' # Custom aspect ratios: make y twice as long visually
 #' p + coord_3d(scales = "free", ratio = c(1, 2, 1))
 #'
-#' # Custom aspect ratios: fix scales but make y twice long
+#' # Combine behaviors: fix scales and make y twice as long
 #' p + coord_3d(scales = "fixed", ratio = c(1, 2, 1))
 #'
 #'
 #' # Use `panels` to select which cube faces to render ------------------------
 #'
-#' p + coord_3d(panels = c("zmin", "xmax"))
+#' p + coord_3d(panels = c("xmin", "xmax", "zmax"))
 #'
 #' # and use `theme()` elements to control panel and text styling
 #' p + coord_3d(panels = "all") +
@@ -162,7 +165,7 @@
 #'           panel.grid.foreground = element_line(color = "gray", linewidth = .25),
 #'           axis.text = element_text(color = "darkblue"),
 #'           axis.text.z = element_text(color = "darkred"),
-#'           axis.title = element_text(margin = margin(t = 30)),
+#'           axis.title = element_text(margin = margin(t = 30)), # add padding
 #'           axis.title.x = element_text(color = "magenta"))
 #'
 #'
@@ -182,7 +185,8 @@ coord_3d <- function(pitch = 0, roll = -60, yaw = -30,
                      xlabels = "auto", ylabels = "auto", zlabels = "auto",
                      rotate_labels = TRUE,
                      scales = "free",
-                     ratio = c(1, 1, 1)) {
+                     ratio = c(1, 1, 1),
+                     light = ggcube::light()) {
 
       # Validate parameters
       if (!scales %in% c("free", "fixed")) {
@@ -206,7 +210,8 @@ coord_3d <- function(pitch = 0, roll = -60, yaw = -30,
                     rotate_labels = rotate_labels,
                     scales = scales,
                     ratio = ratio,
-                    xlabels = xlabels, ylabels = ylabels, zlabels = zlabels
+                    xlabels = xlabels, ylabels = ylabels, zlabels = zlabels,
+                    light = light
             ),
             theme(plot.margin = margin(20, 20, 20, 20, "pt"))
       )
@@ -322,6 +327,7 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                    rotate_labels = TRUE,
                    scales = "free",
                    ratio = c(1, 1, 1),
+                   light = NULL,
 
                    plot_bounds = c(0, 1, 0, 1),  # [xmin, xmax, ymin, ymax]
 
@@ -523,6 +529,9 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                                panel_params$grid_transformed <- NULL
                          }
 
+                         # add light specs
+                         panel_params$light <- self$light
+
                          return(panel_params)
                    },
 
@@ -553,6 +562,9 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                    },
 
                    transform = function(self, data, panel_params) {
+
+                         # Add light specs if applicable
+                         data <- attach_light(data, self$light)
 
                          # Translate project_to_face names if they exist
                          if ("project_to_face" %in% names(data) && !is.null(panel_params$scale_flips)) {
@@ -1014,23 +1026,15 @@ process_backfaces <- function(data) {
             mutate(
                   n_vertices = n(),
 
-                  # Simple test (old method)
-                  back_face_simple = ((x[2] - x[1]) * (y[3] - y[1]) - (x[3] - x[1]) * (y[2] - y[1])) < 0,
-
                   # Complex test (new method)
                   back_face = case_when(
-                        n_vertices != 4 ~ back_face_simple,
+                        n_vertices != 4 ~ ((x[2] - x[1]) * (y[3] - y[1]) - (x[3] - x[1]) * (y[2] - y[1])) < 0,
                         n_vertices == 4 ~ {
-                              # Test all 4 triangulations
+                              # Test all 4 triangles
                               tri_123 <- (x[2] - x[1]) * (y[3] - y[1]) - (x[3] - x[1]) * (y[2] - y[1]) < 0
                               tri_134 <- (x[3] - x[1]) * (y[4] - y[1]) - (x[4] - x[1]) * (y[3] - y[1]) < 0
                               tri_124 <- (x[2] - x[1]) * (y[4] - y[1]) - (x[4] - x[1]) * (y[2] - y[1]) < 0
                               tri_234 <- (x[3] - x[2]) * (y[4] - y[2]) - (x[4] - x[2]) * (y[3] - y[2]) < 0
-
-                              # # Print debug info for first few groups
-                              # if (cur_group_id() <= 3) {
-                              #       cat("Group", cur_group_id(), "triangulations:", tri_123, tri_134, tri_124, tri_234, "\n")
-                              # }
 
                               # Both triangulations must be consistently negative
                               (tri_123 & tri_134) & (tri_124 & tri_234)
@@ -1038,10 +1042,8 @@ process_backfaces <- function(data) {
                   )
             )
 
-
       # Apply culling if requested
-      cull_backfaces <- data$cull_backfaces[1] %||% FALSE
-      if(cull_backfaces) {
+      if("cull_backfaces" %in% names(data) && data$cull_backfaces[1]) {
             data <- filter(data, !back_face)
       }
 

@@ -18,7 +18,8 @@ coord_3d(
   zlabels = "auto",
   rotate_labels = TRUE,
   scales = "free",
-  ratio = c(1, 1, 1)
+  ratio = c(1, 1, 1),
+  light = ggcube::light()
 )
 }
 \arguments{
@@ -89,6 +90,10 @@ as scaled by \code{ratio}. Similar to \code{coord_fixed()} but for 3D
 \item With \code{scales = "free"}: Ratios apply to scaled cube coordinates
 \item With \code{scales = "fixed"}: Ratios apply to original data coordinates
 }}
+
+\item{light}{A lighting specification object created by \code{\link[=light]{light()}} (see that function for details),
+or \code{NULL} to disable shading. Specify plot-level lighting in \code{coord_3d()} and layer-specific
+lighting in \verb{geom_*3d()} functions.}
 }
 \value{
 A \code{Coord} object that can be added to a ggplot.
@@ -141,9 +146,11 @@ p <- ggplot() +
     aes(fill = after_stat(z), color = after_stat(z)),
     fun = function(x, y) sin(x) * cos(y),
     xlim = c(-pi, pi), ylim = c(-pi, pi),
-    n = 50, light = light(contrast = 1.5)) +
-  scale_fill_gradientn(colors = c("#344a91", "#753491", "#913434", "#915b34")) +
-  scale_color_gradientn(colors = c("#344a91", "#753491", "#913434", "#915b34")) +
+    n = 50, light = light("direct", contrast = .7)) +
+  #scale_fill_gradientn(colors = c("#344a91", "#753491", "#913434", "#915b34")) +
+  #scale_color_gradientn(colors = c("#344a91", "#753491", "#913434", "#915b34")) +
+  scale_fill_viridis_c() +
+  scale_color_viridis_c() +
   theme(legend.position = "none")
 
 # 3D plot with default coord settings
@@ -189,13 +196,13 @@ p + coord_3d(scales = "fixed")
 # Custom aspect ratios: make y twice as long visually
 p + coord_3d(scales = "free", ratio = c(1, 2, 1))
 
-# Custom aspect ratios: fix scales but make y twice long
+# Combine behaviors: fix scales and make y twice as long
 p + coord_3d(scales = "fixed", ratio = c(1, 2, 1))
 
 
 # Use `panels` to select which cube faces to render ------------------------
 
-p + coord_3d(panels = c("zmin", "xmax"))
+p + coord_3d(panels = c("xmin", "xmax", "zmax"))
 
 # and use `theme()` elements to control panel and text styling
 p + coord_3d(panels = "all") +
@@ -205,7 +212,7 @@ p + coord_3d(panels = "all") +
           panel.grid.foreground = element_line(color = "gray", linewidth = .25),
           axis.text = element_text(color = "darkblue"),
           axis.text.z = element_text(color = "darkred"),
-          axis.title = element_text(margin = margin(t = 30)),
+          axis.title = element_text(margin = margin(t = 30)), # add padding
           axis.title.x = element_text(color = "magenta"))
 
 

@@ -158,6 +158,8 @@ StatSegment3D <- ggproto("StatSegment3D", Stat,
                                      data$group <- paste0(original_group, "__seg", 1:nrow(data))
                                }
 
+                               data <- average_aesthetics(data)
+
                                return(data)
                          }
 )

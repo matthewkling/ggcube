@@ -74,6 +74,7 @@ StatDensity3D <- ggproto("StatDensity3D", Stat,
                                # Add computed variables and light info
                                d <- d %>%
                                      compute_surface_vars() %>%
+                                     average_aesthetics() %>%
                                      mutate(cull_backfaces = cull_backfaces) %>%
                                      attach_light(light)
 
@@ -236,7 +237,7 @@ geom_density_3d <- function(mapping = NULL, data = NULL,
                             h = NULL, adjust = 1,
                             pad = 0.1,
                             min_ndensity = 0,
-                            light = ggcube::light(),
+                            light = NULL,
                             cull_backfaces = FALSE, sort_method = NULL,
                             force_convex = TRUE, scale_depth = TRUE,
                             na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
@@ -261,7 +262,7 @@ stat_density_3d <- function(mapping = NULL, data = NULL,
                             h = NULL, adjust = 1,
                             pad = 0.1,
                             min_ndensity = 0,
-                            light = ggcube::light(),
+                            light = NULL,
                             cull_backfaces = FALSE, sort_method = NULL,
                             force_convex = TRUE, scale_depth = TRUE,
                             na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {

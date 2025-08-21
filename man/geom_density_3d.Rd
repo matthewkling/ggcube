@@ -18,7 +18,7 @@ geom_density_3d(
   adjust = 1,
   pad = 0.1,
   min_ndensity = 0,
-  light = ggcube::light(),
+  light = NULL,
   cull_backfaces = FALSE,
   sort_method = NULL,
   force_convex = TRUE,
@@ -41,7 +41,7 @@ stat_density_3d(
   adjust = 1,
   pad = 0.1,
   min_ndensity = 0,
-  light = ggcube::light(),
+  light = NULL,
   cull_backfaces = FALSE,
   sort_method = NULL,
   force_convex = TRUE,
@@ -86,7 +86,9 @@ described below), below which to filter out results. This is particularly useful
 removing low-density corners of rectangular density grids when density surfaces are
 shown for multiple groups, as in the example below. Default is 0 (no filtering).}
 
-\item{light}{A lighting specification object created by \code{\link[=light]{light()}}, or NULL to disable shading.}
+\item{light}{A lighting specification object created by \code{\link[=light]{light()}} (see that function for details),
+or \code{NULL} to disable shading. Specify plot-level lighting in \code{coord_3d()} and layer-specific
+lighting in \verb{geom_*3d()} functions.}
 
 \item{cull_backfaces, sort_method, force_convex, scale_depth}{Advanced polygon
 rendering parameters. See \link{polygon_rendering} for details.}

@@ -11,7 +11,7 @@ geom_surface_3d(
   stat = StatSurface3D,
   position = "identity",
   ...,
-  light = ggcube::light(),
+  light = NULL,
   cull_backfaces = FALSE,
   sort_method = NULL,
   force_convex = TRUE,
@@ -27,7 +27,7 @@ stat_surface_3d(
   geom = GeomPolygon3D,
   position = "identity",
   ...,
-  light = ggcube::light(),
+  light = NULL,
   cull_backfaces = FALSE,
   sort_method = NULL,
   force_convex = TRUE,
@@ -52,7 +52,9 @@ onto one 2D surface, use \code{position_on_face()}.}
 \item{...}{Other arguments passed on to the the layer function (typically GeomPolygon3D), such as
 aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc.}
 
-\item{light}{A lighting specification object created by \code{\link[=light]{light()}}, or NULL to disable shading.}
+\item{light}{A lighting specification object created by \code{\link[=light]{light()}} (see that function for details),
+or \code{NULL} to disable shading. Specify plot-level lighting in \code{coord_3d()} and layer-specific
+lighting in \verb{geom_*3d()} functions.}
 
 \item{cull_backfaces, sort_method, force_convex, scale_depth}{Advanced polygon
 rendering parameters. See \link{polygon_rendering} for details.}

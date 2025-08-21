@@ -14,7 +14,7 @@ geom_pillar_3d(
   width = 1,
   faces = "all",
   zmin = NULL,
-  light = ggcube::light(),
+  light = NULL,
   cull_backfaces = TRUE,
   sort_method = NULL,
   scale_depth = TRUE,
@@ -33,7 +33,7 @@ stat_pillar_3d(
   width = 1,
   faces = "all",
   zmin = NULL,
-  light = ggcube::light(),
+  light = NULL,
   cull_backfaces = TRUE,
   sort_method = NULL,
   scale_depth = TRUE,
@@ -75,7 +75,9 @@ interior faces the viewer -- e.g., when \code{cull_backfaces = TRUE} and \code{f
 \code{zmin} aesthetic mapping. If \code{NULL} (default), uses the \code{zmin} aesthetic
 if mapped, otherwise defaults to the minimum \code{z} value in the data.}
 
-\item{light}{A lighting specification object created by \code{\link[=light]{light()}}, or NULL to disable shading.}
+\item{light}{A lighting specification object created by \code{\link[=light]{light()}} (see that function for details),
+or \code{NULL} to disable shading. Specify plot-level lighting in \code{coord_3d()} and layer-specific
+lighting in \verb{geom_*3d()} functions.}
 
 \item{cull_backfaces, sort_method, force_convex, scale_depth}{Advanced polygon
 rendering parameters. See \link{polygon_rendering} for details.}

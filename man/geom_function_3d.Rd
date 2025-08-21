@@ -17,7 +17,7 @@ geom_function_3d(
   n = NULL,
   grid = NULL,
   direction = NULL,
-  light = ggcube::light(),
+  light = NULL,
   cull_backfaces = FALSE,
   sort_method = NULL,
   force_convex = TRUE,
@@ -43,7 +43,7 @@ stat_function_3d(
   sort_method = NULL,
   force_convex = TRUE,
   scale_depth = TRUE,
-  light = ggcube::light(),
+  light = NULL,
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE
@@ -75,7 +75,9 @@ If \code{NULL} (default), uses the scale ranges from the plot, which can be set 
 \item{grid, n, direction}{Parameters determining the geometry, resolution, and
 orientation of the surface grid. See \link{grid_generation} for details.}
 
-\item{light}{A lighting specification object created by \code{\link[=light]{light()}}, or NULL to disable shading.}
+\item{light}{A lighting specification object created by \code{\link[=light]{light()}} (see that function for details),
+or \code{NULL} to disable shading. Specify plot-level lighting in \code{coord_3d()} and layer-specific
+lighting in \verb{geom_*3d()} functions.}
 
 \item{cull_backfaces, sort_method, force_convex, scale_depth}{Advanced polygon
 rendering parameters. See \link{polygon_rendering} for details.}

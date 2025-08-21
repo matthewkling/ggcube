@@ -3,7 +3,7 @@
 GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                          required_aes = c("x", "y", "z", "group"),
                          default_aes = aes(
-                               fill = "grey80", colour = NA, linewidth = 0.1, linetype = 1, alpha = 1
+                               fill = "grey80", colour = "grey80", linewidth = 0.1, linetype = 1, alpha = 1
                          ),
 
                          draw_panel = function(data, panel_params, coord,

@@ -131,7 +131,9 @@ NULL
 
 #' Light param
 #'
-#' @param light A lighting specification object created by [light()], or NULL to disable shading.
+#' @param light A lighting specification object created by [light()] (see that function for details),
+#'   or `NULL` to disable shading. Specify plot-level lighting in `coord_3d()` and layer-specific
+#'   lighting in `geom_*3d()` functions.
 #' @name light_param
 #' @keywords internal
 NULL
