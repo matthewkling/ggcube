@@ -3,7 +3,7 @@
 \docType{data}
 \name{mountain}
 \alias{mountain}
-\title{Mountain}
+\title{Volcano terrain data}
 \format{
 \subsection{\code{mountain}}{
 
@@ -17,7 +17,7 @@ derived from the \code{datasets::volcano} data set
 mountain
 }
 \description{
-A terrain data set representing elevation variation over
+A terrain data set representing elevational variation over
 an x-y grid.
 }
 \keyword{datasets}

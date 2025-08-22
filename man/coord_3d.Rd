@@ -44,14 +44,12 @@ for some 3D plots) to allow drawing outside the plot panel.}
 
 \item{panels}{Character vector specifying which panels to render, including one or more of the following:
 \itemize{
-\item \code{"background"}, \code{"foreground"}: faces laying behind or in front of
+\item \code{"background"} (the default), \code{"foreground"}: faces laying behind or in front of
 the cube's interior volume, respectively. These panels vary depending on plot rotation.
 \item \code{"xmin"}, \code{"ymax"}, etc.: names of specific cube faces.
 \item \code{"all"}, \code{"none"}: display the full cube or remove all faces.
 }
-The default is \code{"background"}. Note that panel styling is handled
-via the normal \code{theme()} approach; if you select panels that sit in front of
-the data, you can control their transparency with \code{element_rect(alpha = ...)}.}
+See \link{cube_theming} for details on panel styling, including transparency of foreground panels.}
 
 \item{xlabels, ylabels, zlabels}{Character strings or length-2 character vectors specifying
 axis label (text and title) placement. Labels are placed inline with grid lines for
@@ -68,7 +66,8 @@ xmin and ymin faces). The \strong{first face} in the vector determines which
 face the axis labels will be aligned with, while the second face
 identifies which edge of this face gets labelled. Available face names are:
 "xmin", "xmax", "ymin", "ymax", "zmin", "zmax".
-}}
+}
+See \link{cube_theming} for details on axis label styling.}
 
 \item{rotate_labels}{Logical indicating whether axis labels (text and titles) should automatically
 rotate to align with the projected axis directions. When \code{FALSE}, uses theme
@@ -102,43 +101,8 @@ A \code{Coord} object that can be added to a ggplot.
 \code{coord_3d} is a 3D coordinate system that creates a 2D view of 3D data.
 This is the essential core component of any plot made with \code{ggcube}.
 It supports rotation, perspective projection, and options for controlling plot
-aspect ratios, panel selection, and axis label placement.
+aspect ratios, panel selection, axis label placement, and lighting.
 }
-\section{3D Theming}{
-
-3D plots support additional theme elements beyond standard ggplot2 themes:
-
-\strong{Text elements:}
-\itemize{
-\item \code{axis.text.z}: Styling for z-axis tick labels (inherits from \code{axis.text})
-\item \code{axis.title.z}: Styling for z-axis title (inherits from \code{axis.title})
-\item \code{axis.text}, \code{axis.text}: Standard styling with \code{element_text()}. Note: use
-\code{element_text(margin = margin(...))} to adjust text padding, with left/right
-margins affecting axis text and top/bottom margins affecting axis titles;
-since placement and justification of these elements varies dynamically,
-no distinction is made between left and right margins, or between top and
-bottom margins -- you can set either, and the maximum of the two will be used.
-}
-
-\strong{Panel elements:}
-\itemize{
-\item \code{panel.foreground}: Styling for cube faces rendered in front of data (inherits from \code{panel.background})
-\item \code{panel.border.foreground}: Styling for cube faces rendered in front of data (inherits from \code{panel.border})
-\item \code{panel.grid.foreground}: Styling for grid lines on foreground faces (inherits from \code{panel.grid})
-\item \code{panel.grid.major.foreground}: Major grid lines on foreground faces (inherits from \code{panel.grid.foreground})
-}
-
-\strong{Enhanced elements:}
-\itemize{
-\item \code{element_rect()} supports an \code{alpha} parameter for transparency effects, particularly useful for \code{panel.foreground}
-}
-
-The \code{panels} parameter controls which cube faces are rendered, while \code{theme()} controls their visual styling.
-Background panels use standard \code{panel.background}, \code{panel.border}, \code{panel.grid}, etc., while foreground panels
-use the \verb{*.foreground} variants listed above. Since the foreground elements inherit from the standard background
-and grid elements, you can use \code{panel.background}, etc. to style both background and foreground faces simultaneously.
-}
-
 \examples{
 # base plot used in examples
 p <- ggplot() +
@@ -147,8 +111,6 @@ p <- ggplot() +
     fun = function(x, y) sin(x) * cos(y),
     xlim = c(-pi, pi), ylim = c(-pi, pi),
     n = 50, light = light("direct", contrast = .7)) +
-  #scale_fill_gradientn(colors = c("#344a91", "#753491", "#913434", "#915b34")) +
-  #scale_color_gradientn(colors = c("#344a91", "#753491", "#913434", "#915b34")) +
   scale_fill_viridis_c() +
   scale_color_viridis_c() +
   theme(legend.position = "none")
@@ -204,16 +166,8 @@ p + coord_3d(scales = "fixed", ratio = c(1, 2, 1))
 
 p + coord_3d(panels = c("xmin", "xmax", "zmax"))
 
-# and use `theme()` elements to control panel and text styling
-p + coord_3d(panels = "all") +
-    theme(panel.background = element_rect(color = "black"),
-          panel.border = element_rect(color = "black"),
-          panel.foreground = element_rect(alpha = .3),
-          panel.grid.foreground = element_line(color = "gray", linewidth = .25),
-          axis.text = element_text(color = "darkblue"),
-          axis.text.z = element_text(color = "darkred"),
-          axis.title = element_text(margin = margin(t = 30)), # add padding
-          axis.title.x = element_text(color = "magenta"))
+# foreground panels default to 20\% opaque (can be styled using `theme()`)
+p + coord_3d(panels = "all")
 
 
 # Use label params to control axis text placement and rotation -------------
@@ -223,4 +177,8 @@ p + coord_3d(xlabels = c("ymax", "zmax"),
 
 p + coord_3d(rotate_labels = FALSE)
 
+}
+\seealso{
+\code{\link[=light]{light()}} for lighting specification, \link{cube_theming} for panel and
+text styling, \link{polygon_rendering} for 3D-related parameters for polygon layers.
 }

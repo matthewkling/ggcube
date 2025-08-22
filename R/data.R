@@ -8,9 +8,9 @@
 "sphere_points"
 
 
-#' Mountain
+#' Volcano terrain data
 #'
-#' A terrain data set representing elevation variation over
+#' A terrain data set representing elevational variation over
 #' an x-y grid.
 #'
 #' @format ## `mountain`

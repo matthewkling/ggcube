@@ -22,6 +22,7 @@ released. There are bugs, and future API changes are possible.
 
 ## Installation
 
+ggcube isn’t yet available on CRAN as it’s still in initial development.
 You can install the development version of ggcube from
 [GitHub](https://github.com/matthewkling/ggcube) with:
 

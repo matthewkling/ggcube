@@ -4,7 +4,7 @@
       register_theme_elements(
             axis.text.z = element_text(),
             axis.title.z = element_text(),
-            panel.foreground = element_rect(),
+            panel.foreground = element_rect(alpha = .2),
             panel.grid.foreground = element_line(),
             panel.grid.major.foreground = element_line(),
             panel.border.foreground = element_rect(),

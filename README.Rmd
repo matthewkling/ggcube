@@ -28,7 +28,7 @@ WARNING: This package is in development and has not yet been officially released
 
 ## Installation
 
-You can install the development version of ggcube from [GitHub](https://github.com/matthewkling/ggcube) with:
+ggcube isn't yet available on CRAN as it's still in initial development. You can install the development version of ggcube from [GitHub](https://github.com/matthewkling/ggcube) with:
 
 ``` r
 devtools::install_github("matthewkling/ggcube")

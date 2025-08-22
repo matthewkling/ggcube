@@ -16,10 +16,11 @@ reference:
 - contents:
   - light
   - guide_3d
-  - make_tile_grid
-  - grid_generation
+  - cube_theming
   - element_rect
   - polygon_rendering
+  - grid_generation
+  - make_tile_grid
 - title: Z axis scales
 - contents:
   - scale_z_continuous
