@@ -9,12 +9,16 @@
 <url><loc>https://matthewkling.github.io/ggcube/reference/apply_surface_light.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/calculate_face_centers.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/calculate_positional_light_directions.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/camera_facing.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/compute_axis_aligned_normals.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/compute_camera_facing_vectors.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/compute_light.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/compute_light_dot_products.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/compute_light_in_coord.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/compute_rgb_light.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/compute_surface_normals.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/compute_text_aspect_ratios.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/compute_text_rotation_matrix.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/compute_triangle_normals.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/convert_to_tiles.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/coord_3d.html</loc></url>
@@ -27,6 +31,7 @@
 <url><loc>https://matthewkling.github.io/ggcube/reference/element_rect.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/extract_aesthetic_vars.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/extract_light_from_plot.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/facing_to_normal.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/fit_and_predict.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/generate_circle_vertices.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/generate_point_elements.html</loc></url>
@@ -40,6 +45,7 @@
 <url><loc>https://matthewkling.github.io/ggcube/reference/geom_segment_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/geom_smooth_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/geom_surface_3d.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/geom_text_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/geom_voxel_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/get_scale_names.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/ggcube.html</loc></url>
@@ -65,6 +71,9 @@
 <url><loc>https://matthewkling.github.io/ggcube/reference/replace_colorbar_colors.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/rgb2hsl.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/rotate_3d.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/rotate_text_to_facing.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/rotation_matrix_around_axis.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/rotation_matrix_between_vectors.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/scale_to_npc_coordinates.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/scale_to_standard.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/scale_z_continuous.html</loc></url>
@@ -72,6 +81,7 @@
 <url><loc>https://matthewkling.github.io/ggcube/reference/sphere_points.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/stat_identity_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/surface_computed_vars.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/text_outlines.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/transform_3d_standard.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/translate_face_names_from_flips.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/validate_position_stat.html</loc></url>
