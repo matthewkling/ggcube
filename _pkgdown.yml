@@ -8,6 +8,7 @@ reference:
   - coord_3d
   - aes
   - position_on_face
+  - camera_facing
 - title: 3D layers
 - contents:
   - starts_with("geom_")
@@ -31,3 +32,4 @@ reference:
   - mountain
   - sphere_points
   - lorenz_attractor
+  - text_outlines

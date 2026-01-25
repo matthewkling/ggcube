@@ -59,5 +59,6 @@ ggplot(mtcars, aes(mpg, wt, qsec)) +
 }
 \seealso{
 \code{\link[ggplot2]{element_rect}} for the original function,
-\code{\link{coord_3d}} for 3D coordinate systems that utilize foreground panels
+\code{\link{coord_3d}} for 3D coordinate systems that utilize foreground panels,
+\link{cube_theming} for details on panel/gridline/axis label styling.
 }

@@ -2,13 +2,13 @@
 
 #' Using themes to style 3D panels and axis labels
 #'
-#' Standard ggplot2 themes generally influence 3D plots as expected, including adding
+#' In ggcube, standard ggplot2 themes generally influence 3D plots as expected, including adding
 #' complete themes like `ggplot2::theme_dark()` and modifying theme elements like
 #' `theme(panel.background = element_rect(fill = "darkblue")`. However, ggcube also
 #' provides additional theme elements that control 3D-specific styling of panels
 #' and labels.
 #'
-#' **Text elements:**
+#' @section Text elements:
 #' - `axis.text.z`: Styling for z-axis tick labels (inherits from `axis.text`)
 #' - `axis.title.z`: Styling for z-axis title (inherits from `axis.title`)
 #' - `axis.text`, `axis.text`: Standard styling with `element_text()`.
@@ -19,7 +19,7 @@
 #' no distinction is made between left and right margins, or between top and
 #' bottom margins -- you can set either, and the maximum of the two will be used.
 #'
-#' **Panel elements:**
+#' @section Panel elements:
 #' - `panel.foreground`: Styling for cube faces rendered in front of data (inherits from `panel.background`).
 #'          Uses `element_rect(alpha = .2)` by default, to prevent foreground panels from obscuring the data.
 #' - `panel.border.foreground`: Styling for cube faces rendered in front of data (inherits from `panel.border`)
@@ -30,7 +30,7 @@
 #' use the `*.foreground` variants listed above. Since the foreground elements inherit from the standard background
 #' and grid elements, you can use `panel.background`, etc. to style both background and foreground faces simultaneously.
 #'
-#' **Enhanced elements:**
+#' @section Enhanced elements:
 #' - `element_rect()` extends `ggplot2::element_rect()` by adding an `alpha` parameter for transparency effects.
 #' This is particularly useful for `panel.foreground` components that sit in front of the data.
 #'
@@ -88,7 +88,8 @@ NULL
 #'         panel.foreground = element_rect(fill = "blue", alpha = 0))
 #'
 #' @seealso \code{\link[ggplot2]{element_rect}} for the original function,
-#'   \code{\link{coord_3d}} for 3D coordinate systems that utilize foreground panels
+#'   \code{\link{coord_3d}} for 3D coordinate systems that utilize foreground panels,
+#'   [cube_theming] for details on panel/gridline/axis label styling.
 #' @export
 element_rect <- function(fill = NULL, colour = NULL, linewidth = NULL, linetype = NULL,
                          color = NULL, inherit.blank = FALSE, size = lifecycle::deprecated(),

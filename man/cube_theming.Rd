@@ -4,14 +4,14 @@
 \alias{cube_theming}
 \title{Using themes to style 3D panels and axis labels}
 \description{
-Standard ggplot2 themes generally influence 3D plots as expected, including adding
+In ggcube, standard ggplot2 themes generally influence 3D plots as expected, including adding
 complete themes like \code{ggplot2::theme_dark()} and modifying theme elements like
 \verb{theme(panel.background = element_rect(fill = "darkblue")}. However, ggcube also
 provides additional theme elements that control 3D-specific styling of panels
 and labels.
 }
-\details{
-\strong{Text elements:}
+\section{Text elements}{
+
 \itemize{
 \item \code{axis.text.z}: Styling for z-axis tick labels (inherits from \code{axis.text})
 \item \code{axis.title.z}: Styling for z-axis title (inherits from \code{axis.title})
@@ -23,8 +23,10 @@ margins affecting axis text and top/bottom margins affecting axis titles;
 since placement and justification of these elements varies dynamically,
 no distinction is made between left and right margins, or between top and
 bottom margins -- you can set either, and the maximum of the two will be used.
+}
 
-\strong{Panel elements:}
+\section{Panel elements}{
+
 \itemize{
 \item \code{panel.foreground}: Styling for cube faces rendered in front of data (inherits from \code{panel.background}).
 Uses \code{element_rect(alpha = .2)} by default, to prevent foreground panels from obscuring the data.
@@ -36,13 +38,16 @@ Uses \code{element_rect(alpha = .2)} by default, to prevent foreground panels fr
 Background panels use standard \code{panel.background}, \code{panel.border}, \code{panel.grid}, etc., while foreground panels
 use the \verb{*.foreground} variants listed above. Since the foreground elements inherit from the standard background
 and grid elements, you can use \code{panel.background}, etc. to style both background and foreground faces simultaneously.
+}
 
-\strong{Enhanced elements:}
+\section{Enhanced elements}{
+
 \itemize{
 \item \code{element_rect()} extends \code{ggplot2::element_rect()} by adding an \code{alpha} parameter for transparency effects.
 This is particularly useful for \code{panel.foreground} components that sit in front of the data.
 }
 }
+
 \examples{
 # example code
 p <- ggplot(sphere_points, aes(x, y, z)) +

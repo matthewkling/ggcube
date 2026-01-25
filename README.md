@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# ggcube
+# ggcube <a href="https://matthewkling.github.io/ggcube/"><img src="man/figures/logo.png" align="right" height="139" alt="ggcube website" /></a>
 
 <!-- badges: start -->
 <!-- badges: end -->
@@ -11,7 +11,7 @@ surfaces, volumes, scatter plots, and complex layered visualizations
 using familiar ggplot2 syntax with `aes(x, y, z)` and `coord_3d()`.
 
 The package provides a variety of 3D-specific `geoms` to render
-surfaces, prisms, points, and paths in 3D; it also works with some
+surfaces, prisms, points, paths, and text in 3D; it also works with some
 standard ggplot2 layer functions. You can control plot geometry with 3D
 projection parameters, can apply a range of 3D lighting models, and can
 mix 3D layers with 2D layers rendered on cube faces. Standard ggplot2
@@ -183,6 +183,23 @@ ggplot(mpg, aes(x = displ, y = hwy, z = drv, fill = class)) +
 ```
 
 <img src="man/figures/README-points-1.png" width="100%" />
+
+## 3D text
+
+`geom_text_3d()` creates 3D-aware text, rendered either as”billboard”
+text that faces the viewing plane or as 3D polygons that can face any
+direction:
+
+``` r
+df <- expand.grid(x = c("H", "B"), y = c("a", "o", "u"), z = c("g", "t"))
+df$label <- paste0(df$x, df$y, df$z)
+ggplot(df, aes(x, y, z, label = label, fill = x)) +
+   geom_text_3d(method = "polygon", facing = "zmax", 
+                size = 5, weight = "bold") +
+   coord_3d(scales = "fixed", light = NULL)
+```
+
+<img src="man/figures/README-text-1.png" width="100%" />
 
 ## Lighting effects
 
