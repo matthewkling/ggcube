@@ -1,20 +1,22 @@
-# 3D voxel visualization from sparse 3D data
+# 3D columns from grid data
 
-Creates 3D voxel visualizations from sparse 3D point data. Each data
-point becomes a fixed-size cube centered on its coordinates. Useful for
-volumetric data and 3D pixel art.
+Creates 3D columns (rectangular prisms) from grid data in which x and y
+fall on a regular grid. Works with both complete and sparse grid data.
+Each data point becomes a rectangular 3D column extending from a base
+level to the data value.
 
 ## Usage
 
 ``` r
-geom_voxel_3d(
+geom_col_3d(
   mapping = NULL,
   data = NULL,
-  stat = StatVoxel3D,
+  stat = StatCol3D,
   position = "identity",
   ...,
   width = 1,
   faces = "all",
+  zmin = NULL,
   light = NULL,
   cull_backfaces = TRUE,
   sort_method = NULL,
@@ -25,7 +27,7 @@ geom_voxel_3d(
   inherit.aes = TRUE
 )
 
-stat_voxel_3d(
+stat_col_3d(
   mapping = NULL,
   data = NULL,
   geom = GeomPolygon3D,
@@ -33,6 +35,7 @@ stat_voxel_3d(
   ...,
   width = 1,
   faces = "all",
+  zmin = NULL,
   light = NULL,
   cull_backfaces = TRUE,
   sort_method = NULL,
@@ -58,7 +61,7 @@ stat_voxel_3d(
 - stat:
 
   The statistical transformation to use on the data. Defaults to
-  `StatVoxel3D`.
+  `StatCol3D`.
 
 - position:
 
@@ -94,6 +97,12 @@ stat_voxel_3d(
   faces whose interior faces the viewer – e.g., when
   `cull_backfaces = TRUE` and `faces = "all"` (the default), only front
   faces are rendered.
+
+- zmin:
+
+  Base level for all columns. When provided as a parameter, overrides
+  any `zmin` aesthetic mapping. If `NULL` (the default), uses the `zmin`
+  aesthetic if mapped, otherwise defaults to 0.
 
 - light:
 
@@ -133,35 +142,45 @@ A `Layer` object that can be added to a ggplot.
 
 ## Details
 
-Note that voxel geometries sometimes require pairwise depth sorting for
+This is analogous to
+[`ggplot2::geom_col()`](https://ggplot2.tidyverse.org/reference/geom_bar.html)
+for 3D plots. For automatic counting or binning, see
+[`geom_bar_3d()`](https://matthewkling.github.io/ggcube/reference/geom_bar_3d.md).
+
+Note that column geometries often require pairwise depth sorting for
 correct rendering. This is the default for smaller data sets, but not
 for larger data sets due to compute speed; in those cases you may wish
-to manually specify `sort_method = "pairwise"`.
+to manually specify `sort_method = "pairwise"` for good results.
 
 ## Aesthetics
 
-Voxel 3D requires the following aesthetics:
+`stat_col_3d()` requires the following aesthetics:
 
-- **x**: X coordinate (voxel center position)
+- **x**: X coordinate (grid position)
 
-- **y**: Y coordinate (voxel center position)
+- **y**: Y coordinate (grid position)
 
-- **z**: Z coordinate (voxel center position)
+- **z**: Z coordinate (column top height)
+
+And optionally understands:
+
+- **zmin**: Base level for each column (can be overridden by the `zmin`
+  parameter)
 
 ## Computed variables
 
 - `normal_x`, `normal_y`, `normal_z`: Face normal components
 
-- `voxel_id`: Sequential voxel number
+- `col_id`: Sequential column number
 
 - `face_type`: Face name ("zmax", "xmin", etc.)
 
 ## See also
 
-[`stat_col_3d()`](https://matthewkling.github.io/ggcube/reference/geom_col_3d.md)
-for variable-height columns,
+[`geom_bar_3d()`](https://matthewkling.github.io/ggcube/reference/geom_bar_3d.md)
+for automatic counting/binning,
 [`stat_surface_3d()`](https://matthewkling.github.io/ggcube/reference/geom_surface_3d.md)
-for smooth surfaces,
+for smooth surface rendering,
 [`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md)
 for 3D coordinate systems,
 [`light()`](https://matthewkling.github.io/ggcube/reference/light.md)
@@ -170,25 +189,40 @@ for lighting specifications, GeomPolygon3D for the default geometry.
 ## Examples
 
 ``` r
-# Sparse 3D voxel data
-voxel_data <- data.frame(
-  x = round(rnorm(100, 0, 2)),
-  y = round(rnorm(100, 0, 2)),
-  z = round(rnorm(100, 0, 2))
-)
-
-p <- ggplot(voxel_data, aes(x, y, z)) + coord_3d()
-
-# Basic 3D voxel plot
-p + geom_voxel_3d(fill = "steelblue")
+# Basic 3D bar chart from regular grid
+# (columns extend from z=0 by default)
+d <- expand.grid(x = 1:5, y = 1:5)
+d$z <- d$x + d$y + rnorm(25, 0, 0.5)
+ggplot(d, aes(x, y, z)) +
+  geom_col_3d() +
+  coord_3d()
 
 
-# With aesthetic fill
-p + stat_voxel_3d(aes(fill = z)) +
-  geom_fill_viridis_c() + guides(fill = guide_colorbar_3d())
-#> Error in geom_fill_viridis_c(): could not find function "geom_fill_viridis_c"
+# Set uniform base level using `zmin` parameter
+ggplot(d, aes(x, y, z)) +
+  geom_col_3d(aes(fill = z), color = "white",
+              zmin = 5) +
+  coord_3d()
 
-# Show only visible faces for performance
-p + geom_voxel_3d(faces = c("zmax", "ymin", "xmin"))
+
+# Set variable base levels using `zmin` aesthetic
+d$base_level <- runif(nrow(d), -5, 1)
+ggplot(d, aes(x, y, z = z, zmin = base_level)) +
+  geom_col_3d(color = "black") +
+  coord_3d()
+
+
+# Show only a subset of column faces
+ggplot(d, aes(x, y, z)) +
+  geom_col_3d(faces = c("zmax", "ymin"),
+    cull_backfaces = FALSE,
+    fill = "steelblue", color = "black") +
+  coord_3d()
+
+
+# With gaps between columns
+ggplot(d, aes(x, y, z)) +
+  geom_col_3d(color = "black", width = 0.6) +
+  coord_3d()
 
 ```

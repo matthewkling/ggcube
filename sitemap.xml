@@ -10,8 +10,13 @@
 <url><loc>https://matthewkling.github.io/ggcube/reference/calculate_face_centers.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/calculate_positional_light_directions.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/camera_facing.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/col_params.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/compute_axis_aligned_normals.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/compute_bar_stats.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/compute_bin_2d.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/compute_bin_mixed.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/compute_camera_facing_vectors.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/compute_count_2d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/compute_light.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/compute_light_dot_products.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/compute_light_in_coord.html</loc></url>
@@ -22,9 +27,10 @@
 <url><loc>https://matthewkling.github.io/ggcube/reference/compute_triangle_normals.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/convert_to_tiles.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/coord_3d.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/create_bar_cols.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/create_cols.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/create_grid_segments.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/create_light_gradients.html</loc></url>
-<url><loc>https://matthewkling.github.io/ggcube/reference/create_pillars.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/create_voxels.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/cube_theming.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/detect_scale_direction_flip.html</loc></url>
@@ -35,11 +41,12 @@
 <url><loc>https://matthewkling.github.io/ggcube/reference/fit_and_predict.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/generate_circle_vertices.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/generate_point_elements.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/geom_bar_3d.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/geom_col_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/geom_density_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/geom_function_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/geom_hull_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/geom_path_3d.html</loc></url>
-<url><loc>https://matthewkling.github.io/ggcube/reference/geom_pillar_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/geom_point_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/geom_polygon_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/geom_segment_3d.html</loc></url>
@@ -62,7 +69,6 @@
 <url><loc>https://matthewkling.github.io/ggcube/reference/make_tile_grid.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/mountain.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/normalize_light_direction.html</loc></url>
-<url><loc>https://matthewkling.github.io/ggcube/reference/pillar_params.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/points_to_circles.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/polygon_params.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/polygon_rendering.html</loc></url>

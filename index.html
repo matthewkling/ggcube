@@ -61,6 +61,7 @@
 <!-- badges: end -->
 <p><strong>ggcube</strong> lets you build 3D figures using ggplot2. Use it to create 3D surfaces, volumes, scatter plots, and complex layered visualizations using familiar ggplot2 syntax with <code>aes(x, y, z)</code> and <code><a href="reference/coord_3d.html">coord_3d()</a></code>.</p>
 <p>The package provides a variety of 3D-specific <code>geoms</code> to render surfaces, prisms, points, paths, and text in 3D; it also works with some standard ggplot2 layer functions. You can control plot geometry with 3D projection parameters, can apply a range of 3D lighting models, and can mix 3D layers with 2D layers rendered on cube faces. Standard ggplot2 features like faceting, themes, scales, and legends work as expected.</p>
+<p>Note that 3D plots are often a poor choice when clear communication is a priority, due to issues like occlusion and perspective distortion. But they can be great for exploratory analysis, storytelling, and data art!</p>
 <p>WARNING: This package is in development and has not yet been officially released. There are bugs, and future API changes are possible.</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
@@ -147,37 +148,10 @@
 <p><img src="reference/figures/README-smooth-1.png" width="100%"></p>
 </div>
 <div class="section level2">
-<h2 id="id_3d-prisms">3D prisms<a class="anchor" aria-label="anchor" href="#id_3d-prisms"></a>
-</h2>
-<ul>
-<li>
-<code><a href="reference/geom_pillar_3d.html">geom_pillar_3d()</a></code> produces 3D column charts</li>
-<li>
-<code><a href="reference/geom_voxel_3d.html">geom_voxel_3d()</a></code> renders sparse 3D pixel data as arrays of cubes</li>
-<li>
-<code>geom_histogram_3d()</code> (coming soon)</li>
-<li>
-<code>geom_prism_3d()</code> (coming soon)</li>
-</ul>
-<p>Example: a 3D bar chart using <code><a href="reference/geom_pillar_3d.html">geom_pillar_3d()</a></code>:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># 3D pillar visualization</span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mountain</span><span class="op">[</span><span class="va">mountain</span><span class="op">$</span><span class="va">z</span> <span class="op">&gt;</span> <span class="fl">90</span>, <span class="op">]</span>, </span>
-<span>       <span class="fu"><a href="reference/aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span>, zmin <span class="op">=</span> <span class="fl">90</span>, fill <span class="op">=</span> <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>      <span class="fu"><a href="reference/geom_pillar_3d.html">geom_pillar_3d</a></span><span class="op">(</span>color <span class="op">=</span> <span class="st">"black"</span>, linewidth <span class="op">=</span> <span class="fl">0.1</span>, width <span class="op">=</span> <span class="fl">.9</span>,</span>
-<span>                     light <span class="op">=</span> <span class="fu"><a href="reference/light.html">light</a></span><span class="op">(</span>direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="op">-</span><span class="fl">.25</span>, <span class="fl">0</span><span class="op">)</span>, color <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>,</span>
-<span>                     sort_method <span class="op">=</span> <span class="st">"pairwise"</span><span class="op">)</span> <span class="op">+</span></span>
-<span>      <span class="fu"><a href="reference/coord_3d.html">coord_3d</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_c</a></span><span class="op">(</span>option <span class="op">=</span> <span class="st">"B"</span><span class="op">)</span> <span class="op">+</span> </span>
-<span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/guides.html" class="external-link">guides</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="fu"><a href="reference/guide_3d.html">guide_colorbar_3d</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>panel.border <span class="op">=</span> <span class="fu"><a href="reference/element_rect.html">element_rect</a></span><span class="op">(</span>color <span class="op">=</span> <span class="st">"black"</span>, linewidth <span class="op">=</span> <span class="fl">.25</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README-volumes-1.png" width="100%"></p>
-</div>
-<div class="section level2">
 <h2 id="id_3d-paths">3D paths<a class="anchor" aria-label="anchor" href="#id_3d-paths"></a>
 </h2>
 <p><code><a href="reference/geom_path_3d.html">geom_path_3d()</a></code> renders paths in 3D space with depth-based sorting and scaling:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">butterfly</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/lorenz_attractor.html">lorenz_attractor</a></span><span class="op">(</span>n_points <span class="op">=</span> <span class="fl">8000</span>, dt <span class="op">=</span> <span class="fl">.01</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">butterfly</span>, <span class="fu"><a href="reference/aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span>, color <span class="op">=</span> <span class="va">time</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>      <span class="fu"><a href="reference/geom_path_3d.html">geom_path_3d</a></span><span class="op">(</span>linewidth <span class="op">=</span> <span class="fl">0.1</span>, color <span class="op">=</span> <span class="st">"black"</span>,</span>
@@ -192,13 +166,33 @@
 <h2 id="id_3d-points">3D points<a class="anchor" aria-label="anchor" href="#id_3d-points"></a>
 </h2>
 <p>While <code><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">ggplot2::geom_point()</a></code> works with ggcube as demonstrated above, <code><a href="reference/geom_point_3d.html">geom_point_3d()</a></code> creates 3D-aware scatter plots with proper point ordering, depth-scaled point sizes, and options to include reference lines and reference points projecting 3D points onto 2D face panels:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mpg</span>, <span class="fu"><a href="reference/aes.html">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">displ</span>, y <span class="op">=</span> <span class="va">hwy</span>, z <span class="op">=</span> <span class="va">drv</span>, fill <span class="op">=</span> <span class="va">class</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>      <span class="fu"><a href="reference/geom_point_3d.html">geom_point_3d</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">3</span>, shape <span class="op">=</span> <span class="fl">21</span>, color <span class="op">=</span> <span class="st">"black"</span>, stroke <span class="op">=</span> <span class="fl">.1</span>,</span>
 <span>                    ref_lines <span class="op">=</span> <span class="cn">TRUE</span>, ref_points <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>                    ref_faces <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ymax"</span>, <span class="st">"xmax"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>      <span class="fu"><a href="reference/coord_3d.html">coord_3d</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p><img src="reference/figures/README-points-1.png" width="100%"></p>
+</div>
+<div class="section level2">
+<h2 id="id_3d-prisms">3D prisms<a class="anchor" aria-label="anchor" href="#id_3d-prisms"></a>
+</h2>
+<ul>
+<li>
+<code><a href="reference/geom_col_3d.html">geom_col_3d()</a></code> produces 3D column charts</li>
+<li>
+<code><a href="reference/geom_bar_3d.html">geom_bar_3d()</a></code> creates 3D histograms of 2D discrete or continuous variables</li>
+<li>
+<code><a href="reference/geom_voxel_3d.html">geom_voxel_3d()</a></code> renders sparse 3D pixel data as arrays of cubes</li>
+</ul>
+<p>Example: a 3D histogram chart using <code><a href="reference/geom_bar_3d.html">geom_bar_3d()</a></code>:</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">iris</span>, <span class="fu"><a href="reference/aes.html">aes</a></span><span class="op">(</span><span class="va">Species</span>, <span class="va">Sepal.Length</span>, fill <span class="op">=</span> <span class="va">Species</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>      <span class="fu"><a href="reference/geom_bar_3d.html">geom_bar_3d</a></span><span class="op">(</span>bins <span class="op">=</span> <span class="fl">20</span>, width <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">.5</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>      <span class="fu"><a href="reference/coord_3d.html">coord_3d</a></span><span class="op">(</span>scales <span class="op">=</span> <span class="st">"fixed"</span>, ratio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">3</span>, <span class="fl">.25</span><span class="op">)</span>, yaw <span class="op">=</span> <span class="fl">60</span><span class="op">)</span> <span class="op">+</span></span>
+<span>      <span class="fu"><a href="reference/scale_z_continuous.html">scale_z_continuous</a></span><span class="op">(</span>expand <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="reference/figures/README-bar-1.png" width="100%"></p>
 </div>
 <div class="section level2">
 <h2 id="id_3d-text">3D text<a class="anchor" aria-label="anchor" href="#id_3d-text"></a>

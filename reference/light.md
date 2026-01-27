@@ -131,9 +131,6 @@ for examples.
 
 ## See also
 
-[`stat_surface_3d`](https://matthewkling.github.io/ggcube/reference/geom_surface_3d.md),
-[`stat_voxel_3d`](https://matthewkling.github.io/ggcube/reference/geom_voxel_3d.md),
-[`stat_pillar_3d`](https://matthewkling.github.io/ggcube/reference/geom_pillar_3d.md),
 `scale_colorbar_shade`
 
 ## Examples

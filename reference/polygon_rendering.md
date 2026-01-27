@@ -42,5 +42,5 @@ Polygon rendering parameters
   Logical indicating whether to remove polygon vertices that are not
   part of the convex hull. Default value varies by geom. Specifying TRUE
   can help reduce artifacts in surfaces that have polygon tiles that
-  wrap over a visible horizon. For prism-type geoms like pillars and
+  wrap over a visible horizon. For prism-type geoms like columns and
   voxels, FALSE is safe because polygons fill always be convex.

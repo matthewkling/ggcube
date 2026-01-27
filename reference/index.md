@@ -13,6 +13,12 @@
 
 ## 3D layers
 
+- [`geom_bar_3d()`](https://matthewkling.github.io/ggcube/reference/geom_bar_3d.md)
+  [`stat_bar_3d()`](https://matthewkling.github.io/ggcube/reference/geom_bar_3d.md)
+  : 3D bar chart with automatic counting or binning
+- [`geom_col_3d()`](https://matthewkling.github.io/ggcube/reference/geom_col_3d.md)
+  [`stat_col_3d()`](https://matthewkling.github.io/ggcube/reference/geom_col_3d.md)
+  : 3D columns from grid data
 - [`geom_density_3d()`](https://matthewkling.github.io/ggcube/reference/geom_density_3d.md)
   [`stat_density_3d()`](https://matthewkling.github.io/ggcube/reference/geom_density_3d.md)
   : 3D surface from 2D density estimate
@@ -25,9 +31,6 @@
 - [`geom_path_3d()`](https://matthewkling.github.io/ggcube/reference/geom_path_3d.md)
   [`stat_path_3d()`](https://matthewkling.github.io/ggcube/reference/geom_path_3d.md)
   : 3D paths connecting observations
-- [`geom_pillar_3d()`](https://matthewkling.github.io/ggcube/reference/geom_pillar_3d.md)
-  [`stat_pillar_3d()`](https://matthewkling.github.io/ggcube/reference/geom_pillar_3d.md)
-  : 3D pillars from grid data
 - [`geom_point_3d()`](https://matthewkling.github.io/ggcube/reference/geom_point_3d.md)
   [`stat_point_3d()`](https://matthewkling.github.io/ggcube/reference/geom_point_3d.md)
   : 3D scatter plot with 2D reference elements

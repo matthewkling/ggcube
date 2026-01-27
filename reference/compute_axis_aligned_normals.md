@@ -1,6 +1,6 @@
-# Compute normals for axis-aligned faces (voxels/pillars)
+# Compute normals for axis-aligned faces (voxels/columns)
 
-Compute normals for axis-aligned faces (voxels/pillars)
+Compute normals for axis-aligned faces (voxels/columns)
 
 ## Usage
 

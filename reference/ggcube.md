@@ -23,11 +23,7 @@ Key functions:
 - [`stat_hull_3d()`](https://matthewkling.github.io/ggcube/reference/geom_hull_3d.md):
   3D convex and alpha hulls
 
-- [`stat_voxel_3d()`](https://matthewkling.github.io/ggcube/reference/geom_voxel_3d.md):
-  3D voxel visualization
-
-- [`stat_pillar_3d()`](https://matthewkling.github.io/ggcube/reference/geom_pillar_3d.md):
-  3D pillar/bar charts
+- `stat_column_3d()`: 3D pillar/bar charts
 
 - [`light()`](https://matthewkling.github.io/ggcube/reference/light.md):
   Lighting specifications for 3D surfaces

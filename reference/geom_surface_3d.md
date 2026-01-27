@@ -148,7 +148,7 @@ The following computed variables are available via
 for surfaces representing mathematical functions;
 [`stat_smooth_3d()`](https://matthewkling.github.io/ggcube/reference/geom_smooth_3d.md)
 for surfaces based on fitted statistical models;
-[`stat_pillar_3d()`](https://matthewkling.github.io/ggcube/reference/geom_pillar_3d.md)
+[`stat_col_3d()`](https://matthewkling.github.io/ggcube/reference/geom_col_3d.md)
 for terraced column-like surfaces;
 [`geom_polygon_3d()`](https://matthewkling.github.io/ggcube/reference/geom_polygon_3d.md)
 for the default geom associated with this layer.
