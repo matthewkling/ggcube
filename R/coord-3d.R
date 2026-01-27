@@ -530,6 +530,11 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                          # Add light specs if applicable
                          data <- attach_light(data, self$light)
 
+                         # Restore z=0 for baseline vertices, if applicable (stat_bar_3d)
+                         if ("z0" %in% names(data)) {
+                               data$z[data$z0] <- 0
+                         }
+
                          # Translate project_to_face names if they exist
                          if ("project_to_face" %in% names(data) && !is.null(panel_params$scale_flips)) {
                                data$project_to_face <- translate_face_names_from_flips(data$project_to_face, panel_params$scale_flips)
@@ -779,6 +784,8 @@ train_z_scale <- function(){
       # If found data, train z scale
       if (!is.null(data) && !is.null(.z_scale_cache$scale)) {
             for (layer_data in data) {
+
+                  # Train on z column
                   if ("z" %in% names(layer_data) && nrow(layer_data) > 0) {
 
                         # Train continuous scales
@@ -797,6 +804,20 @@ train_z_scale <- function(){
                                     .z_scale_cache$scale$train(layer_data$z)
                               }
 
+                        }
+                  }
+
+                  # Train on zmin column if present (for col geoms with variable baseline)
+                  if ("zmin" %in% names(layer_data) && nrow(layer_data) > 0) {
+                        if(inherits(.z_scale_cache$scale, "ScaleContinuousPosition")) {
+                              .z_scale_cache$scale$train(layer_data$zmin)
+                        }
+                  }
+
+                  # Train on 0 if z0 column exists (for bar geoms with fixed baseline)
+                  if ("z0" %in% names(layer_data) && nrow(layer_data) > 0) {
+                        if(inherits(.z_scale_cache$scale, "ScaleContinuousPosition")) {
+                              .z_scale_cache$scale$train(0)
                         }
                   }
             }

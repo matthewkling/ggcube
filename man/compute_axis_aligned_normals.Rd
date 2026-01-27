@@ -2,7 +2,7 @@
 % Please edit documentation in R/light.R
 \name{compute_axis_aligned_normals}
 \alias{compute_axis_aligned_normals}
-\title{Compute normals for axis-aligned faces (voxels/pillars)}
+\title{Compute normals for axis-aligned faces (voxels/columns)}
 \usage{
 compute_axis_aligned_normals(face_data)
 }
@@ -13,6 +13,6 @@ compute_axis_aligned_normals(face_data)
 Matrix with normalized normal vectors (one row per face, 3 columns)
 }
 \description{
-Compute normals for axis-aligned faces (voxels/pillars)
+Compute normals for axis-aligned faces (voxels/columns)
 }
 \keyword{internal}

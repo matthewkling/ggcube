@@ -154,6 +154,6 @@ ggplot(mountain, aes(x, y, z, fill = z, color = z)) +
 \seealso{
 \code{\link[=stat_function_3d]{stat_function_3d()}} for surfaces representing mathematical functions;
 \code{\link[=stat_smooth_3d]{stat_smooth_3d()}} for surfaces based on fitted statistical models;
-\code{\link[=stat_pillar_3d]{stat_pillar_3d()}} for terraced column-like surfaces;
+\code{\link[=stat_col_3d]{stat_col_3d()}} for terraced column-like surfaces;
 \code{\link[=geom_polygon_3d]{geom_polygon_3d()}} for the default geom associated with this layer.
 }

@@ -25,8 +25,8 @@ test_that("continuous and discrete scales run without error for various stats", 
             test(disc, stat_voxel_3d())
             test(mix, stat_voxel_3d())
 
-            test(cont, stat_pillar_3d())
-            test(disc, stat_pillar_3d())
-            test(mix, stat_pillar_3d())
+            test(cont, stat_col_3d())
+            test(disc, stat_col_3d())
+            test(mix, stat_col_3d())
       })
 })

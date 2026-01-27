@@ -137,7 +137,7 @@
 #'              light = light(backface_scale = 1, mode = "hsl",
 #'                            backface_offset = -.5))
 #'
-#' @seealso \code{\link{stat_surface_3d}}, \code{\link{stat_voxel_3d}}, \code{\link{stat_pillar_3d}}, \code{\link{scale_colorbar_shade}}
+#' @seealso \code{\link{scale_colorbar_shade}}
 #' @export
 light <- function(method = "diffuse",
                   direction = c(-.5, 0, 1),
@@ -507,7 +507,7 @@ compute_light_in_coord <- function(data, standardized_coords, scale_ranges, scal
             # Hull/triangle data: compute normals from vertex coordinates
             normals <- compute_triangle_normals(data, faces)
       } else if ("face_type" %in% names(faces)) {
-            # Voxel/pillar data: axis-aligned normals
+            # Voxel/column data: axis-aligned normals
             normals <- compute_axis_aligned_normals(faces)
       } else {
             # Surface-like data: normals from fitted plane gradients
@@ -649,7 +649,7 @@ calculate_face_centers <- function(faces) {
       return(face_centers)
 }
 
-#' Compute normals for axis-aligned faces (voxels/pillars)
+#' Compute normals for axis-aligned faces (voxels/columns)
 #'
 #' @param face_data Data frame with unique faces containing face_type column
 #' @return Matrix with normalized normal vectors (one row per face, 3 columns)

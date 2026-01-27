@@ -138,7 +138,7 @@ p + geom_voxel_3d(faces = c("zmax", "ymin", "xmin"))
 
 }
 \seealso{
-\code{\link[=stat_pillar_3d]{stat_pillar_3d()}} for variable-height columns, \code{\link[=stat_surface_3d]{stat_surface_3d()}} for smooth surfaces,
+\code{\link[=stat_col_3d]{stat_col_3d()}} for variable-height columns, \code{\link[=stat_surface_3d]{stat_surface_3d()}} for smooth surfaces,
 \code{\link[=coord_3d]{coord_3d()}} for 3D coordinate systems, \code{\link[=light]{light()}} for lighting specifications,
 \link{GeomPolygon3D} for the default geometry.
 }

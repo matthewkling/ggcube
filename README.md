@@ -17,6 +17,10 @@ projection parameters, can apply a range of 3D lighting models, and can
 mix 3D layers with 2D layers rendered on cube faces. Standard ggplot2
 features like faceting, themes, scales, and legends work as expected.
 
+Note that 3D plots are often a poor choice when clear communication is a
+priority, due to issues like occlusion and perspective distortion. But
+they can be great for exploratory analysis, storytelling, and data art!
+
 WARNING: This package is in development and has not yet been officially
 released. There are bugs, and future API changes are possible.
 
@@ -125,30 +129,6 @@ ggplot(d, aes(x, y, z)) +
 
 <img src="man/figures/README-smooth-1.png" width="100%" />
 
-## 3D prisms
-
-- `geom_pillar_3d()` produces 3D column charts
-- `geom_voxel_3d()` renders sparse 3D pixel data as arrays of cubes
-- `geom_histogram_3d()` (coming soon)
-- `geom_prism_3d()` (coming soon)
-
-Example: a 3D bar chart using `geom_pillar_3d()`:
-
-``` r
-# 3D pillar visualization
-ggplot(mountain[mountain$z > 90, ], 
-       aes(x, y, z, zmin = 90, fill = z)) +
-      geom_pillar_3d(color = "black", linewidth = 0.1, width = .9,
-                     light = light(direction = c(1, -.25, 0), color = FALSE),
-                     sort_method = "pairwise") +
-      coord_3d() +
-      scale_fill_viridis_c(option = "B") + 
-      guides(fill = guide_colorbar_3d()) +
-      theme(panel.border = element_rect(color = "black", linewidth = .25))
-```
-
-<img src="man/figures/README-volumes-1.png" width="100%" />
-
 ## 3D paths
 
 `geom_path_3d()` renders paths in 3D space with depth-based sorting and
@@ -183,6 +163,25 @@ ggplot(mpg, aes(x = displ, y = hwy, z = drv, fill = class)) +
 ```
 
 <img src="man/figures/README-points-1.png" width="100%" />
+
+## 3D prisms
+
+- `geom_col_3d()` produces 3D column charts
+- `geom_bar_3d()` creates 3D histograms of 2D discrete or continuous
+  variables
+- `geom_voxel_3d()` renders sparse 3D pixel data as arrays of cubes
+
+Example: a 3D histogram chart using `geom_bar_3d()`:
+
+``` r
+ggplot(iris, aes(Species, Sepal.Length, fill = Species)) +
+      geom_bar_3d(bins = 20, width = c(.5, 1)) +
+      coord_3d(scales = "fixed", ratio = c(1, 3, .25), yaw = 60) +
+      scale_z_continuous(expand = c(0, 0)) +
+      theme(legend.position = "none")
+```
+
+<img src="man/figures/README-bar-1.png" width="100%" />
 
 ## 3D text
 

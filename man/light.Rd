@@ -169,5 +169,5 @@ p + coord_3d(pitch = 0, roll = -70, yaw = 0,
 
 }
 \seealso{
-\code{\link{stat_surface_3d}}, \code{\link{stat_voxel_3d}}, \code{\link{stat_pillar_3d}}, \code{\link{scale_colorbar_shade}}
+\code{\link{scale_colorbar_shade}}
 }

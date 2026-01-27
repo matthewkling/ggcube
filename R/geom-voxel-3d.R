@@ -86,7 +86,7 @@ create_voxels <- function(data, x_spacing, y_spacing, z_spacing, width, selected
             t <- cz + half_z
             b <- cz - half_z
 
-            # Define the 8 corners of the pillar
+            # Define the 8 corners of the voxel
             corners <- list(
                   c(l, k, b),  # 1: left-back-bottom
                   c(r, k, b),  # 2: right-back
@@ -200,7 +200,7 @@ convert_to_numeric <- function(data) {
 #' @param stat The statistical transformation to use on the data. Defaults to `StatVoxel3D`.
 #' @param geom The geometric object used to display the data. Defaults to `GeomPolygon3D`.
 #'
-#' @inheritParams pillar_params
+#' @inheritParams col_params
 #' @inheritParams polygon_params
 #' @inheritParams light_param
 #' @inheritParams position_param
@@ -236,7 +236,7 @@ convert_to_numeric <- function(data) {
 #' # Show only visible faces for performance
 #' p + geom_voxel_3d(faces = c("zmax", "ymin", "xmin"))
 #'
-#' @seealso [stat_pillar_3d()] for variable-height columns, [stat_surface_3d()] for smooth surfaces,
+#' @seealso [stat_col_3d()] for variable-height columns, [stat_surface_3d()] for smooth surfaces,
 #'   [coord_3d()] for 3D coordinate systems, [light()] for lighting specifications,
 #'   [GeomPolygon3D] for the default geometry.
 #' @return A `Layer` object that can be added to a ggplot.

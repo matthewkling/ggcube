@@ -27,7 +27,7 @@
 #'   wider and farther lines narrower. Default is TRUE. Scaling is based on the mean depth of a polygon.
 #' @param force_convex Logical indicating whether to remove polygon vertices that are not part of the
 #'   convex hull. Default value varies by geom. Specifying TRUE can help reduce artifacts in surfaces
-#'   that have polygon tiles that wrap over a visible horizon. For prism-type geoms like pillars and
+#'   that have polygon tiles that wrap over a visible horizon. For prism-type geoms like columns and
 #'   voxels, FALSE is safe because polygons fill always be convex.
 #' @name polygon_rendering
 NULL
@@ -46,7 +46,7 @@ NULL
 #' @keywords internal
 NULL
 
-#' Shared pillar and voxel params
+#' Shared column and voxel params
 #'
 #' @param width Numeric value controlling box width as a fraction of grid spacing.
 #'   Default is 1.0 (volumes touch each other). Use 0.8 for small gaps, 1.2 for overlap.
@@ -61,7 +61,7 @@ NULL
 #'   Note that this setting acts jointly with backface culling, which removes faces whose
 #'   interior faces the viewer -- e.g., when `cull_backfaces = TRUE` and `faces = "all"`
 #'   (the default), only front faces are rendered.
-#' @name pillar_params
+#' @name col_params
 #' @keywords internal
 NULL
 

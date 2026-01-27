@@ -20,8 +20,7 @@ Key functions:
 \item \code{aes()}: Enhanced aesthetic mapping with positional z support
 \item \code{stat_surface_3d()}: Surface plotting from grid data
 \item \code{stat_hull_3d()}: 3D convex and alpha hulls
-\item \code{stat_voxel_3d()}: 3D voxel visualization
-\item \code{stat_pillar_3d()}: 3D pillar/bar charts
+\item \code{stat_column_3d()}: 3D pillar/bar charts
 \item \code{light()}: Lighting specifications for 3D surfaces
 }
 }

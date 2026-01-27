@@ -219,7 +219,7 @@ convert_to_tiles <- function(data, grid = c("tri1", "tri2", "quad")) {
 #'
 #' @seealso [stat_function_3d()] for surfaces representing mathematical functions;
 #'   [stat_smooth_3d()] for surfaces based on fitted statistical models;
-#'   [stat_pillar_3d()] for terraced column-like surfaces;
+#'   [stat_col_3d()] for terraced column-like surfaces;
 #'   [geom_polygon_3d()] for the default geom associated with this layer.
 #' @return A `Layer` object that can be added to a ggplot.
 #' @rdname geom_surface_3d
