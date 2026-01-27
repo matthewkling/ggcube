@@ -8,13 +8,14 @@ using familiar ggplot2 syntax with `aes(x, y, z)` and
 The package provides a variety of 3D-specific `geoms` to render
 surfaces, prisms, points, paths, and text in 3D; it also works with some
 standard ggplot2 layer functions. You can control plot geometry with 3D
-projection parameters, can apply a range of 3D lighting models, and can
-mix 3D layers with 2D layers rendered on cube faces. Standard ggplot2
-features like faceting, themes, scales, and legends work as expected.
+projection parameters, apply a range of 3D lighting models, and mix 3D
+layers with 2D layers rendered on cube faces. Standard ggplot2 features
+like faceting, themes, scales, and legends work as expected.
 
-Note that 3D plots are often a poor choice when clear communication is a
-priority, due to issues like occlusion and perspective distortion. But
-they can be great for exploratory analysis, storytelling, and data art!
+NOTE: 3D plots are generally a poor choice when precise quantitative
+communication is important, due to issues like occlusion and perspective
+distortion. But they are often excellent for exploratory analysis,
+storytelling, and data art!
 
 WARNING: This package is in development and has not yet been officially
 released. There are bugs, and future API changes are possible.
