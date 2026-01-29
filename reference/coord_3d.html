@@ -147,9 +147,10 @@ as scaled by <code>ratio</code>. Similar to <code><a href="https://ggplot2.tidyv
 
 
 <dt id="arg-light">light<a class="anchor" aria-label="anchor" href="#arg-light"></a></dt>
-<dd><p>A lighting specification object created by <code><a href="light.html">light()</a></code> (see that function for details),
-or <code>NULL</code> to disable shading. Specify plot-level lighting in <code>coord_3d()</code> and layer-specific
-lighting in <code>geom_*3d()</code> functions.</p></dd>
+<dd><p>A lighting specification object created by <code><a href="light.html">light()</a></code>,<code>"none"</code> to disable
+lighting, or <code>NULL</code> to inherit plot-level lighting specs from the coord. Specify
+plot-level lighting in <code>coord_3d()</code> and layer-specific lighting in <code>geom_*3d()</code>
+functions.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -166,7 +167,7 @@ text styling, <a href="polygon_rendering.html">polygon_rendering</a> for 3D-rela
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># base plot used in examples</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="geom_function_3d.html">geom_function_3d</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="stat_function_3d.html">geom_function_3d</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>    <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat</a></span><span class="op">(</span><span class="va">z</span><span class="op">)</span>, color <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat</a></span><span class="op">(</span><span class="va">z</span><span class="op">)</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>    fun <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cos</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>    xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="va">pi</span>, <span class="va">pi</span><span class="op">)</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="va">pi</span>, <span class="va">pi</span><span class="op">)</span>,</span></span>

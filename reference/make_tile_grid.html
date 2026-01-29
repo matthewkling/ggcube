@@ -106,7 +106,7 @@ for the two dimensions. For triangular and hexagonal grids, this means that
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="geom_function_3d.html">stat_function_3d()</a></code>, <code><a href="geom_smooth_3d.html">stat_smooth_3d()</a></code>, and <code><a href="geom_density_3d.html">stat_density_3d()</a></code> for ggcube layers that
+    <div class="dont-index"><p><code><a href="stat_function_3d.html">stat_function_3d()</a></code>, <code><a href="geom_smooth_3d.html">stat_smooth_3d()</a></code>, and <code><a href="stat_density_3d.html">stat_density_3d()</a></code> for ggcube layers that
 use <code>make_tile_grid()</code> to generate gridded surfaces.</p></div>
     </div>
 
@@ -127,12 +127,15 @@ use <code>make_tile_grid()</code> to generate gridded surfaces.</p></div>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># use from within ggcube stat</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="geom_function_3d.html">stat_function_3d</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="stat_function_3d.html">stat_function_3d</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>    grid <span class="op">=</span> <span class="st">"hex"</span>, n <span class="op">=</span> <span class="fl">20</span>, xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>    fun <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span> <span class="op">-</span> <span class="va">x</span><span class="op">^</span><span class="fl">2</span> <span class="op">-</span> <span class="va">y</span><span class="op">^</span><span class="fl">2</span>,</span></span>
 <span class="r-in"><span>    fill <span class="op">=</span> <span class="st">"black"</span>, color <span class="op">=</span> <span class="st">"white"</span>, light <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="make_tile_grid-1.png" alt="" width="700" height="433"></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in stat_function_3d(grid = "hex", n = 20, xlim = c(-2, 2), ylim = c(-2,     2), fun = function(x, y) -x^2 - y^2, fill = "black", color = "white",     light = NULL):</span> Problem while setting up geom.</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Error occurred in the 1st layer.</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="font-weight: bold;">Caused by error in `match.arg()`:</span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="color: #BBBB00;">!</span> 'arg' should be one of “rectangle”, “tri1”, “tri2”</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

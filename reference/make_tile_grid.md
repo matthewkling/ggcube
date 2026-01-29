@@ -67,10 +67,10 @@ that `n` is only approximate.
 
 ## See also
 
-[`stat_function_3d()`](https://matthewkling.github.io/ggcube/reference/geom_function_3d.md),
+[`stat_function_3d()`](https://matthewkling.github.io/ggcube/reference/stat_function_3d.md),
 [`stat_smooth_3d()`](https://matthewkling.github.io/ggcube/reference/geom_smooth_3d.md),
 and
-[`stat_density_3d()`](https://matthewkling.github.io/ggcube/reference/geom_density_3d.md)
+[`stat_density_3d()`](https://matthewkling.github.io/ggcube/reference/stat_density_3d.md)
 for ggcube layers that use `make_tile_grid()` to generate gridded
 surfaces.
 
@@ -97,5 +97,8 @@ ggplot() +
     fun = function(x, y) - x^2 - y^2,
     fill = "black", color = "white", light = NULL) +
   coord_3d()
-
+#> Error in stat_function_3d(grid = "hex", n = 20, xlim = c(-2, 2), ylim = c(-2,     2), fun = function(x, y) -x^2 - y^2, fill = "black", color = "white",     light = NULL): Problem while setting up geom.
+#> ℹ Error occurred in the 1st layer.
+#> Caused by error in `match.arg()`:
+#> ! 'arg' should be one of “rectangle”, “tri1”, “tri2”
 ```

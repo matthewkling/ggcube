@@ -70,16 +70,16 @@ ggplot(mpg, aes(displ, hwy, drv, color = class)) +
   plots triangulated volumes based on convex or alpha hulls of 3D points
 - [`geom_function()`](https://ggplot2.tidyverse.org/reference/geom_function.html)
   visualizes mathematical functions
-- [`geom_surface_3d()`](https://matthewkling.github.io/ggcube/reference/geom_surface_3d.md)
+- [`geom_surface_3d()`](https://matthewkling.github.io/ggcube/reference/stat_surface_3d.md)
   renders surfaces based on existing grid data such as terrain data
 - [`geom_smooth_3d()`](https://matthewkling.github.io/ggcube/reference/geom_smooth_3d.md)
   fits statistical models with two predictors and visualizes fitted
   surfaces with confidence intervals
-- [`geom_density_3d()`](https://matthewkling.github.io/ggcube/reference/geom_density_3d.md)
+- [`geom_density_3d()`](https://matthewkling.github.io/ggcube/reference/stat_density_3d.md)
   creates perspective visualizations of 2D kernel density estimates
 
 Example: a terrain surface using
-[`geom_surface_3d()`](https://matthewkling.github.io/ggcube/reference/geom_surface_3d.md):
+[`geom_surface_3d()`](https://matthewkling.github.io/ggcube/reference/stat_surface_3d.md):
 
 ``` r
 ggplot(mountain, aes(x, y, z)) +
@@ -94,7 +94,7 @@ ggplot(mountain, aes(x, y, z)) +
 ![](reference/figures/README-surfaces-1.png)
 
 Example: a mathematical surface using
-[`geom_function_3d()`](https://matthewkling.github.io/ggcube/reference/geom_function_3d.md):
+[`geom_function_3d()`](https://matthewkling.github.io/ggcube/reference/stat_function_3d.md):
 
 ``` r
 ggplot() +

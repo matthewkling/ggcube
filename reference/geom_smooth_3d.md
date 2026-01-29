@@ -184,9 +184,9 @@ stat_smooth_3d(
 - light:
 
   A lighting specification object created by
-  [`light()`](https://matthewkling.github.io/ggcube/reference/light.md)
-  (see that function for details), or `NULL` to disable shading. Specify
-  plot-level lighting in
+  [`light()`](https://matthewkling.github.io/ggcube/reference/light.md),`"none"`
+  to disable lighting, or `NULL` to inherit plot-level lighting specs
+  from the coord. Specify plot-level lighting in
   [`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md)
   and layer-specific lighting in `geom_*3d()` functions.
 
@@ -254,9 +254,9 @@ The following computed variables are available via
 
 ## See also
 
-[`stat_surface_3d()`](https://matthewkling.github.io/ggcube/reference/geom_surface_3d.md)
+[`stat_surface_3d()`](https://matthewkling.github.io/ggcube/reference/stat_surface_3d.md)
 for surfaces from existing grid data,
-[`stat_function_3d()`](https://matthewkling.github.io/ggcube/reference/geom_function_3d.md)
+[`stat_function_3d()`](https://matthewkling.github.io/ggcube/reference/stat_function_3d.md)
 for mathematical function surfaces,
 [`make_tile_grid()`](https://matthewkling.github.io/ggcube/reference/make_tile_grid.md)
 for details about grid geometry options,
@@ -283,7 +283,6 @@ p <- ggplot(d, aes(x, y, z)) +
 
 # Basic smooth surface with default loess model
 p + geom_smooth_3d()
-#> Warning: Ignoring unknown parameters: `force_convex` and `sort_method`
 
 
 # Linear model surface with 90% confidence intervals
@@ -291,7 +290,6 @@ p + geom_smooth_3d(aes(fill = after_stat(level)),
       method = "lm", color = "black", se = TRUE,
       level = 0.99, se.alpha = .7, n = 10) +
       scale_fill_manual(values = c("red", "darkorchid4", "steelblue"))
-#> Warning: Ignoring unknown parameters: `force_convex` and `sort_method`
 #> Scale for fill is already present.
 #> Adding another scale for fill, which will replace the existing scale.
 
@@ -299,7 +297,6 @@ p + geom_smooth_3d(aes(fill = after_stat(level)),
 # Linear model surface with custom model formula
 p + geom_smooth_3d(method = "lm", n = 10,
       formula = z ~ poly(x, 2) + poly(y, 2) + x:y)
-#> Warning: Ignoring unknown parameters: `force_convex` and `sort_method`
 
 
 # Loess with custom span parameter, and lighting effects
@@ -307,7 +304,6 @@ p + geom_smooth_3d(
       method = "loess", method.args = list(span = 0.3),
       fill = "steelblue", color = "white", n = 20,
       light = light(direction = c(0, -1, 0)))
-#> Warning: Ignoring unknown parameters: `force_convex` and `sort_method`
 
 
 # GLM with gamma family and log link
@@ -315,30 +311,25 @@ p + geom_smooth_3d(
       method = "glm", n = 10,
       method.args = list(family = Gamma(link = "log")),
       formula = z ~ poly(x, 2) + poly(y, 2))
-#> Warning: Ignoring unknown parameters: `force_convex` and `sort_method`
 
 
 # Visualize uncertainty with computed "standard error" variable
 p + geom_smooth_3d(aes(fill = after_stat(se * 2))) +
   scale_fill_viridis_c()
-#> Warning: Ignoring unknown parameters: `force_convex` and `sort_method`
 #> Scale for fill is already present.
 #> Adding another scale for fill, which will replace the existing scale.
 
 
 # Extend surface beyond training data range (explicit extrapolation)
 p + geom_smooth_3d(method = "lm", xlim = c(-5, 5), ylim = c(-5, 5))
-#> Warning: Ignoring unknown parameters: `force_convex` and `sort_method`
 
 # Clip surface to predictor convex hull
 # to prevent extrapolation into corner areas
 p + geom_smooth_3d(method = "lm", domain = "chull")
-#> Warning: Ignoring unknown parameters: `force_convex` and `sort_method`
 
 
 # Specify alternative grid geometry
 p + geom_smooth_3d(grid = "hex", n = 30, direction = "y")
-#> Warning: Ignoring unknown parameters: `force_convex` and `sort_method`
 
 
 # Separate fits for data subgroups
@@ -346,6 +337,5 @@ ggplot(mtcars, aes(wt, mpg, qsec, fill = factor(cyl))) +
   geom_smooth_3d(method = "lm", alpha = .7,
     xlim = c(0, 5), ylim = c(0, 40)) + # specify shared domain
   coord_3d() + theme_light()
-#> Warning: Ignoring unknown parameters: `force_convex` and `sort_method`
 
 ```

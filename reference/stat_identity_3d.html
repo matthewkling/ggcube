@@ -92,9 +92,10 @@ reordering withing groups during depth sorting.</p>
 
 
 <dt id="arg-light">light<a class="anchor" aria-label="anchor" href="#arg-light"></a></dt>
-<dd><p>A lighting specification object created by <code><a href="light.html">light()</a></code> (see that function for details),
-or <code>NULL</code> to disable shading. Specify plot-level lighting in <code><a href="coord_3d.html">coord_3d()</a></code> and layer-specific
-lighting in <code>geom_*3d()</code> functions.</p></dd>
+<dd><p>A lighting specification object created by <code><a href="light.html">light()</a></code>,<code>"none"</code> to disable
+lighting, or <code>NULL</code> to inherit plot-level lighting specs from the coord. Specify
+plot-level lighting in <code><a href="coord_3d.html">coord_3d()</a></code> and layer-specific lighting in <code>geom_*3d()</code>
+functions.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>

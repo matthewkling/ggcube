@@ -107,9 +107,9 @@ stat_col_3d(
 - light:
 
   A lighting specification object created by
-  [`light()`](https://matthewkling.github.io/ggcube/reference/light.md)
-  (see that function for details), or `NULL` to disable shading. Specify
-  plot-level lighting in
+  [`light()`](https://matthewkling.github.io/ggcube/reference/light.md),`"none"`
+  to disable lighting, or `NULL` to inherit plot-level lighting specs
+  from the coord. Specify plot-level lighting in
   [`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md)
   and layer-specific lighting in `geom_*3d()` functions.
 
@@ -179,7 +179,7 @@ And optionally understands:
 
 [`geom_bar_3d()`](https://matthewkling.github.io/ggcube/reference/geom_bar_3d.md)
 for automatic counting/binning,
-[`stat_surface_3d()`](https://matthewkling.github.io/ggcube/reference/geom_surface_3d.md)
+[`stat_surface_3d()`](https://matthewkling.github.io/ggcube/reference/stat_surface_3d.md)
 for smooth surface rendering,
 [`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md)
 for 3D coordinate systems,

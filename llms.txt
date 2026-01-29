@@ -70,16 +70,16 @@ ggplot(mpg, aes(displ, hwy, drv, color = class)) +
   plots triangulated volumes based on convex or alpha hulls of 3D points
 - [`geom_function()`](https://ggplot2.tidyverse.org/reference/geom_function.html)
   visualizes mathematical functions
-- [`geom_surface_3d()`](https://matthewkling.github.io/ggcube/reference/geom_surface_3d.md)
+- [`geom_surface_3d()`](https://matthewkling.github.io/ggcube/reference/stat_surface_3d.md)
   renders surfaces based on existing grid data such as terrain data
 - [`geom_smooth_3d()`](https://matthewkling.github.io/ggcube/reference/geom_smooth_3d.md)
   fits statistical models with two predictors and visualizes fitted
   surfaces with confidence intervals
-- [`geom_density_3d()`](https://matthewkling.github.io/ggcube/reference/geom_density_3d.md)
+- [`geom_density_3d()`](https://matthewkling.github.io/ggcube/reference/stat_density_3d.md)
   creates perspective visualizations of 2D kernel density estimates
 
 Example: a terrain surface using
-[`geom_surface_3d()`](https://matthewkling.github.io/ggcube/reference/geom_surface_3d.md):
+[`geom_surface_3d()`](https://matthewkling.github.io/ggcube/reference/stat_surface_3d.md):
 
 ``` r
 ggplot(mountain, aes(x, y, z)) +
@@ -94,7 +94,7 @@ ggplot(mountain, aes(x, y, z)) +
 ![](reference/figures/README-surfaces-1.png)
 
 Example: a mathematical surface using
-[`geom_function_3d()`](https://matthewkling.github.io/ggcube/reference/geom_function_3d.md):
+[`geom_function_3d()`](https://matthewkling.github.io/ggcube/reference/stat_function_3d.md):
 
 ``` r
 ggplot() +
@@ -294,12 +294,6 @@ ggplot(iris, aes(Sepal.Length, Sepal.Width, Petal.Length,
 - [`geom_col_3d()`](https://matthewkling.github.io/ggcube/reference/geom_col_3d.md)
   [`stat_col_3d()`](https://matthewkling.github.io/ggcube/reference/geom_col_3d.md)
   : 3D columns from grid data
-- [`geom_density_3d()`](https://matthewkling.github.io/ggcube/reference/geom_density_3d.md)
-  [`stat_density_3d()`](https://matthewkling.github.io/ggcube/reference/geom_density_3d.md)
-  : 3D surface from 2D density estimate
-- [`geom_function_3d()`](https://matthewkling.github.io/ggcube/reference/geom_function_3d.md)
-  [`stat_function_3d()`](https://matthewkling.github.io/ggcube/reference/geom_function_3d.md)
-  : 3D function as a continuous surface
 - [`geom_hull_3d()`](https://matthewkling.github.io/ggcube/reference/geom_hull_3d.md)
   [`stat_hull_3d()`](https://matthewkling.github.io/ggcube/reference/geom_hull_3d.md)
   : 3D convex and alpha hulls
@@ -311,21 +305,29 @@ ggplot(iris, aes(Sepal.Length, Sepal.Width, Petal.Length,
   : 3D scatter plot with 2D reference elements
 - [`geom_polygon_3d()`](https://matthewkling.github.io/ggcube/reference/geom_polygon_3d.md)
   : 3D polygon geometry with depth sorting
+- [`geom_ridgeline_3d()`](https://matthewkling.github.io/ggcube/reference/geom_ridgeline_3d.md)
+  : 3D ridgeline plot from point grid
 - [`geom_segment_3d()`](https://matthewkling.github.io/ggcube/reference/geom_segment_3d.md)
   [`stat_segment_3d()`](https://matthewkling.github.io/ggcube/reference/geom_segment_3d.md)
   : 3D line segments
 - [`geom_smooth_3d()`](https://matthewkling.github.io/ggcube/reference/geom_smooth_3d.md)
   [`stat_smooth_3d()`](https://matthewkling.github.io/ggcube/reference/geom_smooth_3d.md)
   : 3D surface from smoothed conditional means
-- [`geom_surface_3d()`](https://matthewkling.github.io/ggcube/reference/geom_surface_3d.md)
-  [`stat_surface_3d()`](https://matthewkling.github.io/ggcube/reference/geom_surface_3d.md)
-  : 3D surface from regular grid data
 - [`geom_text_3d()`](https://matthewkling.github.io/ggcube/reference/geom_text_3d.md)
   [`stat_text_3d()`](https://matthewkling.github.io/ggcube/reference/geom_text_3d.md)
   : 3D text labels
 - [`geom_voxel_3d()`](https://matthewkling.github.io/ggcube/reference/geom_voxel_3d.md)
   [`stat_voxel_3d()`](https://matthewkling.github.io/ggcube/reference/geom_voxel_3d.md)
   : 3D voxel visualization from sparse 3D data
+- [`geom_density_3d()`](https://matthewkling.github.io/ggcube/reference/stat_density_3d.md)
+  [`stat_density_3d()`](https://matthewkling.github.io/ggcube/reference/stat_density_3d.md)
+  : 3D surface from 2D density estimate
+- [`stat_function_3d()`](https://matthewkling.github.io/ggcube/reference/stat_function_3d.md)
+  [`geom_function_3d()`](https://matthewkling.github.io/ggcube/reference/stat_function_3d.md)
+  : 3D surface from a function
+- [`stat_surface_3d()`](https://matthewkling.github.io/ggcube/reference/stat_surface_3d.md)
+  [`geom_surface_3d()`](https://matthewkling.github.io/ggcube/reference/stat_surface_3d.md)
+  : 3D surface from point data
 - [`stat_identity_3d()`](https://matthewkling.github.io/ggcube/reference/stat_identity_3d.md)
   : 3D-aware identity transformation
 

@@ -5,7 +5,7 @@ realistic 3D surface visualization. It's designed to work with surface
 data from
 [`stat_hull_3d()`](https://matthewkling.github.io/ggcube/reference/geom_hull_3d.md)
 and
-[`stat_surface_3d()`](https://matthewkling.github.io/ggcube/reference/geom_surface_3d.md),
+[`stat_surface_3d()`](https://matthewkling.github.io/ggcube/reference/stat_surface_3d.md),
 as well as regular polygon data like maps.
 
 ## Usage
@@ -119,14 +119,14 @@ ggplot(sphere_points, aes(x, y, z)) +
 
 
 # Can be used directly with properly structured data
-triangles <- data.frame(x = rep(c(1, 2, 3), 3),
+triangles <- data.frame(x = rep(c(3, 2, 1), 3),
                             y = rep(c(1, 3, 1), 3),
                             z = rep(1:3, each = 3),
                             shape = rep(letters[1:3], each = 3))
 ggplot(triangles, aes(x, y, z, fill = shape)) +
   geom_polygon_3d(color = "black") +
   coord_3d()
-
+#> Error in as.vector(x, "character"): cannot coerce type 'environment' to vector of type 'character'
 
 # Use `sort_method` to choose between depth sorting algorithms
 d <- data.frame(group = rep(letters[1:3], each = 4),
@@ -134,16 +134,17 @@ d <- data.frame(group = rep(letters[1:3], each = 4),
                 y = rep(c(1, 2, 2, 1), 3),
                 z = rep(c(1, 1.5, 2), each = 4))
 p <- ggplot(d, aes(x, y, z, group = group, fill = group)) +
-      coord_3d(pitch = 50, roll = 20, yaw = 0, scales = "fixed") +
+      coord_3d(pitch = 50, roll = 20, yaw = 0,
+               scales = "fixed", light = "none") +
       theme_light()
 
 # fast, but rendering order is incorrect in this particular example
 p + geom_polygon_3d(color = "black", linewidth = 1, alpha = .75,
       sort_method = "painter")
-
+#> Error in as.vector(x, "character"): cannot coerce type 'environment' to vector of type 'character'
 
 # correct rendering order (but slower for large data sets)
 p + geom_polygon_3d(color = "black", linewidth = 1, alpha = .75,
       sort_method = "pairwise")
-
+#> Error in as.vector(x, "character"): cannot coerce type 'environment' to vector of type 'character'
 ```

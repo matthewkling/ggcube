@@ -17,7 +17,7 @@ Key functions:
 - [`aes()`](https://matthewkling.github.io/ggcube/reference/aes.md):
   Enhanced aesthetic mapping with positional z support
 
-- [`stat_surface_3d()`](https://matthewkling.github.io/ggcube/reference/geom_surface_3d.md):
+- [`stat_surface_3d()`](https://matthewkling.github.io/ggcube/reference/stat_surface_3d.md):
   Surface plotting from grid data
 
 - [`stat_hull_3d()`](https://matthewkling.github.io/ggcube/reference/geom_hull_3d.md):

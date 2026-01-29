@@ -126,7 +126,7 @@ A `lighting` object that can be passed to polygon-based 3D layers or to
 Note that light-like effects can also be achieved in some stats by
 mapping color aesthestics to computed variables such as
 `after_stat(dzdx)`; see
-[`geom_surface_3d()`](https://matthewkling.github.io/ggcube/reference/geom_surface_3d.md)
+[`geom_surface_3d()`](https://matthewkling.github.io/ggcube/reference/stat_surface_3d.md)
 for examples.
 
 ## See also
