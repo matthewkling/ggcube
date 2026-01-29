@@ -46,9 +46,8 @@ StatDensity3D <- ggproto("StatDensity3D", Stat,
                                xlim <- c(x_range[1] - x_extend, x_range[2] + x_extend)
                                ylim <- c(y_range[1] - y_extend, y_range[2] + y_extend)
 
-                               # Generate grid
-                               d <- make_tile_grid(grid, n, direction, xlim, ylim)
-                               d$group <- paste0("surface__tile", d$group, "::grp", data$group[1])
+                               # # Generate grid
+                               d <- make_point_grid(n, xlim, ylim)
 
                                # Compute kernel density
                                d$z <- kde2d(data$x, data$y, d$x, d$y, h)
@@ -69,13 +68,19 @@ StatDensity3D <- ggproto("StatDensity3D", Stat,
                                d$count <- d$density * n_obs
                                d$n <- n_obs
 
+                               d <- compute_point_gradients(d)
+
                                # Remove data below ndensity threshold
-                               d <- filter(d, ndensity >= min_ndensity)
+                               if(min_ndensity > 0){
+                                     d <- d %>%
+                                           select(-column, -row) %>% # to trigger triangulation
+                                           filter(ndensity >= min_ndensity)
+                               }
 
                                # Add computed variables and light info
                                d <- d %>%
-                                     compute_surface_vars() %>%
-                                     average_aesthetics() %>%
+                                     # compute_surface_vars() %>%
+                                     # average_aesthetics() %>%
                                      mutate(cull_backfaces = cull_backfaces) %>%
                                      attach_light(light)
 
@@ -131,7 +136,7 @@ kde2d <- function(x, y, eval_x, eval_y, h) {
 
 #' 3D surface from 2D density estimate
 #'
-#' A 3D version of `ggplot2::geom_density_2d()`.
+#' A 3D version of `ggplot2::stat_density_2d()`.
 #' Creates surfaces from 2D point data using kernel density estimation.
 #' The density values become the z-coordinates of the surface, allowing
 #' visualization of data concentration as peaks and valleys in 3D space.
@@ -192,15 +197,18 @@ kde2d <- function(x, y, eval_x, eval_y, h) {
 #' p <- ggplot(faithful, aes(eruptions, waiting)) +
 #'   coord_3d() +
 #'   scale_fill_viridis_c()
-#'
 #' p + geom_density_3d() + guides(fill = guide_colorbar_3d())
 #'
 #' # Color by alternative density values
 #' p + geom_density_3d(aes(fill = after_stat(count)))
 #'
 #' # Adjust bandwidth for smoother or more detailed surfaces
-#' p + geom_density_3d(adjust = 0.5, color = "white")  # More detail
+#' p + geom_density_3d(adjust = 0.5, n = 100, color = "white")  # More detail
 #' p + geom_density_3d(adjust = 2, color = "white")   # Smoother
+#'
+#' # As ridgeline plot instead of default surface plot
+#' p + stat_density_3d(geom = "ridgeline_3d", direction = "y") +
+#'   guides(fill = guide_colorbar_3d())
 #'
 #' # Multiple density surfaces by group,
 #' # using normalized density to equalize peak heights
@@ -218,7 +226,7 @@ kde2d <- function(x, y, eval_x, eval_y, h) {
 #'   coord_3d(ratio = c(3, 3, 1))
 #'
 #' # Specify alternative grid geometry and light model
-#' p + geom_density_3d(grid = "hex", n = 30, direction = "y",
+#' p + geom_density_3d(grid = "tri2", n = 30, direction = "y",
 #'                     light = light("direct"),
 #'                     color = "white", linewidth = .1) +
 #'   guides(fill = guide_colorbar_3d())
@@ -227,11 +235,11 @@ kde2d <- function(x, y, eval_x, eval_y, h) {
 #'   surfaces from existing grid data, [light()] for lighting specifications,
 #'   [make_tile_grid()] for details about grid geometry options,
 #'   [coord_3d()] for 3D coordinate systems.
-#' @rdname geom_density_3d
+#' @rdname stat_density_3d
 #' @return A `Layer` object that can be added to a ggplot.
 #' @export
 geom_density_3d <- function(mapping = NULL, data = NULL,
-                            stat = StatDensity3D,
+                            stat = "density_3d",
                             position = "identity",
                             ...,
                             n = NULL, grid = NULL, direction = NULL, trim = NULL,
@@ -240,10 +248,10 @@ geom_density_3d <- function(mapping = NULL, data = NULL,
                             min_ndensity = 0,
                             light = NULL,
                             cull_backfaces = FALSE, sort_method = NULL,
-                            force_convex = TRUE, scale_depth = TRUE,
+                            force_convex = FALSE, scale_depth = TRUE,
                             na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
 
-      layer(data = data, mapping = mapping, stat = stat, geom = GeomPolygon3D,
+      layer(data = data, mapping = mapping, stat = ggproto_lookup(stat, "stat"), geom = GeomSurface3D,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(n = n, grid = grid, direction = direction, trim = trim,
                           force_convex = force_convex, cull_backfaces = cull_backfaces,
@@ -253,10 +261,10 @@ geom_density_3d <- function(mapping = NULL, data = NULL,
       )
 }
 
-#' @rdname geom_density_3d
+#' @rdname stat_density_3d
 #' @export
 stat_density_3d <- function(mapping = NULL, data = NULL,
-                            geom = GeomPolygon3D,
+                            geom = "surface_3d",
                             position = "identity",
                             ...,
                             n = NULL, grid = NULL, direction = NULL, trim = NULL,
@@ -265,10 +273,10 @@ stat_density_3d <- function(mapping = NULL, data = NULL,
                             min_ndensity = 0,
                             light = NULL,
                             cull_backfaces = FALSE, sort_method = NULL,
-                            force_convex = TRUE, scale_depth = TRUE,
+                            force_convex = FALSE, scale_depth = TRUE,
                             na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
 
-      layer(data = data, mapping = mapping, stat = StatDensity3D, geom = geom,
+      layer(data = data, mapping = mapping, stat = StatDensity3D, geom = ggproto_lookup(geom, "geom"),
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(n = n, grid = grid, direction = direction, trim = trim,
                           force_convex = force_convex, cull_backfaces = cull_backfaces,

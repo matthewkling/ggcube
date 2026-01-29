@@ -1,7 +1,9 @@
 
 
 GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
+
                          required_aes = c("x", "y", "z", "group"),
+
                          default_aes = aes(
                                fill = "grey50", colour = "grey50", linewidth = 0.1, linetype = 1, alpha = 1
                          ),
@@ -13,9 +15,9 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
 
                                # Parameter validation
                                validate_coord3d(coord)
-                               sort_method <- match.arg(sort_method, c("auto", "pairwise", "painter"))
 
                                # Transform data
+                               sort_method <- match.arg(sort_method, c("auto", "pairwise", "painter"))
                                data$.sort_method <- sort_method
                                coords <- coord$transform(data, panel_params)
 
@@ -109,7 +111,7 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
 #'   coord_3d()
 #'
 #' # Can be used directly with properly structured data
-#' triangles <- data.frame(x = rep(c(1, 2, 3), 3),
+#' triangles <- data.frame(x = rep(c(3, 2, 1), 3),
 #'                             y = rep(c(1, 3, 1), 3),
 #'                             z = rep(1:3, each = 3),
 #'                             shape = rep(letters[1:3], each = 3))
@@ -123,7 +125,8 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
 #'                 y = rep(c(1, 2, 2, 1), 3),
 #'                 z = rep(c(1, 1.5, 2), each = 4))
 #' p <- ggplot(d, aes(x, y, z, group = group, fill = group)) +
-#'       coord_3d(pitch = 50, roll = 20, yaw = 0, scales = "fixed") +
+#'       coord_3d(pitch = 50, roll = 20, yaw = 0,
+#'                scales = "fixed", light = "none") +
 #'       theme_light()
 #'
 #' # fast, but rendering order is incorrect in this particular example
@@ -145,7 +148,7 @@ geom_polygon_3d <- function(mapping = NULL, data = NULL, stat = StatIdentity3D,
                             na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
 
       layer(
-            geom = GeomPolygon3D, mapping = mapping, data = data, stat = stat,
+            geom = GeomPolygon3D, mapping = mapping, data = data, stat = ggproto_lookup(stat, "stat"),
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(sort_method = sort_method,
                           scale_depth = scale_depth,

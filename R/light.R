@@ -955,6 +955,10 @@ transform_light_position <- function(position, scale_ranges, scales, ratio) {
 
 # store lighting specification to data frame for downstream use,
 attach_light <- function(data, light){
-      if(!is.null(light) && ! "lighting_spec" %in% names(data)) data$lighting_spec <- I(list(light))
+      if(!is.null(light)){
+            if(!inherits(light, "light") && light == "none") light <- light(fill = FALSE, color = FALSE)
+            if(! "lighting_spec" %in% names(data)) data$lighting_spec <- I(list(light))
+      }
+
       data
 }

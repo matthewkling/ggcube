@@ -65,6 +65,19 @@ NULL
 #' @keywords internal
 NULL
 
+#' Shared ridgeline params
+#'
+#' @param direction Direction of ridges:
+#'   \describe{
+#'     \item{"x"}{One ridge per unique x value; ridge varies in y (default)}
+#'     \item{"y"}{One ridge per unique y value; ridge varies in x}
+#'   }
+#' @param base Z-value for ridge polygon bottoms. If NULL, uses min(z).
+#' @name ridgeline_params
+#' @keywords internal
+NULL
+
+
 # grids ----------------------------------------------------
 
 #' Grid generation parameters
@@ -137,9 +150,10 @@ NULL
 
 #' Light param
 #'
-#' @param light A lighting specification object created by [light()] (see that function for details),
-#'   or `NULL` to disable shading. Specify plot-level lighting in `coord_3d()` and layer-specific
-#'   lighting in `geom_*3d()` functions.
+#' @param light A lighting specification object created by [light()],`"none"` to disable
+#'   lighting, or `NULL` to inherit plot-level lighting specs from the coord. Specify
+#'   plot-level lighting in `coord_3d()` and layer-specific lighting in `geom_*3d()`
+#'   functions.
 #' @name light_param
 #' @keywords internal
 NULL

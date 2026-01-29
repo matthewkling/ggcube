@@ -81,7 +81,7 @@ ggplot(sphere_points, aes(x, y, z)) +
   coord_3d()
 
 # Can be used directly with properly structured data
-triangles <- data.frame(x = rep(c(1, 2, 3), 3),
+triangles <- data.frame(x = rep(c(3, 2, 1), 3),
                             y = rep(c(1, 3, 1), 3),
                             z = rep(1:3, each = 3),
                             shape = rep(letters[1:3], each = 3))
@@ -95,7 +95,8 @@ d <- data.frame(group = rep(letters[1:3], each = 4),
                 y = rep(c(1, 2, 2, 1), 3),
                 z = rep(c(1, 1.5, 2), each = 4))
 p <- ggplot(d, aes(x, y, z, group = group, fill = group)) +
-      coord_3d(pitch = 50, roll = 20, yaw = 0, scales = "fixed") +
+      coord_3d(pitch = 50, roll = 20, yaw = 0,
+               scales = "fixed", light = "none") +
       theme_light()
 
 # fast, but rendering order is incorrect in this particular example

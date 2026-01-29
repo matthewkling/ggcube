@@ -7,7 +7,8 @@ GeomSmooth3D <- ggproto("GeomSmooth3D", Geom,
                               linewidth = 0.1, linetype = 1, alpha = 1
                         ),
 
-                        draw_panel = function(data, panel_params, coord, scale_depth = TRUE) {
+                        draw_panel = function(data, panel_params, coord, scale_depth = TRUE,
+                                              force_convex = FALSE, sort_method = "auto") {
 
                               # Assign correct aesthetics to primary/CI elements
                               merge_aes <- function(a, b = NULL){
@@ -21,7 +22,12 @@ GeomSmooth3D <- ggproto("GeomSmooth3D", Geom,
 
                               # Transform data
                               validate_coord3d(coord)
+                              sort_method <- match.arg(sort_method, c("auto", "pairwise", "painter"))
+                              data$.sort_method <- sort_method
                               coords <- coord$transform(data, panel_params)
+
+                              # Enforce convexity if requested
+                              coords <- drop_nonconvex_vertices(coords, force_convex)
 
                               # Scale linewidths by depth
                               coords <- scale_depth(coords, scale_depth)

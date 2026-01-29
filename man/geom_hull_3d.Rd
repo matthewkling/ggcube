@@ -63,9 +63,10 @@ A face is included in the resulting alpha shape if it can be "exposed" by a sphe
 If NULL (the default), a simple heuristic based on the data scale is used to calculate a radius value.
 Note that alpha shapes are quite sensitive to the coordinate scales of your data. See Details section.}
 
-\item{light}{A lighting specification object created by \code{\link[=light]{light()}} (see that function for details),
-or \code{NULL} to disable shading. Specify plot-level lighting in \code{coord_3d()} and layer-specific
-lighting in \verb{geom_*3d()} functions.}
+\item{light}{A lighting specification object created by \code{\link[=light]{light()}},\code{"none"} to disable
+lighting, or \code{NULL} to inherit plot-level lighting specs from the coord. Specify
+plot-level lighting in \code{coord_3d()} and layer-specific lighting in \verb{geom_*3d()}
+functions.}
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics.}
 

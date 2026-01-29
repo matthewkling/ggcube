@@ -328,6 +328,7 @@ polygons_intersect <- function(poly1, poly2) {
 # Helper function to get centroid of polygon intersection
 intersection_centroid <- function(poly1, poly2) {
       clipped <- sutherland_hodgman_clip(poly1, poly2)
+      if(nrow(clipped) == 0) clipped <- sutherland_hodgman_clip(poly2, poly1)
       return(c(x = mean(clipped[, 1]), y =  mean(clipped[, 2])))
 }
 

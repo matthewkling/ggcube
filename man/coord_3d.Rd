@@ -90,9 +90,10 @@ as scaled by \code{ratio}. Similar to \code{coord_fixed()} but for 3D
 \item With \code{scales = "fixed"}: Ratios apply to original data coordinates
 }}
 
-\item{light}{A lighting specification object created by \code{\link[=light]{light()}} (see that function for details),
-or \code{NULL} to disable shading. Specify plot-level lighting in \code{coord_3d()} and layer-specific
-lighting in \verb{geom_*3d()} functions.}
+\item{light}{A lighting specification object created by \code{\link[=light]{light()}},\code{"none"} to disable
+lighting, or \code{NULL} to inherit plot-level lighting specs from the coord. Specify
+plot-level lighting in \code{coord_3d()} and layer-specific lighting in \verb{geom_*3d()}
+functions.}
 }
 \value{
 A \code{Coord} object that can be added to a ggplot.
