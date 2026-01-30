@@ -326,7 +326,15 @@ p + geom_smooth_3d(method = "lm", xlim = c(-5, 5), ylim = c(-5, 5))
 # Clip surface to predictor convex hull
 # to prevent extrapolation into corner areas
 p + geom_smooth_3d(method = "lm", domain = "chull")
-
+#> Warning: Computation failed in `stat_smooth3d()`.
+#> Caused by error in `reframe()`:
+#> ℹ In argument: `poly = sutherland_hodgman_clip(cbind(x, y), hull)`.
+#> ℹ In group 1: `group = "surface__tile1000::grp-1"`.
+#> Caused by error in `sutherland_hodgman_clip()`:
+#> ! could not find function "sutherland_hodgman_clip"
+#> Error in mutate(., group = rep(1:(nrow(.)/2), each = 2)): ℹ In argument: `group = rep(1:(nrow(.)/2), each = 2)`.
+#> Caused by error:
+#> ! `group` must be size 0 or 1, not 4.
 
 # Specify alternative grid geometry
 p + geom_smooth_3d(grid = "hex", n = 30, direction = "y")

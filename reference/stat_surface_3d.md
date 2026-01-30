@@ -146,7 +146,8 @@ clouds are passed through for Delaunay tessellation by the geom.
 ## Examples
 
 ``` r
-# Regular grid ----------------------------------
+# Regular grid data ------------------------------------------
+
 # simulated data and base plot for basic surface
 d <- dplyr::mutate(tidyr::expand_grid(x = -10:10, y = -10:10),
                    z = sqrt(x^2 + y^2) / 1.5,
@@ -203,13 +204,10 @@ ggplot(mountain, aes(x, y, z)) +
   stat_surface_3d(geom = "ridgeline_3d", sort_method = "pairwise",
                   fill = "black", color = "white", light = "none", linewidth = .1) +
       coord_3d(ratio = c(1, 1.5, .75), yaw = 45)
-#> Error in stat_surface_3d(geom = "ridgeline_3d", sort_method = "pairwise",     fill = "black", color = "white", light = "none", linewidth = 0.1): Problem while setting up geom.
-#> ℹ Error occurred in the 1st layer.
-#> Caused by error in `loadNamespace()`:
-#> ! there is no package called ‘polyclip’
 
 
-# Irregular point data---------------------------------------
+
+# Irregular point data ---------------------------------------
 
 set.seed(42)
 pts <- data.frame(x = runif(200, -2, 2), y = runif(200, -2, 2))

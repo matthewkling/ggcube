@@ -16,7 +16,7 @@ geom_ridgeline_3d(
   direction = "x",
   base = NULL,
   cull_backfaces = FALSE,
-  sort_method = "auto",
+  sort_method = "pairwise",
   scale_depth = TRUE,
   force_convex = FALSE,
   light = NULL,
@@ -132,33 +132,22 @@ grid_data <- expand.grid(x = seq(-3, 3, 0.5), y = seq(-3, 3, 0.1))
 grid_data$z <- with(grid_data, dnorm(y) * dnorm(x) * 10)
 
 ggplot(grid_data, aes(x, y, z = z)) +
-  geom_ridgeline_3d(sort_method = "pairwise") +
+  geom_ridgeline_3d() +
   coord_3d()
-#> Error in geom_ridgeline_3d(sort_method = "pairwise"): Problem while setting up geom.
-#> ℹ Error occurred in the 1st layer.
-#> Caused by error in `loadNamespace()`:
-#> ! there is no package called ‘polyclip’
+
 
 # With fill
 ggplot(grid_data, aes(x, y, z = z, fill = x)) +
-  geom_ridgeline_3d(colour = "white", linewidth = 0.3,
-     sort_method = "pairwise") +
+  geom_ridgeline_3d(colour = "white", linewidth = 0.3) +
   scale_fill_viridis_c() +
   coord_3d()
-#> Error in geom_ridgeline_3d(colour = "white", linewidth = 0.3, sort_method = "pairwise"): Problem while setting up geom.
-#> ℹ Error occurred in the 1st layer.
-#> Caused by error in `loadNamespace()`:
-#> ! there is no package called ‘polyclip’
+
 
 # Ridges in y direction
 ggplot(grid_data, aes(x, y, z = z)) +
-  geom_ridgeline_3d(direction = "y", fill = "steelblue",
-     sort_method = "pairwise") +
+  geom_ridgeline_3d(direction = "y", fill = "steelblue") +
   coord_3d()
-#> Error in geom_ridgeline_3d(direction = "y", fill = "steelblue", sort_method = "pairwise"): Problem while setting up geom.
-#> ℹ Error occurred in the 1st layer.
-#> Caused by error in `loadNamespace()`:
-#> ! there is no package called ‘polyclip’
+
 
 # With stat_function_3d
 ggplot() +
@@ -167,8 +156,5 @@ ggplot() +
                    n = 30,
                    geom = "ridgeline_3d") +
   coord_3d()
-#> Error in stat_function_3d(fun = function(x, y) sin(x) * cos(y), xlim = c(-pi,     pi), ylim = c(-pi, pi), n = 30, geom = "ridgeline_3d"): Problem while setting up geom.
-#> ℹ Error occurred in the 1st layer.
-#> Caused by error in `loadNamespace()`:
-#> ! there is no package called ‘polyclip’
+
 ```

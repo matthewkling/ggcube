@@ -111,7 +111,7 @@ And understands these additional aesthetics:
 ## Examples
 
 ``` r
-# Typically used via stats like stat_surface_3d() or stat_hull_3d()
+# Typically used via stats such as stat_surface_3d() or stat_hull_3d()
 ggplot(sphere_points, aes(x, y, z)) +
   stat_hull_3d(method = "convex", fill = "dodgerblue",
             light = light(fill = TRUE, mode = "hsl")) +
@@ -126,7 +126,7 @@ triangles <- data.frame(x = rep(c(3, 2, 1), 3),
 ggplot(triangles, aes(x, y, z, fill = shape)) +
   geom_polygon_3d(color = "black") +
   coord_3d()
-#> Error in as.vector(x, "character"): cannot coerce type 'environment' to vector of type 'character'
+
 
 # Use `sort_method` to choose between depth sorting algorithms
 d <- data.frame(group = rep(letters[1:3], each = 4),
@@ -141,10 +141,10 @@ p <- ggplot(d, aes(x, y, z, group = group, fill = group)) +
 # fast, but rendering order is incorrect in this particular example
 p + geom_polygon_3d(color = "black", linewidth = 1, alpha = .75,
       sort_method = "painter")
-#> Error in as.vector(x, "character"): cannot coerce type 'environment' to vector of type 'character'
+
 
 # correct rendering order (but slower for large data sets)
 p + geom_polygon_3d(color = "black", linewidth = 1, alpha = .75,
       sort_method = "pairwise")
-#> Error in as.vector(x, "character"): cannot coerce type 'environment' to vector of type 'character'
+
 ```

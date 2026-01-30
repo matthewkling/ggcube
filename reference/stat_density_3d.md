@@ -248,10 +248,7 @@ p + geom_density_3d(adjust = 2, color = "white")   # Smoother
 # As ridgeline plot instead of default surface plot
 p + stat_density_3d(geom = "ridgeline_3d", direction = "y") +
   guides(fill = guide_colorbar_3d())
-#> Error in stat_density_3d(geom = "ridgeline_3d", direction = "y"): Problem while setting up geom.
-#> ℹ Error occurred in the 1st layer.
-#> Caused by error in `loadNamespace()`:
-#> ! there is no package called ‘polyclip’
+
 
 # Multiple density surfaces by group,
 # using normalized density to equalize peak heights

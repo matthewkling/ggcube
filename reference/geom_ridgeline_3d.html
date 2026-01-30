@@ -52,7 +52,7 @@ of the surface.</p>
 <span>  direction <span class="op">=</span> <span class="st">"x"</span>,</span>
 <span>  base <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  cull_backfaces <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  sort_method <span class="op">=</span> <span class="st">"auto"</span>,</span>
+<span>  sort_method <span class="op">=</span> <span class="st">"pairwise"</span>,</span>
 <span>  scale_depth <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  force_convex <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  light <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -161,33 +161,22 @@ functions.</p></dd>
 <span class="r-in"><span><span class="va">grid_data</span><span class="op">$</span><span class="va">z</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/with.html" class="external-link">with</a></span><span class="op">(</span><span class="va">grid_data</span>, <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">dnorm</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">dnorm</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">*</span> <span class="fl">10</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">grid_data</span>, <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, z <span class="op">=</span> <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
-<span class="r-in"><span>  <span class="fu">geom_ridgeline_3d</span><span class="op">(</span>sort_method <span class="op">=</span> <span class="st">"pairwise"</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span>  <span class="fu">geom_ridgeline_3d</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in geom_ridgeline_3d(sort_method = "pairwise"):</span> Problem while setting up geom.</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Error occurred in the 1st layer.</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="font-weight: bold;">Caused by error in `loadNamespace()`:</span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="color: #BBBB00;">!</span> there is no package called ‘polyclip’</span>
+<span class="r-plt img"><img src="geom_ridgeline_3d-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># With fill</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">grid_data</span>, <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, z <span class="op">=</span> <span class="va">z</span>, fill <span class="op">=</span> <span class="va">x</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
-<span class="r-in"><span>  <span class="fu">geom_ridgeline_3d</span><span class="op">(</span>colour <span class="op">=</span> <span class="st">"white"</span>, linewidth <span class="op">=</span> <span class="fl">0.3</span>,</span></span>
-<span class="r-in"><span>     sort_method <span class="op">=</span> <span class="st">"pairwise"</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span>  <span class="fu">geom_ridgeline_3d</span><span class="op">(</span>colour <span class="op">=</span> <span class="st">"white"</span>, linewidth <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_c</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in geom_ridgeline_3d(colour = "white", linewidth = 0.3, sort_method = "pairwise"):</span> Problem while setting up geom.</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Error occurred in the 1st layer.</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="font-weight: bold;">Caused by error in `loadNamespace()`:</span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="color: #BBBB00;">!</span> there is no package called ‘polyclip’</span>
+<span class="r-plt img"><img src="geom_ridgeline_3d-2.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Ridges in y direction</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">grid_data</span>, <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, z <span class="op">=</span> <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
-<span class="r-in"><span>  <span class="fu">geom_ridgeline_3d</span><span class="op">(</span>direction <span class="op">=</span> <span class="st">"y"</span>, fill <span class="op">=</span> <span class="st">"steelblue"</span>,</span></span>
-<span class="r-in"><span>     sort_method <span class="op">=</span> <span class="st">"pairwise"</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span>  <span class="fu">geom_ridgeline_3d</span><span class="op">(</span>direction <span class="op">=</span> <span class="st">"y"</span>, fill <span class="op">=</span> <span class="st">"steelblue"</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in geom_ridgeline_3d(direction = "y", fill = "steelblue", sort_method = "pairwise"):</span> Problem while setting up geom.</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Error occurred in the 1st layer.</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="font-weight: bold;">Caused by error in `loadNamespace()`:</span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="color: #BBBB00;">!</span> there is no package called ‘polyclip’</span>
+<span class="r-plt img"><img src="geom_ridgeline_3d-3.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># With stat_function_3d</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span></span>
@@ -196,10 +185,7 @@ functions.</p></dd>
 <span class="r-in"><span>                   n <span class="op">=</span> <span class="fl">30</span>,</span></span>
 <span class="r-in"><span>                   geom <span class="op">=</span> <span class="st">"ridgeline_3d"</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in stat_function_3d(fun = function(x, y) sin(x) * cos(y), xlim = c(-pi,     pi), ylim = c(-pi, pi), n = 30, geom = "ridgeline_3d"):</span> Problem while setting up geom.</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Error occurred in the 1st layer.</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="font-weight: bold;">Caused by error in `loadNamespace()`:</span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="color: #BBBB00;">!</span> there is no package called ‘polyclip’</span>
+<span class="r-plt img"><img src="geom_ridgeline_3d-4.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

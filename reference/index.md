@@ -47,6 +47,9 @@
 - [`geom_density_3d()`](https://matthewkling.github.io/ggcube/reference/stat_density_3d.md)
   [`stat_density_3d()`](https://matthewkling.github.io/ggcube/reference/stat_density_3d.md)
   : 3D surface from 2D density estimate
+- [`stat_distributions_3d()`](https://matthewkling.github.io/ggcube/reference/stat_distributions_3d.md)
+  [`geom_distributions_3d()`](https://matthewkling.github.io/ggcube/reference/stat_distributions_3d.md)
+  : 3D ridgeline distributions
 - [`stat_function_3d()`](https://matthewkling.github.io/ggcube/reference/stat_function_3d.md)
   [`geom_function_3d()`](https://matthewkling.github.io/ggcube/reference/stat_function_3d.md)
   : 3D surface from a function

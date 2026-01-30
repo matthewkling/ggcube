@@ -140,8 +140,5 @@ ggplot() +
                    geom = "ridgeline_3d", base = 0, light = "none",
                    fill = "black", color = "white") +
   coord_3d()
-#> Error in stat_function_3d(fun = function(x, y) dnorm(x) * dnorm(y) * 10,     xlim = c(-1.5, 1.5), ylim = c(-1.5, 1.5), n = c(15, 30),     geom = "ridgeline_3d", base = 0, light = "none", fill = "black",     color = "white"): Problem while setting up geom.
-#> ℹ Error occurred in the 1st layer.
-#> Caused by error in `loadNamespace()`:
-#> ! there is no package called ‘polyclip’
+
 ```
