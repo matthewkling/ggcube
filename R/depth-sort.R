@@ -175,161 +175,42 @@ sat_overlap <- function(poly1, poly2, tol = 1e-9) {
       return(TRUE) # no separating axis found, polygons overlap
 }
 
-# Check if polygon vertices are ordered counter-clockwise
-is_counter_clockwise <- function(poly) {
-      n <- nrow(poly)
-      if (n < 3) return(TRUE)
+get_centroid <- function(p) {
+      x <- p$x
+      y <- p$y
 
-      # Calculate signed area using shoelace formula
-      area <- 0
-      for (i in 1:n) {
-            j <- if (i == n) 1 else i + 1
-            area <- area + (poly[j, 1] - poly[i, 1]) * (poly[j, 2] + poly[i, 2])
+      # Close the loop if it's not already closed
+      n <- length(x)
+      if (x[1] != x[n] || y[1] != y[n]) {
+            x <- c(x, x[1])
+            y <- c(y, y[1])
+            n <- n + 1
       }
-      return(area < 0)  # Negative area = counter-clockwise
+
+      # Pre-calculate the cross products
+      i <- 1:(n - 1)
+      cross_prod <- x[i] * y[i+1] - x[i+1] * y[i]
+
+      # Calculate Area
+      area <- sum(cross_prod) / 2
+
+      # alculate Centroid Coordinates
+      cx <- sum((x[i] + x[i+1]) * cross_prod) / (6 * area)
+      cy <- sum((y[i] + y[i+1]) * cross_prod) / (6 * area)
+
+      return(c(x = cx, y = cy))
 }
 
-# Ensure counter-clockwise vertex ordering
-ensure_ccw <- function(poly) {
-      if (!is_counter_clockwise(poly)) {
-            return(poly[nrow(poly):1, ])  # Reverse order
-      }
-      return(poly)
-}
-
-# Sutherland-Hodgman polygon clipping algorithm
-sutherland_hodgman_clip <- function(subject_poly, clip_poly) {
-      # Handle degenerate cases
-      if (nrow(subject_poly) < 3 || nrow(clip_poly) < 3) {
-            return(matrix(numeric(0), ncol = 2))
-      }
-
-      # Ensure counter-clockwise ordering
-      subject_poly <- ensure_ccw(subject_poly)
-      clip_poly <- ensure_ccw(clip_poly)
-
-      # Ensure polygons are closed (last vertex = first vertex)
-      if (!all(subject_poly[1, ] == subject_poly[nrow(subject_poly), ])) {
-            subject_poly <- rbind(subject_poly, subject_poly[1, ])
-      }
-      if (!all(clip_poly[1, ] == clip_poly[nrow(clip_poly), ])) {
-            clip_poly <- rbind(clip_poly, clip_poly[1, ])
-      }
-
-      # Start with the subject polygon
-      output_list <- subject_poly
-
-      # Clip against each edge of the clipping polygon
-      n_clip_edges <- nrow(clip_poly) - 1
-
-      for (i in 1:n_clip_edges) {
-            if (nrow(output_list) == 0) break  # Nothing left to clip
-
-            # Current clipping edge
-            edge_start <- clip_poly[i, ]
-            edge_end <- clip_poly[i + 1, ]
-
-            # Clip current polygon against this edge
-            output_list <- clip_polygon_by_edge(output_list, edge_start, edge_end)
-      }
-
-      # Remove duplicate last vertex if it was added
-      if (nrow(output_list) > 0 && all(output_list[1, ] == output_list[nrow(output_list), ])) {
-            output_list <- output_list[-nrow(output_list), , drop = FALSE]
-      }
-
-      return(output_list)
-}
-
-# Clip a polygon against a single edge (half-plane)
-clip_polygon_by_edge <- function(poly, edge_start, edge_end) {
-      if (nrow(poly) < 3) return(matrix(numeric(0), ncol = 2))
-
-      input_list <- poly
-      output_list <- matrix(numeric(0), ncol = 2)
-
-      if (nrow(input_list) == 0) return(output_list)
-
-      # Start with the last vertex
-      s <- input_list[nrow(input_list), ]
-
-      for (i in 1:nrow(input_list)) {
-            e <- input_list[i, ]
-
-            if (is_inside(e, edge_start, edge_end)) {
-                  # e is inside
-                  if (!is_inside(s, edge_start, edge_end)) {
-                        # s is outside, e is inside: add intersection
-                        intersection <- line_intersect(s, e, edge_start, edge_end)
-                        if (!is.null(intersection)) {
-                              output_list <- rbind(output_list, intersection)
-                        }
-                  }
-                  # Add e
-                  output_list <- rbind(output_list, e)
-
-            } else if (is_inside(s, edge_start, edge_end)) {
-                  # s is inside, e is outside: add intersection only
-                  intersection <- line_intersect(s, e, edge_start, edge_end)
-                  if (!is.null(intersection)) {
-                        output_list <- rbind(output_list, intersection)
-                  }
-            }
-
-            # If both outside, add nothing
-
-            s <- e  # Move to next vertex
-      }
-
-      return(output_list)
-}
-
-# Test if point is inside (on the left side of) the directed edge
-is_inside <- function(point, edge_start, edge_end) {
-      # Cross product test: (edge_end - edge_start) × (point - edge_start)
-      # Positive cross product means point is on the left (inside)
-      cross_product <- (edge_end[1] - edge_start[1]) * (point[2] - edge_start[2]) -
-            (edge_end[2] - edge_start[2]) * (point[1] - edge_start[1])
-      return(cross_product >= 0)  # >= 0 includes points on the edge
-}
-
-# Find intersection of two line segments
-line_intersect <- function(p1, p2, p3, p4, tol = 1e-10) {
-      # Line 1: p1 to p2
-      # Line 2: p3 to p4
-
-      x1 <- p1[1]; y1 <- p1[2]
-      x2 <- p2[1]; y2 <- p2[2]
-      x3 <- p3[1]; y3 <- p3[2]
-      x4 <- p4[1]; y4 <- p4[2]
-
-      denom <- (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)
-
-      if (abs(denom) < tol) {
-            # Lines are parallel
-            return(NULL)
-      }
-
-      t <- ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / denom
-
-      # Calculate intersection point
-      ix <- x1 + t * (x2 - x1)
-      iy <- y1 + t * (y2 - y1)
-
-      return(c(ix, iy))
-}
-
-# Helper function to check if two polygons actually intersect
-polygons_intersect <- function(poly1, poly2) {
-      clipped <- sutherland_hodgman_clip(poly1, poly2)
-      return(nrow(clipped) >= 3)  # Valid intersection if result has 3+ vertices
-}
-
-# Helper function to get centroid of polygon intersection
+# Get centroid of polygon intersection
 intersection_centroid <- function(poly1, poly2) {
-      clipped <- sutherland_hodgman_clip(poly1, poly2)
-      if(nrow(clipped) == 0) clipped <- sutherland_hodgman_clip(poly2, poly1)
-      return(c(x = mean(clipped[, 1]), y =  mean(clipped[, 2])))
+      clipped <- polyclip::polyclip(list(as.data.frame(poly1)),
+                                    list(as.data.frame(poly2)))
+      if(length(clipped) == 0) return(NULL) # non-intersecting polygons
+
+      centroids <- do.call("rbind", lapply(clipped, get_centroid))
+
+      # if multiple intersection polys, average their centroids
+      return(colMeans(centroids))
 }
 
 pw_render_order <- function(data,
@@ -380,6 +261,7 @@ pw_render_order <- function(data,
 
                   # otherwise, sample depth at center of polygon intersection
                   int <- intersection_centroid(di[, 1:2], dj[, 1:2])
+                  if(is.null(int)) next()
                   zi <- interpolate_z(di[, 1:3], int)
                   zj <- interpolate_z(dj[, 1:3], int)
                   dlt <- zi - zj

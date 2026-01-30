@@ -1005,31 +1005,15 @@ validate_coord3d <- function(coord){
 
 process_backfaces <- function(data) {
 
-      # Compute back_face mask
+      # Identify backfaces using signed area test
       data <- data %>%
             group_by(group) %>%
-            mutate(
-                  n_vertices = n(),
-
-                  # Complex test (new method)
-                  back_face = case_when(
-                        n_vertices != 4 ~ ((x[2] - x[1]) * (y[3] - y[1]) - (x[3] - x[1]) * (y[2] - y[1])) < 0,
-                        n_vertices == 4 ~ {
-                              # Test all 4 triangles
-                              tri_123 <- (x[2] - x[1]) * (y[3] - y[1]) - (x[3] - x[1]) * (y[2] - y[1]) < 0
-                              tri_134 <- (x[3] - x[1]) * (y[4] - y[1]) - (x[4] - x[1]) * (y[3] - y[1]) < 0
-                              tri_124 <- (x[2] - x[1]) * (y[4] - y[1]) - (x[4] - x[1]) * (y[2] - y[1]) < 0
-                              tri_234 <- (x[3] - x[2]) * (y[4] - y[2]) - (x[4] - x[2]) * (y[3] - y[2]) < 0
-
-                              # Both triangulations must be consistently negative
-                              (tri_123 & tri_134) & (tri_124 & tri_234)
-                        }
-                  )
-            )
+            mutate(.backface = sum(x * lead(y, default = first(y)) -
+                                         lead(x, default = first(x)) * y) < 0)
 
       # Apply culling if requested
       if("cull_backfaces" %in% names(data) && data$cull_backfaces[1]) {
-            data <- filter(data, !back_face)
+            data <- filter(data, !.backface)
       }
 
       # Apply lighting effects if present
@@ -1038,11 +1022,11 @@ process_backfaces <- function(data) {
             off <- data$lighting_spec[[1]]$backface_offset %||% 0
             if((scl != 1 || off != 0) &
                data$lighting_spec[[1]]$method != "rgb") {
-                  data <- mutate(data, light = ifelse(back_face, light * scl + off, light))
+                  data <- mutate(data, light = ifelse(.backface, light * scl + off, light))
             }
       }
 
-      return(select(data, -back_face))
+      return(select(data, -.backface))
 }
 
 

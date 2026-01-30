@@ -25,7 +25,8 @@ Imports:
     alphashape3d,
     geometry,
     purrr,
-    magrittr
+    magrittr,
+    polyclip
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Suggests: 
