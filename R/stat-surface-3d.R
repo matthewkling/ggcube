@@ -90,7 +90,8 @@ StatSurface3D <- ggproto("StatSurface3D", Stat,
 #'
 #' @examples
 
-#' # Regular grid ----------------------------------
+#' # Regular grid data ------------------------------------------
+#'
 #' # simulated data and base plot for basic surface
 #' d <- dplyr::mutate(tidyr::expand_grid(x = -10:10, y = -10:10),
 #'                    z = sqrt(x^2 + y^2) / 1.5,
@@ -143,7 +144,7 @@ StatSurface3D <- ggproto("StatSurface3D", Stat,
 #'       coord_3d(ratio = c(1, 1.5, .75), yaw = 45)
 #'
 #'
-#' # Irregular point data---------------------------------------
+#' # Irregular point data ---------------------------------------
 #'
 #' set.seed(42)
 #' pts <- data.frame(x = runif(200, -2, 2), y = runif(200, -2, 2))

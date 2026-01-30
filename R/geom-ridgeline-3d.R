@@ -16,6 +16,7 @@ GeomRidgeline3D <- ggproto("GeomRidgeline3D", GeomPolygon3D,
                                             "sort_method", "scale_depth", "force_convex"),
 
                            setup_params = function(data, params) {
+                                 if(is.null(params$direction) && ".direction" %in% names(data)) params$direction <- data$.direction[1]
                                  params$direction <- params$direction %||% "x"
                                  params$direction <- match.arg(params$direction, c("x", "y"))
 
@@ -43,6 +44,9 @@ GeomRidgeline3D <- ggproto("GeomRidgeline3D", GeomPolygon3D,
                                        message("Creating ", n_slices, " ridgeline polygons. ",
                                                "Consider reducing grid resolution.")
                                  }
+
+                                 # Cleanup
+                                 if (".direction" %in% names(data)) data <- select(data, -.direction)
 
                                  # Convert to ridgeline polygons
                                  data <- points_to_ridgelines(
@@ -90,20 +94,18 @@ GeomRidgeline3D <- ggproto("GeomRidgeline3D", GeomPolygon3D,
 #' grid_data$z <- with(grid_data, dnorm(y) * dnorm(x) * 10)
 #'
 #' ggplot(grid_data, aes(x, y, z = z)) +
-#'   geom_ridgeline_3d(sort_method = "pairwise") +
+#'   geom_ridgeline_3d() +
 #'   coord_3d()
 #'
 #' # With fill
 #' ggplot(grid_data, aes(x, y, z = z, fill = x)) +
-#'   geom_ridgeline_3d(colour = "white", linewidth = 0.3,
-#'      sort_method = "pairwise") +
+#'   geom_ridgeline_3d(colour = "white", linewidth = 0.3) +
 #'   scale_fill_viridis_c() +
 #'   coord_3d()
 #'
 #' # Ridges in y direction
 #' ggplot(grid_data, aes(x, y, z = z)) +
-#'   geom_ridgeline_3d(direction = "y", fill = "steelblue",
-#'      sort_method = "pairwise") +
+#'   geom_ridgeline_3d(direction = "y", fill = "steelblue") +
 #'   coord_3d()
 #'
 #' # With stat_function_3d
@@ -122,7 +124,7 @@ geom_ridgeline_3d <- function(mapping = NULL, data = NULL,
                               direction = "x",
                               base = NULL,
                               cull_backfaces = FALSE,
-                              sort_method = "auto",
+                              sort_method = "pairwise",
                               scale_depth = TRUE,
                               force_convex = FALSE,
                               light = NULL,

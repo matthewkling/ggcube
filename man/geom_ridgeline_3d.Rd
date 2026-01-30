@@ -13,7 +13,7 @@ geom_ridgeline_3d(
   direction = "x",
   base = NULL,
   cull_backfaces = FALSE,
-  sort_method = "auto",
+  sort_method = "pairwise",
   scale_depth = TRUE,
   force_convex = FALSE,
   light = NULL,
@@ -78,20 +78,18 @@ grid_data <- expand.grid(x = seq(-3, 3, 0.5), y = seq(-3, 3, 0.1))
 grid_data$z <- with(grid_data, dnorm(y) * dnorm(x) * 10)
 
 ggplot(grid_data, aes(x, y, z = z)) +
-  geom_ridgeline_3d(sort_method = "pairwise") +
+  geom_ridgeline_3d() +
   coord_3d()
 
 # With fill
 ggplot(grid_data, aes(x, y, z = z, fill = x)) +
-  geom_ridgeline_3d(colour = "white", linewidth = 0.3,
-     sort_method = "pairwise") +
+  geom_ridgeline_3d(colour = "white", linewidth = 0.3) +
   scale_fill_viridis_c() +
   coord_3d()
 
 # Ridges in y direction
 ggplot(grid_data, aes(x, y, z = z)) +
-  geom_ridgeline_3d(direction = "y", fill = "steelblue",
-     sort_method = "pairwise") +
+  geom_ridgeline_3d(direction = "y", fill = "steelblue") +
   coord_3d()
 
 # With stat_function_3d

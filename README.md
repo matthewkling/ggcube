@@ -17,10 +17,10 @@ projection parameters, apply a range of 3D lighting models, and mix 3D
 layers with 2D layers rendered on cube faces. Standard ggplot2 features
 like faceting, themes, scales, and legends work as expected.
 
-NOTE: 3D plots are generally a poor choice when precise quantitative
+NOTE: 3D plots are wonderful for exploratory analysis, storytelling, and
+data art – but they are often a poor choice when precise quantitative
 communication is important, due to issues like occlusion and perspective
-distortion. But they are often excellent for exploratory analysis,
-storytelling, and data art!
+distortion.
 
 WARNING: This package is in development and has not yet been officially
 released. There are bugs, and future API changes are possible.
@@ -70,15 +70,16 @@ ggplot(mpg, aes(displ, hwy, drv, color = class)) +
 
 ## 3D surfaces
 
-- `geom_hull_3d()` plots triangulated volumes based on convex or alpha
-  hulls of 3D points
-- `geom_function()` visualizes mathematical functions
 - `geom_surface_3d()` renders surfaces based on existing grid data such
   as terrain data
-- `geom_smooth_3d()` fits statistical models with two predictors and
+- `geom_ridgeline_3d()` renders surfaces as a series of cross-sections
+- `stat_function()` visualizes mathematical functions
+- `stat_smooth_3d()` fits statistical models with two predictors and
   visualizes fitted surfaces with confidence intervals
-- `geom_density_3d()` creates perspective visualizations of 2D kernel
+- `stat_density_3d()` creates perspective visualizations of 2D kernel
   density estimates
+- `stat_hull_3d()` plots triangulated volumes based on convex or alpha
+  hulls of 3D points
 
 Example: a terrain surface using `geom_surface_3d()`:
 
@@ -94,6 +95,17 @@ ggplot(mountain, aes(x, y, z)) +
 
 <img src="man/figures/README-surfaces-1.png" width="100%" />
 
+Example: a terrain surface using `geom_ridgeline_3d()`:
+
+``` r
+ggplot(mountain, aes(x, y, z)) +
+      geom_ridgeline_3d(fill = "black", color = "white", base = 50) +
+      coord_3d(ratio = c(1.5, 2, 1), yaw = 60, light = "none") +
+      theme_void()
+```
+
+<img src="man/figures/README-ridgeline-1.png" width="100%" />
+
 Example: a mathematical surface using `geom_function_3d()`:
 
 ``` r
@@ -101,7 +113,7 @@ ggplot() +
       geom_function_3d(fun = function(x, y) cos(x) * sin(y),
                        xlim = c(-pi, pi), ylim = c(-2*pi, 2*pi),
                        fill = "#7a2100", color = "#b3725b", 
-                       grid = "tri") +
+                       grid = "tri1") +
       coord_3d(yaw = 160, roll = -70, 
                scales = "fixed", ratio = c(1, 1, 2)) +
       labs(z = "cos(x) * sin(y)") +

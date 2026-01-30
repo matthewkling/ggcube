@@ -74,7 +74,7 @@ And understands these additional aesthetics:
 }
 
 \examples{
-# Typically used via stats like stat_surface_3d() or stat_hull_3d()
+# Typically used via stats such as stat_surface_3d() or stat_hull_3d()
 ggplot(sphere_points, aes(x, y, z)) +
   stat_hull_3d(method = "convex", fill = "dodgerblue",
             light = light(fill = TRUE, mode = "hsl")) +
