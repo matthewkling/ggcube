@@ -25,9 +25,10 @@ average_aesthetics <- function(data, aesthetics = c("fill", "colour", "color", "
 }
 
 
-ggproto_lookup <- function(x, type = "geom"){
+get_proto <- function(x){
       if(!inherits(x, "character")) return(x)
       if(!grepl("_3d", x)) return(x)
+      type <- if(grepl("geom", x, ignore.case = TRUE)) "geom" else "stat"
       cap <- function(s) paste0(toupper(substr(s, 1, 1)), substr(s, 2, nchar(s)))
       get(paste0(cap(type), cap(gsub("_3d", "3D", x))))
 }

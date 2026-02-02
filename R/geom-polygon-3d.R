@@ -169,7 +169,7 @@ geom_polygon_3d <- function(mapping = NULL, data = NULL, stat = StatIdentity3D,
                             na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
 
       layer(
-            geom = GeomPolygon3D, mapping = mapping, data = data, stat = ggproto_lookup(stat, "stat"),
+            geom = GeomPolygon3D, mapping = mapping, data = data, stat = get_proto(stat),
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(sort_method = sort_method,
                           scale_depth = scale_depth,

@@ -150,7 +150,7 @@ ggplot(mountain, aes(x, y, z, fill = z, color = z)) +
       guides(fill = guide_colorbar_3d())
 
 
-# stat_suface with alternative geoms ----------------------------
+# stat_surface_3d with alternative geoms ----------------------------
 
 # horizontal slices with geom_ridgeline_3d
 ggplot(mountain, aes(x, y, z)) +

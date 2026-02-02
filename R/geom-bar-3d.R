@@ -511,7 +511,7 @@ geom_bar_3d <- function(mapping = NULL, data = NULL,
                         scale_depth = TRUE, force_convex = FALSE,
                         na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
 
-      layer(data = data, mapping = mapping, stat = stat, geom = GeomPolygon3D,
+      layer(data = data, mapping = mapping, stat = get_proto(stat), geom = GeomPolygon3D,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(na.rm = na.rm, bins = bins, binwidth = binwidth, drop = drop,
                           width = width, faces = faces, light = light,
@@ -535,7 +535,7 @@ stat_bar_3d <- function(mapping = NULL, data = NULL,
                         scale_depth = TRUE, force_convex = FALSE,
                         na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
 
-      layer(data = data, mapping = mapping, stat = StatBar3D, geom = geom,
+      layer(data = data, mapping = mapping, stat = StatBar3D, geom = get_proto(geom),
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(na.rm = na.rm, bins = bins, binwidth = binwidth, drop = drop,
                           width = width, faces = faces, light = light,

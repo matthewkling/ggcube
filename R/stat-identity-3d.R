@@ -88,7 +88,7 @@ stat_identity_3d <- function(mapping = NULL, data = NULL,
                              light = NULL, ...) {
 
       layer(
-            stat = StatIdentity3D, data = data, mapping = mapping, geom = geom,
+            stat = StatIdentity3D, data = data, mapping = mapping, geom = get_proto(geom),
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(na.rm = na.rm, light = light, ...)
       )

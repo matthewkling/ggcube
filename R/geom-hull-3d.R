@@ -196,7 +196,7 @@ geom_hull_3d <- function(mapping = NULL, data = NULL,
                          cull_backfaces = TRUE, sort_method = NULL, scale_depth = TRUE,
                          inherit.aes = TRUE, show.legend = TRUE) {
 
-      layer(data = data, mapping = mapping, stat = stat, geom = GeomPolygon3D,
+      layer(data = data, mapping = mapping, stat = get_proto(stat), geom = GeomPolygon3D,
             position = position, inherit.aes = inherit.aes, show.legend = show.legend,
             params = list(method = method, radius = radius, light = light,
                           cull_backfaces = cull_backfaces, sort_method = sort_method, scale_depth = scale_depth,
@@ -214,7 +214,7 @@ stat_hull_3d <- function(mapping = NULL, data = NULL,
                          cull_backfaces = TRUE, sort_method = NULL, scale_depth = TRUE,
                          inherit.aes = TRUE, show.legend = TRUE) {
 
-      layer(data = data, mapping = mapping, stat = StatHull3D, geom = geom,
+      layer(data = data, mapping = mapping, stat = StatHull3D, geom = get_proto(geom),
             position = position, inherit.aes = inherit.aes, show.legend = show.legend,
             params = list(method = method, radius = radius, light = light,
                           cull_backfaces = cull_backfaces, sort_method = sort_method, scale_depth = scale_depth,
