@@ -19,6 +19,9 @@
 - [`geom_col_3d()`](https://matthewkling.github.io/ggcube/reference/geom_col_3d.md)
   [`stat_col_3d()`](https://matthewkling.github.io/ggcube/reference/geom_col_3d.md)
   : 3D columns from grid data
+- [`geom_contour_3d()`](https://matthewkling.github.io/ggcube/reference/geom_contour_3d.md)
+  [`stat_contour_3d()`](https://matthewkling.github.io/ggcube/reference/geom_contour_3d.md)
+  : 3D contour bands (layer cake)
 - [`geom_hull_3d()`](https://matthewkling.github.io/ggcube/reference/geom_hull_3d.md)
   [`stat_hull_3d()`](https://matthewkling.github.io/ggcube/reference/geom_hull_3d.md)
   : 3D convex and alpha hulls

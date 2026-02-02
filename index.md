@@ -70,6 +70,8 @@ ggplot(mpg, aes(displ, hwy, drv, color = class)) +
   renders surfaces based on existing grid data such as terrain data
 - [`geom_ridgeline_3d()`](https://matthewkling.github.io/ggcube/reference/geom_ridgeline_3d.md)
   renders surfaces as a series of cross-sections
+- [`geom_contour_3d()`](https://matthewkling.github.io/ggcube/reference/geom_contour_3d.md)
+  renders surfaces as layer cakes of stacked contours
 - [`stat_function()`](https://ggplot2.tidyverse.org/reference/geom_function.html)
   visualizes mathematical functions
 - [`stat_smooth_3d()`](https://matthewkling.github.io/ggcube/reference/geom_smooth_3d.md)

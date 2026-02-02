@@ -3,8 +3,8 @@
 Takes user-provided (x, y, z) point data and prepares it for surface
 rendering. If data form a regular grid, can render either a
 GeomSurface3D of rectangular or triangular tiles, or a GeomRidgeline3D
-of surface slices; otherwise, renders triangular tiles via Delaunay
-trianuglation.
+or GeomContour3D set of surface slices; otherwise, renders triangular
+tiles via Delaunay trianuglation.
 
 ## Usage
 
@@ -199,11 +199,24 @@ ggplot(mountain, aes(x, y, z, fill = z, color = z)) +
       guides(fill = guide_colorbar_3d())
 
 
-# As ridgelines
+
+# stat_suface with alternative geoms ----------------------------
+
+# horizontal slices with geom_ridgeline_3d
 ggplot(mountain, aes(x, y, z)) +
-  stat_surface_3d(geom = "ridgeline_3d", sort_method = "pairwise",
-                  fill = "black", color = "white", light = "none", linewidth = .1) +
+  stat_surface_3d(geom = "ridgeline_3d",
+                  fill = "black", color = "white",
+                  light = "none", linewidth = .1) +
       coord_3d(ratio = c(1, 1.5, .75), yaw = 45)
+
+
+# elevation contours with geom_contour_3d
+ggplot(mountain, aes(x, y, z, fill = z)) +
+  stat_surface_3d(geom = "contour_3d", light = "none",
+                  bins = 50, sort_method = "pairwise",
+                  color = "black") +
+      coord_3d(ratio = c(1, 1.5, .75), yaw = 45) +
+      scale_fill_viridis_c(option = "B")
 
 
 

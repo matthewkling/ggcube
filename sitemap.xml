@@ -45,6 +45,7 @@
 <url><loc>https://matthewkling.github.io/ggcube/reference/generate_point_elements.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/geom_bar_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/geom_col_3d.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/geom_contour_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/geom_hull_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/geom_path_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/geom_point_3d.html</loc></url>
@@ -72,6 +73,7 @@
 <url><loc>https://matthewkling.github.io/ggcube/reference/mountain.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/normalize_light_direction.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/points_to_circles.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/points_to_contours.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/points_to_ridgelines.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/points_to_tiles.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/polygon_params.html</loc></url>
