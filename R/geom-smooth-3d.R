@@ -170,7 +170,7 @@ GeomSmooth3D <- ggproto("GeomSmooth3D", Geom,
 #' p + geom_smooth_3d(
 #'       method = "loess", method.args = list(span = 0.3),
 #'       fill = "steelblue", color = "white", n = 20,
-#'       light = light(direction = c(0, -1, 0)))
+#'       light = light(direction = c(0, -1, 0), color = FALSE))
 #'
 #' # GLM with gamma family and log link
 #' p + geom_smooth_3d(
@@ -374,7 +374,9 @@ clip_polys_to_chull <- function(d, point_data){
 
       d <- d %>%
             group_by(group) %>%
-            reframe(poly = sutherland_hodgman_clip(cbind(x, y), hull)) %>%
+            reframe(poly = bind_cols(polyclip::polyclip(A = list(x = x, y = y),
+                                              B = list(x = hull[,1], y = hull[,2])))) %>%
+            mutate(.vertex_order = 1:n()) %>%
             ungroup()
 
       xy <- d[[2]]
@@ -383,8 +385,6 @@ clip_polys_to_chull <- function(d, point_data){
             group_by(group) %>%
             mutate(.vertex_order = 1:n()) %>%
             ungroup()
-
-      return(d)
 }
 
 #' Fit and predict with 3D smoothing models
@@ -536,7 +536,7 @@ stat_smooth_3d <- function(mapping = NULL, data = NULL,
       domain <- match.arg(domain)
 
       layer(
-            stat = StatSmooth3D, data = data, mapping = mapping, geom = geom,
+            stat = StatSmooth3D, data = data, mapping = mapping, geom = ggproto_lookup(geom, "geom"),
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(method = method, formula = formula, method.args = method.args,
                           xlim = xlim, ylim = ylim, domain = domain, n = n, se = se, level = level,

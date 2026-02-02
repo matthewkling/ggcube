@@ -51,19 +51,40 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                                      if (is.na(alpha_val)) alpha_val <- 1
 
                                      # Draw this polygon
-                                     polygon_grobs[[i]] <- grid::polygonGrob(
-                                           x = poly_data$x,
-                                           y = poly_data$y,
-                                           default.units = "npc",
-                                           gp = grid::gpar(
-                                                 col = poly_data$colour[1],
-                                                 fill = poly_data$fill[1],
-                                                 lwd = mean(poly_data$linewidth) * .pt,
-                                                 lty = poly_data$linetype[1],
-                                                 alpha = alpha_val
-                                           ),
-                                           name = paste0("polygon_", i)
-                                     )
+                                     if (".subgroup" %in% names(coords)) {
+                                           # .subgroup column indicates we need a grob that can handle holes
+                                           polygon_grobs[[i]] <- grid::pathGrob(
+                                                 x = poly_data$x,
+                                                 y = poly_data$y,
+                                                 id = as.integer(factor(poly_data$.subgroup)),
+                                                 pathId = as.integer(factor(poly_data$group)),
+                                                 rule = "evenodd",
+                                                 default.units = "npc",
+                                                 gp = grid::gpar(
+                                                       col = poly_data$colour[1],
+                                                       fill = poly_data$fill[1],
+                                                       lwd = mean(poly_data$linewidth) * .pt,
+                                                       lty = poly_data$linetype[1],
+                                                       alpha = alpha_val
+                                                 ),
+                                                 name = paste0("polygon_", i)
+                                           )
+                                     } else {
+                                           polygon_grobs[[i]] <- grid::polygonGrob(
+                                                 x = poly_data$x,
+                                                 y = poly_data$y,
+                                                 default.units = "npc",
+                                                 gp = grid::gpar(
+                                                       col = poly_data$colour[1],
+                                                       fill = poly_data$fill[1],
+                                                       lwd = mean(poly_data$linewidth) * .pt,
+                                                       lty = poly_data$linetype[1],
+                                                       alpha = alpha_val
+                                                 ),
+                                                 name = paste0("polygon_", i)
+                                           )
+                                     }
+
                                }
 
                                # Combine all polygon grobs

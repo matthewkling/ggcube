@@ -73,6 +73,8 @@ ggplot(mpg, aes(displ, hwy, drv, color = class)) +
 - `geom_surface_3d()` renders surfaces based on existing grid data such
   as terrain data
 - `geom_ridgeline_3d()` renders surfaces as a series of cross-sections
+- `geom_contour_3d()` renders surfaces as layer cakes of stacked
+  contours
 - `stat_function()` visualizes mathematical functions
 - `stat_smooth_3d()` fits statistical models with two predictors and
   visualizes fitted surfaces with confidence intervals

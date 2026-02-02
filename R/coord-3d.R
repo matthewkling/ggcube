@@ -1005,11 +1005,14 @@ validate_coord3d <- function(coord){
 
 process_backfaces <- function(data) {
 
+      data <- if(".subgroup" %in% names(data)) mutate(data, .grp = paste(group, .subgroup), group) else mutate(data, .grp = group)
+
       # Identify backfaces using signed area test
       data <- data %>%
-            group_by(group) %>%
+            group_by(.grp) %>%
             mutate(.backface = sum(x * lead(y, default = first(y)) -
-                                         lead(x, default = first(x)) * y) < 0)
+                                         lead(x, default = first(x)) * y) < 0) %>%
+            ungroup()
 
       # Apply culling if requested
       if("cull_backfaces" %in% names(data) && data$cull_backfaces[1]) {
@@ -1026,7 +1029,7 @@ process_backfaces <- function(data) {
             }
       }
 
-      return(select(data, -.backface))
+      return(select(data, -.backface, -.grp))
 }
 
 
