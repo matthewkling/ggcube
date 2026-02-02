@@ -248,7 +248,7 @@ p + geom_density_3d(adjust = 2, color = "white")   # Smoother
 # As ridgeline plot instead of default surface plot
 p + stat_density_3d(geom = "ridgeline_3d", direction = "y") +
   guides(fill = guide_colorbar_3d())
-
+#> Error in get(paste0(cap(type), cap(gsub("_3d", "3D", x)))): object 'StatRidgeline3D' not found
 
 # Multiple density surfaces by group,
 # using normalized density to equalize peak heights

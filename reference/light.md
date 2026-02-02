@@ -202,7 +202,7 @@ ggplot(mountain, aes(x, y, z)) +
   stat_surface_3d(fill = "red", color = "red") +
   coord_3d(light = light(position = c(.5, .7, 95),
     distance_falloff = TRUE, mode = "hsl", contrast = .9))
-
+#> Error in validate_subclass(geom, "Geom", env = parent.frame(), call = call_env): `geom` must be either a string or a <Geom> object, not a <StatSurface3D> object.
 
 
 # Backface lighting --------------------------------------------------------

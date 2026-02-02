@@ -200,7 +200,7 @@ ggplot(mountain, aes(x, y, z, fill = z, color = z)) +
 
 
 
-# stat_suface with alternative geoms ----------------------------
+# stat_surface_3d with alternative geoms ----------------------------
 
 # horizontal slices with geom_ridgeline_3d
 ggplot(mountain, aes(x, y, z)) +
@@ -208,7 +208,7 @@ ggplot(mountain, aes(x, y, z)) +
                   fill = "black", color = "white",
                   light = "none", linewidth = .1) +
       coord_3d(ratio = c(1, 1.5, .75), yaw = 45)
-
+#> Error in get(paste0(cap(type), cap(gsub("_3d", "3D", x)))): object 'StatRidgeline3D' not found
 
 # elevation contours with geom_contour_3d
 ggplot(mountain, aes(x, y, z, fill = z)) +
@@ -217,7 +217,7 @@ ggplot(mountain, aes(x, y, z, fill = z)) +
                   color = "black") +
       coord_3d(ratio = c(1, 1.5, .75), yaw = 45) +
       scale_fill_viridis_c(option = "B")
-
+#> Error in get(paste0(cap(type), cap(gsub("_3d", "3D", x)))): object 'StatContour3D' not found
 
 
 # Irregular point data ---------------------------------------
@@ -230,5 +230,5 @@ ggplot(pts, aes(x, y, z = z, fill = z)) +
   stat_surface_3d(sort_method = "pairwise") +
   scale_fill_viridis_c() +
   coord_3d()
-
+#> Error in validate_subclass(geom, "Geom", env = parent.frame(), call = call_env): `geom` must be either a string or a <Geom> object, not a <StatSurface3D> object.
 ```

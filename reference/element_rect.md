@@ -77,7 +77,7 @@ ggplot(mountain, aes(x, y, z)) +
   stat_surface_3d(fill = "darkblue", color = "lightblue", linewidth = .1) +
   coord_3d(panels = c("background", "ymin")) +
   theme(panel.foreground = element_rect(alpha = 0.6))
-
+#> Error in validate_subclass(geom, "Geom", env = parent.frame(), call = call_env): `geom` must be either a string or a <Geom> object, not a <StatSurface3D> object.
 
 # Completely transparent foreground panels
 ggplot(mtcars, aes(mpg, wt, qsec)) +
