@@ -204,7 +204,7 @@ ggplot(mountain, aes(x, y, z, fill = after_stat(z))) +
 ggplot(faithful, aes(eruptions, waiting)) +
   stat_density_3d(geom = "contour_3d") +
   coord_3d()
-#> Error in get(paste0(cap(type), cap(gsub("_3d", "3D", x)))): object 'StatContour3D' not found
+
 
 # With stat_function_3d
 ggplot() +
@@ -216,5 +216,5 @@ ggplot() +
   ) +
   scale_fill_viridis_c(option = "B") +
   coord_3d(light = "none")
-#> Error in get(paste0(cap(type), cap(gsub("_3d", "3D", x)))): object 'StatContour3D' not found
+
 ```

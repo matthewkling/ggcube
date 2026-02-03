@@ -55,12 +55,11 @@ ggplot(mountain, aes(x, y, z, fill = z)) +
    guides(fill = guide_colorbar_3d()) +
    scale_fill_gradientn(colors = c("tomato", "dodgerblue")) +
    coord_3d()
-#> Error in validate_subclass(geom, "Geom", env = parent.frame(), call = call_env): `geom` must be either a string or a <Geom> object, not a <StatSurface3D> object.
+
 
 # discrete `legend` guide
 ggplot(mountain, aes(x, y, z, fill = x > .5, group = 1)) +
    stat_surface_3d(light = light(mode = "hsl", direction = c(1, 0, 0))) +
    guides(fill = guide_legend_3d()) +
    coord_3d()
-#> Error in validate_subclass(geom, "Geom", env = parent.frame(), call = call_env): `geom` must be either a string or a <Geom> object, not a <StatSurface3D> object.
 ```

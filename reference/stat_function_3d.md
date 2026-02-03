@@ -140,5 +140,5 @@ ggplot() +
                    geom = "ridgeline_3d", base = 0, light = "none",
                    fill = "black", color = "white") +
   coord_3d()
-#> Error in get(paste0(cap(type), cap(gsub("_3d", "3D", x)))): object 'StatRidgeline3D' not found
+
 ```

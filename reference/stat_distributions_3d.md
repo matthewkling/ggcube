@@ -301,35 +301,38 @@ p <- ggplot(iris, aes(y = Sepal.Length, x = Species, fill = Species)) +
   scale_z_continuous(expand = expansion(mult = c(0, NA))) + # remove gap beneath ridges
   theme(legend.position = "none")
 p + stat_distributions_3d()
-#> Error in get(paste0(cap(type), cap(gsub("_3d", "3D", x)))): object 'StatRidgeline3D' not found
+
 
 # Normalize max ridge heights
 p + stat_distributions_3d(aes(z = after_stat(ndensity)))
-#> Error in get(paste0(cap(type), cap(gsub("_3d", "3D", x)))): object 'StatRidgeline3D' not found
+
 
 # Adjust smoothing bandwidth
 p + stat_distributions_3d(adjust = 0.5)
-#> Error in get(paste0(cap(type), cap(gsub("_3d", "3D", x)))): object 'StatRidgeline3D' not found
+
 
 # Use joint bandwidth for consistent smoothing across groups
 p + stat_distributions_3d(joint_bandwidth = TRUE)
-#> Error in get(paste0(cap(type), cap(gsub("_3d", "3D", x)))): object 'StatRidgeline3D' not found
+#> Picking joint bandwidth of 0.274
+
 
 # Different bandwidth selection rules
 p + stat_distributions_3d(bw = "SJ")
-#> Error in get(paste0(cap(type), cap(gsub("_3d", "3D", x)))): object 'StatRidgeline3D' not found
+
 
 # Remove tails with rel_min_height
 p + stat_distributions_3d(rel_min_height = 0.05)
-#> Error in get(paste0(cap(type), cap(gsub("_3d", "3D", x)))): object 'StatRidgeline3D' not found
+
 
 # Trim to data range
 p + stat_distributions_3d(trim = TRUE)
-#> Error in get(paste0(cap(type), cap(gsub("_3d", "3D", x)))): object 'StatRidgeline3D' not found
+
 
 # Rotated to reduce perspective distortion
 p + stat_distributions_3d(alpha = .7) +
    coord_3d(pitch = 0, roll = -90, yaw = 90, dist = 5,
       panels = c("zmin", "xmin"))
-#> Error in get(paste0(cap(type), cap(gsub("_3d", "3D", x)))): object 'StatRidgeline3D' not found
+#> Coordinate system already present.
+#> ℹ Adding new coordinate system, which will replace the existing one.
+
 ```

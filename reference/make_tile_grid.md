@@ -97,5 +97,8 @@ ggplot() +
     fun = function(x, y) - x^2 - y^2,
     fill = "black", color = "white", light = NULL) +
   coord_3d()
-#> Error in validate_subclass(geom, "Geom", env = parent.frame(), call = call_env): `geom` must be either a string or a <Geom> object, not a <StatSurface3D> object.
+#> Error in stat_function_3d(grid = "hex", n = 20, xlim = c(-2, 2), ylim = c(-2,     2), fun = function(x, y) -x^2 - y^2, fill = "black", color = "white",     light = NULL): Problem while setting up geom.
+#> ℹ Error occurred in the 1st layer.
+#> Caused by error in `match.arg()`:
+#> ! 'arg' should be one of “rectangle”, “tri1”, “tri2”
 ```
