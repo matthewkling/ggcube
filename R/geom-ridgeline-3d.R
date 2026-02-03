@@ -135,7 +135,7 @@ geom_ridgeline_3d <- function(mapping = NULL, data = NULL,
       layer(
             data = data,
             mapping = mapping,
-            stat = get_proto(stat),
+            stat = get_proto(stat, "stat"),
             geom = GeomRidgeline3D,
             position = position,
             show.legend = show.legend,

@@ -251,7 +251,7 @@ geom_density_3d <- function(mapping = NULL, data = NULL,
                             force_convex = FALSE, scale_depth = TRUE,
                             na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
 
-      layer(data = data, mapping = mapping, stat = get_proto(stat), geom = GeomSurface3D,
+      layer(data = data, mapping = mapping, stat = get_proto(stat, "stat"), geom = GeomSurface3D,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(n = n, grid = grid, direction = direction, trim = trim,
                           force_convex = force_convex, cull_backfaces = cull_backfaces,
@@ -276,7 +276,7 @@ stat_density_3d <- function(mapping = NULL, data = NULL,
                             force_convex = FALSE, scale_depth = TRUE,
                             na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
 
-      layer(data = data, mapping = mapping, stat = StatDensity3D, geom = get_proto(geom),
+      layer(data = data, mapping = mapping, stat = StatDensity3D, geom = get_proto(geom, "geom"),
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(n = n, grid = grid, direction = direction, trim = trim,
                           force_convex = force_convex, cull_backfaces = cull_backfaces,

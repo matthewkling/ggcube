@@ -295,6 +295,8 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
 
                    plot_bounds = c(0, 1, 0, 1),  # [xmin, xmax, ymin, ymax]
 
+                   fixed_bounds = NULL, # set by animate_3d() to lock bounds
+
                    setup_panel_params = function(self, scale_x, scale_y, params = list()) {
 
                          # Check if theme is void-like and override panels if so
@@ -455,6 +457,13 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                                      panel_params$plot_bounds <- c(-1, 1, -1, 1)
                                }
 
+                               # Override bounds if fixed (e.g. during animation)
+                               if (!is.null(self$fixed_bounds)) {
+                                     panel_params$plot_bounds <- self$fixed_bounds
+                                     self$bounds_aspect <- diff(self$fixed_bounds[3:4]) /
+                                           diff(self$fixed_bounds[1:2])
+                               }
+
                                # Generate grid for selected faces using real scale breaks
                                if (length(visible_faces) > 0) {
                                      selected_grid <- make_scale_grid(visible_faces, panel_params$scale_info,
@@ -501,6 +510,9 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
 
                    # Force 1:1 aspect ratio
                    aspect = function(self, ranges) {
+                         if (!is.null(self$fixed_bounds)) {
+                               return(diff(self$fixed_bounds[3:4]) / diff(self$fixed_bounds[1:2]))
+                         }
                          if (!is.null(self$bounds_aspect)) {
                                return(self$bounds_aspect)
                          }

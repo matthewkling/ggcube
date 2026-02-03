@@ -77,7 +77,7 @@ geom_path_3d <- function(mapping = NULL, data = NULL,
                          scale_depth = TRUE, arrow = NULL, lineend = "butt",
                          na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
 
-      layer(data = data, mapping = mapping, stat = get_proto(stat), geom = GeomSegment3D,
+      layer(data = data, mapping = mapping, stat = get_proto(stat, "stat"), geom = GeomSegment3D,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(
                   na.rm = na.rm,
@@ -97,7 +97,7 @@ stat_path_3d <- function(mapping = NULL, data = NULL,
                          scale_depth = TRUE, arrow = NULL, lineend = "butt",
                          na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
 
-      layer(data = data, mapping = mapping, stat = StatPath3D, geom = get_proto(geom),
+      layer(data = data, mapping = mapping, stat = StatPath3D, geom = get_proto(geom, "geom"),
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(
                   na.rm = na.rm,

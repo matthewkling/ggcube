@@ -585,7 +585,7 @@ geom_point_3d <- function(mapping = NULL, data = NULL,
       }
 
       layer(
-            data = data, mapping = mapping, stat = get_proto(stat), geom = GeomPoint3D,
+            data = data, mapping = mapping, stat = get_proto(stat, "stat"), geom = GeomPoint3D,
             position = position,  show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(
                   na.rm = na.rm,
@@ -646,7 +646,7 @@ stat_point_3d <- function(mapping = NULL, data = NULL,
       }
 
       layer(
-            data = data, mapping = mapping, stat = StatPoint3D, geom = get_proto(geom),
+            data = data, mapping = mapping, stat = StatPoint3D, geom = get_proto(geom, "geom"),
             position = position,  show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(
                   na.rm = na.rm,

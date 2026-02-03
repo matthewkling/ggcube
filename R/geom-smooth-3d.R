@@ -235,7 +235,7 @@ geom_smooth_3d <- function(mapping = NULL, data = NULL, stat = StatSmooth3D,
       domain <- match.arg(domain)
 
       layer(
-            geom = GeomSmooth3D, mapping = mapping, data = data, stat = get_proto(stat),
+            geom = GeomSmooth3D, mapping = mapping, data = data, stat = get_proto(stat, "stat"),
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(method = method, formula = formula, method.args = method.args,
                           xlim = xlim, ylim = ylim, domain = domain, n = n, se = se, level = level,
@@ -536,7 +536,7 @@ stat_smooth_3d <- function(mapping = NULL, data = NULL,
       domain <- match.arg(domain)
 
       layer(
-            stat = StatSmooth3D, data = data, mapping = mapping, geom = get_proto(geom),
+            stat = StatSmooth3D, data = data, mapping = mapping, geom = get_proto(geom, "geom"),
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(method = method, formula = formula, method.args = method.args,
                           xlim = xlim, ylim = ylim, domain = domain, n = n, se = se, level = level,

@@ -281,7 +281,7 @@ geom_col_3d <- function(mapping = NULL, data = NULL,
                         scale_depth = TRUE, force_convex = FALSE,
                         na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
 
-      layer(data = data, mapping = mapping, stat = get_proto(stat), geom = GeomPolygon3D,
+      layer(data = data, mapping = mapping, stat = get_proto(stat, "stat"), geom = GeomPolygon3D,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(na.rm = na.rm, width = width, faces = faces, light = light, zmin = zmin,
                           force_convex = force_convex, cull_backfaces = cull_backfaces,
@@ -303,7 +303,7 @@ stat_col_3d <- function(mapping = NULL, data = NULL,
                         scale_depth = TRUE, force_convex = FALSE,
                         na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
 
-      layer(data = data, mapping = mapping, stat = StatCol3D, geom = get_proto(geom),
+      layer(data = data, mapping = mapping, stat = StatCol3D, geom = get_proto(geom, "geom"),
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(na.rm = na.rm, width = width, faces = faces, light = light, zmin = zmin,
                           force_convex = force_convex, cull_backfaces = cull_backfaces,
