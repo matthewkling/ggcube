@@ -19,7 +19,9 @@ coord_3d(
   rotate_labels = TRUE,
   scales = "free",
   ratio = c(1, 1, 1),
-  light = ggcube::light()
+  zoom = 1,
+  light = ggcube::light(),
+  ...
 )
 }
 \arguments{
@@ -89,6 +91,10 @@ as scaled by \code{ratio}. Similar to \code{coord_fixed()} but for 3D
 \item With \code{scales = "free"}: Ratios apply to scaled cube coordinates
 \item With \code{scales = "fixed"}: Ratios apply to original data coordinates
 }}
+
+\item{zoom}{Numeric value controlling the framing of the plot. Values greater
+than 1 zoom in (tighter framing, may crop edges), values less than 1
+zoom out (more whitespace around the plot). Default is 1.}
 
 \item{light}{A lighting specification object created by \code{\link[=light]{light()}},\code{"none"} to disable
 lighting, or \code{NULL} to inherit plot-level lighting specs from the coord. Specify

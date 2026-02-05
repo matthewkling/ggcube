@@ -3,7 +3,7 @@
 \name{geom_contour_3d}
 \alias{geom_contour_3d}
 \alias{stat_contour_3d}
-\title{3D contour bands (layer cake)}
+\title{Contours of a 3D surface}
 \usage{
 geom_contour_3d(
   mapping = NULL,
@@ -80,9 +80,8 @@ functions.}
 A \code{Layer} object that can be added to a ggplot.
 }
 \description{
-Renders a surface as stacked horizontal contour bands, creating a "layer cake"
-visualization. Each contour band is a filled polygon placed at its corresponding
-z-level, making it easy to read off elevation values.
+Renders a surface as stacked horizontal contour bands. Each contour band is a
+polygon placed at its corresponding z-level.
 }
 \details{
 This geom takes point grid data (like that produced by \code{\link[=stat_surface_3d]{stat_surface_3d()}},
@@ -133,7 +132,8 @@ ggplot(mountain, aes(x, y, z, fill = after_stat(z))) +
 
 # With stat_density_3d
 ggplot(faithful, aes(eruptions, waiting)) +
-  stat_density_3d(geom = "contour_3d") +
+  stat_density_3d(geom = "contour_3d",
+    sort_method = "pairwise") +
   coord_3d()
 
 # With stat_function_3d

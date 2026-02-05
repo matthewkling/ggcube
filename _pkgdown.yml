@@ -22,6 +22,10 @@ reference:
   - polygon_rendering
   - grid_generation
   - make_tile_grid
+- title: Animation
+- contents:
+  - contains("anim")
+  - contains("renderer")
 - title: Z axis scales
 - contents:
   - scale_z_continuous

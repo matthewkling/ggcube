@@ -13,6 +13,9 @@
 #' @param dist Distance from viewer to center of the data cube. Only used when \code{persp = TRUE}.
 #'   Larger values create less perspective distortion. Default is 2.
 #'   Values less than 1 are allowed but can be problematic for rendering.
+#' @param zoom Numeric value controlling the framing of the plot. Values greater
+#'   than 1 zoom in (tighter framing, may crop edges), values less than 1
+#'   zoom out (more whitespace around the plot). Default is 1.
 #' @param expand Logical indicating whether to expand axis ranges beyond the data range,
 #'   similar to standard ggplot2 behavior. If \code{TRUE} (the default), expansion behavior
 #'   can be controlled using standard axis scaling functions, e.g.
@@ -150,7 +153,13 @@ coord_3d <- function(pitch = 0, roll = -60, yaw = -30,
                      rotate_labels = TRUE,
                      scales = "free",
                      ratio = c(1, 1, 1),
-                     light = ggcube::light()) {
+                     zoom = 1,
+                     light = ggcube::light(),
+                     ...) {
+
+      # Capture internal-only params from ...
+      dots <- list(...)
+      fixed_bounds <- dots$fixed_bounds
 
       # Validate parameters
       if (!scales %in% c("free", "fixed")) {
@@ -159,6 +168,10 @@ coord_3d <- function(pitch = 0, roll = -60, yaw = -30,
 
       if (!is.numeric(ratio) || length(ratio) != 3 || any(ratio <= 0)) {
             stop("ratio must be a positive numeric vector of length 3")
+      }
+
+      if (!is.numeric(zoom) || length(zoom) != 1 || zoom <= 0) {
+            stop("zoom must be a positive numeric value")
       }
 
       if(persp && dist < 1) {
@@ -174,8 +187,10 @@ coord_3d <- function(pitch = 0, roll = -60, yaw = -30,
                     rotate_labels = rotate_labels,
                     scales = scales,
                     ratio = ratio,
+                    zoom = zoom,
                     xlabels = xlabels, ylabels = ylabels, zlabels = zlabels,
-                    light = light
+                    light = light,
+                    fixed_bounds = fixed_bounds
             ),
             theme(plot.margin = margin(20, 20, 20, 20, "pt"))
       )
@@ -291,6 +306,7 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                    rotate_labels = TRUE,
                    scales = "free",
                    ratio = c(1, 1, 1),
+                   zoom = 1,
                    light = NULL,
 
                    plot_bounds = c(0, 1, 0, 1),  # [xmin, xmax, ymin, ymax]
@@ -372,6 +388,7 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                                panel_params$scales,
                                panel_params$ratio
                          )
+                         panel_params$effective_ratios <- effective_ratios
 
                          # Visible faces (using translated panel names)
                          visible_faces_fgbg <- select_visible_faces(self$panels, panel_params$proj, effective_ratios)
@@ -462,6 +479,21 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                                      panel_params$plot_bounds <- self$fixed_bounds
                                      self$bounds_aspect <- diff(self$fixed_bounds[3:4]) /
                                            diff(self$fixed_bounds[1:2])
+                               }
+
+                               # Apply zoom: scale bounds around center
+                               # zoom < 1 zooms in (tighter framing), zoom > 1 zooms out (more padding)
+                               if (!is.null(self$zoom) && self$zoom != 1) {
+                                     bounds <- panel_params$plot_bounds
+                                     x_center <- mean(bounds[1:2])
+                                     y_center <- mean(bounds[3:4])
+                                     x_half <- diff(bounds[1:2]) / 2 / self$zoom
+                                     y_half <- diff(bounds[3:4]) / 2 / self$zoom
+                                     panel_params$plot_bounds <- c(
+                                           x_center - x_half, x_center + x_half,
+                                           y_center - y_half, y_center + y_half
+                                     )
+                                     # Aspect ratio doesn't change with uniform zoom
                                }
 
                                # Generate grid for selected faces using real scale breaks
@@ -1043,5 +1075,3 @@ process_backfaces <- function(data) {
 
       return(select(data, -.backface, -.grp))
 }
-
-

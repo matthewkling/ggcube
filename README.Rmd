@@ -84,13 +84,14 @@ ggplot(mountain, aes(x, y, z)) +
       theme_light()
 ```
 
-Example: a terrain surface using `geom_ridgeline_3d()`:
+Example: a terrain surface using `geom_contour_3d()`, also showing functionality for animation as a rotating GIF:
 
-```{r ridgeline, warning = FALSE, message = FALSE}
-ggplot(mountain, aes(x, y, z)) +
-      geom_ridgeline_3d(fill = "black", color = "white", base = 50) +
-      coord_3d(ratio = c(1.5, 2, 1), yaw = 60, light = "none") +
+```{r contour_anim, warning = FALSE, message = FALSE}
+p <- ggplot(mountain, aes(x, y, z)) +
+      geom_contour_3d(fill = "black", color = "white", linewidth = .5) +
+      coord_3d(ratio = c(1.5, 2, 1), light = "none", zoom = 1.5) +
       theme_void()
+animate_3d(p, yaw = c(0, 360))
 ```
 
 Example: a mathematical surface using `geom_function_3d()`:

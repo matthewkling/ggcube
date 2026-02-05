@@ -187,11 +187,10 @@ points_to_contours <- function(data,
 
 # Layer function --------------------------------------------------------------
 
-#' 3D contour bands (layer cake)
+#' Contours of a 3D surface
 #'
-#' Renders a surface as stacked horizontal contour bands, creating a "layer cake"
-#' visualization. Each contour band is a filled polygon placed at its corresponding
-#' z-level, making it easy to read off elevation values.
+#' Renders a surface as stacked horizontal contour bands. Each contour band is a
+#' polygon placed at its corresponding z-level.
 #'
 #' This geom takes point grid data (like that produced by [stat_surface_3d()],
 #' [stat_function_3d()], [stat_smooth_3d()], or [stat_density_3d()]) and converts
@@ -250,7 +249,8 @@ points_to_contours <- function(data,
 #'
 #' # With stat_density_3d
 #' ggplot(faithful, aes(eruptions, waiting)) +
-#'   stat_density_3d(geom = "contour_3d") +
+#'   stat_density_3d(geom = "contour_3d",
+#'     sort_method = "pairwise") +
 #'   coord_3d()
 #'
 #' # With stat_function_3d
