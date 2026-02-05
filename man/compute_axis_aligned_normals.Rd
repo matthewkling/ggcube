@@ -2,17 +2,17 @@
 % Please edit documentation in R/light.R
 \name{compute_axis_aligned_normals}
 \alias{compute_axis_aligned_normals}
-\title{Compute normals for axis-aligned faces (voxels/columns)}
+\title{Compute axis-aligned normals for voxel/column faces}
 \usage{
-compute_axis_aligned_normals(face_data)
+compute_axis_aligned_normals(faces)
 }
 \arguments{
-\item{face_data}{Data frame with unique faces containing face_type column}
+\item{faces}{Data frame with face_type column indicating face orientation}
 }
 \value{
-Matrix with normalized normal vectors (one row per face, 3 columns)
+Matrix with 3 columns (x, y, z normal components)
 }
 \description{
-Compute normals for axis-aligned faces (voxels/columns)
+Compute axis-aligned normals for voxel/column faces
 }
 \keyword{internal}

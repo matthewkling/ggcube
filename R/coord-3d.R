@@ -594,7 +594,8 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                          # lighting computation
                          if ("lighting_spec" %in% names(data)) {
                                data <- compute_light_in_coord(data, result, scale_ranges,
-                                                              panel_params$scales, panel_params$ratio)
+                                                              panel_params$scales, panel_params$ratio,
+                                                              panel_params$proj)
                          }
 
                          # Project data onto cube face, if applicable

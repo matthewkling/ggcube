@@ -2,17 +2,17 @@
 % Please edit documentation in R/light.R
 \name{compute_surface_normals}
 \alias{compute_surface_normals}
-\title{Compute surface normals from face gradients}
+\title{Compute surface normals from gradients}
 \usage{
-compute_surface_normals(face_data)
+compute_surface_normals(gradients)
 }
 \arguments{
-\item{face_data}{Data frame with unique faces containing dzdx and dzdy}
+\item{gradients}{Data frame with group, dzdx, dzdy columns}
 }
 \value{
-Matrix with normalized normal vectors (one row per face, 3 columns)
+Matrix with 3 columns (x, y, z normal components)
 }
 \description{
-Compute surface normals from face gradients
+Compute surface normals from gradients
 }
 \keyword{internal}

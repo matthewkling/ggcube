@@ -35,14 +35,24 @@
 #' @param contrast Numeric value greater than zero controlling the intensity of lighting effects.
 #'   1.0 (the default) gives full black-to-white range. Values less than 1 give subtler effects, while
 #'   values greater than 1 give more dramatic effects.
-#' @param direction Numeric vector of length 3 specifying direction in 3D space that
-#'   light comes from for directional lighting. The default is \code{c(1, 0, 1)}, giving
-#'   diagonal lighting from the upper right edge with default rotation. Common examples: \code{c(0, 0, 1)} gives
-#'   overhead lighting, \code{c(1, 0, 0)} lights surfaces facing the positive x
-#'   direction, and \code{c(-1, -1, 0)} lights surfaces facing negative x-y edge. At least
+#' @param direction Numeric vector of length 3 specifying direction in 3D space (x, y, z) that
+#'   light comes from for directional lighting. Depending on `anchor`, direction is relative to
+#'   either the plot axes or the viewing pane. The default is \code{c(-.5, 0, 1)}, giving
+#'   diagonal lighting from the upper right edge with default rotation and anchor. At least
 #'   one value must be non-zero. Values are automatically normalized, so magnitude doesn't
-#'   matter, only sign and relative magnitude. Direction is relative to the data axes,
-#'   not the rotated figure. This argument is ignored if \code{position} is provided.
+#'   matter, only sign and relative magnitude. Direction is specified in visual space (relative
+#'   to the rendered cube's bounding box), not data space. This argument is ignored if
+#'   \code{position} is provided.
+#' @param anchor Character string specifying the reference frame for light direction:
+#'   \itemize{
+#'     \item \code{"scene"} (default): Light `direction` is fixed relative to the data/scene.
+#'       Light rotates with the plot, so regardless of rotation, `direction = c(1, 0, 0)`
+#'       lights surfaces facing the "xmax" cube face, for example.
+#'     \item \code{"camera"}: Light `direction` is fixed relative to the camera/viewer.
+#'       Light direction stays in place regardless of rotation, so `direction = c(1, 0, 0)`
+#'       lights surfaces facing the right side of the plot, for example.
+#'   }
+#'   When all rotation parameters are zero, these options give the same result.
 #' @param position Numeric vector of length 3 specifying light source position in
 #'   data coordinate space for positional lighting. When specified, each face gets
 #'   its own light direction calculated from the light position to the face center.
@@ -96,7 +106,7 @@
 #'
 #' # disable lighting entirely
 #' # (equivalent to specifying `light(fill = FALSE, color = FALSE`))
-#' p + coord_3d(light = NULL)
+#' p + coord_3d(light = "none")
 #'
 #' # if provided, layer-level lighting overrides plot-level (coord_3d) lighting
 #' p + coord_3d(light = light("direct"), # plot-level: affects original layer
@@ -107,15 +117,21 @@
 #'
 #' # Light sources ------------------------------------------------------------
 #'
-#' # set directional light as horizontal from back left corner
-#' # (left = negative x, back = positive y, horizontal = neutral z)
-#' p + coord_3d(light = light(direction = c(-1, 1, 0)))
+#' # directional light from the xmin-ymin-zmin direction
+#' # (`direction` is relative to rotated axes with default `anchor = "scene"`)
+#' p + coord_3d(light = light(direction = c(-1, -1, -1)))
 #'
-#' # specify positional light source within plot
+#' # directional light from top-right corner of figure
+#' # (`anchor = "camera"` makes `direction` fixed relative to the plot)
+#' p + coord_3d(light = light(direction = c(1, 1, 0), anchor = "camera"))
+#'
+#' # positional light source within plot
 #' ggplot(mountain, aes(x, y, z)) +
 #'   stat_surface_3d(fill = "red", color = "red") +
-#'   coord_3d(light = light(position = c(.5, .7, 95),
-#'     distance_falloff = TRUE, mode = "hsl", contrast = .9))
+#'   coord_3d(
+#'     light = light(position = c(.5, .7, 95), distance_falloff = TRUE,
+#'                   mode = "hsl", contrast = .9),
+#'     ratio = c(1, 2, 1.5))
 #'
 #'
 #' # Backface lighting --------------------------------------------------------
@@ -141,6 +157,7 @@
 #' @export
 light <- function(method = "diffuse",
                   direction = c(-.5, 0, 1),
+                  anchor = "scene",
                   position = NULL,
                   distance_falloff = FALSE,
                   fill = TRUE,
@@ -196,6 +213,12 @@ light <- function(method = "diffuse",
             stop("mode must be one of: ", paste(valid_modes, collapse = ", "))
       }
 
+      # Validate anchor
+      valid_anchors <- c("scene", "camera")
+      if (!anchor %in% valid_anchors) {
+            stop("anchor must be one of: ", paste(valid_anchors, collapse = ", "))
+      }
+
       # Convert new API to old internal representation for backward compatibility
       if (fill && color) {
             shade <- "both"
@@ -217,6 +240,7 @@ light <- function(method = "diffuse",
                   shade = shade,
                   shade_strength = contrast,
                   shade_mode = mode,
+                  anchor = anchor,
                   backface_scale = backface_scale,
                   backface_offset = backface_offset
             ),
@@ -239,6 +263,8 @@ print.light <- function(x, ...) {
       } else {
             cat("  Direction: [", paste(x$direction, collapse = ", "), "] (directional lighting)\n")
       }
+
+      cat("  anchor:", x$anchor, "\n")
 
       # Show what gets shaded using new API terms
       shading_targets <- c()
@@ -481,15 +507,32 @@ compute_rgb_light <- function(normals, light_dir_norm) {
 #'
 #' @param data Original data frame with lighting_spec column
 #' @param standardized_coords Data frame with standardized x, y, z coordinates
+#' @param scale_ranges List with x, y, z scale ranges
+#' @param scales Character, either "free" or "fixed"
+#' @param ratio Numeric vector of length 3
+#' @param proj List with pitch, roll, yaw, persp, dist (projection parameters)
 #' @return data frame with lighting values and normal components added
 #' @keywords internal
-compute_light_in_coord <- function(data, standardized_coords, scale_ranges, scales, ratio) {
+compute_light_in_coord <- function(data, standardized_coords, scale_ranges, scales, ratio, proj = NULL) {
 
       # Extract lighting specification from first row (all rows have same spec)
       light <- data$lighting_spec[[1]]
 
-      # Transform light position, if applicable
+      # Transform light position from data space to visual space, if applicable
       light$position <- transform_light_position(light$position, scale_ranges, scales, ratio)
+
+      # For camera-frame lighting, rotate the coordinates into camera space
+      if (light$anchor == "camera" && !is.null(proj)) {
+            standardized_coords <- standardized_coords %>%
+                  mutate(z = -z) %>%  # z-flip first, like transform_3d_standard
+                  as.matrix() %>%
+                  rotate_3d(proj$pitch, proj$roll, proj$yaw) %>%
+                  as.data.frame() %>%
+                  setNames(names(standardized_coords))
+
+            # Flip light direction
+            light$direction[1:2] <- -light$direction[1:2]
+      }
 
       # Replace original coordinates with standardized ones for lighting computation
       data$x <- standardized_coords$x
@@ -550,126 +593,110 @@ compute_surface_gradients_from_vertices <- function(data) {
                   .groups = "drop"
             ) %>%
             mutate(
-                  # Means
-                  mean_x = sum_x / n_pts, mean_y = sum_y / n_pts, mean_z = sum_z / n_pts,
+                  # Solve normal equations for dz/dx and dz/dy
+                  # Using simplified form assuming roughly centered data
+                  denom_x = n_pts * sum_xx - sum_x^2,
+                  denom_y = n_pts * sum_yy - sum_y^2,
 
-                  # Centered sums of squares and cross products
-                  sxx = sum_xx - n_pts * mean_x^2,
-                  syy = sum_yy - n_pts * mean_y^2,
-                  sxy = sum_xy - n_pts * mean_x * mean_y,
-                  sxz = sum_xz - n_pts * mean_x * mean_z,
-                  syz = sum_yz - n_pts * mean_y * mean_z,
-
-                  # Determinant for solving 2x2 system
-                  det = sxx * syy - sxy^2,
-
-                  # Gradients from normal equations (or fallback to 0)
-                  dzdx = ifelse(abs(det) > 1e-10, (sxz * syy - syz * sxy) / det, 0),
-                  dzdy = ifelse(abs(det) > 1e-10, (syz * sxx - sxz * sxy) / det, 0)
+                  # Gradients (with protection against division by zero)
+                  dzdx = ifelse(abs(denom_x) > 1e-10,
+                                (n_pts * sum_xz - sum_x * sum_z) / denom_x,
+                                0),
+                  dzdy = ifelse(abs(denom_y) > 1e-10,
+                                (n_pts * sum_yz - sum_y * sum_z) / denom_y,
+                                0)
             ) %>%
             select(group, dzdx, dzdy)
 
       return(gradients)
 }
 
+
+#' Compute surface normals from gradients
+#'
+#' @param gradients Data frame with group, dzdx, dzdy columns
+#' @return Matrix with 3 columns (x, y, z normal components)
+#' @keywords internal
+compute_surface_normals <- function(gradients) {
+      # Compute raw normals from gradients
+      # For a surface z = f(x,y), the normal is (-dz/dx, -dz/dy, 1) (unnormalized)
+      raw_normals <- cbind(
+            -gradients$dzdx,
+            -gradients$dzdy,
+            rep(1, nrow(gradients))
+      )
+
+      # Normalize each normal vector
+      lengths <- sqrt(rowSums(raw_normals^2))
+      normals <- raw_normals / lengths
+
+      return(normals)
+}
+
 #' Compute triangle normals from vertex coordinates
 #'
-#' @param data Face vertex data with standardized CCW winding order
-#' @param face_data Unique face data (unused, kept for compatibility)
-#' @return Matrix with normalized normal vectors (one row per face, 3 columns)
+#' @param data Full vertex data with x, y, z coordinates
+#' @param faces Data frame with one row per face (group column required)
+#' @return Matrix with 3 columns (x, y, z normal components)
 #' @keywords internal
-compute_triangle_normals <- function(data, face_data) {
-
-      normals_data <- data %>%
+compute_triangle_normals <- function(data, faces) {
+      # For each face, get three vertices and compute cross product
+      face_normals <- data %>%
             group_by(group) %>%
+            slice(1:3) %>%
             summarise(
-                  # Get triangle vertices
+                  # Get first three vertices
                   x1 = x[1], y1 = y[1], z1 = z[1],
                   x2 = x[2], y2 = y[2], z2 = z[2],
                   x3 = x[3], y3 = y[3], z3 = z[3],
                   .groups = "drop"
             ) %>%
             mutate(
-                  # Cross product: (v2-v1) × (v3-v1)
-                  v1_x = x2 - x1, v1_y = y2 - y1, v1_z = z2 - z1,
-                  v2_x = x3 - x1, v2_y = y3 - y1, v2_z = z3 - z1,
-                  normal_x = v1_y * v2_z - v1_z * v2_y,
-                  normal_y = v1_z * v2_x - v1_x * v2_z,
-                  normal_z = v1_x * v2_y - v1_y * v2_x,
-
+                  # Edge vectors
+                  e1x = x2 - x1, e1y = y2 - y1, e1z = z2 - z1,
+                  e2x = x3 - x1, e2y = y3 - y1, e2z = z3 - z1,
+                  # Cross product (e1 × e2)
+                  normal_x = e1y * e2z - e1z * e2y,
+                  normal_y = e1z * e2x - e1x * e2z,
+                  normal_z = e1x * e2y - e1y * e2x,
                   # Normalize
-                  normal_length = sqrt(normal_x^2 + normal_y^2 + normal_z^2),
-                  normal_x = ifelse(normal_length > 0, normal_x / normal_length, 0),
-                  normal_y = ifelse(normal_length > 0, normal_y / normal_length, 0),
-                  normal_z = ifelse(normal_length > 0, normal_z / normal_length, 1)
+                  length = sqrt(normal_x^2 + normal_y^2 + normal_z^2),
+                  normal_x = ifelse(length > 0, normal_x / length, 0),
+                  normal_y = ifelse(length > 0, normal_y / length, 0),
+                  normal_z = ifelse(length > 0, normal_z / length, 1)
             )
 
-      return(as.matrix(normals_data[, c("normal_x", "normal_y", "normal_z")]))
-}
-
-#' Compute surface normals from face gradients
-#'
-#' @param face_data Data frame with unique faces containing dzdx and dzdy
-#' @return Matrix with normalized normal vectors (one row per face, 3 columns)
-#' @keywords internal
-compute_surface_normals <- function(face_data) {
-      # Compute surface normals from gradients
-      normals <- matrix(nrow = nrow(face_data), ncol = 3)
-      normals[, 1] <- -face_data$dzdx  # Normal x component
-      normals[, 2] <- -face_data$dzdy  # Normal y component
-      normals[, 3] <- 1                # Normal z component
-
-      # Normalize the normal vectors
-      normal_lengths <- sqrt(rowSums(normals^2))
-      normals <- normals / normal_lengths
+      # Return as matrix format expected by lighting functions
+      normals <- as.matrix(face_normals[, c("normal_x", "normal_y", "normal_z")])
 
       return(normals)
 }
 
-#' Calculate face centers for positional lighting
+#' Compute axis-aligned normals for voxel/column faces
 #'
-#' @param faces Data frame with all face vertices
-#' @return Matrix with face centers (one row per face, 3 columns)
+#' @param faces Data frame with face_type column indicating face orientation
+#' @return Matrix with 3 columns (x, y, z normal components)
 #' @keywords internal
-calculate_face_centers <- function(faces) {
-
-      # Vectorized computation using group_by instead of loops
-      centers <- faces %>%
-            group_by(group) %>%
-            summarise(
-                  center_x = mean(x),
-                  center_y = mean(y),
-                  center_z = mean(z),
-                  .groups = "drop"
-            )
-
-      # Convert to matrix format expected by lighting functions
-      face_centers <- as.matrix(centers[, c("center_x", "center_y", "center_z")])
-
-      return(face_centers)
-}
-
-#' Compute normals for axis-aligned faces (voxels/columns)
-#'
-#' @param face_data Data frame with unique faces containing face_type column
-#' @return Matrix with normalized normal vectors (one row per face, 3 columns)
-#' @keywords internal
-compute_axis_aligned_normals <- function(face_data) {
-
-      # Lookup table for axis-aligned face normals
-      normal_lookup <- data.frame(
-            face_type = c("xmin", "xmax", "ymin", "ymax", "zmin", "zmax"),
-            normal_x = c(-1, 1, 0, 0, 0, 0),
-            normal_y = c(0, 0, -1, 1, 0, 0),
-            normal_z = c(0, 0, 0, 0, -1, 1),
-            stringsAsFactors = FALSE
-      )
-
-      # Vectorized lookup - merge face_data with normals
-      face_normals <- face_data %>%
-            left_join(normal_lookup, by = "face_type") %>%
+compute_axis_aligned_normals <- function(faces) {
+      # Map face types to normal directions
+      face_normals <- faces %>%
             mutate(
-                  # Handle any unknown face types with default upward normal
+                  normal_x = case_when(
+                        face_type == "xmin" ~ -1,
+                        face_type == "xmax" ~ 1,
+                        TRUE ~ 0
+                  ),
+                  normal_y = case_when(
+                        face_type == "ymin" ~ -1,
+                        face_type == "ymax" ~ 1,
+                        TRUE ~ 0
+                  ),
+                  normal_z = case_when(
+                        face_type == "zmin" ~ -1,
+                        face_type == "zmax" ~ 1,
+                        TRUE ~ 0
+                  ),
+                  # Handle NA face_type (shouldn't happen but be safe)
                   normal_x = ifelse(is.na(normal_x), 0, normal_x),
                   normal_y = ifelse(is.na(normal_y), 0, normal_y),
                   normal_z = ifelse(is.na(normal_z), 1, normal_z)
@@ -679,6 +706,24 @@ compute_axis_aligned_normals <- function(face_data) {
       normals <- as.matrix(face_normals[, c("normal_x", "normal_y", "normal_z")])
 
       return(normals)
+}
+
+#' Calculate face centers from vertex data
+#'
+#' @param data Data frame with x, y, z coordinates and group column
+#' @return Matrix with 3 columns (x, y, z face center coordinates)
+#' @keywords internal
+calculate_face_centers <- function(data) {
+      centers <- data %>%
+            group_by(group) %>%
+            summarise(
+                  center_x = mean(x, na.rm = TRUE),
+                  center_y = mean(y, na.rm = TRUE),
+                  center_z = mean(z, na.rm = TRUE),
+                  .groups = "drop"
+            )
+
+      as.matrix(centers[, c("center_x", "center_y", "center_z")])
 }
 
 #' Apply lighting models to surface normals
@@ -750,10 +795,11 @@ rgb2hsl <- function(rgb_matrix) {
             blue_max <- non_zero_diff & (b == max_val)
             h[blue_max] <- (r[blue_max] - g[blue_max]) / diff[blue_max] + 4
 
-            h[non_zero_diff] <- h[non_zero_diff] / 6
+            # Normalize hue to [0, 1]
+            h <- h / 6
       }
 
-      return(rbind(h, s, l))
+      rbind(h, s, l)
 }
 
 #' Convert HSL to RGB color space
@@ -770,67 +816,70 @@ hsl2rgb <- function(hsl_matrix) {
       s <- hsl_matrix[2, ]
       l <- hsl_matrix[3, ]
 
-      # Initialize RGB
-      r <- rep(0, ncol(hsl_matrix))
-      g <- rep(0, ncol(hsl_matrix))
-      b <- rep(0, ncol(hsl_matrix))
+      n <- ncol(hsl_matrix)
+      r <- rep(0, n)
+      g <- rep(0, n)
+      b <- rep(0, n)
 
-      # Check for grayscale (s == 0)
-      grayscale <- s == 0
-      r[grayscale] <- l[grayscale]
-      g[grayscale] <- l[grayscale]
-      b[grayscale] <- l[grayscale]
+      for (i in seq_len(n)) {
+            if (s[i] == 0) {
+                  # Achromatic (gray)
+                  r[i] <- g[i] <- b[i] <- l[i]
+            } else {
+                  q <- ifelse(l[i] < 0.5, l[i] * (1 + s[i]), l[i] + s[i] - l[i] * s[i])
+                  p <- 2 * l[i] - q
 
-      # Process colored pixels
-      colored <- !grayscale
-      if (any(colored)) {
-            q <- ifelse(l[colored] < 0.5,
-                        l[colored] * (1 + s[colored]),
-                        l[colored] + s[colored] - l[colored] * s[colored])
-            p <- 2 * l[colored] - q
+                  hue_to_rgb <- function(p, q, t) {
+                        if (t < 0) t <- t + 1
+                        if (t > 1) t <- t - 1
+                        if (t < 1/6) return(p + (q - p) * 6 * t)
+                        if (t < 1/2) return(q)
+                        if (t < 2/3) return(p + (q - p) * (2/3 - t) * 6)
+                        return(p)
+                  }
 
-            r[colored] <- hue2rgb(p, q, h[colored] + 1/3)
-            g[colored] <- hue2rgb(p, q, h[colored])
-            b[colored] <- hue2rgb(p, q, h[colored] - 1/3)
+                  r[i] <- hue_to_rgb(p, q, h[i] + 1/3)
+                  g[i] <- hue_to_rgb(p, q, h[i])
+                  b[i] <- hue_to_rgb(p, q, h[i] - 1/3)
+            }
       }
 
-      return(rbind(r, g, b))
-}
-
-# Helper function for hue to RGB conversion
-hue2rgb <- function(p, q, t) {
-      t <- ifelse(t < 0, t + 1, t)
-      t <- ifelse(t > 1, t - 1, t)
-
-      result <- p
-      result <- ifelse(t < 1/6, p + (q - p) * 6 * t, result)
-      result <- ifelse(t >= 1/6 & t < 1/2, q, result)
-      result <- ifelse(t >= 1/2 & t < 2/3, p + (q - p) * (2/3 - t) * 6, result)
-
-      return(result)
+      rbind(r, g, b)
 }
 
 
-# Blend lighting values with base colors using HSV or HSL color spaces
-blend_light_with_colors <- function(base_colors, light_values, lighting) {
+#' Apply shading to colors based on lighting values
+#'
+#' @param colors Vector of color values (hex or named colors)
+#' @param light_values Numeric vector of lighting values
+#' @param lighting Lighting specification with shade_mode and shade_strength
+#' @return Vector of modified colors
+#' @keywords internal
+blend_light_with_colors <- function(colors, light_values, lighting) {
+      # Handle NA or NULL colors
+      if (is.null(colors) || length(colors) == 0) {
+            return(colors)
+      }
 
+      # RGB method produces colors directly - return them as-is
       if (lighting$method == "rgb") {
             return(I(light_values))
       }
 
-      # Handle any invalid values
-      valid_mask <- !is.na(base_colors) & !is.na(light_values) & is.finite(light_values)
+      # Initialize result
+      result_colors <- colors
+
+      # Handle only valid colors (not NA)
+      valid_mask <- !is.na(colors) & !is.na(light_values)
+
       if (!any(valid_mask)) {
-            return(base_colors)
+            return(result_colors)
       }
 
-      result_colors <- base_colors
-
-      # Process only valid entries
-      valid_base <- base_colors[valid_mask]
+      valid_base <- colors[valid_mask]
       valid_light <- light_values[valid_mask]
 
-      # Normalize lighting values to [0, 1] if needed
+      # Normalize light values to [0, 1] if needed
       if (lighting$method == "diffuse") {
             valid_light <- (valid_light + 1) / 2
       }
@@ -945,7 +994,14 @@ blend_light <- function(coords) {
       return(coords)
 }
 
-# convert light position from data units to cube units
+#' Convert light position from data units to visual space units
+#'
+#' @param position Numeric vector of length 3 (x, y, z in data coordinates)
+#' @param scale_ranges List with x, y, z scale ranges
+#' @param scales Character, either "free" or "fixed"
+#' @param ratio Numeric vector of length 3
+#' @return Position vector in visual space, or NULL if position is NULL
+#' @keywords internal
 transform_light_position <- function(position, scale_ranges, scales, ratio) {
       if(is.null(position)) return(NULL)
       light_data <- data.frame(x = position[1], y = position[2], z = position[3])
@@ -953,7 +1009,12 @@ transform_light_position <- function(position, scale_ranges, scales, ratio) {
       return(c(standardized$x, standardized$y, standardized$z))
 }
 
-# store lighting specification to data frame for downstream use,
+#' Store lighting specification to data frame for downstream use
+#'
+#' @param data Data frame to attach lighting spec to
+#' @param light Lighting specification object, "none", or NULL
+#' @return Data frame with lighting_spec column added (if light is not NULL)
+#' @keywords internal
 attach_light <- function(data, light){
       if(!is.null(light)){
             if(!inherits(light, "light") && light == "none") light <- light(fill = FALSE, color = FALSE)

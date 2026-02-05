@@ -95,21 +95,17 @@ p <- ggplot() +
   geom_function_3d(
     fun = function(x, y) sin(x) * cos(y),
     xlim = c(-pi, pi), ylim = c(-pi, pi),
-    fill = "steelblue", color = "steelblue") +
-  coord_3d(light = light(mode = "hsl"))
+    fill = "steelblue", color = "steelblue", linewidth = .5) +
+  coord_3d(light = light(mode = "hsl", anchor = "camera",
+                         direction = c(1, 1, 0))) +
+  theme_void()
 
 # Simple turntable rotation
 animate_3d(p, yaw = c(-30, 330))
 
-# Orbit with pitch change
-animate_3d(p, yaw = c(-30, 330), pitch = c(0, 30),
-           nframes = 120, fps = 15)
-
-# Multi-segment animation: rotate yaw, then tilt pitch
-animate_3d(p, yaw = c(0, 180, 180), pitch = c(0, 0, 45))
-
-# Parallel rendering with 4 cores
-animate_3d(p, yaw = c(0, 360), cores = 4)
+# Multi-segment orbit with pitch change
+animate_3d(p, yaw = c(0, 720), roll = c(-90, 0, -90),
+           nframes = 120, fps = 15, cores = 10)
 
 # Save to file
 anim <- animate_3d(p, yaw = c(0, 360))

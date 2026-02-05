@@ -4,12 +4,27 @@
 \alias{compute_light_in_coord}
 \title{Compute lighting from standardized coordinates in coord_3d}
 \usage{
-compute_light_in_coord(data, standardized_coords, scale_ranges, scales, ratio)
+compute_light_in_coord(
+  data,
+  standardized_coords,
+  scale_ranges,
+  scales,
+  ratio,
+  proj = NULL
+)
 }
 \arguments{
 \item{data}{Original data frame with lighting_spec column}
 
 \item{standardized_coords}{Data frame with standardized x, y, z coordinates}
+
+\item{scale_ranges}{List with x, y, z scale ranges}
+
+\item{scales}{Character, either "free" or "fixed"}
+
+\item{ratio}{Numeric vector of length 3}
+
+\item{proj}{List with pitch, roll, yaw, persp, dist (projection parameters)}
 }
 \value{
 data frame with lighting values and normal components added

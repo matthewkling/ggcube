@@ -2,17 +2,17 @@
 % Please edit documentation in R/light.R
 \name{calculate_face_centers}
 \alias{calculate_face_centers}
-\title{Calculate face centers for positional lighting}
+\title{Calculate face centers from vertex data}
 \usage{
-calculate_face_centers(faces)
+calculate_face_centers(data)
 }
 \arguments{
-\item{faces}{Data frame with all face vertices}
+\item{data}{Data frame with x, y, z coordinates and group column}
 }
 \value{
-Matrix with face centers (one row per face, 3 columns)
+Matrix with 3 columns (x, y, z face center coordinates)
 }
 \description{
-Calculate face centers for positional lighting
+Calculate face centers from vertex data
 }
 \keyword{internal}

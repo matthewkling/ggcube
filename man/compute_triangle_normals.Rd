@@ -4,15 +4,15 @@
 \alias{compute_triangle_normals}
 \title{Compute triangle normals from vertex coordinates}
 \usage{
-compute_triangle_normals(data, face_data)
+compute_triangle_normals(data, faces)
 }
 \arguments{
-\item{data}{Face vertex data with standardized CCW winding order}
+\item{data}{Full vertex data with x, y, z coordinates}
 
-\item{face_data}{Unique face data (unused, kept for compatibility)}
+\item{faces}{Data frame with one row per face (group column required)}
 }
 \value{
-Matrix with normalized normal vectors (one row per face, 3 columns)
+Matrix with 3 columns (x, y, z normal components)
 }
 \description{
 Compute triangle normals from vertex coordinates
