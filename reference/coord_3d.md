@@ -23,7 +23,9 @@ coord_3d(
   rotate_labels = TRUE,
   scales = "free",
   ratio = c(1, 1, 1),
-  light = ggcube::light()
+  zoom = 1,
+  light = ggcube::light(),
+  ...
 )
 ```
 
@@ -132,6 +134,12 @@ coord_3d(
   - With `scales = "free"`: Ratios apply to scaled cube coordinates
 
   - With `scales = "fixed"`: Ratios apply to original data coordinates
+
+- zoom:
+
+  Numeric value controlling the framing of the plot. Values greater than
+  1 zoom in (tighter framing, may crop edges), values less than 1 zoom
+  out (more whitespace around the plot). Default is 1.
 
 - light:
 

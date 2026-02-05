@@ -98,16 +98,18 @@ ggplot(mountain, aes(x, y, z)) +
 ![](reference/figures/README-surfaces-1.png)
 
 Example: a terrain surface using
-[`geom_ridgeline_3d()`](https://matthewkling.github.io/ggcube/reference/geom_ridgeline_3d.md):
+[`geom_contour_3d()`](https://matthewkling.github.io/ggcube/reference/geom_contour_3d.md),
+also showing functionality for animation as a rotating GIF:
 
 ``` r
-ggplot(mountain, aes(x, y, z)) +
-      geom_ridgeline_3d(fill = "black", color = "white", base = 50) +
-      coord_3d(ratio = c(1.5, 2, 1), yaw = 60, light = "none") +
+p <- ggplot(mountain, aes(x, y, z)) +
+      geom_contour_3d(fill = "black", color = "white", linewidth = .5) +
+      coord_3d(ratio = c(1.5, 2, 1), light = "none", zoom = 1.5) +
       theme_void()
+animate_3d(p, yaw = c(0, 360))
 ```
 
-![](reference/figures/README-ridgeline-1.png)
+![](reference/figures/README-contour_anim-1.gif)
 
 Example: a mathematical surface using
 [`geom_function_3d()`](https://matthewkling.github.io/ggcube/reference/stat_function_3d.md):

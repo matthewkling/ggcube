@@ -21,7 +21,7 @@
   : 3D columns from grid data
 - [`geom_contour_3d()`](https://matthewkling.github.io/ggcube/reference/geom_contour_3d.md)
   [`stat_contour_3d()`](https://matthewkling.github.io/ggcube/reference/geom_contour_3d.md)
-  : 3D contour bands (layer cake)
+  : Contours of a 3D surface
 - [`geom_hull_3d()`](https://matthewkling.github.io/ggcube/reference/geom_hull_3d.md)
   [`stat_hull_3d()`](https://matthewkling.github.io/ggcube/reference/geom_hull_3d.md)
   : 3D convex and alpha hulls
@@ -79,6 +79,17 @@
   : Grid generation parameters
 - [`make_tile_grid()`](https://matthewkling.github.io/ggcube/reference/make_tile_grid.md)
   : Generate rectangular, triangular, or hexagonal grids
+
+## Animation
+
+- [`anim_save_3d()`](https://matthewkling.github.io/ggcube/reference/anim_save_3d.md)
+  : Save a 3D animation to a file
+- [`animate_3d()`](https://matthewkling.github.io/ggcube/reference/animate_3d.md)
+  : Animate a 3D plot
+- [`gifski_renderer_3d()`](https://matthewkling.github.io/ggcube/reference/renderers_3d.md)
+  [`av_renderer_3d()`](https://matthewkling.github.io/ggcube/reference/renderers_3d.md)
+  [`file_renderer_3d()`](https://matthewkling.github.io/ggcube/reference/renderers_3d.md)
+  : Animation renderers for animate_3d
 
 ## Z axis scales
 

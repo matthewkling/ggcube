@@ -5,6 +5,8 @@
 <url><loc>https://matthewkling.github.io/ggcube/authors.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/index.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/aes.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/anim_save_3d.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/animate_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/apply_perspective.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/apply_surface_light.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/calculate_face_centers.html</loc></url>
@@ -80,6 +82,7 @@
 <url><loc>https://matthewkling.github.io/ggcube/reference/polygon_rendering.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/position_on_face.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/position_param.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/renderers_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/replace_colorbar_colors.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/rgb2hsl.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/ridgeline_params.html</loc></url>

@@ -1,8 +1,7 @@
-# 3D contour bands (layer cake)
+# Contours of a 3D surface
 
-Renders a surface as stacked horizontal contour bands, creating a "layer
-cake" visualization. Each contour band is a filled polygon placed at its
-corresponding z-level, making it easy to read off elevation values.
+Renders a surface as stacked horizontal contour bands. Each contour band
+is a polygon placed at its corresponding z-level.
 
 ## Usage
 
@@ -202,7 +201,8 @@ ggplot(mountain, aes(x, y, z, fill = after_stat(z))) +
 
 # With stat_density_3d
 ggplot(faithful, aes(eruptions, waiting)) +
-  stat_density_3d(geom = "contour_3d") +
+  stat_density_3d(geom = "contour_3d",
+    sort_method = "pairwise") +
   coord_3d()
 
 
