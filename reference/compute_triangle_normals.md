@@ -5,19 +5,19 @@ Compute triangle normals from vertex coordinates
 ## Usage
 
 ``` r
-compute_triangle_normals(data, face_data)
+compute_triangle_normals(data, faces)
 ```
 
 ## Arguments
 
 - data:
 
-  Face vertex data with standardized CCW winding order
+  Full vertex data with x, y, z coordinates
 
-- face_data:
+- faces:
 
-  Unique face data (unused, kept for compatibility)
+  Data frame with one row per face (group column required)
 
 ## Value
 
-Matrix with normalized normal vectors (one row per face, 3 columns)
+Matrix with 3 columns (x, y, z normal components)

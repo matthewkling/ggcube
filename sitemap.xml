@@ -9,6 +9,8 @@
 <url><loc>https://matthewkling.github.io/ggcube/reference/animate_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/apply_perspective.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/apply_surface_light.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/attach_light.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/blend_light_with_colors.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/calculate_face_centers.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/calculate_positional_light_directions.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/camera_facing.html</loc></url>
@@ -104,6 +106,7 @@
 <url><loc>https://matthewkling.github.io/ggcube/reference/surface_computed_vars.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/text_outlines.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/transform_3d_standard.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/transform_light_position.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/translate_face_names_from_flips.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/validate_position_stat.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/zlim.html</loc></url>

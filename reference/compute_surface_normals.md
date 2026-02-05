@@ -1,19 +1,19 @@
-# Compute surface normals from face gradients
+# Compute surface normals from gradients
 
-Compute surface normals from face gradients
+Compute surface normals from gradients
 
 ## Usage
 
 ``` r
-compute_surface_normals(face_data)
+compute_surface_normals(gradients)
 ```
 
 ## Arguments
 
-- face_data:
+- gradients:
 
-  Data frame with unique faces containing dzdx and dzdy
+  Data frame with group, dzdx, dzdy columns
 
 ## Value
 
-Matrix with normalized normal vectors (one row per face, 3 columns)
+Matrix with 3 columns (x, y, z normal components)

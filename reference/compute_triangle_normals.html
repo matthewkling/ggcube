@@ -37,7 +37,7 @@
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">compute_triangle_normals</span><span class="op">(</span><span class="va">data</span>, <span class="va">face_data</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">compute_triangle_normals</span><span class="op">(</span><span class="va">data</span>, <span class="va">faces</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -45,16 +45,16 @@
 
 
 <dl><dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
-<dd><p>Face vertex data with standardized CCW winding order</p></dd>
+<dd><p>Full vertex data with x, y, z coordinates</p></dd>
 
 
-<dt id="arg-face-data">face_data<a class="anchor" aria-label="anchor" href="#arg-face-data"></a></dt>
-<dd><p>Unique face data (unused, kept for compatibility)</p></dd>
+<dt id="arg-faces">faces<a class="anchor" aria-label="anchor" href="#arg-faces"></a></dt>
+<dd><p>Data frame with one row per face (group column required)</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>Matrix with normalized normal vectors (one row per face, 3 columns)</p>
+    <p>Matrix with 3 columns (x, y, z normal components)</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

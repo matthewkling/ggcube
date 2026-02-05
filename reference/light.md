@@ -15,6 +15,7 @@ layer functions (which take precedence over plot-level lighting).
 light(
   method = "diffuse",
   direction = c(-0.5, 0, 1),
+  anchor = "scene",
   position = NULL,
   distance_falloff = FALSE,
   fill = TRUE,
@@ -49,16 +50,32 @@ light(
 
 - direction:
 
-  Numeric vector of length 3 specifying direction in 3D space that light
-  comes from for directional lighting. The default is `c(1, 0, 1)`,
-  giving diagonal lighting from the upper right edge with default
-  rotation. Common examples: `c(0, 0, 1)` gives overhead lighting,
-  `c(1, 0, 0)` lights surfaces facing the positive x direction, and
-  `c(-1, -1, 0)` lights surfaces facing negative x-y edge. At least one
-  value must be non-zero. Values are automatically normalized, so
-  magnitude doesn't matter, only sign and relative magnitude. Direction
-  is relative to the data axes, not the rotated figure. This argument is
-  ignored if `position` is provided.
+  Numeric vector of length 3 specifying direction in 3D space (x, y, z)
+  that light comes from for directional lighting. Depending on `anchor`,
+  direction is relative to either the plot axes or the viewing pane. The
+  default is `c(-.5, 0, 1)`, giving diagonal lighting from the upper
+  right edge with default rotation and anchor. At least one value must
+  be non-zero. Values are automatically normalized, so magnitude doesn't
+  matter, only sign and relative magnitude. Direction is specified in
+  visual space (relative to the rendered cube's bounding box), not data
+  space. This argument is ignored if `position` is provided.
+
+- anchor:
+
+  Character string specifying the reference frame for light direction:
+
+  - `"scene"` (default): Light `direction` is fixed relative to the
+    data/scene. Light rotates with the plot, so regardless of rotation,
+    `direction = c(1, 0, 0)` lights surfaces facing the "xmax" cube
+    face, for example.
+
+  - `"camera"`: Light `direction` is fixed relative to the
+    camera/viewer. Light direction stays in place regardless of
+    rotation, so `direction = c(1, 0, 0)` lights surfaces facing the
+    right side of the plot, for example.
+
+  When all rotation parameters are zero, these options give the same
+  result.
 
 - position:
 
@@ -179,7 +196,7 @@ p + geom_hull_3d(aes(fill = x, color = x)) +
 
 # disable lighting entirely
 # (equivalent to specifying `light(fill = FALSE, color = FALSE`))
-p + coord_3d(light = NULL)
+p + coord_3d(light = "none")
 
 
 # if provided, layer-level lighting overrides plot-level (coord_3d) lighting
@@ -192,16 +209,23 @@ p + coord_3d(light = light("direct"), # plot-level: affects original layer
 
 # Light sources ------------------------------------------------------------
 
-# set directional light as horizontal from back left corner
-# (left = negative x, back = positive y, horizontal = neutral z)
-p + coord_3d(light = light(direction = c(-1, 1, 0)))
+# directional light from the xmin-ymin-zmin direction
+# (`direction` is relative to rotated axes with default `anchor = "scene"`)
+p + coord_3d(light = light(direction = c(-1, -1, -1)))
 
 
-# specify positional light source within plot
+# directional light from top-right corner of figure
+# (`anchor = "camera"` makes `direction` fixed relative to the plot)
+p + coord_3d(light = light(direction = c(1, 1, 0), anchor = "camera"))
+
+
+# positional light source within plot
 ggplot(mountain, aes(x, y, z)) +
   stat_surface_3d(fill = "red", color = "red") +
-  coord_3d(light = light(position = c(.5, .7, 95),
-    distance_falloff = TRUE, mode = "hsl", contrast = .9))
+  coord_3d(
+    light = light(position = c(.5, .7, 95), distance_falloff = TRUE,
+                  mode = "hsl", contrast = .9),
+    ratio = c(1, 2, 1.5))
 
 
 

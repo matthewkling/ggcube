@@ -1,19 +1,19 @@
-# Calculate face centers for positional lighting
+# Calculate face centers from vertex data
 
-Calculate face centers for positional lighting
+Calculate face centers from vertex data
 
 ## Usage
 
 ``` r
-calculate_face_centers(faces)
+calculate_face_centers(data)
 ```
 
 ## Arguments
 
-- faces:
+- data:
 
-  Data frame with all face vertices
+  Data frame with x, y, z coordinates and group column
 
 ## Value
 
-Matrix with face centers (one row per face, 3 columns)
+Matrix with 3 columns (x, y, z face center coordinates)

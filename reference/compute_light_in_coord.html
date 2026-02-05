@@ -37,7 +37,14 @@
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">compute_light_in_coord</span><span class="op">(</span><span class="va">data</span>, <span class="va">standardized_coords</span>, <span class="va">scale_ranges</span>, <span class="va">scales</span>, <span class="va">ratio</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">compute_light_in_coord</span><span class="op">(</span></span>
+<span>  <span class="va">data</span>,</span>
+<span>  <span class="va">standardized_coords</span>,</span>
+<span>  <span class="va">scale_ranges</span>,</span>
+<span>  <span class="va">scales</span>,</span>
+<span>  <span class="va">ratio</span>,</span>
+<span>  proj <span class="op">=</span> <span class="cn">NULL</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -50,6 +57,22 @@
 
 <dt id="arg-standardized-coords">standardized_coords<a class="anchor" aria-label="anchor" href="#arg-standardized-coords"></a></dt>
 <dd><p>Data frame with standardized x, y, z coordinates</p></dd>
+
+
+<dt id="arg-scale-ranges">scale_ranges<a class="anchor" aria-label="anchor" href="#arg-scale-ranges"></a></dt>
+<dd><p>List with x, y, z scale ranges</p></dd>
+
+
+<dt id="arg-scales">scales<a class="anchor" aria-label="anchor" href="#arg-scales"></a></dt>
+<dd><p>Character, either "free" or "fixed"</p></dd>
+
+
+<dt id="arg-ratio">ratio<a class="anchor" aria-label="anchor" href="#arg-ratio"></a></dt>
+<dd><p>Numeric vector of length 3</p></dd>
+
+
+<dt id="arg-proj">proj<a class="anchor" aria-label="anchor" href="#arg-proj"></a></dt>
+<dd><p>List with pitch, roll, yaw, persp, dist (projection parameters)</p></dd>
 
 </dl></div>
     <div class="section level2">

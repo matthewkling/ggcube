@@ -55,6 +55,7 @@ The result can be passed <code><a href="coord_3d.html">coord_3d()</a></code> to 
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">light</span><span class="op">(</span></span>
 <span>  method <span class="op">=</span> <span class="st">"diffuse"</span>,</span>
 <span>  direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">0.5</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>,</span>
+<span>  anchor <span class="op">=</span> <span class="st">"scene"</span>,</span>
 <span>  position <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  distance_falloff <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  fill <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -83,14 +84,24 @@ colors. If this option is selected, parameters like <code>mode</code> and <code>
 
 
 <dt id="arg-direction">direction<a class="anchor" aria-label="anchor" href="#arg-direction"></a></dt>
-<dd><p>Numeric vector of length 3 specifying direction in 3D space that
-light comes from for directional lighting. The default is <code>c(1, 0, 1)</code>, giving
-diagonal lighting from the upper right edge with default rotation. Common examples: <code>c(0, 0, 1)</code> gives
-overhead lighting, <code>c(1, 0, 0)</code> lights surfaces facing the positive x
-direction, and <code>c(-1, -1, 0)</code> lights surfaces facing negative x-y edge. At least
+<dd><p>Numeric vector of length 3 specifying direction in 3D space (x, y, z) that
+light comes from for directional lighting. Depending on <code>anchor</code>, direction is relative to
+either the plot axes or the viewing pane. The default is <code>c(-.5, 0, 1)</code>, giving
+diagonal lighting from the upper right edge with default rotation and anchor. At least
 one value must be non-zero. Values are automatically normalized, so magnitude doesn't
-matter, only sign and relative magnitude. Direction is relative to the data axes,
-not the rotated figure. This argument is ignored if <code>position</code> is provided.</p></dd>
+matter, only sign and relative magnitude. Direction is specified in visual space (relative
+to the rendered cube's bounding box), not data space. This argument is ignored if
+<code>position</code> is provided.</p></dd>
+
+
+<dt id="arg-anchor">anchor<a class="anchor" aria-label="anchor" href="#arg-anchor"></a></dt>
+<dd><p>Character string specifying the reference frame for light direction:</p><ul><li><p><code>"scene"</code> (default): Light <code>direction</code> is fixed relative to the data/scene.
+Light rotates with the plot, so regardless of rotation, <code>direction = c(1, 0, 0)</code>
+lights surfaces facing the "xmax" cube face, for example.</p></li>
+<li><p><code>"camera"</code>: Light <code>direction</code> is fixed relative to the camera/viewer.
+Light direction stays in place regardless of rotation, so <code>direction = c(1, 0, 0)</code>
+lights surfaces facing the right side of the plot, for example.</p></li>
+</ul><p>When all rotation parameters are zero, these options give the same result.</p></dd>
 
 
 <dt id="arg-position">position<a class="anchor" aria-label="anchor" href="#arg-position"></a></dt>
@@ -198,7 +209,7 @@ for examples.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># disable lighting entirely</span></span></span>
 <span class="r-in"><span><span class="co"># (equivalent to specifying `light(fill = FALSE, color = FALSE`))</span></span></span>
-<span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span>light <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span>light <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="light-8.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># if provided, layer-level lighting overrides plot-level (coord_3d) lighting</span></span></span>
@@ -211,17 +222,24 @@ for examples.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Light sources ------------------------------------------------------------</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># set directional light as horizontal from back left corner</span></span></span>
-<span class="r-in"><span><span class="co"># (left = negative x, back = positive y, horizontal = neutral z)</span></span></span>
-<span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span>light <span class="op">=</span> <span class="fu">light</span><span class="op">(</span>direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># directional light from the xmin-ymin-zmin direction</span></span></span>
+<span class="r-in"><span><span class="co"># (`direction` is relative to rotated axes with default `anchor = "scene"`)</span></span></span>
+<span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span>light <span class="op">=</span> <span class="fu">light</span><span class="op">(</span>direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="op">-</span><span class="fl">1</span>, <span class="op">-</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="light-10.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># specify positional light source within plot</span></span></span>
+<span class="r-in"><span><span class="co"># directional light from top-right corner of figure</span></span></span>
+<span class="r-in"><span><span class="co"># (`anchor = "camera"` makes `direction` fixed relative to the plot)</span></span></span>
+<span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span>light <span class="op">=</span> <span class="fu">light</span><span class="op">(</span>direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span>, anchor <span class="op">=</span> <span class="st">"camera"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="light-11.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># positional light source within plot</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mountain</span>, <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="stat_surface_3d.html">stat_surface_3d</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="st">"red"</span>, color <span class="op">=</span> <span class="st">"red"</span><span class="op">)</span> <span class="op">+</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span>light <span class="op">=</span> <span class="fu">light</span><span class="op">(</span>position <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">.5</span>, <span class="fl">.7</span>, <span class="fl">95</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>    distance_falloff <span class="op">=</span> <span class="cn">TRUE</span>, mode <span class="op">=</span> <span class="st">"hsl"</span>, contrast <span class="op">=</span> <span class="fl">.9</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="light-11.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span>  <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>    light <span class="op">=</span> <span class="fu">light</span><span class="op">(</span>position <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">.5</span>, <span class="fl">.7</span>, <span class="fl">95</span><span class="op">)</span>, distance_falloff <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
+<span class="r-in"><span>                  mode <span class="op">=</span> <span class="st">"hsl"</span>, contrast <span class="op">=</span> <span class="fl">.9</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    ratio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">1.5</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="light-12.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Backface lighting --------------------------------------------------------</span></span></span>
@@ -233,18 +251,18 @@ for examples.</p>
 <span class="r-in"><span>    fill <span class="op">=</span> <span class="st">"steelblue"</span>, color <span class="op">=</span> <span class="st">"steelblue"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span>pitch <span class="op">=</span> <span class="fl">0</span>, roll <span class="op">=</span> <span class="op">-</span><span class="fl">70</span>, yaw <span class="op">=</span> <span class="fl">0</span>,</span></span>
 <span class="r-in"><span>             light <span class="op">=</span> <span class="fu">light</span><span class="op">(</span>mode <span class="op">=</span> <span class="st">"hsl"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="light-12.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="light-13.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># use `backface_scale = 1` to light backfaces as if they're frontfaces</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span>pitch <span class="op">=</span> <span class="fl">0</span>, roll <span class="op">=</span> <span class="op">-</span><span class="fl">70</span>, yaw <span class="op">=</span> <span class="fl">0</span>,</span></span>
 <span class="r-in"><span>             light <span class="op">=</span> <span class="fu">light</span><span class="op">(</span>backface_scale <span class="op">=</span> <span class="fl">1</span>, mode <span class="op">=</span> <span class="st">"hsl"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="light-13.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="light-14.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># use `backface_offset` to uniformly darken (or lighten) backfaces</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span>pitch <span class="op">=</span> <span class="fl">0</span>, roll <span class="op">=</span> <span class="op">-</span><span class="fl">70</span>, yaw <span class="op">=</span> <span class="fl">0</span>,</span></span>
 <span class="r-in"><span>             light <span class="op">=</span> <span class="fu">light</span><span class="op">(</span>backface_scale <span class="op">=</span> <span class="fl">1</span>, mode <span class="op">=</span> <span class="st">"hsl"</span>,</span></span>
 <span class="r-in"><span>                           backface_offset <span class="op">=</span> <span class="op">-</span><span class="fl">.5</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="light-14.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="light-15.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
