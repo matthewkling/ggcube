@@ -47,7 +47,7 @@ StatDensity3D <- ggproto("StatDensity3D", Stat,
                                ylim <- c(y_range[1] - y_extend, y_range[2] + y_extend)
 
                                # # Generate grid
-                               d <- make_point_grid(n, xlim, ylim)
+                               d <- make_point_grid(grid, n, direction, xlim, ylim, trim)
 
                                # Compute kernel density
                                d$z <- kde2d(data$x, data$y, d$x, d$y, h)
@@ -191,24 +191,29 @@ kde2d <- function(x, y, eval_x, eval_y, h) {
 #' proper `count` and `n` values.
 #'
 #' @examples
-#' library(ggplot2)
-#'
 #' # Basic density surface from scattered points
 #' p <- ggplot(faithful, aes(eruptions, waiting)) +
 #'   coord_3d() +
 #'   scale_fill_viridis_c()
 #' p + geom_density_3d() + guides(fill = guide_colorbar_3d())
 #'
-#' # Color by alternative density values
+#' # Specify alternative grid geometry and light model
+#' p + geom_density_3d(grid = "triangle", n = 30, direction = "y",
+#'                     light = light("direct"),
+#'                     color = "white", linewidth = .1) +
+#'   guides(fill = guide_colorbar_3d())
+#'
+#' # Color by alternative density metric
 #' p + geom_density_3d(aes(fill = after_stat(count)))
 #'
 #' # Adjust bandwidth for smoother or more detailed surfaces
 #' p + geom_density_3d(adjust = 0.5, n = 100, color = "white")  # More detail
 #' p + geom_density_3d(adjust = 2, color = "white")   # Smoother
 #'
-#' # As ridgeline plot instead of default surface plot
-#' p + stat_density_3d(geom = "ridgeline_3d", direction = "y") +
-#'   guides(fill = guide_colorbar_3d())
+#' # As contour plot instead of default surface plot
+#' p + stat_density_3d(geom = "contour_3d", light = "none",
+#'                     color = "black", bins = 25,
+#'                     sort_method = "pairwise")
 #'
 #' # Multiple density surfaces by group,
 #' # using normalized density to equalize peak heights
@@ -225,12 +230,6 @@ kde2d <- function(x, y, eval_x, eval_y, h) {
 #'                   color = "black", alpha = .7, light = NULL) +
 #'   coord_3d(ratio = c(3, 3, 1))
 #'
-#' # Specify alternative grid geometry and light model
-#' p + geom_density_3d(grid = "tri2", n = 30, direction = "y",
-#'                     light = light("direct"),
-#'                     color = "white", linewidth = .1) +
-#'   guides(fill = guide_colorbar_3d())
-#'
 #' @seealso [stat_density_2d()] for 2D density contours, [stat_surface_3d()] for
 #'   surfaces from existing grid data, [light()] for lighting specifications,
 #'   [make_tile_grid()] for details about grid geometry options,
@@ -242,7 +241,7 @@ geom_density_3d <- function(mapping = NULL, data = NULL,
                             stat = "density_3d",
                             position = "identity",
                             ...,
-                            n = NULL, grid = NULL, direction = NULL, trim = NULL,
+                            grid = "rectangle", n = 40, direction = "x", trim = TRUE,
                             h = NULL, adjust = 1,
                             pad = 0.1,
                             min_ndensity = 0,
@@ -267,7 +266,7 @@ stat_density_3d <- function(mapping = NULL, data = NULL,
                             geom = "surface_3d",
                             position = "identity",
                             ...,
-                            n = NULL, grid = NULL, direction = NULL, trim = NULL,
+                            grid = "rectangle", n = 40, direction = "x", trim = TRUE,
                             h = NULL, adjust = 1,
                             pad = 0.1,
                             min_ndensity = 0,

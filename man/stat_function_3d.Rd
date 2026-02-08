@@ -14,7 +14,10 @@ stat_function_3d(
   fun = NULL,
   xlim = NULL,
   ylim = NULL,
+  grid = "rectangle",
   n = 40,
+  direction = "x",
+  trim = TRUE,
   cull_backfaces = FALSE,
   light = NULL,
   na.rm = FALSE,
@@ -31,7 +34,10 @@ geom_function_3d(
   fun = NULL,
   xlim = NULL,
   ylim = NULL,
+  grid = "rectangle",
   n = 40,
+  direction = "x",
+  trim = TRUE,
   cull_backfaces = FALSE,
   light = NULL,
   na.rm = FALSE,
@@ -52,6 +58,9 @@ surfaces. Use \link{GeomRidgeline3D} for ridgeline rendering.}
 \item{...}{Other arguments passed to the layer.}
 
 \item{fun}{Function to evaluate. Must accept (x, y) and return numeric z values.}
+
+\item{grid, n, direction, trim}{Parameters determining the geometry, resolution, and
+orientation of the surface grid. See \link{grid_generation} for details.}
 
 \item{light}{A lighting specification object created by \code{\link[=light]{light()}},\code{"none"} to disable
 lighting, or \code{NULL} to inherit plot-level lighting specs from the coord. Specify
@@ -89,7 +98,8 @@ ggplot() +
 ggplot() +
   geom_function_3d(fun = function(x, y) x^2 + y^2,
                    xlim = c(-2, 2), ylim = c(-2, 2),
-                   aes(fill = after_stat(slope))) +
+                   aes(fill = after_stat(slope)),
+                   grid = "triangle") +
   scale_fill_viridis_c() +
   coord_3d()
 

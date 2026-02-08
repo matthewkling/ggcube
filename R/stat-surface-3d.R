@@ -17,27 +17,7 @@ StatSurface3D <- ggproto("StatSurface3D", Stat,
                                      return(data.frame())
                                }
 
-                               # Check if data forms a regular grid
-                               x_vals <- sort(unique(data$x))
-                               y_vals <- sort(unique(data$y))
-                               is_regular_grid <- nrow(data) == length(x_vals) * length(y_vals)
-
-                               if (is_regular_grid && length(x_vals) >= 2 && length(y_vals) >= 2) {
-                                     # Add row/column indices for regular grid
-                                     data <- data %>%
-                                           mutate(column = match(x, !!x_vals),
-                                                  row = match(y, !!y_vals))
-
-                                     # Compute point-level gradients
-                                     data <- compute_point_gradients(data)
-                               } else {
-                                     # Irregular data - gradients will be computed per-face after tessellation
-                                     # Set gradient columns to NA for now
-                                     data$dzdx <- NA_real_
-                                     data$dzdy <- NA_real_
-                                     data$slope <- NA_real_
-                                     data$aspect <- NA_real_
-                               }
+                               data <- compute_point_gradients(data)
 
                                # Attach rendering parameters
                                data$cull_backfaces <- cull_backfaces
@@ -79,7 +59,7 @@ StatSurface3D <- ggproto("StatSurface3D", Stat,
 #'   \item{aspect}{Direction of steepest slope: atan2(dzdy, dzdx)}
 #' }
 #'
-#' For irregular data, gradient variables are NA (computed per-face by geom).
+#' For irregular data, gradient variables are NA.
 #'
 #' @section Grid detection:
 #' The stat automatically detects whether data forms a regular grid by checking
@@ -149,7 +129,7 @@ StatSurface3D <- ggproto("StatSurface3D", Stat,
 #' # elevation contours with geom_contour_3d
 #' ggplot(mountain, aes(x, y, z, fill = z)) +
 #'   stat_surface_3d(geom = "contour_3d", light = "none",
-#'                   bins = 50, sort_method = "pairwise",
+#'                   bins = 25, sort_method = "pairwise",
 #'                   color = "black") +
 #'       coord_3d(ratio = c(1, 1.5, .75), yaw = 45) +
 #'       scale_fill_viridis_c(option = "B")
@@ -164,7 +144,7 @@ StatSurface3D <- ggproto("StatSurface3D", Stat,
 #' ggplot(pts, aes(x, y, z = z, fill = z)) +
 #'   stat_surface_3d(sort_method = "pairwise") +
 #'   scale_fill_viridis_c() +
-#'   coord_3d()
+#'   coord_3d(light = "none")
 #'
 #' @seealso [geom_surface_3d()], [geom_ridgeline_3d()], [stat_function_3d()],
 #'   [coord_3d()]
@@ -206,7 +186,7 @@ geom_surface_3d <- function(mapping = NULL, data = NULL,
                             stat = "surface_3d", position = "identity",
                             ...,
                             method = "auto",
-                            grid = "rectangle",
+                            grid = NULL,
                             cull_backfaces = FALSE,
                             sort_method = "auto",
                             scale_depth = TRUE,

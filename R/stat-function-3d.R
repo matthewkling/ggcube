@@ -14,9 +14,9 @@ StatFunction3D <- ggproto("StatFunction3D", Stat,
                                 data
                           },
 
-                          compute_panel = function(data, scales, fun = NULL, xlim = NULL, ylim = NULL,
-                                                   n = NULL, cull_backfaces = FALSE,
-                                                   light = NULL, na.rm = FALSE) {
+                          compute_panel = function(data, scales, fun = NULL,
+                                                   grid = "rectangle", n = 40, direction = "x", xlim = NULL, ylim = NULL, trim = TRUE,
+                                                   cull_backfaces = FALSE, light = NULL, na.rm = FALSE) {
 
                                 # Validate function
                                 if (is.null(fun)) {
@@ -44,11 +44,8 @@ StatFunction3D <- ggproto("StatFunction3D", Stat,
                                       stop("ylim must be a numeric vector of length 2 with ylim[1] < ylim[2]")
                                 }
 
-                                # Set defaults
-                                if (is.null(n)) n <- 40
-
                                 # Generate point grid
-                                grid_data <- make_point_grid(n, xlim, ylim)
+                                grid_data <- make_point_grid(grid, n, direction, xlim, ylim, trim)
 
                                 # Evaluate function
                                 tryCatch({
@@ -127,7 +124,8 @@ StatFunction3D <- ggproto("StatFunction3D", Stat,
 #' ggplot() +
 #'   geom_function_3d(fun = function(x, y) x^2 + y^2,
 #'                    xlim = c(-2, 2), ylim = c(-2, 2),
-#'                    aes(fill = after_stat(slope))) +
+#'                    aes(fill = after_stat(slope)),
+#'                    grid = "triangle") +
 #'   scale_fill_viridis_c() +
 #'   coord_3d()
 #'
@@ -145,9 +143,8 @@ stat_function_3d <- function(mapping = NULL, data = ensure_nonempty_data,
                              geom = "surface_3d", position = "identity",
                              ...,
                              fun = NULL,
-                             xlim = NULL,
-                             ylim = NULL,
-                             n = 40,
+                             xlim = NULL, ylim = NULL,
+                             grid = "rectangle", n = 40, direction = "x", trim = TRUE,
                              cull_backfaces = FALSE,
                              light = NULL,
                              na.rm = FALSE,
@@ -164,9 +161,8 @@ stat_function_3d <- function(mapping = NULL, data = ensure_nonempty_data,
             inherit.aes = inherit.aes,
             params = list(
                   fun = fun,
-                  xlim = xlim,
-                  ylim = ylim,
-                  n = n,
+                  xlim = xlim, ylim = ylim,
+                  grid = grid, n = n, direction = direction, trim = trim,
                   cull_backfaces = cull_backfaces,
                   light = light,
                   na.rm = na.rm,
@@ -182,9 +178,8 @@ geom_function_3d <- function(mapping = NULL, data = ensure_nonempty_data,
                              stat = "function_3d", position = "identity",
                              ...,
                              fun = NULL,
-                             xlim = NULL,
-                             ylim = NULL,
-                             n = 40,
+                             xlim = NULL, ylim = NULL,
+                             grid = "rectangle", n = 40, direction = "x", trim = TRUE,
                              cull_backfaces = FALSE,
                              light = NULL,
                              na.rm = FALSE,
@@ -201,9 +196,8 @@ geom_function_3d <- function(mapping = NULL, data = ensure_nonempty_data,
             inherit.aes = inherit.aes,
             params = list(
                   fun = fun,
-                  xlim = xlim,
-                  ylim = ylim,
-                  n = n,
+                  xlim = xlim, ylim = ylim,
+                  grid = grid, n = n, direction = direction, trim = trim,
                   cull_backfaces = cull_backfaces,
                   light = light,
                   na.rm = na.rm,

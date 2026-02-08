@@ -4,7 +4,14 @@
 \alias{make_point_grid}
 \title{Generate a grid of unique vertex points}
 \usage{
-make_point_grid(n = 40, xlim, ylim)
+make_point_grid(
+  grid = c("rectangle", "tri1", "tri2", "triangle"),
+  n = 40,
+  direction = c("x", "y"),
+  xlim,
+  ylim,
+  trim = TRUE
+)
 }
 \arguments{
 \item{n}{Integer or length-2 integer vector specifying grid resolution.}

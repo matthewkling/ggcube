@@ -1,4 +1,6 @@
 
+# Tile grids --------------------------------------
+
 #' Generate rectangular, triangular, or hexagonal grids
 #'
 #' Creates a regular grid of tiles of specified resolution and geometry.
@@ -216,7 +218,7 @@ compute_surface_vars <- function(tiles){
 }
 
 
-# --------------------------------------
+# Point grids --------------------------------------
 
 
 #' Generate a grid of unique vertex points
@@ -231,23 +233,83 @@ compute_surface_vars <- function(tiles){
 #' @return A data frame with columns `x`, `y`, `row`, `column`.
 #'
 #' @keywords internal
-make_point_grid <- function(n = 40, xlim, ylim) {
+make_point_grid <- function(grid = c("rectangle", "tri1", "tri2", "triangle"),
+                            n = 40,
+                            direction = c("x", "y"),
+                            xlim, ylim,
+                            trim = TRUE) {
+
+      grid <- match.arg(grid)
+      direction <- match.arg(direction)
 
       if (is.null(n)) n <- 40
       n <- as.integer(n)
       if (any(n < 2)) stop("`n` must be at least 2")
       if (!length(n) %in% 1:2) stop("`n` must be a vector of length 1 or 2")
-      if (length(n) == 1) n <- c(n, n)
 
-      # Create grid of vertex positions
-      # n[1] x n[2] points
-      d <- tidyr::expand_grid(column = 1:n[1], row = 1:n[2]) %>%
-            mutate(x = scales::rescale(column, to = xlim),
-                   y = scales::rescale(row, to = ylim))
+      d <- switch(grid,
+                  "rectangle" = make_rect_grid(n),
+                  "tri1" = make_rect_grid(n),
+                  "tri2" = make_rect_grid(n),
+                  "triangle" = make_tri_grid(n, trim))
+
+      d <- d %>%
+            transpose_grid(direction) %>%
+            rescale_grid(xlim, ylim)
 
       return(d)
 }
 
+make_rect_grid <- function(n){
+      if (length(n) == 1) n <- c(n, n)
+      tidyr::expand_grid(x = 1:n[1], y = 1:n[2])
+}
+
+make_tri_grid <- function(n, trim = FALSE){
+
+      side_length <- 1
+      tri_height <- side_length * sqrt(3) / 2
+
+      if (length(n) == 1) {
+            # Equilateral triangles
+            n_x <- n
+            n_y <- n * side_length / tri_height
+      } else {
+            # Non-equilateral case - user specifies both dimensions
+            n_x <- n[1]
+            n_y <- n[2]
+      }
+
+      x <- seq(0, by = side_length, length.out = n_x)
+      y <- seq(0, by = tri_height, length.out = n_y)
+
+      grid <- expand_grid(row = 1:n_y, column = 1:n_x) %>%
+            mutate(x = x[column],
+                   y = y[row],
+                   x = ifelse(row %% 2 == 0, x, x + side_length/2)) %>%
+            select(-row, -column)
+
+      if(trim){
+            xmax <- filter(grid, x == max(x)) %>%
+                  mutate(x = min(grid$x))
+            grid <- grid %>%
+                  mutate(x = ifelse(x == max(x), max(x[x != max(x)]), x)) %>%
+                  bind_rows(xmax)
+      }
+
+      return(grid)
+}
+
+is_regular_grid <- function(data){
+      if(! "group" %in% names(data)) data$group <- 1
+      data <- split(data, data$group)
+      reg <- sapply(data, function(d){
+            x_vals <- sort(unique(d$x))
+            y_vals <- sort(unique(d$y))
+            nrow(d) == length(x_vals) * length(y_vals)
+      })
+      all(reg)
+}
 
 #' Compute gradients at grid points using finite differences
 #'
@@ -261,15 +323,26 @@ make_point_grid <- function(n = 40, xlim, ylim) {
 #' @keywords internal
 compute_point_gradients <- function(data) {
 
-      # Need row/column indices
-      if (!all(c("row", "column") %in% names(data))) {
-            # Try to infer from x, y
-            x_vals <- sort(unique(data$x))
-            y_vals <- sort(unique(data$y))
-            data <- data %>%
-                  mutate(column = match(x, x_vals),
-                         row = match(y, y_vals))
+      if(is_regular_grid(data)){
+            data <- compute_grid_point_gradients(data)
+      }else{
+            data <- compute_irregular_point_gradients(data)
       }
+
+      # Compute derived variables
+      data$slope <- sqrt(data$dzdx^2 + data$dzdy^2)
+      data$aspect <- atan2(data$dzdy, data$dzdx)
+
+      return(data)
+}
+
+compute_grid_point_gradients <- function(data){
+      # Add row/column indices for regular grid
+      x_vals <- sort(unique(data$x))
+      y_vals <- sort(unique(data$y))
+      data <- data %>%
+            mutate(column = match(x, x_vals),
+                   row = match(y, y_vals))
 
       # Get grid dimensions and spacing
       n_col <- max(data$column)
@@ -316,9 +389,109 @@ compute_point_gradients <- function(data) {
       data$dzdx <- mapply(function(r, c) dzdx_matrix[r, c], data$row, data$column)
       data$dzdy <- mapply(function(r, c) dzdy_matrix[r, c], data$row, data$column)
 
-      # Compute derived variables
-      data$slope <- sqrt(data$dzdx^2 + data$dzdy^2)
-      data$aspect <- atan2(data$dzdy, data$dzdx)
+      data
+}
+
+
+compute_irregular_point_gradients <- function(data) {
+
+      # Extract coordinates
+      x_vals <- data$x
+      y_vals <- data$y
+      z_vals <- data$z
+
+      # Perform Delaunay triangulation
+      points_2d <- cbind(x_vals, y_vals)
+      triangles <- geometry::delaunayn(points_2d)
+
+      # Initialize gradient storage
+      n_triangles <- nrow(triangles)
+      triangle_dzdx <- numeric(n_triangles)
+      triangle_dzdy <- numeric(n_triangles)
+      triangle_centroids <- matrix(0, nrow = n_triangles, ncol = 2)
+
+      # Compute gradient for each triangle
+      for (i in seq_len(n_triangles)) {
+            idx <- triangles[i, ]
+
+            # Get triangle vertices
+            x1 <- x_vals[idx[1]]; y1 <- y_vals[idx[1]]; z1 <- z_vals[idx[1]]
+            x2 <- x_vals[idx[2]]; y2 <- y_vals[idx[2]]; z2 <- z_vals[idx[2]]
+            x3 <- x_vals[idx[3]]; y3 <- y_vals[idx[3]]; z3 <- z_vals[idx[3]]
+
+            # Edge vectors
+            v1 <- c(x2 - x1, y2 - y1, z2 - z1)
+            v2 <- c(x3 - x1, y3 - y1, z3 - z1)
+
+            # Normal vector via cross product
+            normal <- c(
+                  v1[2] * v2[3] - v1[3] * v2[2],
+                  v1[3] * v2[1] - v1[1] * v2[3],
+                  v1[1] * v2[2] - v1[2] * v2[1]
+            )
+
+            # Plane equation: normal[1]*x + normal[2]*y + normal[3]*z = d
+            # Gradient: dz/dx = -normal[1]/normal[3], dz/dy = -normal[2]/normal[3]
+            if (abs(normal[3]) > 1e-10) {
+                  triangle_dzdx[i] <- -normal[1] / normal[3]
+                  triangle_dzdy[i] <- -normal[2] / normal[3]
+            } else {
+                  # Vertical or near-vertical triangle
+                  triangle_dzdx[i] <- NA
+                  triangle_dzdy[i] <- NA
+            }
+
+            # Centroid
+            triangle_centroids[i, 1] <- (x1 + x2 + x3) / 3
+            triangle_centroids[i, 2] <- (y1 + y2 + y3) / 3
+      }
+
+      # For each point, find adjacent triangles and compute weighted average
+      n_points <- nrow(data)
+      point_dzdx <- numeric(n_points)
+      point_dzdy <- numeric(n_points)
+
+      for (i in seq_len(n_points)) {
+            # Find triangles containing this point
+            adj_triangles <- which(apply(triangles, 1, function(tri) i %in% tri))
+
+            if (length(adj_triangles) == 0) {
+                  point_dzdx[i] <- NA
+                  point_dzdy[i] <- NA
+                  next
+            }
+
+            # Get gradients for adjacent triangles (remove NAs)
+            valid <- !is.na(triangle_dzdx[adj_triangles])
+            adj_triangles <- adj_triangles[valid]
+
+            if (length(adj_triangles) == 0) {
+                  point_dzdx[i] <- NA
+                  point_dzdy[i] <- NA
+                  next
+            }
+
+            # Calculate distances to centroids
+            px <- x_vals[i]
+            py <- y_vals[i]
+            distances <- sqrt(
+                  (triangle_centroids[adj_triangles, 1] - px)^2 +
+                        (triangle_centroids[adj_triangles, 2] - py)^2
+            )
+
+            # Use inverse distance weighting (add small epsilon to avoid division by zero)
+            epsilon <- 1e-10
+            weights <- 1 / (distances + epsilon)
+            weights <- weights / sum(weights)
+
+            # Weighted average
+            point_dzdx[i] <- sum(weights * triangle_dzdx[adj_triangles])
+            point_dzdy[i] <- sum(weights * triangle_dzdy[adj_triangles])
+      }
+
+      # Add gradients to original data
+      data$dzdx <- point_dzdx
+      data$dzdy <- point_dzdy
 
       return(data)
 }
@@ -345,25 +518,17 @@ points_to_tiles <- function(data,
       method <- match.arg(method, c("auto", "grid", "delaunay"))
 
       # Auto-detect method
-
       if (method == "auto") {
-            if (all(c("row", "column") %in% names(data))) {
+            if (is_regular_grid(data)) {
                   method <- "grid"
             } else {
-                  # Check if data forms a regular grid
-                  x_vals <- sort(unique(data$x))
-                  y_vals <- sort(unique(data$y))
-                  expected_n <- length(x_vals) * length(y_vals)
-                  if (nrow(data) == expected_n && expected_n >= 4) {
-                        method <- "grid"
-                  } else {
-                        method <- "delaunay"
-                  }
+                  method <- "delaunay"
             }
+
       }
 
       if (method == "grid") {
-            tiles <- grid_points_to_tiles(data, grid_type, group_prefix)
+            tiles <- rect_points_to_tiles(data, grid_type, group_prefix)
       } else {
             tiles <- delaunay_points_to_tiles(data, group_prefix)
       }
@@ -374,7 +539,7 @@ points_to_tiles <- function(data,
 
 #' Convert regular grid points to tiles
 #' @keywords internal
-grid_points_to_tiles <- function(data, grid_type, group_prefix) {
+rect_points_to_tiles <- function(data, grid_type, group_prefix) {
 
       grid_type <- match.arg(grid_type, c("rectangle", "tri1", "tri2"))
 
@@ -535,8 +700,8 @@ delaunay_points_to_tiles <- function(data, group_prefix) {
 
             # Create group column
             # if ("group" %in% names(data) && !all(data$group == data$group[1])) {
-                  tile_vertices <- tile_vertices %>%
-                        mutate(group = paste0(group_prefix, tile_id, "::", group))
+            tile_vertices <- tile_vertices %>%
+                  mutate(group = paste0(group_prefix, tile_id, "::", group))
             # } else {
             #       tile_vertices <- tile_vertices %>%
             #             mutate(group = paste0(group_prefix, tile_id))
@@ -722,6 +887,6 @@ points_to_ridgelines <- function(data,
 
       result <- do.call(rbind, all_ridges)
       rownames(result) <- NULL
-# ggplot(result, aes(y, z, group = group, order = order, color = order)) + facet_wrap(~x) + geom_path() + scale_color_viridis_c()
+      # ggplot(result, aes(y, z, group = group, order = order, color = order)) + facet_wrap(~x) + geom_path() + scale_color_viridis_c()
       return(result)
 }

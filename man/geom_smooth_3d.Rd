@@ -249,6 +249,5 @@ ggplot(mtcars, aes(wt, mpg, qsec, fill = factor(cyl))) +
 \seealso{
 \code{\link[=stat_surface_3d]{stat_surface_3d()}} for surfaces from existing grid data,
 \code{\link[=stat_function_3d]{stat_function_3d()}} for mathematical function surfaces,
-\code{\link[=make_tile_grid]{make_tile_grid()}} for details about grid geometry options,
-\code{\link[=light]{light()}} for lighting specifications, \code{\link[=coord_3d]{coord_3d()}} for 3D coordinate systems.
+\code{\link[=make_tile_grid]{make_tile_grid()}} for details about grid geometry options.
 }

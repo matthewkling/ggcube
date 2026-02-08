@@ -25,7 +25,7 @@ geom_surface_3d(
   position = "identity",
   ...,
   method = "auto",
-  grid = "rectangle",
+  grid = NULL,
   cull_backfaces = FALSE,
   sort_method = "auto",
   scale_depth = TRUE,
@@ -90,7 +90,7 @@ For regular grid data:
 \item{aspect}{Direction of steepest slope: atan2(dzdy, dzdx)}
 }
 
-For irregular data, gradient variables are NA (computed per-face by geom).
+For irregular data, gradient variables are NA.
 }
 
 \section{Grid detection}{
@@ -162,7 +162,7 @@ ggplot(mountain, aes(x, y, z)) +
 # elevation contours with geom_contour_3d
 ggplot(mountain, aes(x, y, z, fill = z)) +
   stat_surface_3d(geom = "contour_3d", light = "none",
-                  bins = 50, sort_method = "pairwise",
+                  bins = 25, sort_method = "pairwise",
                   color = "black") +
       coord_3d(ratio = c(1, 1.5, .75), yaw = 45) +
       scale_fill_viridis_c(option = "B")
@@ -177,7 +177,7 @@ pts$z <- with(pts, sin(x) * cos(y))
 ggplot(pts, aes(x, y, z = z, fill = z)) +
   stat_surface_3d(sort_method = "pairwise") +
   scale_fill_viridis_c() +
-  coord_3d()
+  coord_3d(light = "none")
 
 }
 \seealso{

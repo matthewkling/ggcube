@@ -163,7 +163,7 @@ ggplot(mountain, aes(x, y, z)) +
   coord_3d(
     light = light(position = c(.5, .7, 95), distance_falloff = TRUE,
                   mode = "hsl", contrast = .9),
-    ratio = c(1, 2, 1.5))
+    ratio = c(1.5, 2, 1))
 
 
 # Backface lighting --------------------------------------------------------
