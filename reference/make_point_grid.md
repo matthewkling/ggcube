@@ -8,7 +8,14 @@ vertices with duplicates.
 ## Usage
 
 ``` r
-make_point_grid(n = 40, xlim, ylim)
+make_point_grid(
+  grid = c("rectangle", "tri1", "tri2", "triangle"),
+  n = 40,
+  direction = c("x", "y"),
+  xlim,
+  ylim,
+  trim = TRUE
+)
 ```
 
 ## Arguments

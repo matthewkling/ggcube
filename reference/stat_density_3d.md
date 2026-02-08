@@ -15,10 +15,10 @@ geom_density_3d(
   stat = "density_3d",
   position = "identity",
   ...,
-  n = NULL,
-  grid = NULL,
-  direction = NULL,
-  trim = NULL,
+  grid = "rectangle",
+  n = 40,
+  direction = "x",
+  trim = TRUE,
   h = NULL,
   adjust = 1,
   pad = 0.1,
@@ -39,10 +39,10 @@ stat_density_3d(
   geom = "surface_3d",
   position = "identity",
   ...,
-  n = NULL,
-  grid = NULL,
-  direction = NULL,
-  trim = NULL,
+  grid = "rectangle",
+  n = 40,
+  direction = "x",
+  trim = TRUE,
   h = NULL,
   adjust = 1,
   pad = 0.1,
@@ -226,8 +226,6 @@ for 3D coordinate systems.
 ## Examples
 
 ``` r
-library(ggplot2)
-
 # Basic density surface from scattered points
 p <- ggplot(faithful, aes(eruptions, waiting)) +
   coord_3d() +
@@ -235,7 +233,14 @@ p <- ggplot(faithful, aes(eruptions, waiting)) +
 p + geom_density_3d() + guides(fill = guide_colorbar_3d())
 
 
-# Color by alternative density values
+# Specify alternative grid geometry and light model
+p + geom_density_3d(grid = "triangle", n = 30, direction = "y",
+                    light = light("direct"),
+                    color = "white", linewidth = .1) +
+  guides(fill = guide_colorbar_3d())
+
+
+# Color by alternative density metric
 p + geom_density_3d(aes(fill = after_stat(count)))
 
 
@@ -245,9 +250,10 @@ p + geom_density_3d(adjust = 0.5, n = 100, color = "white")  # More detail
 p + geom_density_3d(adjust = 2, color = "white")   # Smoother
 
 
-# As ridgeline plot instead of default surface plot
-p + stat_density_3d(geom = "ridgeline_3d", direction = "y") +
-  guides(fill = guide_colorbar_3d())
+# As contour plot instead of default surface plot
+p + stat_density_3d(geom = "contour_3d", light = "none",
+                    color = "black", bins = 25,
+                    sort_method = "pairwise")
 
 
 # Multiple density surfaces by group,
@@ -265,12 +271,5 @@ ggplot(iris, aes(Petal.Length, Sepal.Length, fill = Species)) +
                   pad = .3, min_ndensity = .001,
                   color = "black", alpha = .7, light = NULL) +
   coord_3d(ratio = c(3, 3, 1))
-
-
-# Specify alternative grid geometry and light model
-p + geom_density_3d(grid = "tri2", n = 30, direction = "y",
-                    light = light("direct"),
-                    color = "white", linewidth = .1) +
-  guides(fill = guide_colorbar_3d())
 
 ```

@@ -259,11 +259,7 @@ for surfaces from existing grid data,
 [`stat_function_3d()`](https://matthewkling.github.io/ggcube/reference/stat_function_3d.md)
 for mathematical function surfaces,
 [`make_tile_grid()`](https://matthewkling.github.io/ggcube/reference/make_tile_grid.md)
-for details about grid geometry options,
-[`light()`](https://matthewkling.github.io/ggcube/reference/light.md)
-for lighting specifications,
-[`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md)
-for 3D coordinate systems.
+for details about grid geometry options.
 
 ## Examples
 

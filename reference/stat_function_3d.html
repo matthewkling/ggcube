@@ -49,7 +49,10 @@ as a 3D surface or ridgeline plot.</p>
 <span>  fun <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  xlim <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  ylim <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  grid <span class="op">=</span> <span class="st">"rectangle"</span>,</span>
 <span>  n <span class="op">=</span> <span class="fl">40</span>,</span>
+<span>  direction <span class="op">=</span> <span class="st">"x"</span>,</span>
+<span>  trim <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  cull_backfaces <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  light <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  na.rm <span class="op">=</span> <span class="cn">FALSE</span>,</span>
@@ -66,7 +69,10 @@ as a 3D surface or ridgeline plot.</p>
 <span>  fun <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  xlim <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  ylim <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  grid <span class="op">=</span> <span class="st">"rectangle"</span>,</span>
 <span>  n <span class="op">=</span> <span class="fl">40</span>,</span>
+<span>  direction <span class="op">=</span> <span class="st">"x"</span>,</span>
+<span>  trim <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  cull_backfaces <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  light <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  na.rm <span class="op">=</span> <span class="cn">FALSE</span>,</span>
@@ -102,6 +108,11 @@ surfaces. Use GeomRidgeline3D for ridgeline rendering.</p></dd>
 
 <dt id="arg-fun">fun<a class="anchor" aria-label="anchor" href="#arg-fun"></a></dt>
 <dd><p>Function to evaluate. Must accept (x, y) and return numeric z values.</p></dd>
+
+
+<dt id="arg-grid-n-direction-trim">grid, n, direction, trim<a class="anchor" aria-label="anchor" href="#arg-grid-n-direction-trim"></a></dt>
+<dd><p>Parameters determining the geometry, resolution, and
+orientation of the surface grid. See <a href="grid_generation.html">grid_generation</a> for details.</p></dd>
 
 
 <dt id="arg-light">light<a class="anchor" aria-label="anchor" href="#arg-light"></a></dt>
@@ -159,7 +170,8 @@ functions.</p></dd>
 <span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu">geom_function_3d</span><span class="op">(</span>fun <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span> <span class="va">x</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span> <span class="va">y</span><span class="op">^</span><span class="fl">2</span>,</span></span>
 <span class="r-in"><span>                   xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                   <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat</a></span><span class="op">(</span><span class="va">slope</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span>                   <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat</a></span><span class="op">(</span><span class="va">slope</span><span class="op">)</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                   grid <span class="op">=</span> <span class="st">"triangle"</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_c</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="stat_function_3d-2.png" alt="" width="700" height="433"></span>

@@ -69,7 +69,7 @@ trianuglation.</p>
 <span>  position <span class="op">=</span> <span class="st">"identity"</span>,</span>
 <span>  <span class="va">...</span>,</span>
 <span>  method <span class="op">=</span> <span class="st">"auto"</span>,</span>
-<span>  grid <span class="op">=</span> <span class="st">"rectangle"</span>,</span>
+<span>  grid <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  cull_backfaces <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  sort_method <span class="op">=</span> <span class="st">"auto"</span>,</span>
 <span>  scale_depth <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -161,7 +161,7 @@ ridgeline rendering.</p>
 <dd><p>Direction of steepest slope: atan2(dzdy, dzdx)</p></dd>
 
 
-</dl><p>For irregular data, gradient variables are NA (computed per-face by geom).</p>
+</dl><p>For irregular data, gradient variables are NA.</p>
     </div>
     <div class="section level2">
     <h2 id="grid-detection">Grid detection<a class="anchor" aria-label="anchor" href="#grid-detection"></a></h2>
@@ -247,7 +247,7 @@ through for Delaunay tessellation by the geom.</p>
 <span class="r-in"><span><span class="co"># elevation contours with geom_contour_3d</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mountain</span>, <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span>, fill <span class="op">=</span> <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu">stat_surface_3d</span><span class="op">(</span>geom <span class="op">=</span> <span class="st">"contour_3d"</span>, light <span class="op">=</span> <span class="st">"none"</span>,</span></span>
-<span class="r-in"><span>                  bins <span class="op">=</span> <span class="fl">50</span>, sort_method <span class="op">=</span> <span class="st">"pairwise"</span>,</span></span>
+<span class="r-in"><span>                  bins <span class="op">=</span> <span class="fl">25</span>, sort_method <span class="op">=</span> <span class="st">"pairwise"</span>,</span></span>
 <span class="r-in"><span>                  color <span class="op">=</span> <span class="st">"black"</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>      <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span>ratio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1.5</span>, <span class="fl">.75</span><span class="op">)</span>, yaw <span class="op">=</span> <span class="fl">45</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_c</a></span><span class="op">(</span>option <span class="op">=</span> <span class="st">"B"</span><span class="op">)</span></span></span>
@@ -263,7 +263,7 @@ through for Delaunay tessellation by the geom.</p>
 <span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">pts</span>, <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, z <span class="op">=</span> <span class="va">z</span>, fill <span class="op">=</span> <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu">stat_surface_3d</span><span class="op">(</span>sort_method <span class="op">=</span> <span class="st">"pairwise"</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_c</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span>light <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="stat_surface_3d-9.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

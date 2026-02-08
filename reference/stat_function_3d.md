@@ -15,7 +15,10 @@ stat_function_3d(
   fun = NULL,
   xlim = NULL,
   ylim = NULL,
+  grid = "rectangle",
   n = 40,
+  direction = "x",
+  trim = TRUE,
   cull_backfaces = FALSE,
   light = NULL,
   na.rm = FALSE,
@@ -32,7 +35,10 @@ geom_function_3d(
   fun = NULL,
   xlim = NULL,
   ylim = NULL,
+  grid = "rectangle",
   n = 40,
+  direction = "x",
+  trim = TRUE,
   cull_backfaces = FALSE,
   light = NULL,
   na.rm = FALSE,
@@ -68,6 +74,13 @@ geom_function_3d(
 - fun:
 
   Function to evaluate. Must accept (x, y) and return numeric z values.
+
+- grid, n, direction, trim:
+
+  Parameters determining the geometry, resolution, and orientation of
+  the surface grid. See
+  [grid_generation](https://matthewkling.github.io/ggcube/reference/grid_generation.md)
+  for details.
 
 - light:
 
@@ -128,7 +141,8 @@ ggplot() +
 ggplot() +
   geom_function_3d(fun = function(x, y) x^2 + y^2,
                    xlim = c(-2, 2), ylim = c(-2, 2),
-                   aes(fill = after_stat(slope))) +
+                   aes(fill = after_stat(slope)),
+                   grid = "triangle") +
   scale_fill_viridis_c() +
   coord_3d()
 

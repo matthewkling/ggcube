@@ -63,7 +63,6 @@
 <url><loc>https://matthewkling.github.io/ggcube/reference/ggcube.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/grid_generation.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/grid_params.html</loc></url>
-<url><loc>https://matthewkling.github.io/ggcube/reference/grid_points_to_tiles.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/guide_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/hsl2rgb.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/index.html</loc></url>
@@ -84,6 +83,7 @@
 <url><loc>https://matthewkling.github.io/ggcube/reference/polygon_rendering.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/position_on_face.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/position_param.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/rect_points_to_tiles.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/renderers_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/replace_colorbar_colors.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/rgb2hsl.html</loc></url>
