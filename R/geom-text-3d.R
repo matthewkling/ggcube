@@ -74,7 +74,16 @@ text_outlines <- function(text,
             outlines$poly_id <- paste0(i, "_", outlines$contour)
             outlines
       })
-      dplyr::bind_rows(all_glyphs)
+
+      result <- dplyr::bind_rows(all_glyphs)
+
+      # Ensure proper winding order for backface identification
+      result <- result %>%
+            group_by(contour) %>%
+            arrange(desc(row_number())) %>%
+            ungroup()
+
+      result
 }
 
 
@@ -609,6 +618,17 @@ rotate_text_to_facing <- function(vertices, facing_normal, angle,
       )
 }
 
+# Geom (Polygon method) -------------------------------------------------------
+
+GeomText3DPolygon <- ggproto("GeomText3DPolygon", GeomPolygon3D,
+                             default_aes = aes(
+                                   fill = "black",
+                                   colour = NA,
+                                   linewidth = 0,
+                                   linetype = 1,
+                                   alpha = 1
+                             )
+)
 
 # Stat (Polygon method) -------------------------------------------------------
 
@@ -763,7 +783,7 @@ StatText3DPolygon <- ggproto("StatText3DPolygon", Stat,
                                          outlines$vertex_y <- outlines$y
 
                                          # subgroup identifies contours within a text label (for holes)
-                                         outlines$subgroup <- outlines$poly_id
+                                         outlines$.subgroup <- outlines$poly_id
 
                                          # Get anchor position (with nudge already applied)
                                          anchor_x <- anchors$x[i]
@@ -839,73 +859,6 @@ StatText3DPolygon <- ggproto("StatText3DPolygon", Stat,
                              }
 )
 
-
-# Geom (Polygon method) -------------------------------------------------------
-
-GeomText3DPolygon <- ggproto("GeomText3DPolygon", Geom,
-                             required_aes = c("x", "y", "z", "group", "subgroup"),
-
-                             default_aes = aes(
-                                   colour = NA,
-                                   fill = "black",
-                                   alpha = 1,
-                                   linewidth = 0
-                             ),
-
-                             draw_panel = function(data, panel_params, coord,
-                                                   scale_depth = TRUE,
-                                                   rule = "evenodd") {
-
-                                   # Validate coord
-                                   validate_coord3d(coord)
-
-                                   if (nrow(data) == 0) {
-                                         return(grid::nullGrob())
-                                   }
-
-                                   # Transform through coord (3D -> 2D projection)
-                                   coords <- coord$transform(data, panel_params)
-
-                                   # Scale linewidths by depth if enabled
-                                   coords <- scale_depth(coords, scale_depth)
-
-                                   # Apply light blending to colors
-                                   coords <- blend_light(coords)
-
-                                   # Render using pathGrob with evenodd rule for proper hole handling
-                                   # Each text label is a group, each contour is a subgroup
-                                   groups <- unique(coords$group)
-
-                                   if (length(groups) == 0) {
-                                         return(grid::nullGrob())
-                                   }
-
-                                   # Sort by group to maintain proper order
-                                   coords <- coords[order(coords$group, coords$subgroup), ]
-
-                                   # Create unique subgroup IDs across the whole dataset for pathGrob
-                                   coords$path_id <- match(coords$subgroup, unique(coords$subgroup))
-
-                                   # For pathGrob, we need one set of aesthetics per path (group),
-                                   # not per subgroup. Get first row of each group.
-                                   group_first_idx <- !duplicated(coords$group)
-
-                                   grid::pathGrob(
-                                         x = coords$x,
-                                         y = coords$y,
-                                         id = coords$path_id,
-                                         pathId = as.integer(factor(coords$group)),
-                                         rule = rule,
-                                         default.units = "npc",
-                                         gp = grid::gpar(
-                                               col = coords$colour[group_first_idx],
-                                               fill = coords$fill[group_first_idx],
-                                               alpha = coords$alpha[group_first_idx],
-                                               lwd = coords$linewidth[group_first_idx] * .pt
-                                         )
-                                   )
-                             }
-)
 
 
 # Stat (Billboard method) -----------------------------------------------------
@@ -1158,8 +1111,9 @@ GeomText3DBillboard <- ggproto("GeomText3DBillboard", Geom,
 #'   relative to width. Default is 1 (normal proportions). Values > 1 make text
 #'   taller, values < 1 make text wider. When `coord` is provided, this is
 #'   multiplied by the computed aspect correction. Ignored for billboard method.
-#' @param light (Polygon method only) A lighting specification created by
-#'   [light()], or `NULL` for no lighting. When provided, text polygons are
+#' @param light (Polygon method only) Either a lighting specification created by
+#'   [light()], `"none"` (the default) for no lighting, or `NULL` to inherit
+#'   plot-level lighting from `coord_3d()`. When provided, text polygons are
 #'   shaded based on their facing direction. Ignored for billboard method.
 #' @param angle Rotation angle in degrees. For polygon method, rotates around
 #'   the facing axis. For billboard method, rotates in the view plane.
@@ -1181,8 +1135,6 @@ GeomText3DBillboard <- ggproto("GeomText3DBillboard", Geom,
 #'   effect. For billboard method, this scales the font size. For polygon method,
 #'   this scales the outline linewidth (the polygon fill is always depth-scaled
 #'   by the 3D projection).
-#' @param rule (Polygon method only) Fill rule for polygons with holes.
-#'   Either "evenodd" (default) or "winding".
 #' @param na.rm If TRUE, silently remove missing values.
 #' @param show.legend Logical. Should this layer be included in the legends?
 #' @param inherit.aes If TRUE, inherit aesthetics from the plot's default.
@@ -1213,7 +1165,7 @@ GeomText3DBillboard <- ggproto("GeomText3DBillboard", Geom,
 #'   \item `linewidth` - outline thickness
 #' }
 #'
-#' @return A ggplot2 layer.
+#' @return A ggplot2 layer
 #'
 #' @examples
 #' df <- expand.grid(x = c("H", "B"), y = c("a", "o", "u"), z = c("g", "t"))
@@ -1254,7 +1206,7 @@ geom_text_3d <- function(mapping = NULL, data = NULL,
                          facing = "zmax",
                          coord = NULL,
                          aspect_adjust = 1,
-                         light = NULL,
+                         light = "none",
                          # Shared parameters
                          angle = 0,
                          nudge_x = 0,
@@ -1272,7 +1224,6 @@ geom_text_3d <- function(mapping = NULL, data = NULL,
                          fontface = "plain",
                          spacing = 0,
                          tolerance = 0.01,
-                         rule = "evenodd",
                          # Common layer parameters
                          na.rm = FALSE,
                          show.legend = NA,
@@ -1355,7 +1306,8 @@ geom_text_3d <- function(mapping = NULL, data = NULL,
                         spacing = spacing,
                         tolerance = tolerance,
                         scale_depth = scale_depth,
-                        rule = rule,
+                        sort_method = "pairwise",
+                        force_convex = FALSE,
                         na.rm = na.rm,
                         ...
                   )
@@ -1376,7 +1328,7 @@ stat_text_3d <- function(mapping = NULL, data = NULL,
                          facing = "zmax",
                          coord = NULL,
                          aspect_adjust = 1,
-                         light = NULL,
+                         light = "none",
                          # Shared parameters
                          angle = 0,
                          nudge_x = 0,
@@ -1476,6 +1428,9 @@ stat_text_3d <- function(mapping = NULL, data = NULL,
                         lineheight = lineheight,
                         spacing = spacing,
                         tolerance = tolerance,
+                        scale_depth = scale_depth,
+                        sort_method = "pairwise",
+                        force_convex = FALSE,
                         na.rm = na.rm,
                         ...
                   )

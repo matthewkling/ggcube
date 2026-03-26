@@ -1,5 +1,3 @@
-
-
 GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
 
                          required_aes = c("x", "y", "z", "group"),
@@ -39,56 +37,63 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                                      return(grid::nullGrob())
                                }
 
-                               # Create polygon grobs
-                               polygon_grobs <- list()
-                               polygon_ids <- unique(coords$group)
-
-                               for(i in seq_along(polygon_ids)){
-                                     poly_data <- coords[coords$group == polygon_ids[i], ]
-
-                                     # Handle alpha values (default to 1 if NA)
-                                     alpha_val <- poly_data$alpha[1]
-                                     if (is.na(alpha_val)) alpha_val <- 1
-
-                                     # Draw this polygon
-                                     if (".subgroup" %in% names(coords)) {
-                                           # .subgroup column indicates we need a grob that can handle holes
-                                           polygon_grobs[[i]] <- grid::pathGrob(
-                                                 x = poly_data$x,
-                                                 y = poly_data$y,
-                                                 id = as.integer(factor(poly_data$.subgroup)),
-                                                 pathId = as.integer(factor(poly_data$group)),
-                                                 rule = "evenodd",
-                                                 default.units = "npc",
-                                                 gp = grid::gpar(
-                                                       col = poly_data$colour[1],
-                                                       fill = poly_data$fill[1],
-                                                       lwd = mean(poly_data$linewidth) * .pt,
-                                                       lty = poly_data$linetype[1],
-                                                       alpha = alpha_val
-                                                 ),
-                                                 name = paste0("polygon_", i)
-                                           )
-                                     } else {
-                                           polygon_grobs[[i]] <- grid::polygonGrob(
-                                                 x = poly_data$x,
-                                                 y = poly_data$y,
-                                                 default.units = "npc",
-                                                 gp = grid::gpar(
-                                                       col = poly_data$colour[1],
-                                                       fill = poly_data$fill[1],
-                                                       lwd = mean(poly_data$linewidth) * .pt,
-                                                       lty = poly_data$linetype[1],
-                                                       alpha = alpha_val
-                                                 ),
-                                                 name = paste0("polygon_", i)
-                                           )
-                                     }
-
+                               if (nrow(coords) == 0) {
+                                     return(grid::nullGrob())
                                }
 
-                               # Combine all polygon grobs
-                               do.call(grid::grobTree, polygon_grobs)
+                               # Extract per-group aesthetics (one value per group, in render order)
+                               group_first_idx <- !duplicated(coords$group)
+                               group_col <- coords$colour[group_first_idx]
+                               group_fill <- coords$fill[group_first_idx]
+                               group_lwd <- coords$linewidth[group_first_idx] * .pt
+                               group_lty <- coords$linetype[group_first_idx]
+                               group_alpha <- coords$alpha[group_first_idx]
+                               group_alpha <- ifelse(is.na(group_alpha), 1, group_alpha)
+
+                               if (".subgroup" %in% names(coords)) {
+                                     # Holes present: use pathGrob with subgroup as id, group as pathId
+                                     coords <- coords[order(coords$group, coords$.subgroup), ]
+
+                                     # Recompute per-group aesthetics after reordering
+                                     group_first_idx <- !duplicated(coords$group)
+                                     group_col <- coords$colour[group_first_idx]
+                                     group_fill <- coords$fill[group_first_idx]
+                                     group_lwd <- coords$linewidth[group_first_idx] * .pt
+                                     group_lty <- coords$linetype[group_first_idx]
+                                     group_alpha <- coords$alpha[group_first_idx]
+                                     group_alpha <- ifelse(is.na(group_alpha), 1, group_alpha)
+
+                                     grid::pathGrob(
+                                           x = coords$x,
+                                           y = coords$y,
+                                           id = as.integer(factor(coords$.subgroup)),
+                                           pathId = as.integer(factor(coords$group)),
+                                           rule = "evenodd",
+                                           default.units = "npc",
+                                           gp = grid::gpar(
+                                                 col = group_col,
+                                                 fill = group_fill,
+                                                 lwd = group_lwd,
+                                                 lty = group_lty,
+                                                 alpha = group_alpha
+                                           )
+                                     )
+                               } else {
+                                     # No holes: use polygonGrob with group as id
+                                     grid::polygonGrob(
+                                           x = coords$x,
+                                           y = coords$y,
+                                           id = as.integer(factor(coords$group)),
+                                           default.units = "npc",
+                                           gp = grid::gpar(
+                                                 col = group_col,
+                                                 fill = group_fill,
+                                                 lwd = group_lwd,
+                                                 lty = group_lty,
+                                                 alpha = group_alpha
+                                           )
+                                     )
+                               }
                          },
 
                          draw_key = draw_key_polygon
@@ -192,4 +197,3 @@ drop_nonconvex_vertices <- function(data, force_convex){
             select(-keep, -simple) %>%
             return()
 }
-

@@ -1048,16 +1048,37 @@ validate_coord3d <- function(coord){
       stopifnot("Did you forget to add `coord_3d()` to your plot?" = inherits(coord, "Coord3D"))
 }
 
+# Identify backfaces using signed area test
+is_backface <- function(x, y){
+      sum(x * lead(y, default = first(y)) -
+                lead(x, default = first(x)) * y) < 0
+}
+
 process_backfaces <- function(data) {
 
-      data <- if(".subgroup" %in% names(data)) mutate(data, .grp = paste(group, .subgroup), group) else mutate(data, .grp = group)
-
-      # Identify backfaces using signed area test
-      data <- data %>%
-            group_by(.grp) %>%
-            mutate(.backface = sum(x * lead(y, default = first(y)) -
-                                         lead(x, default = first(x)) * y) < 0) %>%
-            ungroup()
+      if (".subgroup" %in% names(data)) {
+            # For data with subgroups (e.g. text with holes), compute signed area
+            # per subgroup to avoid cross-contour stitching artifacts from lead()
+            # wrapping across contour boundaries, then sum per group.
+            group_areas <- data %>%
+                  mutate(y = y*1000, x = x*1000) %>%
+                  group_by(group, .subgroup) %>%
+                  summarise(.area = sum(x * lead(y, default = first(y)) -
+                                              lead(x, default = first(x)) * y),
+                            .groups = "drop") %>%
+                  group_by(group) %>%
+                  summarise(.backface = sum(.area) < 0,
+                            .area = sum(.area)) %>%
+                  ungroup()
+            data <- left_join(data, group_areas, by = "group")
+      } else {
+            # Standard case: signed area over whole group
+            data <- data %>%
+                  group_by(group) %>%
+                  mutate(.backface = sum(x * lead(y, default = first(y)) -
+                                               lead(x, default = first(x)) * y) < 0) %>%
+                  ungroup()
+      }
 
       # Apply culling if requested
       if("cull_backfaces" %in% names(data) && data$cull_backfaces[1]) {
@@ -1074,5 +1095,5 @@ process_backfaces <- function(data) {
             }
       }
 
-      return(select(data, -.backface, -.grp))
+      return(select(data, -.backface))
 }

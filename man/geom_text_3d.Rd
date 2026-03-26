@@ -14,7 +14,7 @@ geom_text_3d(
   facing = "zmax",
   coord = NULL,
   aspect_adjust = 1,
-  light = NULL,
+  light = "none",
   angle = 0,
   nudge_x = 0,
   nudge_y = 0,
@@ -30,7 +30,6 @@ geom_text_3d(
   fontface = "plain",
   spacing = 0,
   tolerance = 0.01,
-  rule = "evenodd",
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE
@@ -46,7 +45,7 @@ stat_text_3d(
   facing = "zmax",
   coord = NULL,
   aspect_adjust = 1,
-  light = NULL,
+  light = "none",
   angle = 0,
   nudge_x = 0,
   nudge_y = 0,
@@ -95,8 +94,9 @@ relative to width. Default is 1 (normal proportions). Values > 1 make text
 taller, values < 1 make text wider. When \code{coord} is provided, this is
 multiplied by the computed aspect correction. Ignored for billboard method.}
 
-\item{light}{(Polygon method only) A lighting specification created by
-\code{\link[=light]{light()}}, or \code{NULL} for no lighting. When provided, text polygons are
+\item{light}{(Polygon method only) Either a lighting specification created by
+\code{\link[=light]{light()}}, \code{"none"} (the default) for no lighting, or \code{NULL} to inherit
+plot-level lighting from \code{coord_3d()}. When provided, text polygons are
 shaded based on their facing direction. Ignored for billboard method.}
 
 \item{angle}{Rotation angle in degrees. For polygon method, rotates around
@@ -131,9 +131,6 @@ or "bold.italic".}
 \item{tolerance}{(Polygon method only) Bezier curve tolerance for text
 outlines. Lower values give smoother curves but more vertices.}
 
-\item{rule}{(Polygon method only) Fill rule for polygons with holes.
-Either "evenodd" (default) or "winding".}
-
 \item{na.rm}{If TRUE, silently remove missing values.}
 
 \item{show.legend}{Logical. Should this layer be included in the legends?}
@@ -145,7 +142,7 @@ Either "evenodd" (default) or "winding".}
 \item{stat}{The statistical transformation to use. Defaults based on method.}
 }
 \value{
-A ggplot2 layer.
+A ggplot2 layer
 }
 \description{
 \code{geom_text_3d()} renders text labels in 3D space. Two rendering methods are

@@ -546,7 +546,15 @@ compute_light_in_coord <- function(data, standardized_coords, scale_ranges, scal
             ungroup()
 
       # Compute normals based on data type
-      if (grepl("sh3d__hull", faces$group[1])) {
+      has_precomputed_normals <- all(c("normal_x", "normal_y", "normal_z") %in% names(faces))
+
+      if (has_precomputed_normals) {
+            # Pre-existing normals (e.g. from text stat): transform to standardized space
+            normals <- transform_normals_to_standard(
+                  as.matrix(faces[, c("normal_x", "normal_y", "normal_z")]),
+                  scale_ranges, scales, ratio, light$anchor, proj
+            )
+      } else if (grepl("sh3d__hull", faces$group[1])) {
             # Hull/triangle data: compute normals from vertex coordinates
             normals <- compute_triangle_normals(data, faces)
       } else if ("face_type" %in% names(faces)) {
@@ -564,6 +572,9 @@ compute_light_in_coord <- function(data, standardized_coords, scale_ranges, scal
       # Apply lighting models
       faces <- apply_surface_light(faces, normals, face_centers, light)
 
+      # Remove pre-existing normal columns from data before join to prevent suffixes
+      data <- data[, !names(data) %in% c("normal_x", "normal_y", "normal_z")]
+
       # Merge face-level lighting vars back into vertex-level data set
       data <- left_join(data, faces, by = join_by(group))
 
@@ -578,6 +589,60 @@ compute_light_in_coord <- function(data, standardized_coords, scale_ranges, scal
       data$lighting_method <- light$method
 
       return(data)
+}
+
+
+#' Transform pre-computed normals from data space to standardized lighting space
+#'
+#' Normals transform under non-uniform scaling by the inverse-transpose of
+#' the scaling matrix. For the diagonal scaling used in standardization,
+#' this means scaling each component by range_width / effective_ratio,
+#' then renormalizing.
+#'
+#' @param normals Matrix with 3 columns (normal_x, normal_y, normal_z) in data space
+#' @param scale_ranges List with x, y, z scale ranges
+#' @param scales Character, either "free" or "fixed"
+#' @param ratio Numeric vector of length 3
+#' @param anchor Character, "scene" or "camera"
+#' @param proj Projection parameters (needed for camera anchor rotation)
+#' @return Matrix with 3 columns of transformed normals
+#' @keywords internal
+transform_normals_to_standard <- function(normals, scale_ranges, scales, ratio, anchor, proj = NULL) {
+
+      # Compute effective ratios (same logic as scale_to_standard multi-axis path)
+      effective_ratios <- compute_effective_ratios(scale_ranges, scales, ratio)
+
+      # Compute per-axis scale factors: standardization scales by effective_ratio / range_width
+      # Normal transform uses inverse-transpose, which for diagonal = range_width / effective_ratio
+      x_width <- diff(scale_ranges$x)
+      y_width <- diff(scale_ranges$y)
+      z_width <- diff(scale_ranges$z)
+      if (x_width == 0 || is.na(x_width)) x_width <- 1
+      if (y_width == 0 || is.na(y_width)) y_width <- 1
+      if (z_width == 0 || is.na(z_width)) z_width <- 1
+
+      inv_scale <- c(x_width / effective_ratios[1],
+                     y_width / effective_ratios[2],
+                     z_width / effective_ratios[3])
+
+      # Apply inverse-transpose scaling
+      normals[, 1] <- normals[, 1] * inv_scale[1]
+      normals[, 2] <- normals[, 2] * inv_scale[2]
+      normals[, 3] <- normals[, 3] * inv_scale[3]
+
+      # Renormalize
+      lengths <- sqrt(rowSums(normals^2))
+      lengths <- pmax(lengths, 1e-10)
+      normals <- normals / lengths
+
+      # For camera-anchor lighting, apply the same transforms as the coordinates:
+      # z-flip then rotation
+      if (anchor == "camera" && !is.null(proj)) {
+            normals[, 3] <- -normals[, 3]  # z-flip
+            normals <- rotate_3d(normals, proj$pitch, proj$roll, proj$yaw)
+      }
+
+      return(normals)
 }
 
 compute_surface_gradients_from_vertices <- function(data) {
