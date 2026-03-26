@@ -17,6 +17,7 @@ geom_polygon_3d(
   stat = StatIdentity3D,
   position = "identity",
   ...,
+  rule = "evenodd",
   sort_method = "auto",
   scale_depth = TRUE,
   force_convex = FALSE,
@@ -59,6 +60,14 @@ geom_polygon_3d(
   GeomPolygon3D), such as aesthetics like `colour`, `fill`, `linewidth`,
   etc.
 
+- rule:
+
+  Either `"evenodd"` or `"winding"`. If polygons with holes are being
+  drawn (using the `subgroup` aesthetic) this argument defines how the
+  hole coordinates are interpreted. See
+  [`ggplot2::geom_polygon()`](https://ggplot2.tidyverse.org/reference/geom_polygon.html)
+  for reference.
+
 - cull_backfaces, sort_method, force_convex, scale_depth:
 
   Advanced polygon rendering parameters. See
@@ -80,6 +89,13 @@ geom_polygon_3d(
 ## Value
 
 A `Layer` object that can be added to a ggplot.
+
+## Details
+
+From R 3.6 and onwards it is possible to draw polygons with holes by
+providing a `subgroup` aesthetic that differentiates the outer ring
+points from those describing holes in the polygon, just as in
+[`ggplot2::geom_polygon()`](https://ggplot2.tidyverse.org/reference/geom_polygon.html).
 
 ## Aesthetics
 
@@ -104,6 +120,8 @@ And understands these additional aesthetics:
 - `linetype`: Border line type
 
 - `alpha`: Transparency
+
+- `subgroup`: Secondary grouping for polygons with holes
 
 - `order`: Vertex order within polygons (for proper polygon
   construction)
