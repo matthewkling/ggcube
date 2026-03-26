@@ -816,7 +816,6 @@ train_z_scale <- function(){
                   env <- parent.frame(i)
                   if (exists("data", envir = env)) {
                         potential_data <- get("data", envir = env)
-                        # Check if this looks like layer data (list of data frames)
                         if (is.list(potential_data) && length(potential_data) > 0 &&
                             is.data.frame(potential_data[[1]])) {
                               data <- potential_data
@@ -826,29 +825,42 @@ train_z_scale <- function(){
             }
       }, error = function(e) {})
 
-      # If found data, train z scale
       if (!is.null(data) && !is.null(.z_scale_cache$scale)) {
             for (layer_data in data) {
 
                   # Train on z column
                   if ("z" %in% names(layer_data) && nrow(layer_data) > 0) {
 
-                        # Train continuous scales
                         if(inherits(.z_scale_cache$scale, "ScaleContinuousPosition")) {
                               .z_scale_cache$scale$train(layer_data$z)
                         }
 
-                        # Train discrete scales
                         if(inherits(.z_scale_cache$scale, "ScaleDiscretePosition")) {
-
-                              if("z_raw" %in% names(layer_data)) { # Data comes from a ggcube stat
+                              if("z_raw" %in% names(layer_data)) {
                                     .z_scale_cache$scale$range_c$train(layer_data$z)
                                     .z_scale_cache$scale$train(layer_data$z_raw)
-                              } else { # Data not from ggcube stat (no z_raw field)
+                              } else {
                                     .z_scale_cache$scale$range_c$train(as.integer(factor(layer_data$z)))
                                     .z_scale_cache$scale$train(layer_data$z)
                               }
+                        }
+                  }
 
+                  # Train on zend column if present (for segment geoms)
+                  if ("zend" %in% names(layer_data) && nrow(layer_data) > 0) {
+
+                        if(inherits(.z_scale_cache$scale, "ScaleContinuousPosition")) {
+                              .z_scale_cache$scale$train(layer_data$zend)
+                        }
+
+                        if(inherits(.z_scale_cache$scale, "ScaleDiscretePosition")) {
+                              if("zend_raw" %in% names(layer_data)) {
+                                    .z_scale_cache$scale$range_c$train(layer_data$zend)
+                                    .z_scale_cache$scale$train(layer_data$zend_raw)
+                              } else {
+                                    .z_scale_cache$scale$range_c$train(as.integer(factor(layer_data$zend)))
+                                    .z_scale_cache$scale$train(layer_data$zend)
+                              }
                         }
                   }
 
