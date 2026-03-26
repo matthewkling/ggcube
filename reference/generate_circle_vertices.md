@@ -5,7 +5,15 @@ Generate circle vertices in 3D space for a given face
 ## Usage
 
 ``` r
-generate_circle_vertices(x_std, y_std, z_std, face, radius, n_vertices)
+generate_circle_vertices(
+  x_std,
+  y_std,
+  z_std,
+  face,
+  radius,
+  n_vertices,
+  effective_ratios = c(1, 1, 1)
+)
 ```
 
 ## Arguments

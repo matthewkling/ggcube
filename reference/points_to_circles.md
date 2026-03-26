@@ -5,7 +5,7 @@ Convert ref_circle points to circular polygons
 ## Usage
 
 ``` r
-points_to_circles(data, data_std)
+points_to_circles(data, data_std, effective_ratios = c(1, 1, 1))
 ```
 
 ## Arguments
