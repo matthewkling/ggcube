@@ -2,6 +2,8 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
 
                          required_aes = c("x", "y", "z", "group"),
 
+                         optional_aes = c("subgroup"),
+
                          default_aes = aes(
                                fill = "grey50", colour = "grey50", linewidth = 0.1, linetype = 1, alpha = 1
                          ),
@@ -9,7 +11,8 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                          draw_panel = function(data, panel_params, coord,
                                                sort_method = "auto",
                                                scale_depth = TRUE,
-                                               force_convex = FALSE) {
+                                               force_convex = FALSE,
+                                               rule = "evenodd") {
 
                                # Parameter validation
                                validate_coord3d(coord)
@@ -41,6 +44,12 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                                      return(grid::nullGrob())
                                }
 
+                               # Detect subgroup column: user-facing "subgroup" or internal ".subgroup"
+                               has_subgroup <- any(c("subgroup", ".subgroup") %in% names(coords))
+                               if (has_subgroup) {
+                                     sg_col <- if (".subgroup" %in% names(coords)) ".subgroup" else "subgroup"
+                               }
+
                                # Map group to integer IDs preserving data order (not alphabetical)
                                unique_groups <- unique(coords$group)
                                group_ids <- match(coords$group, unique_groups)
@@ -54,15 +63,15 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                                group_alpha <- coords$alpha[group_first_idx]
                                group_alpha <- ifelse(is.na(group_alpha), 1, group_alpha)
 
-                               if (".subgroup" %in% names(coords)) {
+                               if (has_subgroup) {
                                      # Holes present: use pathGrob with subgroup as id, group as pathId
-                                     coords <- coords[order(coords$group, coords$.subgroup), ]
+                                     coords <- coords[order(coords$group, coords[[sg_col]]), ]
 
                                      # Recompute after reordering
                                      unique_groups <- unique(coords$group)
                                      group_ids <- match(coords$group, unique_groups)
-                                     unique_subgroups <- unique(coords$.subgroup)
-                                     subgroup_ids <- match(coords$.subgroup, unique_subgroups)
+                                     unique_subgroups <- unique(coords[[sg_col]])
+                                     subgroup_ids <- match(coords[[sg_col]], unique_subgroups)
 
                                      group_first_idx <- !duplicated(coords$group)
                                      group_col <- coords$colour[group_first_idx]
@@ -77,7 +86,7 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                                            y = coords$y,
                                            id = subgroup_ids,
                                            pathId = group_ids,
-                                           rule = "evenodd",
+                                           rule = rule,
                                            default.units = "npc",
                                            gp = grid::gpar(
                                                  col = group_col,
@@ -115,11 +124,18 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
 #' 3D surface visualization. It's designed to work with surface data
 #' from [stat_hull_3d()] and [stat_surface_3d()], as well as regular polygon data like maps.
 #'
+#' From R 3.6 and onwards it is possible to draw polygons with holes by providing
+#' a `subgroup` aesthetic that differentiates the outer ring points from those
+#' describing holes in the polygon, just as in [ggplot2::geom_polygon()].
+#'
 #' @param mapping Set of aesthetic mappings created by [aes()].
 #' @param data The data to be displayed in this layer. Note that if you specify `light` or
 #'   `cull_backfaces`, behavior will depend on the "winding order" of polygon vertices, with
 #'   the counter-clockwise face considered the "front".
 #' @param stat The statistical transformation to use on the data. Defaults to [StatIdentity3D].
+#' @param rule Either `"evenodd"` or `"winding"`. If polygons with holes are
+#'   being drawn (using the `subgroup` aesthetic) this argument defines how the
+#'   hole coordinates are interpreted. See [ggplot2::geom_polygon()] for reference.
 #' @inheritParams polygon_params
 #' @inheritParams position_param
 #'
@@ -136,6 +152,7 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
 #' - `linewidth`: Border line width
 #' - `linetype`: Border line type
 #' - `alpha`: Transparency
+#' - `subgroup`: Secondary grouping for polygons with holes
 #' - `order`: Vertex order within polygons (for proper polygon construction)
 #'
 #' @examples
@@ -177,6 +194,7 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
 geom_polygon_3d <- function(mapping = NULL, data = NULL, stat = StatIdentity3D,
                             position = "identity",
                             ...,
+                            rule = "evenodd",
                             sort_method = "auto", scale_depth = TRUE, force_convex = FALSE,
                             cull_backfaces = FALSE,
                             light = NULL,
@@ -185,7 +203,8 @@ geom_polygon_3d <- function(mapping = NULL, data = NULL, stat = StatIdentity3D,
       layer(
             geom = GeomPolygon3D, mapping = mapping, data = data, stat = get_proto(stat, "stat"),
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
-            params = list(sort_method = sort_method,
+            params = list(rule = rule,
+                          sort_method = sort_method,
                           scale_depth = scale_depth,
                           force_convex = force_convex,
                           cull_backfaces = cull_backfaces,

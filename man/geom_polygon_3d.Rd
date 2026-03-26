@@ -10,6 +10,7 @@ geom_polygon_3d(
   stat = StatIdentity3D,
   position = "identity",
   ...,
+  rule = "evenodd",
   sort_method = "auto",
   scale_depth = TRUE,
   force_convex = FALSE,
@@ -35,6 +36,10 @@ onto one 2D surface, use \code{position_on_face()}.}
 \item{...}{Other arguments passed on to the the layer function (typically GeomPolygon3D), such as
 aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc.}
 
+\item{rule}{Either \code{"evenodd"} or \code{"winding"}. If polygons with holes are
+being drawn (using the \code{subgroup} aesthetic) this argument defines how the
+hole coordinates are interpreted. See \code{\link[ggplot2:geom_polygon]{ggplot2::geom_polygon()}} for reference.}
+
 \item{cull_backfaces, sort_method, force_convex, scale_depth}{Advanced polygon
 rendering parameters. See \link{polygon_rendering} for details.}
 
@@ -51,6 +56,11 @@ A \code{Layer} object that can be added to a ggplot.
 \code{geom_polygon_3d()} renders 3D polygons with proper depth sorting for realistic
 3D surface visualization. It's designed to work with surface data
 from \code{\link[=stat_hull_3d]{stat_hull_3d()}} and \code{\link[=stat_surface_3d]{stat_surface_3d()}}, as well as regular polygon data like maps.
+}
+\details{
+From R 3.6 and onwards it is possible to draw polygons with holes by providing
+a \code{subgroup} aesthetic that differentiates the outer ring points from those
+describing holes in the polygon, just as in \code{\link[ggplot2:geom_polygon]{ggplot2::geom_polygon()}}.
 }
 \section{Aesthetics}{
 
@@ -69,6 +79,7 @@ And understands these additional aesthetics:
 \item \code{linewidth}: Border line width
 \item \code{linetype}: Border line type
 \item \code{alpha}: Transparency
+\item \code{subgroup}: Secondary grouping for polygons with holes
 \item \code{order}: Vertex order within polygons (for proper polygon construction)
 }
 }
