@@ -41,7 +41,11 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                                      return(grid::nullGrob())
                                }
 
-                               # Extract per-group aesthetics (one value per group, in render order)
+                               # Map group to integer IDs preserving data order (not alphabetical)
+                               unique_groups <- unique(coords$group)
+                               group_ids <- match(coords$group, unique_groups)
+
+                               # Extract per-group aesthetics (one value per group, in data order)
                                group_first_idx <- !duplicated(coords$group)
                                group_col <- coords$colour[group_first_idx]
                                group_fill <- coords$fill[group_first_idx]
@@ -54,7 +58,12 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                                      # Holes present: use pathGrob with subgroup as id, group as pathId
                                      coords <- coords[order(coords$group, coords$.subgroup), ]
 
-                                     # Recompute per-group aesthetics after reordering
+                                     # Recompute after reordering
+                                     unique_groups <- unique(coords$group)
+                                     group_ids <- match(coords$group, unique_groups)
+                                     unique_subgroups <- unique(coords$.subgroup)
+                                     subgroup_ids <- match(coords$.subgroup, unique_subgroups)
+
                                      group_first_idx <- !duplicated(coords$group)
                                      group_col <- coords$colour[group_first_idx]
                                      group_fill <- coords$fill[group_first_idx]
@@ -66,8 +75,8 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                                      grid::pathGrob(
                                            x = coords$x,
                                            y = coords$y,
-                                           id = as.integer(factor(coords$.subgroup)),
-                                           pathId = as.integer(factor(coords$group)),
+                                           id = subgroup_ids,
+                                           pathId = group_ids,
                                            rule = "evenodd",
                                            default.units = "npc",
                                            gp = grid::gpar(
@@ -83,7 +92,7 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                                      grid::polygonGrob(
                                            x = coords$x,
                                            y = coords$y,
-                                           id = as.integer(factor(coords$group)),
+                                           id = group_ids,
                                            default.units = "npc",
                                            gp = grid::gpar(
                                                  col = group_col,
