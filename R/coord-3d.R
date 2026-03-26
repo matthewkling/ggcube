@@ -507,6 +507,7 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                                            panel_params$grid_transformed$face <- selected_grid$face
                                            panel_params$grid_transformed$group <- selected_grid$group
                                            panel_params$grid_transformed$z_proj <- selected_grid_transformed$z
+                                           panel_params$grid_transformed$depth_scale <- selected_grid_transformed$depth_scale
                                            panel_params$grid_transformed$break_value <- selected_grid$break_value
                                            panel_params$grid_transformed$break_pos <- selected_grid$break_pos
                                            panel_params$grid_transformed$break_axis <- selected_grid$break_axis

@@ -4,7 +4,15 @@
 \alias{generate_circle_vertices}
 \title{Generate circle vertices in 3D space for a given face}
 \usage{
-generate_circle_vertices(x_std, y_std, z_std, face, radius, n_vertices)
+generate_circle_vertices(
+  x_std,
+  y_std,
+  z_std,
+  face,
+  radius,
+  n_vertices,
+  effective_ratios = c(1, 1, 1)
+)
 }
 \arguments{
 \item{x_std, y_std, z_std}{Standardized point coordinates}

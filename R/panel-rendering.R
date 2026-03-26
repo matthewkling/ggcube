@@ -175,6 +175,7 @@ create_grid_segments <- function(grid_data, plot_bounds) {
                               x1 = group_x[i + 1],
                               y1 = group_y[i + 1],
                               depth = group_data$z_proj[i],
+                              depth_scale = mean(group_data$depth_scale[i:(i+1)]),
                               face = group_data$face[i]
                         ))
                   }
@@ -341,13 +342,14 @@ render_cube <- function(self, panel_params, theme, layer = "background"){
                   visible_grid <- panel_params$grid_transformed[panel_params$grid_transformed$face %in% visible_faces,]
                   segments <- create_grid_segments(visible_grid, panel_params$plot_bounds)
                   if (!is.null(segments) && nrow(segments) > 0) {
+                        base_lwd <- (grid_element$linewidth %||% 0.5) * .pt
                         grid_grob <- grid::segmentsGrob(
                               x0 = segments$x0, y0 = segments$y0,
                               x1 = segments$x1, y1 = segments$y1,
                               default.units = "npc",
                               gp = grid::gpar(
                                     col = grid_element$colour %||% "grey90",
-                                    lwd = (grid_element$linewidth %||% 0.5) * .pt,
+                                    lwd = base_lwd * segments$depth_scale,
                                     lty = grid_element$linetype %||% 1
                               ),
                               name = "grid.3d"
@@ -393,28 +395,36 @@ render_cube <- function(self, panel_params, theme, layer = "background"){
                               })
                               sorted_faces <- unique_faces[order(-face_depths)]
 
-                              all_x <- numeric()
-                              all_y <- numeric()
-                              polygon_ids <- numeric()
+                              seg_x0 <- numeric()
+                              seg_y0 <- numeric()
+                              seg_x1 <- numeric()
+                              seg_y1 <- numeric()
+                              seg_depth_scale <- numeric()
 
-                              pid <- 1
                               for (face in sorted_faces) {
                                     idx <- which(face_corners_transformed$face == face)
-                                    all_x <- c(all_x, x_scaled[idx][c(1, 3, 4, 2)])
-                                    all_y <- c(all_y, y_scaled[idx][c(1, 3, 4, 2)])
-                                    polygon_ids <- c(polygon_ids, rep(pid, 4))
-                                    pid <- pid + 1
+                                    vx <- x_scaled[idx][c(1, 3, 4, 2)]
+                                    vy <- y_scaled[idx][c(1, 3, 4, 2)]
+                                    vds <- face_corners_transformed$depth_scale[idx][c(1, 3, 4, 2)]
+                                    n <- length(vx)
+                                    for (j in seq_len(n)) {
+                                          k <- if (j == n) 1 else j + 1
+                                          seg_x0 <- c(seg_x0, vx[j])
+                                          seg_y0 <- c(seg_y0, vy[j])
+                                          seg_x1 <- c(seg_x1, vx[k])
+                                          seg_y1 <- c(seg_y1, vy[k])
+                                          seg_depth_scale <- c(seg_depth_scale, mean(vds[c(j, k)]))
+                                    }
                               }
 
-                              border_grob <- grid::polygonGrob(
-                                    x = all_x,
-                                    y = all_y,
-                                    id = polygon_ids,
+                              base_lwd <- (panel_border_element$linewidth %||% 0.5) * .pt
+                              border_grob <- grid::segmentsGrob(
+                                    x0 = seg_x0, y0 = seg_y0,
+                                    x1 = seg_x1, y1 = seg_y1,
                                     default.units = "npc",
                                     gp = grid::gpar(
-                                          fill = NA,
                                           col = panel_border_element$colour %||% "black",
-                                          lwd = (panel_border_element$linewidth %||% 0.5) * .pt,
+                                          lwd = base_lwd * seg_depth_scale,
                                           lty = panel_border_element$linetype %||% 1
                                     ),
                                     name = paste0("panel.border.", layer, ".3d")

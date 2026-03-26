@@ -4,7 +4,7 @@
 \alias{points_to_circles}
 \title{Convert ref_circle points to circular polygons}
 \usage{
-points_to_circles(data, data_std)
+points_to_circles(data, data_std, effective_ratios = c(1, 1, 1))
 }
 \arguments{
 \item{data}{Original data frame}
