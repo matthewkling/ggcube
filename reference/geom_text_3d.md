@@ -17,7 +17,7 @@ geom_text_3d(
   facing = "zmax",
   coord = NULL,
   aspect_adjust = 1,
-  light = NULL,
+  light = "none",
   angle = 0,
   nudge_x = 0,
   nudge_y = 0,
@@ -33,7 +33,6 @@ geom_text_3d(
   fontface = "plain",
   spacing = 0,
   tolerance = 0.01,
-  rule = "evenodd",
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE
@@ -49,7 +48,7 @@ stat_text_3d(
   facing = "zmax",
   coord = NULL,
   aspect_adjust = 1,
-  light = NULL,
+  light = "none",
   angle = 0,
   nudge_x = 0,
   nudge_y = 0,
@@ -124,10 +123,13 @@ stat_text_3d(
 
 - light:
 
-  (Polygon method only) A lighting specification created by
+  (Polygon method only) Either a lighting specification created by
   [`light()`](https://matthewkling.github.io/ggcube/reference/light.md),
-  or `NULL` for no lighting. When provided, text polygons are shaded
-  based on their facing direction. Ignored for billboard method.
+  `"none"` (the default) for no lighting, or `NULL` to inherit
+  plot-level lighting from
+  [`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md).
+  When provided, text polygons are shaded based on their facing
+  direction. Ignored for billboard method.
 
 - angle:
 
@@ -186,11 +188,6 @@ stat_text_3d(
   (Polygon method only) Bezier curve tolerance for text outlines. Lower
   values give smoother curves but more vertices.
 
-- rule:
-
-  (Polygon method only) Fill rule for polygons with holes. Either
-  "evenodd" (default) or "winding".
-
 - na.rm:
 
   If TRUE, silently remove missing values.
@@ -213,7 +210,7 @@ stat_text_3d(
 
 ## Value
 
-A ggplot2 layer.
+A ggplot2 layer
 
 ## Methods
 
@@ -351,6 +348,7 @@ df$label <- paste0(df$x, df$y, df$z)
 ggplot(df, aes(x, y, z, label = label)) +
   geom_text_3d() +
   coord_3d(scales = "fixed")
+#> Warning: `light` is ignored for billboard method.
 
 
 # Polygon text - can face any direction
