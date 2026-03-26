@@ -47,6 +47,7 @@ make_tile_grid <- function(grid = c("triangle", "rectangle", "hexagon"),
       direction <- match.arg(direction)
 
       if(is.null(n)) n <- 40
+      if(is.null(trim)) trim <- TRUE
       n <- as.integer(n)
       if(any(n < 2)) stop("`n` must be at least 2")
       if(! length(n) %in% 1:2) stop("`n` must be a vector of length 1 or 2")

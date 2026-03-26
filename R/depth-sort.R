@@ -1,14 +1,21 @@
 
 interpolate_z <- function(train, new) {
       train <- as.matrix(train)
-      if(nrow(unique(train)) >= 3) { # interpolate with linear model (z ~ x + y)
+      if(nrow(unique(train)) >= 3) {
             x <- cbind(1, as.matrix(train[,1:2]))
-            beta <- solve(crossprod(x), crossprod(x, train[,3]))
-            z <- beta[1] + beta[2] * new[1] + beta[3] * new[2]
-      } else { # use inverse-distance-weighted interpolation for degenerate polygons (e.g. zero-height pillar faces)
-            weights <- 1 / sqrt((train[,1] - new[1])^2 + (train[,2] - new[2])^2)
-            z <- weighted.mean(train[,3], weights)
+            beta <- tryCatch(
+                  solve(crossprod(x), crossprod(x, train[,3])),
+                  error = function(e) NULL
+            )
+            if (!is.null(beta)) {
+                  return(beta[1] + beta[2] * new[1] + beta[3] * new[2])
+            }
       }
+      # Fallback: inverse-distance-weighted interpolation
+      # for degenerate polygons (e.g. collinear vertices from face projection,
+      # zero-height pillar faces)
+      weights <- 1 / sqrt((train[,1] - new[1])^2 + (train[,2] - new[2])^2)
+      z <- weighted.mean(train[,3], weights)
       return(z)
 }
 

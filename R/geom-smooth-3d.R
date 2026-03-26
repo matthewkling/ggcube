@@ -137,7 +137,7 @@ StatSmooth3D <- ggproto("StatSmooth3D", Stat,
                               # Create grid polygons
                               if(is.null(xlim)) xlim <- range(data$x, na.rm = TRUE)
                               if(is.null(ylim)) ylim <- range(data$y, na.rm = TRUE)
-                              polys <- make_tile_grid(grid, n, direction, xlim, ylim)
+                              polys <- make_tile_grid(grid, n, direction, xlim, ylim, trim)
                               polys$group <- paste0("surface__tile", polys$group, "::grp", data$group[1])
 
                               # Clip to hull if applicable

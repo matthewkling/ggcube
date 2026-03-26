@@ -73,11 +73,12 @@ transform_3d_standard <- function(data, proj = list(pitch = 0, roll = 0, yaw = 0
       rotated_ref <- rotate_3d(reference_point, pitch, roll, yaw)
 
       if (persp) {
-            # Calculate true distance from viewpoint (camera at 0,0,-dist in rotated space)
+            # Euclidean distance from viewpoint for sorting
             depth <- sqrt(rotated[, 1]^2 + rotated[, 2]^2 + (rotated[, 3] + dist)^2)
 
-            # Calculate reference depth for center point (0,0,0)
-            reference_depth <- sqrt(rotated_ref[1, 1]^2 + rotated_ref[1, 2]^2 + (rotated_ref[1, 3] + dist)^2)
+            # Z-axis depth for size scaling (distance along view axis only)
+            z_depth <- rotated[, 3] + dist
+            reference_z_depth <- rotated_ref[1, 3] + dist
 
             # Apply perspective transformation
             transformed <- apply_perspective(rotated, dist)
@@ -88,7 +89,7 @@ transform_3d_standard <- function(data, proj = list(pitch = 0, roll = 0, yaw = 0
                   y = transformed[, 2],
                   z = transformed[, 3],  # Keep z for face visibility calculations
                   depth = depth,         # True viewpoint distance for sorting
-                  depth_scale = reference_depth / depth  # Scaling factor for size/linewidth
+                  depth_scale = reference_z_depth / z_depth  # Scaling factor for size/linewidth
             ))
       } else {
             # Orthographic: depth is just negative z (farther = larger depth)

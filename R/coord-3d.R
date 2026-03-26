@@ -599,10 +599,10 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                          }
 
                          # Project data onto cube face, if applicable
-                         result <- project_to_face(data, result, panel_params$proj)
+                         result <- project_to_face(data, result, panel_params$proj, panel_params$effective_ratios)
 
                          # Expand ref_circle points to circular polygons, if applicable
-                         data <- points_to_circles(data, result)
+                         data <- points_to_circles(data, result, panel_params$effective_ratios)
 
                          # Apply 3D transformation (returns x, y, z, depth, depth_scale)
                          result <- transform_3d_standard(data, panel_params$proj)
@@ -961,13 +961,15 @@ get_scale_info <- function(scale_obj, expand = TRUE, axis_name = NULL) {
 }
 
 # Project data onto cube face, if applicable
-project_to_face <- function(data, data_std, proj){
+project_to_face <- function(data, data_std, proj, effective_ratios = c(1, 1, 1)){
       if(! "project_to_face" %in% names(data) || all(is.na(data$project_to_face))) return(data_std)
+      face_extent <- setNames(effective_ratios * 0.5, c("x", "y", "z"))
       data_std %>%
             mutate(face = data$project_to_face,
-                   depth_3d = transform_3d_standard(data_std, proj)$depth, # save pre-flattening depth for sorting
+                   depth_3d = transform_3d_standard(data_std, proj)$depth,
                    axis = substr(face, 1, 1),
-                   value = ifelse(substr(face, 2, 4) == "min", -.5, .5),
+                   value = ifelse(substr(face, 2, 4) == "min", -1, 1) *
+                         face_extent[axis],
                    x = ifelse(is.na(face) | axis != "x", x, value),
                    y = ifelse(is.na(face) | axis != "y", y, value),
                    z = ifelse(is.na(face) | axis != "z", z, value)) %>%
@@ -981,7 +983,7 @@ project_to_face <- function(data, data_std, proj){
 #' @param data_std Standardized data frame
 #' @return Data frame with circular polygons replacing ref_circle points
 #' @keywords internal
-points_to_circles <- function(data, data_std) {
+points_to_circles <- function(data, data_std, effective_ratios = c(1, 1, 1)) {
 
       # Keep std coords and all other vars
       d <- bind_cols(select(data, -x, -y, -z),
@@ -996,7 +998,8 @@ points_to_circles <- function(data, data_std) {
       result <- filter(d, element_type == "ref_circle") %>%
             rowwise() %>%
             reframe(generate_circle_vertices(x, y, z, project_to_face,
-                                             ref_circle_radius, ref_circle_vertices),
+                                             ref_circle_radius, ref_circle_vertices,
+                                             effective_ratios),
                     vertex_order = 1:ref_circle_vertices,
                     group = group) %>%
             full_join(select(filter(d, element_type == "ref_circle"), -x, -y, -z),
@@ -1015,13 +1018,15 @@ points_to_circles <- function(data, data_std) {
 #' @param n_vertices Number of vertices for the circle
 #' @return Data frame with x, y, z coordinates for circle vertices
 #' @keywords internal
-generate_circle_vertices <- function(x_std, y_std, z_std, face, radius, n_vertices) {
+generate_circle_vertices <- function(x_std, y_std, z_std, face, radius, n_vertices,
+                                     effective_ratios = c(1, 1, 1)) {
       # Generate angles for circle vertices
       angles <- seq(0, 2 * pi, length.out = n_vertices + 1)[-(n_vertices + 1)]
 
       # Get the face axis and value
       face_axis <- substr(face, 1, 1)
-      face_value <- ifelse(substr(face, 2, 4) == "min", -0.5, 0.5)
+      axis_index <- match(face_axis, c("x", "y", "z"))
+      face_value <- ifelse(substr(face, 2, 4) == "min", -0.5, 0.5) * effective_ratios[axis_index]
 
       # Generate circle vertices based on the face
       if (face_axis == "z") { # Circle in x-y plane
@@ -1087,8 +1092,7 @@ process_backfaces <- function(data) {
             # Standard case: signed area over whole group
             data <- data %>%
                   group_by(group) %>%
-                  mutate(.backface = sum(x * lead(y, default = first(y)) -
-                                               lead(x, default = first(x)) * y) < 0) %>%
+                  mutate(.backface = is_backface(x, y)) %>%
                   ungroup()
       }
 

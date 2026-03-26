@@ -658,18 +658,20 @@ compute_surface_gradients_from_vertices <- function(data) {
                   .groups = "drop"
             ) %>%
             mutate(
-                  # Solve normal equations for dz/dx and dz/dy
-                  # Using simplified form assuming roughly centered data
-                  denom_x = n_pts * sum_xx - sum_x^2,
-                  denom_y = n_pts * sum_yy - sum_y^2,
-
-                  # Gradients (with protection against division by zero)
-                  dzdx = ifelse(abs(denom_x) > 1e-10,
-                                (n_pts * sum_xz - sum_x * sum_z) / denom_x,
-                                0),
-                  dzdy = ifelse(abs(denom_y) > 1e-10,
-                                (n_pts * sum_yz - sum_y * sum_z) / denom_y,
-                                0)
+                  # Full bivariate plane fit: z = a*x + b*y + c
+                  # Normal equations for centered data
+                  Sxx = n_pts * sum_xx - sum_x^2,
+                  Syy = n_pts * sum_yy - sum_y^2,
+                  Sxy = n_pts * sum_xy - sum_x * sum_y,
+                  Sxz = n_pts * sum_xz - sum_x * sum_z,
+                  Syz = n_pts * sum_yz - sum_y * sum_z,
+                  denom = Sxx * Syy - Sxy^2,
+                  dzdx = ifelse(abs(denom) > 1e-10,
+                                (Syy * Sxz - Sxy * Syz) / denom,
+                                ifelse(abs(Sxx) > 1e-10, Sxz / Sxx, 0)),
+                  dzdy = ifelse(abs(denom) > 1e-10,
+                                (Sxx * Syz - Sxy * Sxz) / denom,
+                                ifelse(abs(Syy) > 1e-10, Syz / Syy, 0))
             ) %>%
             select(group, dzdx, dzdy)
 
