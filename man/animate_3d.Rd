@@ -47,7 +47,9 @@ any two of three; the third is computed as
 \item{width, height}{Dimensions of the animation in pixels. Defaults to
 480 x 480.}
 
-\item{res}{Resolution in ppi for the rendered frames. Default is 96.}
+\item{res}{Resolution in ppi for the rendered frames. Default is 96.
+Controls the size of point-based text/lines/point elements relative to
+the plot. See \code{?grDevices::png} for details.}
 
 \item{renderer}{A renderer function that combines image frames into
 an animation file. Built-in options:

@@ -22,6 +22,8 @@
 #' @param width,height Dimensions of the animation in pixels. Defaults to
 #'   480 x 480.
 #' @param res Resolution in ppi for the rendered frames. Default is 96.
+#'   Controls the size of point-based text/lines/point elements relative to
+#'   the plot. See `?grDevices::png` for details.
 #' @param renderer A renderer function that combines image frames into
 #'   an animation file. Built-in options:
 #'   \itemize{
