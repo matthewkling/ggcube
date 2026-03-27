@@ -16,6 +16,7 @@ coord_3d(
   xlabels = "auto",
   ylabels = "auto",
   zlabels = "auto",
+  title_position = c("auto", "center"),
   rotate_labels = TRUE,
   scales = "free",
   ratio = c(1, 1, 1),
@@ -70,6 +71,15 @@ identifies which edge of this face gets labelled. Available face names are:
 "xmin", "xmax", "ymin", "ymax", "zmin", "zmax".
 }
 See \link{cube_theming} for details on axis label styling.}
+
+\item{title_position}{Character string controlling axis title placement. Currently only
+affects titles for internal axes (not on the plot periphery); titles for axes on the
+plot periphery are always centered along the axis edge.
+\itemize{
+\item \code{"auto"} (default): Internal axis titles are placed at the near
+end of the axis, outside the plot area.
+\item \code{"center"}: Internal axis titles are centered along the axis edge.
+}}
 
 \item{rotate_labels}{Logical indicating whether axis labels (text and titles) should automatically
 rotate to align with the projected axis directions. When \code{FALSE}, uses theme

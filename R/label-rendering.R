@@ -415,7 +415,7 @@ calculate_text_position_with_offset <- function(gridline_data, axis_uses_start, 
 
 # Refactored create_axis_labels function
 create_axis_labels <- function(axis, edge_gridlines, theme_elements, offsets, text_dimensions,
-                               panel_params, rotate_labels, plot_bounds, chosen_edge) {
+                               panel_params, rotate_labels, plot_bounds, chosen_edge, on_hull = TRUE) {
 
       # Create text labels using the selected edge/face
       cube_center_3d <- data.frame(x = 0, y = 0, z = 0)
@@ -442,7 +442,8 @@ create_axis_labels <- function(axis, edge_gridlines, theme_elements, offsets, te
                   text_offset_total <- calculate_trigonometric_components(theta, offsets, text_dimensions, theme_elements, plot_bounds)$text_offset_total
 
                   # Use helper to calculate position with offset
-                  position_npc <- calculate_text_position_with_offset(gridline_data, axis_uses_start, text_offset_total, plot_bounds)
+                  offset <- if (on_hull) text_offset_total else -text_offset_total
+                  position_npc <- calculate_text_position_with_offset(gridline_data, axis_uses_start, offset, plot_bounds)
 
                   if (is.null(position_npc)) next
 
@@ -451,12 +452,14 @@ create_axis_labels <- function(axis, edge_gridlines, theme_elements, offsets, te
 
                   # Calculate hjust for labels when using auto orientation
                   if (rotate_labels && is.null(rotation_info$hjust)) {
-                        # Get the original position for comparison
                         label_pos <- calculate_gridline_position(gridline_data, axis_uses_start)
-
-                        condition1 <- label_pos$x < rotation_info$gridline_center_x
-                        condition2 <- abs(rotation_info$angle) <= 90
-                        rotation_info$hjust <- if (condition1 == condition2) 1 else 0
+                        offset_dx <- label_pos$x - rotation_info$gridline_center_x
+                        offset_dy <- label_pos$y - rotation_info$gridline_center_y
+                        angle_rad <- rotation_info$angle * pi / 180
+                        text_dir <- c(cos(angle_rad), sin(angle_rad))
+                        dot <- offset_dx * text_dir[1] + offset_dy * text_dir[2]
+                        rotation_info$hjust <- if (dot > 0) 0 else 1
+                        if (!on_hull) rotation_info$vjust <- -0.5
                   }
 
                   # Get label text using helper
@@ -480,7 +483,8 @@ create_axis_labels <- function(axis, edge_gridlines, theme_elements, offsets, te
 
 # Refactored create_axis_title function
 create_axis_title <- function(axis, edge_gridlines, theme_elements, offsets, text_dimensions,
-                              panel_params, rotate_labels, plot_bounds, chosen_edge, axis_uses_start) {
+                              panel_params, rotate_labels, plot_bounds, chosen_edge, axis_uses_start,
+                              on_hull = TRUE, axis_selection = NULL, title_position = "auto") {
 
       # Get axis name (title)
       axis_name <- panel_params$scale_info[[axis]]$name
@@ -499,6 +503,58 @@ create_axis_title <- function(axis, edge_gridlines, theme_elements, offsets, tex
 
       if (nrow(axis_gridlines) == 0) {
             return(list())  # Return empty list if no gridlines
+      }
+
+      if (!on_hull && title_position != "center" && !is.null(axis_selection)) {
+            # Place title at the near (peripheral) end of the axis edge
+            p1_depth <- axis_selection$edge_p1_2d$depth
+            p2_depth <- axis_selection$edge_p2_2d$depth
+            if (p1_depth <= p2_depth) {
+                  title_pos <- axis_selection$edge_p1_2d
+            } else {
+                  title_pos <- axis_selection$edge_p2_2d
+            }
+
+            # Offset direction: away from cube center
+            cube_center_2d <- transform_3d_standard(data.frame(x = 0, y = 0, z = 0), panel_params$proj)
+            offset_dx <- title_pos$x - cube_center_2d$x
+            offset_dy <- title_pos$y - cube_center_2d$y
+            offset_len <- sqrt(offset_dx^2 + offset_dy^2)
+            if (offset_len > 0) {
+                  offset_dx <- offset_dx / offset_len
+                  offset_dy <- offset_dy / offset_len
+            }
+
+            # Apply a small offset to push outside the plot
+            title_offset <- offsets$title_margin
+            final_x <- title_pos$x + offset_dx * title_offset
+            final_y <- title_pos$y + offset_dy * title_offset
+
+            # Scale to NPC
+            position_npc <- scale_to_npc_coordinates(final_x, final_y, plot_bounds)
+            if (is.null(position_npc)) return(list())
+
+            # Axis angle for rotation
+            axis_angle <- atan2(
+                  axis_selection$edge_p2_2d$y - axis_selection$edge_p1_2d$y,
+                  axis_selection$edge_p2_2d$x - axis_selection$edge_p1_2d$x
+            )
+
+            rotation_info <- calculate_text_rotation_and_justification(
+                  edge_gridlines[edge_gridlines$group == edge_gridlines$group[1], ],
+                  rotate_labels, theme_elements, is_title = TRUE, axis_angle = axis_angle
+            )
+
+            # hjust: anchor text so it extends away from the plot
+            angle_rad <- rotation_info$angle * pi / 180
+            text_dir <- c(cos(angle_rad), sin(angle_rad))
+            dot <- offset_dx * text_dir[1] + offset_dy * text_dir[2]
+            rotation_info$hjust <- if (dot > 0) 0 else 1
+
+            title_grob <- create_text_grob(axis_name, position_npc$x, position_npc$y,
+                                           rotation_info, theme_elements, is_title = TRUE)
+            if (!is.null(title_grob)) return(list(title_grob))
+            return(list())
       }
 
       # Find the gridline closest to the center of the axis range
@@ -526,6 +582,7 @@ create_axis_title <- function(axis, edge_gridlines, theme_elements, offsets, tex
 
       # Use the full title offset formula for proper spacing beyond labels
       title_offset_total <- components$title_offset_total
+      if (!on_hull) title_offset_total <- -title_offset_total
 
       # Use the same position calculation as labels for consistency
       position_npc <- calculate_text_position_with_offset(center_gridline, axis_uses_start, title_offset_total, plot_bounds)
@@ -609,9 +666,9 @@ render_axis_text <- function(self, panel_params, theme) {
 
                   # Create axis labels if theme allows
                   if (should_render_axis_text) {
+                        on_hull <- axis_selection$on_hull %||% TRUE
                         label_result <- create_axis_labels(axis, edge_gridlines, theme_elements_axis, offsets, text_dimensions,
-                                                           panel_params, self$rotate_labels, panel_params$plot_bounds, chosen_edge)
-
+                                                           panel_params, self$rotate_labels, panel_params$plot_bounds, chosen_edge, on_hull)
                         all_labels <- c(all_labels, label_result$labels)
                         axis_uses_start <- label_result$axis_uses_start
                   } else {
@@ -622,8 +679,8 @@ render_axis_text <- function(self, panel_params, theme) {
                   # Create axis titles if theme allows
                   if (should_render_axis_title) {
                         title_result <- create_axis_title(axis, edge_gridlines, theme_elements_axis, offsets, text_dimensions,
-                                                          panel_params, self$rotate_labels, panel_params$plot_bounds, chosen_edge, axis_uses_start)
-
+                                                         panel_params, self$rotate_labels, panel_params$plot_bounds, chosen_edge, axis_uses_start,
+                                                         on_hull, axis_selection, self$title_position %||% "auto")
                         all_titles <- c(all_titles, title_result)
                   }
             }

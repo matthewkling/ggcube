@@ -72,12 +72,14 @@ calculate_face_area_2d <- function(face_name, proj, effective_ratios) {
       # Transform to 2D
       corners_2d <- transform_3d_standard(corners_3d, proj)
 
-      # Calculate area using shoelace formula for quadrilateral
-      x <- corners_2d$x
-      y <- corners_2d$y
+      # Reorder into perimeter sequence via convex hull
+      hull_idx <- chull(corners_2d$x, corners_2d$y)
+      x <- corners_2d$x[hull_idx]
+      y <- corners_2d$y[hull_idx]
 
-      # Shoelace formula: A = 0.5 * |sum(x_i * y_i+1 - x_i+1 * y_i)|
-      area <- 0.5 * abs(sum(x * c(y[2:4], y[1]) - c(x[2:4], x[1]) * y))
+      # Shoelace formula
+      n <- length(x)
+      area <- 0.5 * abs(sum(x * c(y[-1], y[1]) - c(x[-1], x[1]) * y))
 
       return(area)
 }
@@ -273,6 +275,7 @@ select_best_edge_face_combination <- function(scored_combinations, weights = c(0
       # Find max values for normalization
       max_length <- max(sapply(combinations, function(c) c$edge_length))
       max_area <- max(sapply(combinations, function(c) c$face_area))
+      if (max_area == 0) max_area <- 1  # Avoid NaN from 0/0
 
       for(i in seq_along(combinations)) {
             c <- combinations[[i]]
@@ -390,6 +393,7 @@ select_axis_edge_and_face <- function(axis, visible_faces, proj, effective_ratio
             axis = axis,
             edge = best_combination$edge,
             face = best_combination$face,
+            on_hull = best_combination$on_hull,
             edge_p1_2d = best_combination$edge$p1_2d,
             edge_p2_2d = best_combination$edge$p2_2d
       ))

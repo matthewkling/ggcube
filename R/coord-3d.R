@@ -47,6 +47,14 @@
 #'       "xmin", "xmax", "ymin", "ymax", "zmin", "zmax".
 #'   }
 #'   See [cube_theming] for details on axis label styling.
+#' @param title_position Character string controlling axis title placement. Currently only
+#'    affects titles for internal axes (not on the plot periphery); titles for axes on the
+#'    plot periphery are always centered along the axis edge.
+#'   \itemize{
+#'     \item \code{"auto"} (default): Internal axis titles are placed at the near
+#'       end of the axis, outside the plot area.
+#'     \item \code{"center"}: Internal axis titles are centered along the axis edge.
+#'   }
 #' @param rotate_labels Logical indicating whether axis labels (text and titles) should automatically
 #'   rotate to align with the projected axis directions. When \code{FALSE}, uses theme
 #'   text and title angle settings.
@@ -150,6 +158,7 @@ coord_3d <- function(pitch = 0, roll = -60, yaw = -30,
                      expand = TRUE, clip = "off",
                      panels = "background",
                      xlabels = "auto", ylabels = "auto", zlabels = "auto",
+                     title_position = c("auto", "center"),
                      rotate_labels = TRUE,
                      scales = "free",
                      ratio = c(1, 1, 1),
@@ -178,6 +187,8 @@ coord_3d <- function(pitch = 0, roll = -60, yaw = -30,
             warning("Although `dist` values less than 1 are allowed, they often produce nonsensical plots.")
       }
 
+      title_position <- match.arg(title_position)
+
       list(
             ggproto(NULL, Coord3D,
                     pitch = pitch, roll = roll, yaw = yaw,
@@ -190,6 +201,7 @@ coord_3d <- function(pitch = 0, roll = -60, yaw = -30,
                     zoom = zoom,
                     xlabels = xlabels, ylabels = ylabels, zlabels = zlabels,
                     light = light,
+                    title_position = title_position,
                     fixed_bounds = fixed_bounds
             ),
             theme(plot.margin = margin(20, 20, 20, 20, "pt"))
