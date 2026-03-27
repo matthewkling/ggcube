@@ -63,7 +63,10 @@ animate_3d(
 
 - res:
 
-  Resolution in ppi for the rendered frames. Default is 96.
+  Resolution in ppi for the rendered frames. Default is 96. Controls the
+  size of point-based text/lines/point elements relative to the plot.
+  See [`?grDevices::png`](https://rdrr.io/r/grDevices/png.html) for
+  details.
 
 - renderer:
 

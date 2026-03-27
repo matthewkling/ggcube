@@ -20,6 +20,7 @@ coord_3d(
   xlabels = "auto",
   ylabels = "auto",
   zlabels = "auto",
+  title_position = c("auto", "center"),
   rotate_labels = TRUE,
   scales = "free",
   ratio = c(1, 1, 1),
@@ -106,6 +107,18 @@ coord_3d(
   See
   [cube_theming](https://matthewkling.github.io/ggcube/reference/cube_theming.md)
   for details on axis label styling.
+
+- title_position:
+
+  Character string controlling axis title placement. Currently only
+  affects titles for internal axes (not on the plot periphery); titles
+  for axes on the plot periphery are always centered along the axis
+  edge.
+
+  - `"auto"` (default): Internal axis titles are placed at the near end
+    of the axis, outside the plot area.
+
+  - `"center"`: Internal axis titles are centered along the axis edge.
 
 - rotate_labels:
 

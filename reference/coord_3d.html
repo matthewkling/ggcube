@@ -58,6 +58,7 @@ aspect ratios, panel selection, axis label placement, and lighting.</p>
 <span>  xlabels <span class="op">=</span> <span class="st">"auto"</span>,</span>
 <span>  ylabels <span class="op">=</span> <span class="st">"auto"</span>,</span>
 <span>  zlabels <span class="op">=</span> <span class="st">"auto"</span>,</span>
+<span>  title_position <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"auto"</span>, <span class="st">"center"</span><span class="op">)</span>,</span>
 <span>  rotate_labels <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  scales <span class="op">=</span> <span class="st">"free"</span>,</span>
 <span>  ratio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>,</span>
@@ -123,6 +124,15 @@ face the axis labels will be aligned with, while the second face
 identifies which edge of this face gets labelled. Available face names are:
 "xmin", "xmax", "ymin", "ymax", "zmin", "zmax".</p></li>
 </ul><p>See <a href="cube_theming.html">cube_theming</a> for details on axis label styling.</p></dd>
+
+
+<dt id="arg-title-position">title_position<a class="anchor" aria-label="anchor" href="#arg-title-position"></a></dt>
+<dd><p>Character string controlling axis title placement. Currently only
+affects titles for internal axes (not on the plot periphery); titles for axes on the
+plot periphery are always centered along the axis edge.</p><ul><li><p><code>"auto"</code> (default): Internal axis titles are placed at the near
+end of the axis, outside the plot area.</p></li>
+<li><p><code>"center"</code>: Internal axis titles are centered along the axis edge.</p></li>
+</ul></dd>
 
 
 <dt id="arg-rotate-labels">rotate_labels<a class="anchor" aria-label="anchor" href="#arg-rotate-labels"></a></dt>
