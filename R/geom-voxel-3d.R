@@ -231,10 +231,12 @@ convert_to_numeric <- function(data) {
 #'
 #' # With aesthetic fill
 #' p + stat_voxel_3d(aes(fill = z)) +
-#'   geom_fill_viridis_c() + guides(fill = guide_colorbar_3d())
+#'   scale_fill_viridis_c() +
+#'   guides(fill = guide_colorbar_3d())
 #'
-#' # Show only visible faces for performance
-#' p + geom_voxel_3d(faces = c("zmax", "ymin", "xmin"))
+#' # Show only some voxel faces
+#' p + geom_voxel_3d(fill = "steelblue",
+#'                   faces = c("zmax", "ymin", "xmin"))
 #'
 #' @seealso [stat_col_3d()] for variable-height columns, [stat_surface_3d()] for smooth surfaces,
 #'   [coord_3d()] for 3D coordinate systems, [light()] for lighting specifications,
