@@ -117,7 +117,7 @@ ggplot() +
       geom_function_3d(fun = function(x, y) cos(x) * sin(y),
                        xlim = c(-pi, pi), ylim = c(-2*pi, 2*pi),
                        fill = "#7a2100", color = "#b3725b", 
-                       grid = "tri1") +
+                       grid = "right1") +
       coord_3d(yaw = 160, roll = -70, 
                scales = "fixed", ratio = c(1, 1, 2)) +
       labs(z = "cos(x) * sin(y)") +
@@ -138,8 +138,8 @@ d$z <- d$x + d$x^2 - d$y^2 + rnorm(50)
 ggplot(d, aes(x, y, z)) + 
       geom_smooth_3d(aes(fill = after_stat(level)),
                      method = "gam", formula = z ~ te(x, y),
-                     se = TRUE, level = 0.99, 
-                     color = "black", grid = "hex") +
+                     se = TRUE, level = 0.99,
+                     color = "black", grid = "equilateral") +
       scale_fill_manual(values = c("red", "darkorchid4", "steelblue")) +
       coord_3d(light = NULL)
 ```

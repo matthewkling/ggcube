@@ -2,13 +2,19 @@
 % Please edit documentation in R/shared-docs.R
 \name{grid_generation}
 \alias{grid_generation}
-\title{Grid generation parameters}
+\title{Grid generation}
 \arguments{
-\item{grid}{Character argument specifying geometry of grid to generate.
-Options include \code{"tri"} (the default) for triangular grid, \code{"rect"} for
-rectangular grid, or \code{"hex"} for hexagonal grid. Triangles produce a proper 3D
-surface that can prevent lighting artifacts in places where a surface curves past
+\item{grid}{Character specifying tile geometry. Options:
+\describe{
+\item{\code{"rectangle"}}{Rectangular grid (the default).}
+\item{\code{"right1"}}{Rectangular grid with each quad split into two right triangles
+along the bottom-left to top-right diagonal.}
+\item{\code{"right2"}}{Like \code{"right1"} but split along the bottom-right to top-left
+diagonal.}
+\item{\code{"equilateral"}}{Equilateral triangular lattice (tessellated via Delaunay
+triangulation). Can prevent lighting artifacts where a surface curves past
 parallel with the sight line.}
+}}
 
 \item{n}{Either a single integer specifying grid resolution in both dimensions,
 or a vector of length 2 specifying \code{c(nx, ny)} for separate x and y resolutions.
@@ -17,18 +23,13 @@ Default is \code{40}. Higher values create smoother surfaces but slower renderin
 \item{direction}{Either \code{"x"} (the default) or \code{"y"}, specifying the orientation
 of tile rows. Ignored for rectangular grids.}
 
-\item{trim}{Logical. Only relevant for triangular and hexagonal grids. If TRUE
-(default), trims edge tiles to so that grid boundaries are straight lines. If
-FALSE, preserves the full shape of all tiles, resulting in a grid with
-irregular edges.}
+\item{trim}{Logical. Only relevant for \code{grid = "equilateral"}. If \code{TRUE}
+(default), trims edge vertices so that grid boundaries are straight lines. If
+\code{FALSE}, preserves the full lattice, resulting in a grid with irregular edges.}
 }
 \description{
 Parameters defining the geometry, resolution, and orientation of a regular grid
-of tiles, as used by various ggcube layer functions.
-}
-\details{
-Grids are constructed such that tiles are approximately equilateral
-when scaled to a square domain, unless \code{n} gives separate resolution values
-for the two dimensions. For triangular and hexagonal grids, this means that
-\code{n} is only approximate.
+of surface tiles, as used by various ggcube layer functions including
+\code{\link[=geom_smooth_3d]{geom_smooth_3d()}}, \code{\link[=geom_function_3d]{geom_function_3d()}}, \code{\link[=geom_density_3d]{geom_density_3d()}}, and
+\code{\link[=geom_surface_3d]{geom_surface_3d()}}.
 }

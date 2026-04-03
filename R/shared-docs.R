@@ -80,30 +80,32 @@ NULL
 
 # grids ----------------------------------------------------
 
-#' Grid generation parameters
+#' Grid generation
 #'
 #' Parameters defining the geometry, resolution, and orientation of a regular grid
-#' of tiles, as used by various ggcube layer functions.
+#' of surface tiles, as used by various ggcube layer functions including
+#' [geom_smooth_3d()], [geom_function_3d()], [geom_density_3d()], and
+#' [geom_surface_3d()].
 #'
-#' @param grid Character argument specifying geometry of grid to generate.
-#'   Options include `"tri"` (the default) for triangular grid, `"rect"` for
-#'   rectangular grid, or `"hex"` for hexagonal grid. Triangles produce a proper 3D
-#'   surface that can prevent lighting artifacts in places where a surface curves past
-#'   parallel with the sight line.
+#' @param grid Character specifying tile geometry. Options:
+#'   \describe{
+#'     \item{`"rectangle"`}{Rectangular grid (the default).}
+#'     \item{`"right1"`}{Rectangular grid with each quad split into two right triangles
+#'       along the bottom-left to top-right diagonal.}
+#'     \item{`"right2"`}{Like `"right1"` but split along the bottom-right to top-left
+#'       diagonal.}
+#'     \item{`"equilateral"`}{Equilateral triangular lattice (tessellated via Delaunay
+#'       triangulation). Can prevent lighting artifacts where a surface curves past
+#'       parallel with the sight line.}
+#'   }
 #' @param n Either a single integer specifying grid resolution in both dimensions,
 #'   or a vector of length 2 specifying `c(nx, ny)` for separate x and y resolutions.
 #'   Default is `40`. Higher values create smoother surfaces but slower rendering.
 #' @param direction Either `"x"` (the default) or `"y"`, specifying the orientation
 #'   of tile rows. Ignored for rectangular grids.
-#' @param trim Logical. Only relevant for triangular and hexagonal grids. If TRUE
-#'   (default), trims edge tiles to so that grid boundaries are straight lines. If
-#'   FALSE, preserves the full shape of all tiles, resulting in a grid with
-#'   irregular edges.
-#'
-#' @details Grids are constructed such that tiles are approximately equilateral
-#'   when scaled to a square domain, unless `n` gives separate resolution values
-#'   for the two dimensions. For triangular and hexagonal grids, this means that
-#'   `n` is only approximate.
+#' @param trim Logical. Only relevant for `grid = "equilateral"`. If `TRUE`
+#'   (default), trims edge vertices so that grid boundaries are straight lines. If
+#'   `FALSE`, preserves the full lattice, resulting in a grid with irregular edges.
 #'
 #' @name grid_generation
 NULL

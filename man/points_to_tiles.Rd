@@ -17,7 +17,8 @@ points_to_tiles(
 \item{method}{Tessellation method: "grid" for regular grid, "delaunay" for
 triangulation, "auto" to detect.}
 
-\item{grid_type}{For method="grid", type of tiles: "rectangle", "tri1", "tri2".}
+\item{grid_type}{Tile geometry: "rectangle", "right1", "right2", or
+"equilateral". The equilateral option routes to Delaunay tessellation.}
 
 \item{group_prefix}{String prefix for polygon group IDs.}
 }

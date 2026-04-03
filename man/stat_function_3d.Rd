@@ -81,6 +81,7 @@ as a 3D surface or ridgeline plot.
 
 \describe{
 \item{x, y, z}{Grid coordinates and function values}
+\item{fitted}{Function values (same as \code{z}; used for default fill mapping)}
 \item{dzdx, dzdy}{Partial derivatives at each point}
 \item{slope}{Gradient magnitude: sqrt(dzdx^2 + dzdy^2)}
 \item{aspect}{Direction of steepest slope: atan2(dzdy, dzdx)}
@@ -99,7 +100,7 @@ ggplot() +
   geom_function_3d(fun = function(x, y) x^2 + y^2,
                    xlim = c(-2, 2), ylim = c(-2, 2),
                    aes(fill = after_stat(slope)),
-                   grid = "triangle") +
+                   grid = "equilateral") +
   scale_fill_viridis_c() +
   coord_3d()
 

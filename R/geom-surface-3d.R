@@ -18,6 +18,7 @@ GeomSurface3D <- ggproto("GeomSurface3D", GeomPolygon3D,
                          setup_params = function(data, params) {
                                params$method <- params$method %||% "auto"
                                params$grid <- params$grid %||% "rectangle"
+                               params$grid <- match.arg(params$grid, c("rectangle", "right1", "right2"))
                                params
                          },
 

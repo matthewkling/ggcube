@@ -1,81 +1,5 @@
 # ggprotos ---------------
 
-GeomSmooth3D <- ggproto("GeomSmooth3D", Geom,
-                        required_aes = c("x", "y", "z", "group"),
-                        default_aes = aes(
-                              fill = "darkblue", colour = "white",
-                              linewidth = 0.1, linetype = 1, alpha = 1
-                        ),
-
-                        draw_panel = function(data, panel_params, coord, scale_depth = TRUE,
-                                              force_convex = FALSE, sort_method = "auto") {
-
-                              # Assign correct aesthetics to primary/CI elements
-                              merge_aes <- function(a, b = NULL){
-                                    if(is.null(b)) return(a)
-                                    ifelse(!is.na(b), b, a)
-                              }
-                              data$fill <- merge_aes(data$fill, data$se.fill)
-                              data$colour <- merge_aes(data$colour, data$se.colour)
-                              data$alpha <- merge_aes(data$alpha, data$se.alpha)
-                              data$linewidth <- merge_aes(data$linewidth, data$se.linewidth)
-
-                              # Transform data
-                              validate_coord3d(coord)
-                              sort_method <- match.arg(sort_method, c("auto", "pairwise", "painter"))
-                              data$.sort_method <- sort_method
-                              coords <- coord$transform(data, panel_params)
-
-                              # Enforce convexity if requested
-                              coords <- drop_nonconvex_vertices(coords, force_convex)
-
-                              # Scale linewidths by depth
-                              coords <- scale_depth(coords, scale_depth)
-
-                              # Apply light blending to colors
-                              coords <- blend_light(coords)
-
-                              if (!"group" %in% names(coords)) {
-                                    # Fallback for data without groups
-                                    warning("No group column found in polygon data")
-                                    return(grid::nullGrob())
-                              }
-
-                              # Create polygon grobs
-                              polygon_grobs <- list()
-                              polygon_ids <- unique(coords$group)
-
-                              for(i in seq_along(polygon_ids)){
-                                    poly_data <- coords[coords$group == polygon_ids[i], ]
-
-                                    # Handle alpha values (default to 1 if NA)
-                                    alpha_val <- poly_data$alpha[1]
-                                    if (is.na(alpha_val)) alpha_val <- 1
-
-                                    # Draw this polygon
-                                    polygon_grobs[[i]] <- grid::polygonGrob(
-                                          x = poly_data$x,
-                                          y = poly_data$y,
-                                          default.units = "npc",
-                                          gp = grid::gpar(
-                                                col = poly_data$colour[1],
-                                                fill = poly_data$fill[1],
-                                                lwd = poly_data$linewidth[1] * .pt,
-                                                lty = poly_data$linetype[1],
-                                                alpha = alpha_val
-                                          ),
-                                          name = paste0("polygon_", i)
-                                    )
-                              }
-
-                              # Combine all polygon grobs
-                              do.call(grid::grobTree, polygon_grobs)
-                        },
-
-                        draw_key = draw_key_polygon
-)
-
-
 StatSmooth3D <- ggproto("StatSmooth3D", Stat,
                         required_aes = c("x", "y", "z"),
                         default_aes = aes(x = after_stat(x),
@@ -134,16 +58,24 @@ StatSmooth3D <- ggproto("StatSmooth3D", Stat,
                                     surface_types <- "fitted"
                               }
 
-                              # Create grid polygons
+                              # Generate point grid and expand to tile polygons
                               if(is.null(xlim)) xlim <- range(data$x, na.rm = TRUE)
                               if(is.null(ylim)) ylim <- range(data$y, na.rm = TRUE)
-                              polys <- make_tile_grid(grid, n, direction, xlim, ylim, trim)
-                              polys$group <- paste0("surface__tile", polys$group, "::grp", data$group[1])
+                              if(is.null(trim)) trim <- TRUE
+                              points <- make_point_grid(grid, n, direction, xlim, ylim, trim)
+                              points$z <- 0 # placeholder for points_to_tiles
+                              points$group <- data$group[1]
+                              polys <- points_to_tiles(points,
+                                                       method = "grid",
+                                                       grid_type = grid %||% "rectangle",
+                                                       group_prefix = "surface__tile")
+                              polys$group <- paste0(polys$group, "::grp", data$group[1])
 
-                              # Clip to hull if applicable
+                              # Clip to hull if applicable (before prediction, since
+                              # clipping changes vertex positions and creates new ones)
                               if(domain == "chull") polys <- clip_polys_to_chull(polys, data)
 
-                              # Fit model and predict
+                              # Fit model and predict at polygon vertex positions
                               predictions <- fit_and_predict(data, polys, method, formula,
                                                              method.args, se = se, level = level)
                               polys$fitted <- predictions$fitted
@@ -204,7 +136,7 @@ clip_polys_to_chull <- function(d, point_data){
       d <- d %>%
             group_by(group) %>%
             reframe(poly = bind_cols(polyclip::polyclip(A = list(x = x, y = y),
-                                              B = list(x = hull[,1], y = hull[,2])))) %>%
+                                                        B = list(x = hull[,1], y = hull[,2])))) %>%
             mutate(.vertex_order = 1:n()) %>%
             ungroup()
 
@@ -443,13 +375,13 @@ gam_model <- function(){
 #'
 #' # Extend surface beyond training data range (explicit extrapolation)
 #' p + geom_smooth_3d(method = "lm", xlim = c(-5, 5), ylim = c(-5, 5))
-
+#'
 #' # Clip surface to predictor convex hull
 #' # to prevent extrapolation into corner areas
 #' p + geom_smooth_3d(method = "lm", domain = "chull")
 #'
 #' # Specify alternative grid geometry
-#' p + geom_smooth_3d(grid = "hex", n = 30, direction = "y")
+#' p + geom_smooth_3d(grid = "right1", n = 30, direction = "y")
 #'
 #' # Separate fits for data subgroups
 #' ggplot(mtcars, aes(wt, mpg, qsec, fill = factor(cyl))) +
@@ -458,8 +390,7 @@ gam_model <- function(){
 #'   coord_3d() + theme_light()
 #'
 #' @seealso [stat_surface_3d()] for surfaces from existing grid data,
-#'   [stat_function_3d()] for mathematical function surfaces,
-#'   [make_tile_grid()] for details about grid geometry options.
+#'   [stat_function_3d()] for mathematical function surfaces.
 #' @return A `Layer` object that can be added to a ggplot.
 #' @rdname geom_smooth_3d
 #' @export
@@ -493,7 +424,7 @@ geom_smooth_3d <- function(mapping = NULL, data = NULL, stat = StatSmooth3D,
       domain <- match.arg(domain)
 
       layer(
-            geom = GeomSmooth3D, mapping = mapping, data = data, stat = get_proto(stat, "stat"),
+            geom = GeomPolygon3D, mapping = mapping, data = data, stat = get_proto(stat, "stat"),
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(method = method, formula = formula, method.args = method.args,
                           xlim = xlim, ylim = ylim, domain = domain, n = n, se = se, level = level,
@@ -508,7 +439,7 @@ geom_smooth_3d <- function(mapping = NULL, data = NULL, stat = StatSmooth3D,
 #' @rdname geom_smooth_3d
 #' @export
 stat_smooth_3d <- function(mapping = NULL, data = NULL,
-                           geom = GeomSmooth3D,
+                           geom = GeomPolygon3D,
                            position = "identity",
                            ...,
                            method = "loess",
@@ -549,6 +480,3 @@ stat_smooth_3d <- function(mapping = NULL, data = NULL,
                           se.linewidth = se.linewidth, light = light, na.rm = na.rm, ...)
       )
 }
-
-
-

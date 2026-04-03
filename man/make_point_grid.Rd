@@ -5,7 +5,7 @@
 \title{Generate a grid of unique vertex points}
 \usage{
 make_point_grid(
-  grid = c("rectangle", "tri1", "tri2", "triangle"),
+  grid = c("rectangle", "right1", "right2", "equilateral"),
   n = 40,
   direction = c("x", "y"),
   xlim,
@@ -14,16 +14,17 @@ make_point_grid(
 )
 }
 \arguments{
-\item{n}{Integer or length-2 integer vector specifying grid resolution.}
+\item{grid, n, direction, trim}{Parameters determining the geometry, resolution, and
+orientation of the surface grid. See \link{grid_generation} for details.}
 
 \item{xlim, ylim}{Length-two numeric vectors defining bounding box.}
 }
 \value{
-A data frame with columns \code{x}, \code{y}, \code{row}, \code{column}.
+A data frame with columns \code{x}, \code{y}.
 }
 \description{
-Creates a regular grid of unique vertex positions. Unlike \code{\link[=make_tile_grid]{make_tile_grid()}},
-this returns one row per unique vertex position rather than polygon vertices
-with duplicates.
+Creates a regular grid of unique vertex positions for use by surface-generating
+stats. The grid is tessellated into polygon tiles by \code{\link[=points_to_tiles]{points_to_tiles()}} in
+the geom layer (or in the stat for \code{\link[=stat_smooth_3d]{stat_smooth_3d()}}).
 }
 \keyword{internal}

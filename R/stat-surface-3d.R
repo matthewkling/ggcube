@@ -2,7 +2,7 @@
 
 StatSurface3D <- ggproto("StatSurface3D", Stat,
                          required_aes = c("x", "y", "z"),
-                         default_aes = aes(fill = after_stat(z)),
+                         default_aes = aes(fill = after_stat(fitted)),
 
                          compute_group = function(data, scales, na.rm = FALSE,
                                                   cull_backfaces = FALSE, light = NULL) {
@@ -19,6 +19,8 @@ StatSurface3D <- ggproto("StatSurface3D", Stat,
 
                                data <- compute_point_gradients(data)
 
+                               data$fitted <- data$z
+
                                # Attach rendering parameters
                                data$cull_backfaces <- cull_backfaces
                                data <- attach_light(data, light)
@@ -32,8 +34,8 @@ StatSurface3D <- ggproto("StatSurface3D", Stat,
 #'
 #' Takes user-provided (x, y, z) point data and prepares it for surface
 #' rendering. If data form a regular grid, can render either a GeomSurface3D
-#' of rectangular or triangular tiles, or a GeomRidgeline3D or GeomContour3D
-#' set of surface slices; otherwise, renders triangular tiles via Delaunay
+#' of rectangular or right-triangular tiles, or a GeomRidgeline3D or GeomContour3D
+#' set of surface slices; otherwise, renders irregular triangular tiles via Delaunay
 #' trianuglation.
 #'
 #'  For regular grids, computes point-level gradients. Works with
@@ -87,10 +89,10 @@ StatSurface3D <- ggproto("StatSurface3D", Stat,
 #'       scale_color_gradientn(colors = c("black", "blue", "red"))
 #'
 #' # triangulated surface (can prevent lighting flaws)
-#' p + geom_surface_3d(fill = "#9e2602", color = "black", grid = "tri2")
+#' p + geom_surface_3d(fill = "#9e2602", color = "black", grid = "right2")
 #'
 #' # use after_stat to access computed surface-orientation variables
-#' p + geom_surface_3d(aes(fill = after_stat(slope)), grid = "tri2") +
+#' p + geom_surface_3d(aes(fill = after_stat(slope)), grid = "right2") +
 #'       scale_fill_viridis_c() +
 #'       guides(fill = guide_colorbar_3d())
 #'
@@ -180,7 +182,7 @@ stat_surface_3d <- function(mapping = NULL, data = NULL,
 #' @param method Tessellation method passed to [geom_surface_3d()]:
 #'   "auto" (default), "grid", or "delaunay".
 #' @param grid Tile geometry for regular grids: "rectangle" (default),
-#'   "tri1", or "tri2".
+#'   "right1", or "right2".
 #' @export
 geom_surface_3d <- function(mapping = NULL, data = NULL,
                             stat = "surface_3d", position = "identity",

@@ -41,7 +41,7 @@ geom_smooth_3d(
 stat_smooth_3d(
   mapping = NULL,
   data = NULL,
-  geom = GeomSmooth3D,
+  geom = GeomPolygon3D,
   position = "identity",
   ...,
   method = "loess",
@@ -232,12 +232,13 @@ p + geom_smooth_3d(aes(fill = after_stat(se * 2))) +
 
 # Extend surface beyond training data range (explicit extrapolation)
 p + geom_smooth_3d(method = "lm", xlim = c(-5, 5), ylim = c(-5, 5))
+
 # Clip surface to predictor convex hull
 # to prevent extrapolation into corner areas
 p + geom_smooth_3d(method = "lm", domain = "chull")
 
 # Specify alternative grid geometry
-p + geom_smooth_3d(grid = "hex", n = 30, direction = "y")
+p + geom_smooth_3d(grid = "right1", n = 30, direction = "y")
 
 # Separate fits for data subgroups
 ggplot(mtcars, aes(wt, mpg, qsec, fill = factor(cyl))) +
@@ -248,6 +249,5 @@ ggplot(mtcars, aes(wt, mpg, qsec, fill = factor(cyl))) +
 }
 \seealso{
 \code{\link[=stat_surface_3d]{stat_surface_3d()}} for surfaces from existing grid data,
-\code{\link[=stat_function_3d]{stat_function_3d()}} for mathematical function surfaces,
-\code{\link[=make_tile_grid]{make_tile_grid()}} for details about grid geometry options.
+\code{\link[=stat_function_3d]{stat_function_3d()}} for mathematical function surfaces.
 }

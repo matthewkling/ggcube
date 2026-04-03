@@ -1,194 +1,4 @@
-
-# Tile grids --------------------------------------
-
-#' Generate rectangular, triangular, or hexagonal grids
-#'
-#' Creates a regular grid of tiles of specified resolution and geometry.
-#' This function is called by various ggcube stats that generate surfaces, but can
-#' also be used directly. Returns tile vertex data formatted for geoms like
-#' `geom_poygon()` and `geom_poygon_3d()`.
-#'
-#' @param xlim,ylim Length-two numeric vectors defining bounding box over which to
-#'   generate the grid.
-#' @inheritParams grid_generation
-#'
-#' @details Grids are constructed such that tiles are approximately equilateral
-#'   when scaled to a square domain, unless `n` gives separate resolution values
-#'   for the two dimensions. For triangular and hexagonal grids, this means that
-#'   `n` is only approximate.
-#'
-#' @return A data frame with the following columns: `x`, `y`, `group` (integer denoting
-#'   unique polygon id), and `order` (integer giving vertex order for plotting; vertices
-#'   are in counter-clockwise winding order).
-#'
-#' @examples
-#' # direct use
-#' g <- make_tile_grid("tri", xlim = c(0, 5), ylim = c(-100, 100))
-#' head(g)
-#'
-#' # use from within ggcube stat
-#' ggplot() +
-#'   stat_function_3d(
-#'     grid = "hex", n = 20, xlim = c(-2, 2), ylim = c(-2, 2),
-#'     fun = function(x, y) - x^2 - y^2,
-#'     fill = "black", color = "white", light = NULL) +
-#'   coord_3d()
-#'
-#' @seealso [stat_function_3d()], [stat_smooth_3d()], and [stat_density_3d()] for ggcube layers that
-#'   use `make_tile_grid()` to generate gridded surfaces.
-#' @export
-make_tile_grid <- function(grid = c("triangle", "rectangle", "hexagon"),
-                           n = 40,
-                           direction = c("x", "y"),
-                           xlim, ylim,
-                           trim = TRUE) {
-
-      grid <- match.arg(grid)
-      direction <- match.arg(direction)
-
-      if(is.null(n)) n <- 40
-      if(is.null(trim)) trim <- TRUE
-      n <- as.integer(n)
-      if(any(n < 2)) stop("`n` must be at least 2")
-      if(! length(n) %in% 1:2) stop("`n` must be a vector of length 1 or 2")
-      if(direction == "y") n <- rev(n)
-
-      tiles <- switch(grid,
-                      rectangle = make_rect_tiles(n),
-                      triangle = make_tri_tiles(n),
-                      hexagon = make_hex_tiles(n))
-
-      tiles <- tiles %>%
-            trim_grid_edges(grid, trim) %>%
-            transpose_grid(direction) %>%
-            rescale_grid(xlim, ylim)
-
-      return(tiles)
-}
-
-trim_grid_edges <- function(tiles, grid, trim){
-
-      if(trim && grid == "triangle"){
-            # move errant vertices
-            tiles <- mutate(tiles,
-                            x = case_when(x == min(x) ~ min(x[x > min(x)]),
-                                          x == max(x) ~ max(x[x < max(x)]),
-                                          TRUE ~ x))
-      }
-
-      if(trim && grid == "hexagon"){
-            # move or remove errant vertices
-            tiles <- tiles %>%
-                  filter(! x %in% range(x)) %>%
-                  group_by(group) %>%
-                  filter((! y %in% range(tiles$y)) | length(group) == 5)
-            tiles <- tiles %>%
-                  mutate(y = ifelse(x %in% range(tiles$x) &
-                                          y %in% range(tiles$y),
-                                    mean(range(y)), y)) %>%
-                  ungroup() %>%
-                  filter(! y %in% range(y))
-      }
-
-      # (no clipping needed for rectangles)
-      return(tiles)
-}
-
-
-make_rect_tiles <- function(n) {
-
-      # Centers
-      if(length(n) == 1) n <- c(n, n)
-      d <- expand_grid(x = 1:n[1], y = 1:n[2])
-
-      # Vertices
-      dx <- dy <- .5
-      d <- d %>%
-            mutate(group = 1:nrow(.)) %>%
-            group_by(group) %>%
-            reframe(x = c(x+dx, x-dx, x-dx, x+dx), # ccw order
-                    y = c(y+dy, y+dy, y-dy, y-dy),
-                    group = group,
-                    order = 1:4) %>%
-            ungroup() %>%
-            arrange(group, order)
-
-      return(d)
-}
-
-make_tri_tiles <- function(n) {
-
-      if (length(n) == 1) {
-            # Equilateral triangles
-            n <- ceiling(n * .75)
-            n_x <- n * 2 + 1
-            n_y <- max(1, round(n_x / sqrt(3)))
-      } else {
-            # Non-equilateral case - user specifies both dimensions
-            n_x <- n[1]
-            n_y <- n[2]
-      }
-
-      side_length <- 1
-      tri_height <- side_length * sqrt(3) / 2
-
-      # Create grid of triangle centers
-      dx <- side_length / 2
-      dy <- tri_height / 2
-      x <- seq(dx, by = dx, length.out = n_x)
-      y <- seq(dy, by = tri_height, length.out = n_y)
-      tri <- expand_grid(row = 1:n_y, column = 1:n_x) %>%
-            mutate(x = x[column],
-                   y = y[row],
-                   drn = sign(((row + column) %% 2) - .5))
-
-      # Generate vertices
-      tri <- tri %>%
-            mutate(group = 1:nrow(.)) %>%
-            group_by(group) %>%
-            reframe(x = c(x - dx, x + dx, x), # ccw order
-                    y = c(y - dy * drn, y - dy * drn, y + dy * drn),
-                    group = group,
-                    order = if(drn == 1) 1:3 else 3:1) %>%
-            ungroup() %>%
-            arrange(group, order)
-
-      return(tri)
-}
-
-make_hex_tiles <- function(n) {
-
-      hr3 <- sqrt(3)/2
-
-      if (length(n) == 1) {
-            n_x <- n
-            n_y <- max(1, round(n_x * hr3))
-      } else {
-            n_x <- n[1]
-            n_y <- n[2]
-      }
-
-      # Create grid of hex centers
-      hex <- expand_grid(x = 1:n_x,
-                         y = seq(1, by = hr3, length.out = n_y)) %>%
-            mutate(y = ifelse(x %% 2 == 1, y, y - hr3/2))
-
-      # Generate vertices
-      dy <- hr3/2
-      dx <- 1/3
-      hex <- hex %>%
-            mutate(group = 1:nrow(.)) %>%
-            group_by(group) %>%
-            reframe(x = c(x+dx, x+2*dx, x+dx, x-dx, x-2*dx, x-dx),
-                    y = c(y+dy, y, y-dy, y-dy, y, y+dy),
-                    group = group,
-                    order = 6:1) %>% # ccw order
-            ungroup() %>%
-            arrange(group, order) %>%
-            select(x, y, group, order)
-
-      return(hex)
-}
+# Shared grid utilities --------------------------------
 
 # Flip orientation if applicable
 transpose_grid <- function(grid, direction){
@@ -224,17 +34,17 @@ compute_surface_vars <- function(tiles){
 
 #' Generate a grid of unique vertex points
 #'
-#' Creates a regular grid of unique vertex positions. Unlike [make_tile_grid()],
-#' this returns one row per unique vertex position rather than polygon vertices
-#' with duplicates.
+#' Creates a regular grid of unique vertex positions for use by surface-generating
+#' stats. The grid is tessellated into polygon tiles by [points_to_tiles()] in
+#' the geom layer (or in the stat for [stat_smooth_3d()]).
 #'
-#' @param n Integer or length-2 integer vector specifying grid resolution.
+#' @inheritParams grid_params
 #' @param xlim,ylim Length-two numeric vectors defining bounding box.
 #'
-#' @return A data frame with columns `x`, `y`, `row`, `column`.
+#' @return A data frame with columns `x`, `y`.
 #'
 #' @keywords internal
-make_point_grid <- function(grid = c("rectangle", "tri1", "tri2", "triangle"),
+make_point_grid <- function(grid = c("rectangle", "right1", "right2", "equilateral"),
                             n = 40,
                             direction = c("x", "y"),
                             xlim, ylim,
@@ -250,9 +60,9 @@ make_point_grid <- function(grid = c("rectangle", "tri1", "tri2", "triangle"),
 
       d <- switch(grid,
                   "rectangle" = make_rect_grid(n),
-                  "tri1" = make_rect_grid(n),
-                  "tri2" = make_rect_grid(n),
-                  "triangle" = make_tri_grid(n, trim))
+                  "right1" = make_rect_grid(n),
+                  "right2" = make_rect_grid(n),
+                  "equilateral" = make_equilateral_grid(n, trim))
 
       d <- d %>%
             transpose_grid(direction) %>%
@@ -266,7 +76,7 @@ make_rect_grid <- function(n){
       tidyr::expand_grid(x = 1:n[1], y = 1:n[2])
 }
 
-make_tri_grid <- function(n, trim = FALSE){
+make_equilateral_grid <- function(n, trim = FALSE){
 
       side_length <- 1
       tri_height <- side_length * sqrt(3) / 2
@@ -505,7 +315,8 @@ compute_irregular_point_gradients <- function(data) {
 #' @param data Data frame with x, y, z columns (and optionally row, column).
 #' @param method Tessellation method: "grid" for regular grid, "delaunay" for
 #'   triangulation, "auto" to detect.
-#' @param grid_type For method="grid", type of tiles: "rectangle", "tri1", "tri2".
+#' @param grid_type Tile geometry: "rectangle", "right1", "right2", or
+#'   "equilateral". The equilateral option routes to Delaunay tessellation.
 #' @param group_prefix String prefix for polygon group IDs.
 #'
 #' @return Data frame with polygon vertices including `group` and `order` columns.
@@ -529,7 +340,11 @@ points_to_tiles <- function(data,
       }
 
       if (method == "grid") {
-            tiles <- rect_points_to_tiles(data, grid_type, group_prefix)
+            if (grid_type == "equilateral") {
+                  tiles <- delaunay_points_to_tiles(data, group_prefix)
+            } else {
+                  tiles <- rect_points_to_tiles(data, grid_type, group_prefix)
+            }
       } else {
             tiles <- delaunay_points_to_tiles(data, group_prefix)
       }
@@ -542,7 +357,7 @@ points_to_tiles <- function(data,
 #' @keywords internal
 rect_points_to_tiles <- function(data, grid_type, group_prefix) {
 
-      grid_type <- match.arg(grid_type, c("rectangle", "tri1", "tri2"))
+      grid_type <- match.arg(grid_type, c("rectangle", "right1", "right2"))
 
       # Ensure row/column indices exist
       if (!all(c("row", "column") %in% names(data))) {
@@ -580,7 +395,7 @@ rect_points_to_tiles <- function(data, grid_type, group_prefix) {
             select(-d_col, -d_row, -tile_col, -tile_row)
 
       # Handle triangle splitting
-      if (grid_type %in% c("tri1", "tri2")) {
+      if (grid_type %in% c("right1", "right2")) {
             tile_vertices <- split_quads_to_triangles(tile_vertices, grid_type)
       }
 
@@ -607,17 +422,17 @@ split_quads_to_triangles <- function(tile_vertices, grid_type) {
       # Input quad vertices in CCW order when viewed from above:
       # 1 = bottom-left, 2 = bottom-right, 3 = top-right, 4 = top-left
       #
-      # tri1: diagonal from bottom-left(1) to top-right(3)
+      # right1: diagonal from bottom-left(1) to top-right(3)
       #   Triangle A: 1 -> 2 -> 3 (CCW from above)
       #   Triangle B: 1 -> 3 -> 4 (CCW from above)
       #
-      # tri2: diagonal from bottom-right(2) to top-left(4)
+      # right2: diagonal from bottom-right(2) to top-left(4)
       #   Triangle A: 1 -> 2 -> 4 (CCW from above)
       #   Triangle B: 2 -> 3 -> 4 (CCW from above)
 
       i <- switch(grid_type,
-                  tri1 = c(1, 2, 3, 1, 3, 4),
-                  tri2 = c(1, 2, 4, 2, 3, 4))
+                  right1 = c(1, 2, 3, 1, 3, 4),
+                  right2 = c(1, 2, 4, 2, 3, 4))
 
       tile_vertices %>%
             group_by(tile_id) %>%
@@ -700,13 +515,8 @@ delaunay_points_to_tiles <- function(data, group_prefix) {
                   select(-.vertex_idx)
 
             # Create group column
-            # if ("group" %in% names(data) && !all(data$group == data$group[1])) {
             tile_vertices <- tile_vertices %>%
                   mutate(group = paste0(group_prefix, tile_id, "::", group))
-            # } else {
-            #       tile_vertices <- tile_vertices %>%
-            #             mutate(group = paste0(group_prefix, tile_id))
-            # }
       })
 
       tile_vertices <- bind_rows(tile_vertices) %>%
@@ -818,9 +628,6 @@ points_to_ridgelines <- function(data,
             ) %>% distinct()
             nr <- nrow(ridge_df)
 
-            # # reorder so that the first 4 vertices, which are used for backface identification
-            # # are as relevant as possible
-            # ridge_df <- ridge_df[c(nr-1, nr, 1:(nr-2)), ]
             ridge_df$order <- 1:nr
 
             # Add face_type for axis-aligned normal computation
@@ -888,6 +695,5 @@ points_to_ridgelines <- function(data,
 
       result <- do.call(rbind, all_ridges)
       rownames(result) <- NULL
-      # ggplot(result, aes(y, z, group = group, order = order, color = order)) + facet_wrap(~x) + geom_path() + scale_color_viridis_c()
       return(result)
 }

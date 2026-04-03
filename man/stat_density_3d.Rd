@@ -166,7 +166,7 @@ p <- ggplot(faithful, aes(eruptions, waiting)) +
 p + geom_density_3d() + guides(fill = guide_colorbar_3d())
 
 # Specify alternative grid geometry and light model
-p + geom_density_3d(grid = "triangle", n = 30, direction = "y",
+p + geom_density_3d(grid = "equilateral", n = 30, direction = "y",
                     light = light("direct"),
                     color = "white", linewidth = .1) +
   guides(fill = guide_colorbar_3d())
@@ -202,6 +202,5 @@ ggplot(iris, aes(Petal.Length, Sepal.Length, fill = Species)) +
 \seealso{
 \code{\link[=stat_density_2d]{stat_density_2d()}} for 2D density contours, \code{\link[=stat_surface_3d]{stat_surface_3d()}} for
 surfaces from existing grid data, \code{\link[=light]{light()}} for lighting specifications,
-\code{\link[=make_tile_grid]{make_tile_grid()}} for details about grid geometry options,
 \code{\link[=coord_3d]{coord_3d()}} for 3D coordinate systems.
 }

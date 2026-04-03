@@ -1,23 +1,21 @@
+# Aggregate numeric values per polygon group.
+# Averages all numeric columns except positional/structural ones, so that
+# computed variables (e.g. `fitted`, `density`, `se`) and visual aesthetics
+# (e.g. `fill`, `colour`) get per-polygon values before ggplot2 resolves
+# `after_stat()` mappings or picks a single vertex's value.
+average_aesthetics <- function(data,
+                               exclude = c("x", "y", "z", "order",
+                                           ".vertex_order", "PANEL",
+                                           "row", "column")){
 
-# Aggregate aesthetic values per group.
-# Intended for use within compute methods of stats producing polygons or lines, so that
-# e.g. `aes(fill = x)` sets fill based on mean polygon x rather than only the first vertex's x.
-average_aesthetics <- function(data, aesthetics = c("fill", "colour", "color", "alpha", "size", "stroke")){
-      aesthetics <- intersect(names(data), aesthetics)
+      numeric_cols <- names(data)[sapply(data, is.numeric)]
+      avg_cols <- setdiff(numeric_cols, exclude)
 
-      average <- function(x){
-            if(is.numeric(x)){
-                  return(mean(x, na.rm = TRUE))
-            }else{
-                  return(x)
-            }
-      }
-
-      # Compute group-level aesthetic means
-      if (length(aesthetics) > 0) {
+      if (length(avg_cols) > 0) {
             data <- data %>%
                   group_by(group) %>%
-                  mutate(across(all_of(aesthetics), average)) %>%
+                  mutate(across(all_of(avg_cols),
+                                ~ if(is.numeric(.x)) mean(.x, na.rm = TRUE) else .x)) %>%
                   ungroup()
       }
 

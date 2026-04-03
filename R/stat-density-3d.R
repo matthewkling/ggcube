@@ -198,7 +198,7 @@ kde2d <- function(x, y, eval_x, eval_y, h) {
 #' p + geom_density_3d() + guides(fill = guide_colorbar_3d())
 #'
 #' # Specify alternative grid geometry and light model
-#' p + geom_density_3d(grid = "triangle", n = 30, direction = "y",
+#' p + geom_density_3d(grid = "equilateral", n = 30, direction = "y",
 #'                     light = light("direct"),
 #'                     color = "white", linewidth = .1) +
 #'   guides(fill = guide_colorbar_3d())
@@ -232,7 +232,6 @@ kde2d <- function(x, y, eval_x, eval_y, h) {
 #'
 #' @seealso [stat_density_2d()] for 2D density contours, [stat_surface_3d()] for
 #'   surfaces from existing grid data, [light()] for lighting specifications,
-#'   [make_tile_grid()] for details about grid geometry options,
 #'   [coord_3d()] for 3D coordinate systems.
 #' @rdname stat_density_3d
 #' @return A `Layer` object that can be added to a ggplot.
