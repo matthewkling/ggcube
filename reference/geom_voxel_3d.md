@@ -185,10 +185,12 @@ p + geom_voxel_3d(fill = "steelblue")
 
 # With aesthetic fill
 p + stat_voxel_3d(aes(fill = z)) +
-  geom_fill_viridis_c() + guides(fill = guide_colorbar_3d())
-#> Error in geom_fill_viridis_c(): could not find function "geom_fill_viridis_c"
+  scale_fill_viridis_c() +
+  guides(fill = guide_colorbar_3d())
 
-# Show only visible faces for performance
-p + geom_voxel_3d(faces = c("zmax", "ymin", "xmin"))
+
+# Show only some voxel faces
+p + geom_voxel_3d(fill = "steelblue",
+                  faces = c("zmax", "ymin", "xmin"))
 
 ```
