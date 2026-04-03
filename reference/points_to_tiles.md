@@ -26,7 +26,8 @@ points_to_tiles(
 
 - grid_type:
 
-  For method="grid", type of tiles: "rectangle", "tri1", "tri2".
+  Tile geometry: "rectangle", "right1", "right2", or "equilateral". The
+  equilateral option routes to Delaunay tessellation.
 
 - group_prefix:
 

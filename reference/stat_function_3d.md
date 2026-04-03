@@ -109,6 +109,10 @@ geom_function_3d(
 
   Grid coordinates and function values
 
+- fitted:
+
+  Function values (same as `z`; used for default fill mapping)
+
 - dzdx, dzdy:
 
   Partial derivatives at each point
@@ -142,10 +146,13 @@ ggplot() +
   geom_function_3d(fun = function(x, y) x^2 + y^2,
                    xlim = c(-2, 2), ylim = c(-2, 2),
                    aes(fill = after_stat(slope)),
-                   grid = "triangle") +
+                   grid = "equilateral") +
   scale_fill_viridis_c() +
   coord_3d()
-
+#> Error in geom_function_3d(fun = function(x, y) x^2 + y^2, xlim = c(-2,     2), ylim = c(-2, 2), aes(fill = after_stat(slope)), grid = "equilateral"): Problem while setting up geom.
+#> ℹ Error occurred in the 1st layer.
+#> Caused by error in `match.arg()`:
+#> ! 'arg' should be one of “rectangle”, “right1”, “right2”
 
 # As ridgelines
 ggplot() +

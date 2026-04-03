@@ -1,17 +1,39 @@
-# Grid generation parameters
+# Grid generation
 
 Parameters defining the geometry, resolution, and orientation of a
-regular grid of tiles, as used by various ggcube layer functions.
+regular grid of surface tiles, as used by various ggcube layer functions
+including
+[`geom_smooth_3d()`](https://matthewkling.github.io/ggcube/reference/geom_smooth_3d.md),
+[`geom_function_3d()`](https://matthewkling.github.io/ggcube/reference/stat_function_3d.md),
+[`geom_density_3d()`](https://matthewkling.github.io/ggcube/reference/stat_density_3d.md),
+and
+[`geom_surface_3d()`](https://matthewkling.github.io/ggcube/reference/stat_surface_3d.md).
 
 ## Arguments
 
 - grid:
 
-  Character argument specifying geometry of grid to generate. Options
-  include `"tri"` (the default) for triangular grid, `"rect"` for
-  rectangular grid, or `"hex"` for hexagonal grid. Triangles produce a
-  proper 3D surface that can prevent lighting artifacts in places where
-  a surface curves past parallel with the sight line.
+  Character specifying tile geometry. Options:
+
+  `"rectangle"`
+
+  :   Rectangular grid (the default).
+
+  `"right1"`
+
+  :   Rectangular grid with each quad split into two right triangles
+      along the bottom-left to top-right diagonal.
+
+  `"right2"`
+
+  :   Like `"right1"` but split along the bottom-right to top-left
+      diagonal.
+
+  `"equilateral"`
+
+  :   Equilateral triangular lattice (tessellated via Delaunay
+      triangulation). Can prevent lighting artifacts where a surface
+      curves past parallel with the sight line.
 
 - n:
 
@@ -27,14 +49,7 @@ regular grid of tiles, as used by various ggcube layer functions.
 
 - trim:
 
-  Logical. Only relevant for triangular and hexagonal grids. If TRUE
-  (default), trims edge tiles to so that grid boundaries are straight
-  lines. If FALSE, preserves the full shape of all tiles, resulting in a
-  grid with irregular edges.
-
-## Details
-
-Grids are constructed such that tiles are approximately equilateral when
-scaled to a square domain, unless `n` gives separate resolution values
-for the two dimensions. For triangular and hexagonal grids, this means
-that `n` is only approximate.
+  Logical. Only relevant for `grid = "equilateral"`. If `TRUE`
+  (default), trims edge vertices so that grid boundaries are straight
+  lines. If `FALSE`, preserves the full lattice, resulting in a grid
+  with irregular edges.

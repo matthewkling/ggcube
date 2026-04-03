@@ -1,15 +1,16 @@
 # Generate a grid of unique vertex points
 
-Creates a regular grid of unique vertex positions. Unlike
-[`make_tile_grid()`](https://matthewkling.github.io/ggcube/reference/make_tile_grid.md),
-this returns one row per unique vertex position rather than polygon
-vertices with duplicates.
+Creates a regular grid of unique vertex positions for use by
+surface-generating stats. The grid is tessellated into polygon tiles by
+[`points_to_tiles()`](https://matthewkling.github.io/ggcube/reference/points_to_tiles.md)
+in the geom layer (or in the stat for
+[`stat_smooth_3d()`](https://matthewkling.github.io/ggcube/reference/geom_smooth_3d.md)).
 
 ## Usage
 
 ``` r
 make_point_grid(
-  grid = c("rectangle", "tri1", "tri2", "triangle"),
+  grid = c("rectangle", "right1", "right2", "equilateral"),
   n = 40,
   direction = c("x", "y"),
   xlim,
@@ -20,9 +21,12 @@ make_point_grid(
 
 ## Arguments
 
-- n:
+- grid, n, direction, trim:
 
-  Integer or length-2 integer vector specifying grid resolution.
+  Parameters determining the geometry, resolution, and orientation of
+  the surface grid. See
+  [grid_generation](https://matthewkling.github.io/ggcube/reference/grid_generation.md)
+  for details.
 
 - xlim, ylim:
 
@@ -30,4 +34,4 @@ make_point_grid(
 
 ## Value
 
-A data frame with columns `x`, `y`, `row`, `column`.
+A data frame with columns `x`, `y`.

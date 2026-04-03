@@ -2,9 +2,9 @@
 
 Takes user-provided (x, y, z) point data and prepares it for surface
 rendering. If data form a regular grid, can render either a
-GeomSurface3D of rectangular or triangular tiles, or a GeomRidgeline3D
-or GeomContour3D set of surface slices; otherwise, renders triangular
-tiles via Delaunay trianuglation.
+GeomSurface3D of rectangular or right-triangular tiles, or a
+GeomRidgeline3D or GeomContour3D set of surface slices; otherwise,
+renders irregular triangular tiles via Delaunay trianuglation.
 
 ## Usage
 
@@ -100,8 +100,8 @@ geom_surface_3d(
 
 - grid:
 
-  Tile geometry for regular grids: "rectangle" (default), "tri1", or
-  "tri2".
+  Tile geometry for regular grids: "rectangle" (default), "right1", or
+  "right2".
 
 ## Details
 
@@ -165,11 +165,11 @@ p + geom_surface_3d(aes(color = z), fill = NA,
 
 
 # triangulated surface (can prevent lighting flaws)
-p + geom_surface_3d(fill = "#9e2602", color = "black", grid = "tri2")
+p + geom_surface_3d(fill = "#9e2602", color = "black", grid = "right2")
 
 
 # use after_stat to access computed surface-orientation variables
-p + geom_surface_3d(aes(fill = after_stat(slope)), grid = "tri2") +
+p + geom_surface_3d(aes(fill = after_stat(slope)), grid = "right2") +
       scale_fill_viridis_c() +
       guides(fill = guide_colorbar_3d())
 

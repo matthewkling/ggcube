@@ -45,7 +45,7 @@ geom_smooth_3d(
 stat_smooth_3d(
   mapping = NULL,
   data = NULL,
-  geom = GeomSmooth3D,
+  geom = GeomPolygon3D,
   position = "identity",
   ...,
   method = "loess",
@@ -257,9 +257,7 @@ The following computed variables are available via
 [`stat_surface_3d()`](https://matthewkling.github.io/ggcube/reference/stat_surface_3d.md)
 for surfaces from existing grid data,
 [`stat_function_3d()`](https://matthewkling.github.io/ggcube/reference/stat_function_3d.md)
-for mathematical function surfaces,
-[`make_tile_grid()`](https://matthewkling.github.io/ggcube/reference/make_tile_grid.md)
-for details about grid geometry options.
+for mathematical function surfaces.
 
 ## Examples
 
@@ -319,13 +317,14 @@ p + geom_smooth_3d(aes(fill = after_stat(se * 2))) +
 # Extend surface beyond training data range (explicit extrapolation)
 p + geom_smooth_3d(method = "lm", xlim = c(-5, 5), ylim = c(-5, 5))
 
+
 # Clip surface to predictor convex hull
 # to prevent extrapolation into corner areas
 p + geom_smooth_3d(method = "lm", domain = "chull")
 
 
 # Specify alternative grid geometry
-p + geom_smooth_3d(grid = "hex", n = 30, direction = "y")
+p + geom_smooth_3d(grid = "right1", n = 30, direction = "y")
 
 
 # Separate fits for data subgroups

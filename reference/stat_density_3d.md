@@ -218,8 +218,6 @@ for 2D density contours,
 for surfaces from existing grid data,
 [`light()`](https://matthewkling.github.io/ggcube/reference/light.md)
 for lighting specifications,
-[`make_tile_grid()`](https://matthewkling.github.io/ggcube/reference/make_tile_grid.md)
-for details about grid geometry options,
 [`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md)
 for 3D coordinate systems.
 
@@ -234,11 +232,14 @@ p + geom_density_3d() + guides(fill = guide_colorbar_3d())
 
 
 # Specify alternative grid geometry and light model
-p + geom_density_3d(grid = "triangle", n = 30, direction = "y",
+p + geom_density_3d(grid = "equilateral", n = 30, direction = "y",
                     light = light("direct"),
                     color = "white", linewidth = .1) +
   guides(fill = guide_colorbar_3d())
-
+#> Error in geom_density_3d(grid = "equilateral", n = 30, direction = "y",     light = light("direct"), color = "white", linewidth = 0.1): Problem while setting up geom.
+#> ℹ Error occurred in the 1st layer.
+#> Caused by error in `match.arg()`:
+#> ! 'arg' should be one of “rectangle”, “right1”, “right2”
 
 # Color by alternative density metric
 p + geom_density_3d(aes(fill = after_stat(count)))

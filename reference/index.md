@@ -76,9 +76,7 @@
 - [`polygon_rendering`](https://matthewkling.github.io/ggcube/reference/polygon_rendering.md)
   : Polygon rendering parameters
 - [`grid_generation`](https://matthewkling.github.io/ggcube/reference/grid_generation.md)
-  : Grid generation parameters
-- [`make_tile_grid()`](https://matthewkling.github.io/ggcube/reference/make_tile_grid.md)
-  : Generate rectangular, triangular, or hexagonal grids
+  : Grid generation
 
 ## Animation
 
