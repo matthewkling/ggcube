@@ -16,6 +16,7 @@ geom_point_3d(
   position = "identity",
   ...,
   na.rm = FALSE,
+  sort_method = "painter",
   scale_depth = TRUE,
   raw_points = TRUE,
   ref_lines = FALSE,
@@ -46,6 +47,7 @@ stat_point_3d(
   position = "identity",
   ...,
   na.rm = FALSE,
+  sort_method = "painter",
   scale_depth = TRUE,
   raw_points = TRUE,
   ref_lines = FALSE,
@@ -100,6 +102,30 @@ stat_point_3d(
 - na.rm:
 
   If `FALSE`, missing values are removed with a warning.
+
+- sort_method:
+
+  Character indicating algorithm used to determine the order in which
+  elements are rendered. This controls depth sorting for all geometry
+  types within a layer, including polygons, points, segments, and text.
+  Default varies by geometry type.
+
+  - `"painter"`: Elements are sorted by the mean depth (distance from
+    viewer after rotation) of their vertices. This is fast, but can give
+    incorrect results when primitives overlap in screen space at
+    different depths.
+
+  - `"pairwise"`: A more intensive sorting algorithm that compares every
+    pair of elements to determine occlusion order. Uses type-specific
+    geometric tests: polygon overlap detection for polygon-polygon
+    pairs, point-in-polygon tests for polygon-point pairs, line clipping
+    for polygon-segment pairs, and line intersection for segment-segment
+    pairs. When elements are coplanar, smaller primitives (points,
+    segments) render on top of larger ones (polygons). Slower but more
+    accurate.
+
+  - `"auto"`: Uses pairwise if the data has fewer than 500 rows, and
+    painter otherwise.
 
 - scale_depth:
 
@@ -287,11 +313,12 @@ Reference elements intelligently inherit styling from raw points:
 
 ## See also
 
-[`geom_point()`](https://ggplot2.tidyverse.org/reference/geom_point.html)
-for 2D scatter plots,
+[`geom_segment_3d()`](https://matthewkling.github.io/ggcube/reference/geom_segment_3d.md)
+for 3D segments,
+[`geom_path_3d()`](https://matthewkling.github.io/ggcube/reference/geom_path_3d.md)
+for 3D paths,
 [`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md)
-for 3D coordinate systems, `stat_point_3d()` for the underlying
-statistical transformation.
+for 3D coordinate systems.
 
 ## Examples
 
@@ -309,46 +336,7 @@ ggplot(expand.grid(x = 1:5, y = 1:5, z = 1:5),
 # Add circular reference points on 2D face panel
 ggplot(mtcars, aes(mpg, wt, qsec)) +
   geom_point_3d(size = 3,
-    ref_points = TRUE, ref_lines = TRUE, ref_faces = "zmin") +
-  coord_3d()
-
-
-# Aesthetic inheritance - ref elements inherit color and fill
-ggplot(mpg, aes(displ, hwy, cty, color = cty, fill = cty)) +
-  geom_point_3d(shape = 21, size = 3,
-                ref_points = TRUE, ref_lines = TRUE,
-                ref_faces = "zmin") +
-  coord_3d()
-
-
-# Use point-style references with custom shape
-ggplot(mtcars, aes(mpg, wt, qsec)) +
-  geom_point_3d(ref_points = "points", ref_lines = TRUE,
-                ref_point_shape = 4, ref_point_size = 2,
-                ref_line_alpha = 0.5) +
-  coord_3d()
-
-
-# Show only circular reference projections (no original points)
-ggplot(mtcars, aes(mpg, wt, qsec)) +
-  geom_point_3d(raw_points = FALSE, ref_points = "circles", ref_lines = TRUE,
-                ref_faces = c("zmin", "ymin")) +
-  coord_3d()
-
-
-# Project to multiple faces with custom circle styling
-ggplot(mtcars, aes(mpg, wt, qsec, color = factor(cyl))) +
-  geom_point_3d(ref_points = "circles", ref_lines = TRUE,
-                ref_faces = c("zmin", "ymax", "xmax"),
-                ref_line_color = "grey50", ref_line_alpha = 0.3,
-                ref_point_fill = "white", ref_point_stroke = 0.8,
-                ref_circle_radius = 1) +
-  coord_3d()
-
-
-# Disable depth scaling for uniform sizes
-ggplot(mtcars, aes(mpg, wt, qsec)) +
-  geom_point_3d(scale_depth = FALSE, size = 3) +
+    ref_points = TRUE, ref_faces = c("ymax", "xmax")) +
   coord_3d()
 
 ```

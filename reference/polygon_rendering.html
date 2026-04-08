@@ -50,18 +50,6 @@ voxels, etc. where backfaces are generally hidden unless frontfaces are transpar
 or explicitly disabled).</p></dd>
 
 
-<dt id="arg-sort-method">sort_method<a class="anchor" aria-label="anchor" href="#arg-sort-method"></a></dt>
-<dd><p>Character indicating algorithm used to determine the order in which
-polygons are rendered.</p><ul><li><p><code>"painter"</code>: Polygons are sorted by the mean depth (distance from viewer after
-rotation) of their vertices. This is fast, but can give incorrect results in certain cases.</p></li>
-<li><p><code>"pairwise"</code>: A more intensive sorting algorithm that compares every pair of
-polygons in 3D to determine which face should be rendered behind the other;
-slower but more accurate.</p></li>
-<li><p><code>"auto"</code>: The default. Uses pairwise if polygon data has less
-than 500 rows and painter otherwise.</p></li>
-</ul></dd>
-
-
 <dt id="arg-scale-depth">scale_depth<a class="anchor" aria-label="anchor" href="#arg-scale-depth"></a></dt>
 <dd><p>Logical indicating whether polygon linewidths should be scaled to make closer lines
 wider and farther lines narrower. Default is TRUE. Scaling is based on the mean depth of a polygon.</p></dd>

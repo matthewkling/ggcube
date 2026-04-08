@@ -15,22 +15,6 @@ Polygon rendering parameters
   backfaces are generally hidden unless frontfaces are transparent or
   explicitly disabled).
 
-- sort_method:
-
-  Character indicating algorithm used to determine the order in which
-  polygons are rendered.
-
-  - `"painter"`: Polygons are sorted by the mean depth (distance from
-    viewer after rotation) of their vertices. This is fast, but can give
-    incorrect results in certain cases.
-
-  - `"pairwise"`: A more intensive sorting algorithm that compares every
-    pair of polygons in 3D to determine which face should be rendered
-    behind the other; slower but more accurate.
-
-  - `"auto"`: The default. Uses pairwise if polygon data has less than
-    500 rows and painter otherwise.
-
 - scale_depth:
 
   Logical indicating whether polygon linewidths should be scaled to make
