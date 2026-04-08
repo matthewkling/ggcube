@@ -1,7 +1,6 @@
-
 #' 3D line segments
 #'
-#' `geom_segment_3d()` and `stat_segment_3d()` drawe line segments in 3D space
+#' `geom_segment_3d()` and `stat_segment_3d()` draw line segments in 3D space
 #' with automatic depth-based linewidth scaling and proper depth sorting.
 #' Each segment is defined by start coordinates (x, y, z) and end
 #' coordinates (xend, yend, zend).
@@ -19,6 +18,7 @@
 #' @param scale_depth Logical indicating whether to apply depth-based scaling
 #'   to linewidth. When `TRUE` (default), segments closer to the viewer appear
 #'   thicker, and segments farther away appear thinner.
+#' @inheritParams sort_method_param
 #' @param arrow Specification for arrow heads, created by [arrow()].
 #' @param lineend Line end style, one of "round", "butt", "square".
 #'
@@ -57,6 +57,7 @@
 geom_segment_3d <- function(mapping = NULL, data = NULL,
                             stat = StatSegment3D, position = "identity",
                             ...,
+                            sort_method = "painter",
                             scale_depth = TRUE, arrow = NULL, lineend = "butt",
                             na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
 
@@ -64,6 +65,7 @@ geom_segment_3d <- function(mapping = NULL, data = NULL,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(
                   na.rm = na.rm,
+                  sort_method = sort_method,
                   scale_depth = scale_depth,
                   arrow = arrow,
                   lineend = lineend,
@@ -77,6 +79,7 @@ geom_segment_3d <- function(mapping = NULL, data = NULL,
 stat_segment_3d <- function(mapping = NULL, data = NULL,
                             geom = GeomSegment3D, position = "identity",
                             ...,
+                            sort_method = "painter",
                             scale_depth = TRUE, arrow = NULL, lineend = "butt",
                             na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
 
@@ -84,6 +87,7 @@ stat_segment_3d <- function(mapping = NULL, data = NULL,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(
                   na.rm = na.rm,
+                  sort_method = sort_method,
                   scale_depth = scale_depth,
                   arrow = arrow,
                   lineend = lineend,
@@ -170,7 +174,9 @@ GeomSegment3D <- ggproto("GeomSegment3D", Geom,
                                colour = "black", linewidth = 0.5, linetype = 1, alpha = 1
                          ),
 
-                         draw_panel = function(data, panel_params, coord, scale_depth = TRUE,
+                         draw_panel = function(data, panel_params, coord,
+                                               sort_method = "painter",
+                                               scale_depth = TRUE,
                                                arrow = NULL, lineend = "butt", na.rm = FALSE) {
 
                                validate_coord3d(coord)
@@ -180,7 +186,7 @@ GeomSegment3D <- ggproto("GeomSegment3D", Geom,
                                }
 
                                # Convert wide to long format
-                               # Each segment becomes 2 rows with unique sub-group IDs
+                               # Each segment becomes 2 rows sharing a group ID
                                n_segments <- nrow(data)
 
                                # Create start points
@@ -188,7 +194,7 @@ GeomSegment3D <- ggproto("GeomSegment3D", Geom,
                                      x = data$x,
                                      y = data$y,
                                      z = data$z,
-                                     group = paste0(data$group, "__start"),
+                                     group = data$group,
                                      segment_id = 1:n_segments,
                                      point_type = "start"
                                )
@@ -198,7 +204,7 @@ GeomSegment3D <- ggproto("GeomSegment3D", Geom,
                                      x = data$xend,
                                      y = data$yend,
                                      z = data$zend,
-                                     group = paste0(data$group, "__end"),
+                                     group = data$group,
                                      segment_id = 1:n_segments,
                                      point_type = "end"
                                )
@@ -212,6 +218,9 @@ GeomSegment3D <- ggproto("GeomSegment3D", Geom,
 
                                # Combine into long format
                                long_data <- rbind(start_data, end_data)
+                               long_data$.prim <- "segment"
+                               sort_method <- match.arg(sort_method, c("auto", "pairwise", "painter"))
+                               long_data$.sort_method <- sort_method
 
                                # Transform all points together (handles depth sorting)
                                coords <- coord$transform(long_data, panel_params)
@@ -219,52 +228,12 @@ GeomSegment3D <- ggproto("GeomSegment3D", Geom,
                                # Apply depth scaling to linewidth
                                coords <- scale_depth(coords, scale_depth)
 
-                               # Reconstruct segments from transformed data (vectorized)
-                               start_coords <- coords[coords$point_type == "start", ]
-                               end_coords <- coords[coords$point_type == "end", ]
-
-                               # Order by segment_id to ensure proper pairing
-                               start_coords <- start_coords[order(start_coords$segment_id), ]
-                               end_coords <- end_coords[order(end_coords$segment_id), ]
-
-                               # Vectorized segment creation
-                               segments <- data.frame(
-                                     x0 = start_coords$x,
-                                     y0 = start_coords$y,
-                                     x1 = end_coords$x,
-                                     y1 = end_coords$y,
-                                     depth = (start_coords$depth + end_coords$depth) / 2,
-                                     colour = start_coords$colour,
-                                     linewidth = start_coords$linewidth,
-                                     linetype = start_coords$linetype,
-                                     alpha = start_coords$alpha,
-                                     segment_id = start_coords$segment_id
-                               )
-
-                               if (nrow(segments) == 0) {
+                               if (nrow(coords) == 0) {
                                      return(grid::nullGrob())
                                }
 
-                               # Sort segments by depth (back to front)
-                               segments <- segments[order(-segments$depth), ]
-
-                               # Create segments grob
-                               grid::segmentsGrob(
-                                     x0 = segments$x0, y0 = segments$y0,
-                                     x1 = segments$x1, y1 = segments$y1,
-                                     default.units = "npc",
-                                     arrow = arrow,
-                                     gp = grid::gpar(
-                                           col = segments$colour,
-                                           lwd = segments$linewidth * .pt,
-                                           lty = segments$linetype,
-                                           lineend = lineend,
-                                           alpha = segments$alpha
-                                     )
-                               )
+                               render_mixed_grobs(coords, arrow = arrow, lineend = lineend)
                          },
 
                          draw_key = draw_key_path
 )
-
-

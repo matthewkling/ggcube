@@ -1,4 +1,3 @@
-
 #' 3D paths connecting observations
 #'
 #' Connects observations in 3D space in the order they appear
@@ -19,6 +18,7 @@
 #' @param scale_depth Logical indicating whether to apply depth-based scaling
 #'   to linewidth. When `TRUE` (default), path segments closer to the viewer
 #'   appear thicker, and segments farther away appear thinner.
+#' @inheritParams sort_method_param
 #' @param arrow Specification for arrow heads, created by [arrow()].
 #' @param lineend Line end style, one of "round", "butt", "square".
 #'
@@ -74,6 +74,7 @@
 geom_path_3d <- function(mapping = NULL, data = NULL,
                          stat = StatPath3D, position = "identity",
                          ...,
+                         sort_method = "painter",
                          scale_depth = TRUE, arrow = NULL, lineend = "butt",
                          na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
 
@@ -81,6 +82,7 @@ geom_path_3d <- function(mapping = NULL, data = NULL,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(
                   na.rm = na.rm,
+                  sort_method = sort_method,
                   scale_depth = scale_depth,
                   arrow = arrow,
                   lineend = lineend,
@@ -94,6 +96,7 @@ geom_path_3d <- function(mapping = NULL, data = NULL,
 stat_path_3d <- function(mapping = NULL, data = NULL,
                          geom = GeomSegment3D, position = "identity",
                          ...,
+                         sort_method = "painter",
                          scale_depth = TRUE, arrow = NULL, lineend = "butt",
                          na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
 
@@ -101,6 +104,7 @@ stat_path_3d <- function(mapping = NULL, data = NULL,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(
                   na.rm = na.rm,
+                  sort_method = sort_method,
                   scale_depth = scale_depth,
                   arrow = arrow,
                   lineend = lineend,

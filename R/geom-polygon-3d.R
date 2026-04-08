@@ -20,6 +20,7 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                                # Transform data
                                sort_method <- match.arg(sort_method, c("auto", "pairwise", "painter"))
                                data$.sort_method <- sort_method
+                               if (!".prim" %in% names(data)) data$.prim <- "polygon"
                                coords <- coord$transform(data, panel_params)
 
                                # Enforce convexity if requested
@@ -31,11 +32,7 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                                # Apply light blending to colors
                                coords <- blend_light(coords)
 
-                               # Data is already hierarchically sorted by coord$transform()
-                               # Just need to create polygon grobs using the group column
-
                                if (!"group" %in% names(coords)) {
-                                     # Fallback for data without groups
                                      warning("No group column found in polygon data")
                                      return(grid::nullGrob())
                                }
@@ -44,74 +41,7 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                                      return(grid::nullGrob())
                                }
 
-                               # Detect subgroup column: user-facing "subgroup" or internal ".subgroup"
-                               has_subgroup <- any(c("subgroup", ".subgroup") %in% names(coords))
-                               if (has_subgroup) {
-                                     sg_col <- if (".subgroup" %in% names(coords)) ".subgroup" else "subgroup"
-                               }
-
-                               # Map group to integer IDs preserving data order (not alphabetical)
-                               unique_groups <- unique(coords$group)
-                               group_ids <- match(coords$group, unique_groups)
-
-                               # Extract per-group aesthetics (one value per group, in data order)
-                               group_first_idx <- !duplicated(coords$group)
-                               group_col <- coords$colour[group_first_idx]
-                               group_fill <- coords$fill[group_first_idx]
-                               group_lwd <- coords$linewidth[group_first_idx] * .pt
-                               group_lty <- coords$linetype[group_first_idx]
-                               group_alpha <- coords$alpha[group_first_idx]
-                               group_alpha <- ifelse(is.na(group_alpha), 1, group_alpha)
-
-                               if (has_subgroup) {
-                                     # Holes present: use pathGrob with subgroup as id, group as pathId
-                                     coords <- coords[order(coords$group, coords[[sg_col]]), ]
-
-                                     # Recompute after reordering
-                                     unique_groups <- unique(coords$group)
-                                     group_ids <- match(coords$group, unique_groups)
-                                     unique_subgroups <- unique(coords[[sg_col]])
-                                     subgroup_ids <- match(coords[[sg_col]], unique_subgroups)
-
-                                     group_first_idx <- !duplicated(coords$group)
-                                     group_col <- coords$colour[group_first_idx]
-                                     group_fill <- coords$fill[group_first_idx]
-                                     group_lwd <- coords$linewidth[group_first_idx] * .pt
-                                     group_lty <- coords$linetype[group_first_idx]
-                                     group_alpha <- coords$alpha[group_first_idx]
-                                     group_alpha <- ifelse(is.na(group_alpha), 1, group_alpha)
-
-                                     grid::pathGrob(
-                                           x = coords$x,
-                                           y = coords$y,
-                                           id = subgroup_ids,
-                                           pathId = group_ids,
-                                           rule = rule,
-                                           default.units = "npc",
-                                           gp = grid::gpar(
-                                                 col = group_col,
-                                                 fill = group_fill,
-                                                 lwd = group_lwd,
-                                                 lty = group_lty,
-                                                 alpha = group_alpha
-                                           )
-                                     )
-                               } else {
-                                     # No holes: use polygonGrob with group as id
-                                     grid::polygonGrob(
-                                           x = coords$x,
-                                           y = coords$y,
-                                           id = group_ids,
-                                           default.units = "npc",
-                                           gp = grid::gpar(
-                                                 col = group_col,
-                                                 fill = group_fill,
-                                                 lwd = group_lwd,
-                                                 lty = group_lty,
-                                                 alpha = group_alpha
-                                           )
-                                     )
-                               }
+                               render_mixed_grobs(coords, rule = rule)
                          },
 
                          draw_key = draw_key_polygon

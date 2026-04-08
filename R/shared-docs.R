@@ -1,6 +1,33 @@
 # Shared documentation for ggcube functions
 
 
+# sorting ----------------------------------------------------
+
+#' Depth sorting method
+#'
+#' @param sort_method Character indicating algorithm used to determine the order in which
+#'   elements are rendered. This controls depth sorting for all geometry types within
+#'   a layer, including polygons, points, segments, and text. Default varies by geometry
+#'   type.
+#'   \itemize{
+#'     \item \code{"painter"}: Elements are sorted by the mean depth (distance from
+#'     viewer after rotation) of their vertices. This is fast, but can give incorrect
+#'     results when primitives overlap in screen space at different depths.
+#'     \item \code{"pairwise"}: A more intensive sorting algorithm that compares every
+#'     pair of elements to determine occlusion order. Uses type-specific geometric
+#'     tests: polygon overlap detection for polygon-polygon pairs, point-in-polygon
+#'     tests for polygon-point pairs, line clipping for polygon-segment pairs, and
+#'     line intersection for segment-segment pairs. When elements are coplanar,
+#'     smaller primitives (points, segments) render on top of larger ones (polygons).
+#'     Slower but more accurate.
+#'     \item \code{"auto"}: Uses pairwise if the data has fewer than 500 rows, and
+#'     painter otherwise.
+#'   }
+#' @name sort_method_param
+#' @keywords internal
+NULL
+
+
 # polygons ----------------------------------------------------
 
 #' Polygon rendering parameters
@@ -12,17 +39,7 @@
 #'   type: FALSE for open surface-type geometries, TRUE for solid objects (hulls,
 #'   voxels, etc. where backfaces are generally hidden unless frontfaces are transparent
 #'   or explicitly disabled).
-#' @param sort_method Character indicating algorithm used to determine the order in which
-#'   polygons are rendered.
-#'   \itemize{
-#'     \item \code{"painter"}: Polygons are sorted by the mean depth (distance from viewer after
-#'     rotation) of their vertices. This is fast, but can give incorrect results in certain cases.
-#'     \item \code{"pairwise"}: A more intensive sorting algorithm that compares every pair of
-#'     polygons in 3D to determine which face should be rendered behind the other;
-#'     slower but more accurate.
-#'     \item \code{"auto"}: The default. Uses pairwise if polygon data has less
-#'     than 500 rows and painter otherwise.
-#'   }
+#' @inheritParams sort_method_param
 #' @param scale_depth Logical indicating whether polygon linewidths should be scaled to make closer lines
 #'   wider and farther lines narrower. Default is TRUE. Scaling is based on the mean depth of a polygon.
 #' @param force_convex Logical indicating whether to remove polygon vertices that are not part of the
@@ -159,5 +176,3 @@ NULL
 #' @name light_param
 #' @keywords internal
 NULL
-
-

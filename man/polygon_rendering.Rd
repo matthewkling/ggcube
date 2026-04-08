@@ -12,18 +12,6 @@ type: FALSE for open surface-type geometries, TRUE for solid objects (hulls,
 voxels, etc. where backfaces are generally hidden unless frontfaces are transparent
 or explicitly disabled).}
 
-\item{sort_method}{Character indicating algorithm used to determine the order in which
-polygons are rendered.
-\itemize{
-\item \code{"painter"}: Polygons are sorted by the mean depth (distance from viewer after
-rotation) of their vertices. This is fast, but can give incorrect results in certain cases.
-\item \code{"pairwise"}: A more intensive sorting algorithm that compares every pair of
-polygons in 3D to determine which face should be rendered behind the other;
-slower but more accurate.
-\item \code{"auto"}: The default. Uses pairwise if polygon data has less
-than 500 rows and painter otherwise.
-}}
-
 \item{scale_depth}{Logical indicating whether polygon linewidths should be scaled to make closer lines
 wider and farther lines narrower. Default is TRUE. Scaling is based on the mean depth of a polygon.}
 

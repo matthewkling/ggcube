@@ -12,6 +12,7 @@ geom_point_3d(
   position = "identity",
   ...,
   na.rm = FALSE,
+  sort_method = "painter",
   scale_depth = TRUE,
   raw_points = TRUE,
   ref_lines = FALSE,
@@ -42,6 +43,7 @@ stat_point_3d(
   position = "identity",
   ...,
   na.rm = FALSE,
+  sort_method = "painter",
   scale_depth = TRUE,
   raw_points = TRUE,
   ref_lines = FALSE,
@@ -78,6 +80,25 @@ the standard point aesthetics, \code{geom_point_3d()} requires x, y, and z coord
 \item{...}{Other arguments passed on to \code{\link[=layer]{layer()}}.}
 
 \item{na.rm}{If \code{FALSE}, missing values are removed with a warning.}
+
+\item{sort_method}{Character indicating algorithm used to determine the order in which
+elements are rendered. This controls depth sorting for all geometry types within
+a layer, including polygons, points, segments, and text. Default varies by geometry
+type.
+\itemize{
+\item \code{"painter"}: Elements are sorted by the mean depth (distance from
+viewer after rotation) of their vertices. This is fast, but can give incorrect
+results when primitives overlap in screen space at different depths.
+\item \code{"pairwise"}: A more intensive sorting algorithm that compares every
+pair of elements to determine occlusion order. Uses type-specific geometric
+tests: polygon overlap detection for polygon-polygon pairs, point-in-polygon
+tests for polygon-point pairs, line clipping for polygon-segment pairs, and
+line intersection for segment-segment pairs. When elements are coplanar,
+smaller primitives (points, segments) render on top of larger ones (polygons).
+Slower but more accurate.
+\item \code{"auto"}: Uses pairwise if the data has fewer than 500 rows, and
+painter otherwise.
+}}
 
 \item{scale_depth}{Logical indicating whether to apply depth-based scaling
 to point sizes, point stroke widths, and reference line widths.
@@ -222,45 +243,11 @@ ggplot(expand.grid(x = 1:5, y = 1:5, z = 1:5),
 # Add circular reference points on 2D face panel
 ggplot(mtcars, aes(mpg, wt, qsec)) +
   geom_point_3d(size = 3,
-    ref_points = TRUE, ref_lines = TRUE, ref_faces = "zmin") +
-  coord_3d()
-
-# Aesthetic inheritance - ref elements inherit color and fill
-ggplot(mpg, aes(displ, hwy, cty, color = cty, fill = cty)) +
-  geom_point_3d(shape = 21, size = 3,
-                ref_points = TRUE, ref_lines = TRUE,
-                ref_faces = "zmin") +
-  coord_3d()
-
-# Use point-style references with custom shape
-ggplot(mtcars, aes(mpg, wt, qsec)) +
-  geom_point_3d(ref_points = "points", ref_lines = TRUE,
-                ref_point_shape = 4, ref_point_size = 2,
-                ref_line_alpha = 0.5) +
-  coord_3d()
-
-# Show only circular reference projections (no original points)
-ggplot(mtcars, aes(mpg, wt, qsec)) +
-  geom_point_3d(raw_points = FALSE, ref_points = "circles", ref_lines = TRUE,
-                ref_faces = c("zmin", "ymin")) +
-  coord_3d()
-
-# Project to multiple faces with custom circle styling
-ggplot(mtcars, aes(mpg, wt, qsec, color = factor(cyl))) +
-  geom_point_3d(ref_points = "circles", ref_lines = TRUE,
-                ref_faces = c("zmin", "ymax", "xmax"),
-                ref_line_color = "grey50", ref_line_alpha = 0.3,
-                ref_point_fill = "white", ref_point_stroke = 0.8,
-                ref_circle_radius = 1) +
-  coord_3d()
-
-# Disable depth scaling for uniform sizes
-ggplot(mtcars, aes(mpg, wt, qsec)) +
-  geom_point_3d(scale_depth = FALSE, size = 3) +
+    ref_points = TRUE, ref_faces = c("ymax", "xmax")) +
   coord_3d()
 
 }
 \seealso{
-\code{\link[=geom_point]{geom_point()}} for 2D scatter plots, \code{\link[=coord_3d]{coord_3d()}} for 3D coordinate systems,
-\code{\link[=stat_point_3d]{stat_point_3d()}} for the underlying statistical transformation.
+\code{\link[=geom_segment_3d]{geom_segment_3d()}} for 3D segments, \code{\link[=geom_path_3d]{geom_path_3d()}} for 3D paths,
+\code{\link[=coord_3d]{coord_3d()}} for 3D coordinate systems.
 }
