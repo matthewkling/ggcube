@@ -27,11 +27,25 @@ geom_smooth_3d(
   domain = c("bbox", "chull"),
   se = FALSE,
   level = 0.95,
-  se.fill = NULL,
-  se.colour = NULL,
-  se.color = NULL,
-  se.alpha = 0.5,
-  se.linewidth = NULL,
+  se_fill = NULL,
+  se_colour = NULL,
+  se_color = NULL,
+  se_alpha = 0.5,
+  se_linewidth = NULL,
+  points = FALSE,
+  point_colour = "black",
+  point_color = NULL,
+  point_fill = NA,
+  point_size = 1.5,
+  point_shape = 19,
+  point_alpha = 1,
+  point_stroke = 0.5,
+  residuals = FALSE,
+  residual_colour = "black",
+  residual_color = NULL,
+  residual_linewidth = 0.5,
+  residual_linetype = 1,
+  residual_alpha = 1,
   light = NULL,
   cull_backfaces = FALSE,
   sort_method = NULL,
@@ -60,11 +74,25 @@ stat_smooth_3d(
   domain = c("bbox", "chull"),
   se = FALSE,
   level = 0.95,
-  se.fill = NULL,
-  se.colour = NULL,
-  se.color = NULL,
-  se.alpha = 0.5,
-  se.linewidth = NULL,
+  se_fill = NULL,
+  se_colour = NULL,
+  se_color = NULL,
+  se_alpha = 0.5,
+  se_linewidth = NULL,
+  points = FALSE,
+  point_colour = "black",
+  point_color = NULL,
+  point_fill = NA,
+  point_size = 1.5,
+  point_shape = 19,
+  point_alpha = 1,
+  point_stroke = 0.5,
+  residuals = FALSE,
+  residual_colour = "black",
+  residual_color = NULL,
+  residual_linewidth = 0.5,
+  residual_linetype = 1,
+  residual_alpha = 1,
   light = NULL,
   cull_backfaces = FALSE,
   sort_method = NULL,
@@ -162,24 +190,82 @@ stat_smooth_3d(
 
   Level of confidence interval to use (0.95 by default).
 
-- se.fill:
+- se_fill:
 
   Fill colour for confidence interval bands. If `NULL`, inherits from
   the main surface `fill` aesthetic.
 
-- se.colour, se.color:
+- se_colour, se_color:
 
-  Colour for confidence interval band borders. If `NULL`, inherits from
-  the main surface `colour` aesthetic.
+  Color for confidence interval band borders. If `NULL`, inherits from
+  the main surface `color` aesthetic.
 
-- se.alpha:
+- se_alpha:
 
   Alpha transparency for confidence interval bands. Defaults to 0.5.
 
-- se.linewidth:
+- se_linewidth:
 
   Line width for confidence interval band borders. If `NULL`, inherits
   from the main surface `linewidth` aesthetic.
+
+- points:
+
+  Logical indicating whether to overlay the original data points on the
+  fitted surface. Points are depth-sorted together with the surface
+  polygons for proper 3D rendering. Point styling is controlled via the
+  `point_*` parameters; mapped aesthetics from the layer are not
+  inherited by annotation points. Default is `FALSE`.
+
+- point_colour, point_color:
+
+  Color for data points. Defaults to `"black"`.
+
+- point_fill:
+
+  Fill color for data points (only relevant for shapes 21-25). Defaults
+  to `NA` (transparent).
+
+- point_size:
+
+  Size of data points.
+
+- point_shape:
+
+  Shape of data points.
+
+- point_alpha:
+
+  Alpha transparency for data points.
+
+- point_stroke:
+
+  Stroke width for data points.
+
+- residuals:
+
+  Logical indicating whether to draw residual lines connecting data
+  points to the fitted surface. Default is `FALSE`. Residual styling is
+  controlled via the `residual_*` parameters. Note: residual lines may
+  render incorrectly when combined with `se = TRUE`, as the lines
+  intersect the confidence interval surfaces and cannot be split at
+  intersection points.
+
+- residual_colour, residual_color:
+
+  Color for residual lines.
+
+- residual_linewidth:
+
+  Line width for residual lines.
+
+- residual_linetype:
+
+  Line type for residual lines.
+
+- residual_alpha:
+
+  Alpha transparency for residual lines.
 
 - light:
 
@@ -279,10 +365,19 @@ p <- ggplot(d, aes(x, y, z)) +
 p + geom_smooth_3d()
 
 
+# Show data points
+p + geom_smooth_3d(points = TRUE)
+
+
+# Show data points with residual lines
+p + geom_smooth_3d(points = TRUE, residuals = TRUE,
+      point_color = "red", alpha = .8)
+
+
 # Linear model surface with 90% confidence intervals
 p + geom_smooth_3d(aes(fill = after_stat(level)),
       method = "lm", color = "black", se = TRUE,
-      level = 0.99, se.alpha = .7, n = 10) +
+      level = 0.99, se_alpha = .7, n = 10) +
       scale_fill_manual(values = c("red", "darkorchid4", "steelblue"))
 #> Scale for fill is already present.
 #> Adding another scale for fill, which will replace the existing scale.

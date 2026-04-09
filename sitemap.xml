@@ -73,6 +73,8 @@
 <url><loc>https://matthewkling.github.io/ggcube/reference/light_param.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/lorenz_attractor.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/make_point_grid.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/make_point_rows.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/make_residual_segment_rows.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/make_scale_grid.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/mountain.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/normalize_light_direction.html</loc></url>
@@ -93,6 +95,7 @@
 <url><loc>https://matthewkling.github.io/ggcube/reference/render_texts.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/renderers_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/replace_colorbar_colors.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/resolve_aesthetic_overrides.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/resolve_point_aesthetics.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/rgb2hsl.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/ridgeline_params.html</loc></url>
@@ -100,6 +103,8 @@
 <url><loc>https://matthewkling.github.io/ggcube/reference/rotate_text_to_facing.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/rotation_matrix_around_axis.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/rotation_matrix_between_vectors.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/safe_bind_rows.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/scale_depth.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/scale_to_npc_coordinates.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/scale_to_standard.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/scale_z_continuous.html</loc></url>
