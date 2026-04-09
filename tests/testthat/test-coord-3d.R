@@ -1,9 +1,7 @@
 test_that("continuous and discrete scales run without error for various stats", {
-      library(tidyverse)
-
-      cont <- expand_grid(a = 1:3, b = 1:3, c = 1:3)
-      disc <- expand_grid(a = letters[1:3], b = letters[1:3], c = letters[1:3])
-      mix <- expand_grid(a = 1:3, b = letters[1:3], c = letters[1:3])
+      cont <- expand.grid(a = 1:3, b = 1:3, c = 1:3)
+      disc <- expand.grid(a = letters[1:3], b = letters[1:3], c = letters[1:3])
+      mix <- expand.grid(a = 1:3, b = letters[1:3], c = letters[1:3])
 
       test <- function(d, layer, scl = "fixed"){
             cont %>%

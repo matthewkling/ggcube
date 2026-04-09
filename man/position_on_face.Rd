@@ -72,7 +72,7 @@ set.seed(1)
 d <- data.frame(x = round(rnorm(10)), y = round(rnorm(10)), z = round(rnorm(10)))
 ggplot(d, aes(x, y, z)) +
   stat_voxel_3d(color = "black", fill = "steelblue",
-    light = light(shade = "fill", direction = c(1, 1, 0), shade_mode = "hsl"),
+    light = light(direction = c(1, 1, 0), mode = "hsv"),
     position = position_on_face(c("3D", "zmin", "xmax", "ymax"))) +
   coord_3d()
 
@@ -80,7 +80,7 @@ ggplot(d, aes(x, y, z)) +
 ggplot(sphere_points, aes(x, y, z)) +
   stat_hull_3d(position = position_on_face("zmin"), fill = "black") +
   geom_point_3d(position = position_on_face("ymax")) +
-  geom_path(position = position_on_face("xmax")) +
+  geom_path_3d(position = position_on_face("xmax")) +
   stat_hull_3d(color = "black") +
   coord_3d()
 

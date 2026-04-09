@@ -534,13 +534,32 @@ compute_light_in_coord <- function(data, standardized_coords, scale_ranges, scal
             light$direction[1:2] <- -light$direction[1:2]
       }
 
+      # Filter to polygon groups only — points and segments don't have
+      # meaningful surface normals and should not receive lighting
+      has_prim <- ".prim" %in% names(data)
+      if (has_prim) {
+            poly_mask <- is.na(data$.prim) | data$.prim == "polygon"
+      } else {
+            # Count vertices per group to identify polygons (3+ vertices)
+            grp_sizes <- ave(seq_len(nrow(data)), data$group, FUN = length)
+            poly_mask <- grp_sizes >= 3
+      }
+
+      if (!any(poly_mask)) {
+            # No polygon data to light — return unchanged
+            return(data)
+      }
+
+      poly_data <- data[poly_mask, , drop = FALSE]
+      poly_coords <- standardized_coords[poly_mask, , drop = FALSE]
+
       # Replace original coordinates with standardized ones for lighting computation
-      data$x <- standardized_coords$x
-      data$y <- standardized_coords$y
-      data$z <- standardized_coords$z
+      poly_data$x <- poly_coords$x
+      poly_data$y <- poly_coords$y
+      poly_data$z <- poly_coords$z
 
       # Get unique faces for normal/lighting computation
-      faces <- data %>%
+      faces <- poly_data %>%
             group_by(group) %>%
             slice(1) %>%  # One row per face
             ungroup()
@@ -556,39 +575,50 @@ compute_light_in_coord <- function(data, standardized_coords, scale_ranges, scal
             )
       } else if (grepl("sh3d__hull", faces$group[1])) {
             # Hull/triangle data: compute normals from vertex coordinates
-            normals <- compute_triangle_normals(data, faces)
+            normals <- compute_triangle_normals(poly_data, faces)
       } else if ("face_type" %in% names(faces)) {
             # Voxel/column data: axis-aligned normals
             normals <- compute_axis_aligned_normals(faces)
       } else {
             # Surface-like data: normals from fitted plane gradients
-            gradients <- compute_surface_gradients_from_vertices(data)
+            gradients <- compute_surface_gradients_from_vertices(poly_data)
             normals <- compute_surface_normals(gradients)
       }
 
       # Compute face centers from standardized coordinates
-      face_centers <- calculate_face_centers(data)
+      face_centers <- calculate_face_centers(poly_data)
 
       # Apply lighting models
       faces <- apply_surface_light(faces, normals, face_centers, light)
 
       # Remove pre-existing normal columns from data before join to prevent suffixes
-      data <- data[, !names(data) %in% c("normal_x", "normal_y", "normal_z")]
+      poly_data <- poly_data[, !names(poly_data) %in% c("normal_x", "normal_y", "normal_z")]
 
-      # Merge face-level lighting vars back into vertex-level data set
-      data <- left_join(data, faces, by = join_by(group))
+      # Restore original coordinates before join (standardized were temporary)
+      poly_data$x <- data$x[poly_mask]
+      poly_data$y <- data$y[poly_mask]
+      poly_data$z <- data$z[poly_mask]
+
+      # Merge face-level lighting vars back into vertex-level polygon data
+      poly_data <- left_join(poly_data, faces, by = join_by(group))
 
       if (light$method == "rgb") {
-            data$light <- I(data$light)
+            poly_data$light <- I(poly_data$light)
       }
 
       # Add lighting parameters for shade processing in geom
-      data$shade_enabled <- light$shade
-      data$shade_strength <- light$shade_strength
-      data$shade_mode <- light$shade_mode
-      data$lighting_method <- light$method
+      poly_data$shade_enabled <- light$shade
+      poly_data$shade_strength <- light$shade_strength
+      poly_data$shade_mode <- light$shade_mode
+      poly_data$lighting_method <- light$method
 
-      return(data)
+      # Recombine with non-polygon rows (which get no lighting columns)
+      if (all(poly_mask)) {
+            return(poly_data)
+      }
+
+      non_poly_data <- data[!poly_mask, , drop = FALSE]
+      bind_rows(poly_data, non_poly_data)[order(c(which(poly_mask), which(!poly_mask))), ]
 }
 
 
@@ -1032,25 +1062,29 @@ blend_light_with_colors <- function(colors, light_values, lighting) {
 blend_light <- function(coords) {
 
       # Extract lighting parameters from special columns
-      if ("shade_enabled" %in% names(coords) && coords$shade_enabled[1] != "neither") {
-            # Reconstruct lighting object from columns
-            light <- list(
-                  shade = coords$shade_enabled[1],
-                  shade_strength = coords$shade_strength[1],
-                  shade_mode = coords$shade_mode[1],
-                  method = coords$lighting_method[1]
-            )
+      if ("shade_enabled" %in% names(coords)) {
+            shade_val <- coords$shade_enabled[!is.na(coords$shade_enabled)][1]
 
-            # Apply shading if enabled
-            if (light$shade != "neither" && "light" %in% names(coords)) {
-                  # Blend fill colors if requested
-                  if (light$shade %in% c("fill", "both")) {
-                        coords$fill <- blend_light_with_colors(coords$fill, coords$light, light)
-                  }
+            if (!is.na(shade_val) && shade_val != "neither") {
+                  # Reconstruct lighting object from first non-NA row
+                  light <- list(
+                        shade = shade_val,
+                        shade_strength = coords$shade_strength[!is.na(coords$shade_strength)][1],
+                        shade_mode = coords$shade_mode[!is.na(coords$shade_mode)][1],
+                        method = coords$lighting_method[!is.na(coords$lighting_method)][1]
+                  )
 
-                  # Blend colour/border colors if requested
-                  if (light$shade %in% c("colour", "both")) {
-                        coords$colour <- blend_light_with_colors(coords$colour, coords$light, light)
+                  # Apply shading if enabled
+                  if (light$shade != "neither" && "light" %in% names(coords)) {
+                        # Blend fill colors if requested
+                        if (light$shade %in% c("fill", "both")) {
+                              coords$fill <- blend_light_with_colors(coords$fill, coords$light, light)
+                        }
+
+                        # Blend colour/border colors if requested
+                        if (light$shade %in% c("colour", "both")) {
+                              coords$colour <- blend_light_with_colors(coords$colour, coords$light, light)
+                        }
                   }
             }
 
