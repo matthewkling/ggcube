@@ -180,18 +180,33 @@ spiral <- data.frame(
 ggplot(spiral, aes(x, y, z)) +
   geom_path_3d() +
   coord_3d()
-
+#> Error in geom_path_3d(): Problem while converting geom to grob.
+#> ℹ Error occurred in the 1st layer.
+#> Caused by error in `mutate()`:
+#> ℹ In argument: `light = ifelse(.backface, light * scl + off, light)`.
+#> Caused by error in `rep()`:
+#> ! attempt to replicate an object of type 'closure'
 
 # With aesthetic coloring
 ggplot(spiral, aes(x, y, z, color = y)) +
   geom_path_3d(linewidth = 1, lineend = "round") +
   coord_3d() +
   scale_color_gradientn(colors = c("red", "purple", "blue"))
-
+#> Error in geom_path_3d(linewidth = 1, lineend = "round"): Problem while converting geom to grob.
+#> ℹ Error occurred in the 1st layer.
+#> Caused by error in `mutate()`:
+#> ℹ In argument: `light = ifelse(.backface, light * scl + off, light)`.
+#> Caused by error in `rep()`:
+#> ! attempt to replicate an object of type 'closure'
 
 # With grouping
 ggplot(spiral, aes(x, y, z, color = x > 30)) +
   geom_path_3d(linewidth = 1, lineend = "round") +
   coord_3d()
-
+#> Error in geom_path_3d(linewidth = 1, lineend = "round"): Problem while converting geom to grob.
+#> ℹ Error occurred in the 1st layer.
+#> Caused by error in `mutate()`:
+#> ℹ In argument: `light = ifelse(.backface, light * scl + off, light)`.
+#> Caused by error in `rep()`:
+#> ! attempt to replicate an object of type 'closure'
 ```

@@ -331,12 +331,22 @@ ggplot(expand.grid(x = 1:5, y = 1:5, z = 1:5),
   geom_point_3d(size = 10, shape = 21, color = "white", stroke = .1) +
   coord_3d(pitch = 40, roll = 5, yaw = 0, dist = 1.5) +
   scale_fill_viridis_c()
-
+#> Error in geom_point_3d(size = 10, shape = 21, color = "white", stroke = 0.1): Problem while converting geom to grob.
+#> ℹ Error occurred in the 1st layer.
+#> Caused by error in `mutate()`:
+#> ℹ In argument: `light = ifelse(.backface, light * scl + off, light)`.
+#> Caused by error in `rep()`:
+#> ! attempt to replicate an object of type 'closure'
 
 # Add circular reference points on 2D face panel
 ggplot(mtcars, aes(mpg, wt, qsec)) +
   geom_point_3d(size = 3,
     ref_points = TRUE, ref_faces = c("ymax", "xmax")) +
   coord_3d()
-
+#> Error in geom_point_3d(size = 3, ref_points = TRUE, ref_faces = c("ymax",     "xmax")): Problem while converting geom to grob.
+#> ℹ Error occurred in the 1st layer.
+#> Caused by error in `mutate()`:
+#> ℹ In argument: `light = ifelse(.backface, light * scl + off, light)`.
+#> Caused by error in `light * scl`:
+#> ! non-numeric argument to binary operator
 ```

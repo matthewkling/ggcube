@@ -100,26 +100,36 @@ ggplot(sphere_points, aes(x, y, z)) +
   geom_point_3d(position = position_on_face("zmin"), color = "red") +
   geom_point_3d(color = "black") + # add this layer last so it appears on top
   coord_3d()
-
+#> Error in geom_point_3d(position = position_on_face("zmin"), color = "red"): Problem while converting geom to grob.
+#> ℹ Error occurred in the 1st layer.
+#> Caused by error in `mutate()`:
+#> ℹ In argument: `light = ifelse(.backface, light * scl + off, light)`.
+#> Caused by error in `rep()`:
+#> ! attempt to replicate an object of type 'closure'
 
 # 3D layer projected to multiple faces
 set.seed(1)
 d <- data.frame(x = round(rnorm(10)), y = round(rnorm(10)), z = round(rnorm(10)))
 ggplot(d, aes(x, y, z)) +
   stat_voxel_3d(color = "black", fill = "steelblue",
-    light = light(shade = "fill", direction = c(1, 1, 0), shade_mode = "hsl"),
+    light = light(direction = c(1, 1, 0), mode = "hsv"),
     position = position_on_face(c("3D", "zmin", "xmax", "ymax"))) +
   coord_3d()
-#> Error in light(shade = "fill", direction = c(1, 1, 0), shade_mode = "hsl"): unused arguments (shade = "fill", shade_mode = "hsl")
+
 
 # 3D layer projected differently on individual faces
 ggplot(sphere_points, aes(x, y, z)) +
   stat_hull_3d(position = position_on_face("zmin"), fill = "black") +
   geom_point_3d(position = position_on_face("ymax")) +
-  geom_path(position = position_on_face("xmax")) +
+  geom_path_3d(position = position_on_face("xmax")) +
   stat_hull_3d(color = "black") +
   coord_3d()
-
+#> Error in geom_point_3d(position = position_on_face("ymax")): Problem while converting geom to grob.
+#> ℹ Error occurred in the 2nd layer.
+#> Caused by error in `mutate()`:
+#> ℹ In argument: `light = ifelse(.backface, light * scl + off, light)`.
+#> Caused by error in `rep()`:
+#> ! attempt to replicate an object of type 'closure'
 
 # 2D density contour on a specific face
 ggplot(iris, aes(Sepal.Length, Sepal.Width, Petal.Length, color = Species)) +
@@ -131,7 +141,12 @@ ggplot(iris, aes(Sepal.Length, Sepal.Width, Petal.Length, color = Species)) +
 #>   the data.
 #> ℹ Did you forget to specify a `group` aesthetic or to convert a numerical
 #>   variable into a factor?
-
+#> Error in geom_point_3d(): Problem while converting geom to grob.
+#> ℹ Error occurred in the 2nd layer.
+#> Caused by error in `mutate()`:
+#> ℹ In argument: `light = ifelse(.backface, light * scl + off, light)`.
+#> Caused by error in `rep()`:
+#> ! attempt to replicate an object of type 'closure'
 
 # Distinct 2D layers projected to different faces
 ggplot(mtcars) +
@@ -145,5 +160,10 @@ ggplot(mtcars) +
     coord_3d() +
   theme_light()
 #> `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
-
+#> Error in geom_point_3d(aes(mpg, wt, qsec)): Problem while converting geom to grob.
+#> ℹ Error occurred in the 4th layer.
+#> Caused by error in `mutate()`:
+#> ℹ In argument: `light = ifelse(.backface, light * scl + off, light)`.
+#> Caused by error in `rep()`:
+#> ! attempt to replicate an object of type 'closure'
 ```

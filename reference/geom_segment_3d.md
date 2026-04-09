@@ -159,7 +159,12 @@ ggplot(sphere_points,
       aes(x, y, z, xend = 0, yend = 0, zend = 0)) +
   geom_segment_3d() +
   coord_3d()
-
+#> Error in geom_segment_3d(): Problem while converting geom to grob.
+#> ℹ Error occurred in the 1st layer.
+#> Caused by error in `mutate()`:
+#> ℹ In argument: `light = ifelse(.backface, light * scl + off, light)`.
+#> Caused by error in `rep()`:
+#> ! attempt to replicate an object of type 'closure'
 
 # 3D vector field
 data <- expand.grid(x = -1:2, y = -1:2, z = -1:2)
@@ -171,5 +176,10 @@ ggplot(data, aes(x, y, z,
                   type = "closed", angle = 15),
                   linewidth = .5) +
   coord_3d()
-
+#> Error in geom_segment_3d(arrow = arrow(length = unit(0.1, "inches"), type = "closed",     angle = 15), linewidth = 0.5): Problem while converting geom to grob.
+#> ℹ Error occurred in the 1st layer.
+#> Caused by error in `mutate()`:
+#> ℹ In argument: `light = ifelse(.backface, light * scl + off, light)`.
+#> Caused by error in `rep()`:
+#> ! attempt to replicate an object of type 'closure'
 ```
