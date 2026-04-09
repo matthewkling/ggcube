@@ -173,7 +173,6 @@ topological_sort <- function(adj_matrix, depths = NULL) {
       return(result)
 }
 
-
 # calculate edge normals
 calculate_normals <- function(polygon_vertices) {
       # Input: polygon_vertices is a matrix where each row is a vertex (x, y)
@@ -603,7 +602,11 @@ pw_render_order <- function(data,
 
       delta_pruned <- break_cycles(delta)
       adj_logical <- (delta_pruned > 0) & !is.na(delta_pruned)
-      render_order <- groups[topological_sort(adj_logical)]
+
+      # Compute per-group mean depth for tiebreaking unconstrained pairs
+      grp_depths <- vapply(grp_data, function(m) mean(m[, 3]), numeric(1))
+
+      render_order <- groups[topological_sort(adj_logical, grp_depths)]
       match(data$group, render_order)
 }
 
@@ -647,14 +650,25 @@ sort_by_depth <- function(data) {
                   select(-.render_order)
 
       } else if(any(grepl("__", data$group))) {
-            # Hierarchical painter sorting
-            data <- data %>%
-                  tidyr::separate(group, c("level1", "level2"), sep = "__",
-                                  remove = FALSE, extra = "merge") %>%
-                  group_by(level1) %>% mutate(depth1 = max(depth)) %>%
-                  ungroup() %>%
-                  arrange(desc(depth1), desc(.prim_depth), group, .vertex_order) %>%
-                  select(-level1, -level2, -depth1)
+
+            has_mixed_prims <- ".prim" %in% names(data) &&
+                  length(unique(data$.prim[!is.na(data$.prim)])) > 1
+
+            if (has_mixed_prims) {
+                  # Mixed primitive types: flat sort by per-group depth to allow
+                  # interleaving (hierarchical sort would block by level1)
+                  data <- data %>%
+                        arrange(desc(.prim_depth), group, .vertex_order)
+            } else {
+                  # Single primitive type: hierarchical sort preserves object grouping
+                  data <- data %>%
+                        tidyr::separate(group, c("level1", "level2"), sep = "__",
+                                        remove = FALSE, extra = "merge") %>%
+                        group_by(level1) %>% mutate(depth1 = max(depth)) %>%
+                        ungroup() %>%
+                        arrange(desc(depth1), desc(.prim_depth), group, .vertex_order) %>%
+                        select(-level1, -level2, -depth1)
+            }
 
       } else {
             # Simple painter sorting

@@ -7,6 +7,36 @@
 # grob assembly step.
 
 
+# Depth scaling ----------------------------------------------------------------
+
+#' Apply depth scaling to point sizes, strokes, and linewidths
+#'
+#' Scales visual properties by the depth_scale factor so that closer objects
+#' appear larger/thicker and farther objects appear smaller/thinner.
+#'
+#' @param coords Data frame with aesthetic columns and optionally `depth_scale`.
+#' @param scale_depth Logical; if FALSE, no scaling is applied.
+#' @return Data frame with scaled aesthetics.
+#' @keywords internal
+scale_depth <- function(coords, scale_depth){
+      if (scale_depth && "depth_scale" %in% names(coords)) {
+            if("size" %in% names(coords)) {
+                  coords$size <- coords$size * coords$depth_scale
+            }
+            if("stroke" %in% names(coords)) {
+                  coords$stroke <- coords$stroke * coords$depth_scale
+            }
+            if("linewidth" %in% names(coords)) {
+                  coords$linewidth <- coords$linewidth * coords$depth_scale
+            }
+      }
+      return(coords)
+}
+
+
+# Grob assembly ----------------------------------------------------------------
+
+
 #' Render mixed-geometry data into a grob tree
 #'
 #' Takes depth-sorted, transformed data with a `.prim` column indicating
@@ -127,7 +157,8 @@ render_polygons <- function(data, rule = "evenodd") {
       group_col <- data$colour[group_first_idx]
       group_fill <- data$fill[group_first_idx]
       group_lwd <- data$linewidth[group_first_idx] * .pt
-      group_lty <- data$linetype[group_first_idx]
+      group_lty <- if ("linetype" %in% names(data)) data$linetype[group_first_idx] else 1
+      group_lty <- ifelse(is.na(group_lty), 1, group_lty)
       group_alpha <- data$alpha[group_first_idx]
       group_alpha <- ifelse(is.na(group_alpha), 1, group_alpha)
 
@@ -147,7 +178,8 @@ render_polygons <- function(data, rule = "evenodd") {
             group_col <- data$colour[group_first_idx]
             group_fill <- data$fill[group_first_idx]
             group_lwd <- data$linewidth[group_first_idx] * .pt
-            group_lty <- data$linetype[group_first_idx]
+            group_lty <- if ("linetype" %in% names(data)) data$linetype[group_first_idx] else 1
+            group_lty <- ifelse(is.na(group_lty), 1, group_lty)
             group_alpha <- data$alpha[group_first_idx]
             group_alpha <- ifelse(is.na(group_alpha), 1, group_alpha)
 

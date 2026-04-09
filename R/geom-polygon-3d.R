@@ -12,7 +12,12 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                                                sort_method = "auto",
                                                scale_depth = TRUE,
                                                force_convex = FALSE,
-                                               rule = "evenodd") {
+                                               rule = "evenodd",
+                                               point.colour = NULL, point.fill = NULL,
+                                               point.size = NULL, point.shape = NULL,
+                                               point.alpha = NULL, point.stroke = NULL,
+                                               residual.colour = NULL, residual.linewidth = NULL,
+                                               residual.linetype = NULL, residual.alpha = NULL) {
 
                                # Parameter validation
                                validate_coord3d(coord)
@@ -20,13 +25,45 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                                # Transform data
                                sort_method <- match.arg(sort_method, c("auto", "pairwise", "painter"))
                                data$.sort_method <- sort_method
-                               if (!".prim" %in% names(data)) data$.prim <- "polygon"
+                               if (!".prim" %in% names(data)) {
+                                     data$.prim <- "polygon"
+                               } else {
+                                     data$.prim[is.na(data$.prim)] <- "polygon"
+                               }
                                coords <- coord$transform(data, panel_params)
 
-                               # Enforce convexity if requested
+                               # Enforce convexity if requested (polygons only)
                                coords <- drop_nonconvex_vertices(coords, force_convex)
 
-                               # Scale linewidths by depth
+                               # Apply annotation point styling (post-transform, pre-depth-scale).
+                               # Values come from geom_smooth_3d defaults/overrides via params.
+                               if (".prim" %in% names(coords) && any(coords$.prim == "point", na.rm = TRUE)) {
+                                     pt_mask <- coords$.prim == "point" & !is.na(coords$.prim)
+
+                                     # Initialize point-specific columns if they don't exist
+                                     for (col in c("size", "shape", "stroke")) {
+                                           if (!col %in% names(coords)) coords[[col]] <- NA_real_
+                                     }
+
+                                     coords$colour[pt_mask] <- point.colour
+                                     coords$fill[pt_mask] <- point.fill
+                                     coords$size[pt_mask] <- point.size
+                                     coords$shape[pt_mask] <- point.shape
+                                     coords$alpha[pt_mask] <- point.alpha
+                                     coords$stroke[pt_mask] <- point.stroke
+                               }
+
+                               # Apply annotation segment styling
+                               if (".prim" %in% names(coords) && any(coords$.prim == "segment", na.rm = TRUE)) {
+                                     seg_mask <- coords$.prim == "segment" & !is.na(coords$.prim)
+
+                                     coords$colour[seg_mask] <- residual.colour
+                                     coords$alpha[seg_mask] <- residual.alpha
+                                     coords$linewidth[seg_mask] <- residual.linewidth
+                                     coords$linetype[seg_mask] <- residual.linetype
+                               }
+
+                               # Scale linewidths/sizes by depth
                                coords <- scale_depth(coords, scale_depth)
 
                                # Apply light blending to colors

@@ -1,21 +1,3 @@
-# Depth scaling utility --------------------------------------------------------
-
-# Apply depth scaling to point sizes, strokes, and linewidths if enabled
-scale_depth <- function(coords, scale_depth){
-      if (scale_depth && "depth_scale" %in% names(coords)) {
-            if("size" %in% names(coords)) {
-                  coords$size <- coords$size * coords$depth_scale
-            }
-            if("stroke" %in% names(coords)) {
-                  coords$stroke <- coords$stroke * coords$depth_scale
-            }
-            if("linewidth" %in% names(coords)) {
-                  coords$linewidth <- coords$linewidth * coords$depth_scale
-            }
-      }
-      return(coords)
-}
-
 
 # Geom -------------------------------------------------------------------------
 
