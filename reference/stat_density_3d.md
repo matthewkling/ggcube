@@ -236,10 +236,7 @@ p + geom_density_3d(grid = "equilateral", n = 30, direction = "y",
                     light = light("direct"),
                     color = "white", linewidth = .1) +
   guides(fill = guide_colorbar_3d())
-#> Error in geom_density_3d(grid = "equilateral", n = 30, direction = "y",     light = light("direct"), color = "white", linewidth = 0.1): Problem while setting up geom.
-#> ℹ Error occurred in the 1st layer.
-#> Caused by error in `match.arg()`:
-#> ! 'arg' should be one of “rectangle”, “right1”, “right2”
+
 
 # Color by alternative density metric
 p + geom_density_3d(aes(fill = after_stat(count)))
