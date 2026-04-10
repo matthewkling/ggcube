@@ -14,7 +14,7 @@
 #' @param ... Arguments passed to \code{guide_colorbar()} or \code{guide_legend()}
 #' @param reverse_shade Logical. If TRUE, reverses the lighting gradient direction. By default,
 #'   shadows are placed on the left, or on the bottom for horizontal colorbars.
-#' @param shade_limits Length-2 numeric vector in the range -1 to 1, giving the limits
+#' @param shade_range Length-2 numeric vector in the range -1 to 1, giving the limits
 #'   of the shading gradient. -1 is full shade, and 1 is full highlight. Default is `c(-.5, 5)`.
 #' @param ... Additional arguments passed to \code{guide_colorbar()} or \code{guide_legend()}.
 #' @return A guide object that displays shading effects

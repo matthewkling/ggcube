@@ -50,8 +50,8 @@ geom_function_3d(
 
 \item{data}{Ignored; this stat generates its own data.}
 
-\item{geom}{Geom to use for rendering. Defaults to \link{GeomSurface3D} for mesh
-surfaces. Use \link{GeomRidgeline3D} for ridgeline rendering.}
+\item{geom}{Geom to use for rendering. Defaults to \code{"surface_3d"} for mesh
+surfaces. Use \code{"ridgeline_3d"} for ridgeline rendering.}
 
 \item{position}{Position adjustment, defaults to "identity".}
 
@@ -59,8 +59,19 @@ surfaces. Use \link{GeomRidgeline3D} for ridgeline rendering.}
 
 \item{fun}{Function to evaluate. Must accept (x, y) and return numeric z values.}
 
+\item{xlim, ylim}{Length-2 numeric vectors giving the x and y ranges over which to
+plot the function.}
+
 \item{grid, n, direction, trim}{Parameters determining the geometry, resolution, and
 orientation of the surface grid. See \link{grid_generation} for details.}
+
+\item{cull_backfaces}{Logical indicating whether to remove back-facing polygons
+from rendering. This is primarily for performance optimization but may be useful
+for aesthetic reasons in some situations. Backfaces are determined using
+screen-space winding order after 3D transformation. Defaults vary by geometry
+type: FALSE for open surface-type geometries, TRUE for solid objects (hulls,
+voxels, etc. where backfaces are generally hidden unless frontfaces are transparent
+or explicitly disabled).}
 
 \item{light}{A lighting specification object created by \code{\link[=light]{light()}},\code{"none"} to disable
 lighting, or \code{NULL} to inherit plot-level lighting specs from the coord. Specify
@@ -72,6 +83,8 @@ functions.}
 \item{show.legend}{Logical indicating whether this layer should be included in legends.}
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics.}
+
+\item{stat}{Statistical transformation to use on the data. Defaults to \code{"surface_3d"}.}
 }
 \description{
 Evaluates a function f(x,y) = z over a regular grid and renders the result

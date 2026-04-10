@@ -206,6 +206,8 @@ StatDistributions3D <- ggproto("StatDistributions3D", Stat,
 #' @param data The data to be displayed in this layer.
 #' @param geom The geometric object to use to display the data. Defaults to
 #'   [geom_ridgeline_3d()].
+#' @param stat Statistical transformation to use on the data. Defaults to
+#'   [stat_distributions_3d()].
 #' @param ... Other arguments passed to the layer.
 #' @param bw The smoothing bandwidth to be used. If numeric, the standard
 #'   deviation of the smoothing kernel. If character, a rule to choose the

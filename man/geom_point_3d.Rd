@@ -73,7 +73,7 @@ the standard point aesthetics, \code{geom_point_3d()} requires x, y, and z coord
 
 \item{data}{The data to be displayed in this layer.}
 
-\item{stat}{The statistical transformation to use on the data. Defaults to \link{StatPoint3D}.}
+\item{stat}{The statistical transformation to use on the data. Defaults to \code{"point_3d"}.}
 
 \item{position}{Position adjustment, defaults to "identity".}
 
@@ -138,7 +138,7 @@ Both American (\code{ref_point_color}) and British (\code{ref_point_colour}) spe
 
 \item{show.legend}{Logical indicating whether this layer should be included in legends.}
 
-\item{geom}{The geometric object used to display the data. Defaults to \link{GeomPoint3D}.}
+\item{geom}{The geometric object used to display the data. Defaults to \code{"point_3d"}.}
 }
 \value{
 A \code{Layer} object that can be added to a ggplot.

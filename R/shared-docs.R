@@ -23,8 +23,8 @@
 #'     \item \code{"auto"}: Uses pairwise if the data has fewer than 500 rows, and
 #'     painter otherwise.
 #'   }
-#' @name sort_method_param
-#' @keywords internal
+#'
+#' @name sorting_methods
 NULL
 
 
@@ -32,6 +32,10 @@ NULL
 
 #' Polygon rendering parameters
 #'
+#' Parameters controlling depth sorting, backface culling, depth scaling, and
+#' convexity enforcement for polygon-based 3D layers.
+#'
+#' @param sort_method Depth sorting algorithm. See [sorting_methods] for details.
 #' @param cull_backfaces Logical indicating whether to remove back-facing polygons
 #'   from rendering. This is primarily for performance optimization but may be useful
 #'   for aesthetic reasons in some situations. Backfaces are determined using
@@ -39,29 +43,21 @@ NULL
 #'   type: FALSE for open surface-type geometries, TRUE for solid objects (hulls,
 #'   voxels, etc. where backfaces are generally hidden unless frontfaces are transparent
 #'   or explicitly disabled).
-#' @inheritParams sort_method_param
 #' @param scale_depth Logical indicating whether polygon linewidths should be scaled to make closer lines
 #'   wider and farther lines narrower. Default is TRUE. Scaling is based on the mean depth of a polygon.
 #' @param force_convex Logical indicating whether to remove polygon vertices that are not part of the
 #'   convex hull. Default value varies by geom. Specifying TRUE can help reduce artifacts in surfaces
 #'   that have polygon tiles that wrap over a visible horizon. For prism-type geoms like columns and
 #'   voxels, FALSE is safe because polygons fill always be convex.
-#' @name polygon_rendering
-NULL
-
-
-#' Parameters for layers using GeomPolygon3D
-#'
-#' @param cull_backfaces,sort_method,force_convex,scale_depth Advanced polygon
-#'   rendering parameters. See [polygon_rendering] for details.
 #' @param na.rm If `FALSE`, missing values are removed.
 #' @param show.legend Logical indicating whether this layer should be included in legends.
 #' @param inherit.aes If `FALSE`, overrides the default aesthetics.
-#' @param ... Other arguments passed on to the the layer function (typically GeomPolygon3D), such as
+#' @param ... Other arguments passed on to the layer function (typically GeomPolygon3D), such as
 #'   aesthetics like `colour`, `fill`, `linewidth`, etc.
 #' @name polygon_params
 #' @keywords internal
 NULL
+
 
 #' Shared column and voxel params
 #'

@@ -14,7 +14,6 @@ scale_z_discrete(
   na.translate = TRUE,
   na.value = NA_real_,
   drop = TRUE,
-  continuous.limits = NULL,
   ...
 )
 }

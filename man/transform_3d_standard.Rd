@@ -10,7 +10,7 @@ transform_3d_standard(
 )
 }
 \arguments{
-\item{data}{Data frame with x, y, z columns (in standard \link{-0.5, 0.5} domain)}
+\item{data}{Data frame with x, y, z columns (in standard {-0.5, 0.5} domain)}
 
 \item{proj}{A list of projection parameters}
 }

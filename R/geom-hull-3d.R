@@ -12,6 +12,11 @@ StatHull3D <- ggproto("StatHull3D", Stat,
                             # Get triangle indices
                             tri <- switch(method,
                                           alpha = {
+                                                if (!requireNamespace("alphashape3d", quietly = TRUE)) {
+                                                      stop('The alphashape3d package is required for method = "alpha". ',
+                                                           'Install it with install.packages("alphashape3d").',
+                                                           call. = FALSE)
+                                                }
                                                 if(is.null(radius)){
                                                       radius <- signif(.5 * mean(apply(coords, 2, function(x) diff(range(na.omit(x))))), 3)
                                                       message("Alpha shape `radius` parameter is NULL; defaulting to ", radius, " based on data ranges.")

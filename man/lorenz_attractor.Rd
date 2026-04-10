@@ -9,3 +9,4 @@ lorenz_attractor(n_points = 5000, dt = 0.01, sigma = 10, rho = 28, beta = 8/3)
 \description{
 Lorenz butterfly attractor generator
 }
+\keyword{internal}

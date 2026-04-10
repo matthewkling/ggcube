@@ -153,7 +153,8 @@ scale_z_continuous <- function(name = waiver(), breaks = waiver(), minor_breaks 
 scale_z_discrete <- function(name = waiver(), breaks = waiver(), labels = waiver(),
                              limits = NULL, expand = waiver(), guide = "none",
                              na.translate = TRUE, na.value = NA_real_, drop = TRUE,
-                             continuous.limits = NULL, ...) {
+                             ...) {
+
 
       # Create the scale object like ggplot2's scale_x_discrete
       sc <- discrete_scale(
@@ -175,6 +176,7 @@ scale_z_discrete <- function(name = waiver(), breaks = waiver(), labels = waiver
       # Add the missing range_c component, using a template scale to copy the range_c structure
       template_scale <- scale_x_discrete()
       sc$range_c <- template_scale$range_c$clone()
+      continuous.limits <- NULL
       sc$continuous_limits <- continuous.limits
 
       .z_scale_cache$scale <- sc

@@ -148,7 +148,7 @@ make_face_panels <- function(visible_faces, scales = "free", ratio = c(1, 1, 1),
 #' Create grid segments for rendering
 #'
 #' @param grid_data Transformed grid data
-#' @param plot_bounds Bounds for the final plot [xmin, xmax, ymin, ymax]
+#' @param plot_bounds Bounds for the final plot {xmin, xmax, ymin, ymax}
 #' @return Data frame with segment coordinates for grid grob
 #' @keywords internal
 create_grid_segments <- function(grid_data, plot_bounds) {

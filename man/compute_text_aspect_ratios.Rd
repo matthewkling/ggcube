@@ -7,7 +7,7 @@
 compute_text_aspect_ratios(data_ranges, coord)
 }
 \arguments{
-\item{data_ranges}{List with x, y, z elements, each a length-2 vector of \link{min, max}}
+\item{data_ranges}{List with x, y, z elements, each a length-2 vector of \code{c(min, max)}}
 
 \item{coord}{A coord_3d object, or NULL}
 }

@@ -7,7 +7,7 @@
 scale_to_npc_coordinates(x, y = NULL, plot_bounds)
 }
 \arguments{
-\item{plot_bounds}{Plot bounds vector \link{xmin, xmax, ymin, ymax}}
+\item{plot_bounds}{Plot bounds vector {xmin, xmax, ymin, ymax}}
 
 \item{result}{Data frame with transformed x, y coordinates}
 }

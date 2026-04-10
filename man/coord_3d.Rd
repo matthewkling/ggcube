@@ -110,6 +110,8 @@ zoom out (more whitespace around the plot). Default is 1.}
 lighting, or \code{NULL} to inherit plot-level lighting specs from the coord. Specify
 plot-level lighting in \code{coord_3d()} and layer-specific lighting in \verb{geom_*3d()}
 functions.}
+
+\item{...}{Additional arguments reserved for internal use.}
 }
 \value{
 A \code{Coord} object that can be added to a ggplot.
@@ -197,5 +199,5 @@ p + coord_3d(rotate_labels = FALSE)
 }
 \seealso{
 \code{\link[=light]{light()}} for lighting specification, \link{cube_theming} for panel and
-text styling, \link{polygon_rendering} for 3D-related parameters for polygon layers.
+text styling, \link{polygon_params} for 3D-related parameters for polygon layers.
 }

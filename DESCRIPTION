@@ -4,7 +4,7 @@ Title: 3D plotting with ggplot2
 Version: 0.1.0.9000
 Author: Matthew Kling
 Maintainer: Matthew Kling <mattkling@berkeley.edu>
-Description: Use ggplot2 to create 3d visualizations
+Description: Create 3D visualizations with 'ggplot2'.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
@@ -22,13 +22,23 @@ Imports:
     grid,
     lifecycle,
     labeling,
-    alphashape3d,
     geometry,
     purrr,
     magrittr,
-    polyclip
+    polyclip,
+    isoband,
+    systemfonts
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Suggests: 
+    alphashape3d,
+    av,
+    base64enc,
+    gifski,
+    knitr,
+    MASS,
+    mgcv,
+    progress,
+    ragg,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3

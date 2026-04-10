@@ -8,8 +8,8 @@
 #' @param mapping Set of aesthetic mappings created by [aes()]. Requires x, y, z
 #'   for start coordinates and xend, yend, zend for end coordinates.
 #' @param data The data to be displayed in this layer.
-#' @param stat The statistical transformation to use on the data. Defaults to [StatSegment3D].
-#' @param geom The geometric object used to display the data. Defaults to [GeomSegment3D].
+#' @param stat The statistical transformation to use on the data. Defaults to `"segment_3d"`.
+#' @param geom The geometric object used to display the data. Defaults to `"segment_3d"`.
 #' @param position Position adjustment, defaults to "identity".
 #' @param ... Other arguments passed on to [layer()].
 #' @param na.rm If `FALSE`, missing values are removed with a warning.
@@ -18,7 +18,7 @@
 #' @param scale_depth Logical indicating whether to apply depth-based scaling
 #'   to linewidth. When `TRUE` (default), segments closer to the viewer appear
 #'   thicker, and segments farther away appear thinner.
-#' @inheritParams sort_method_param
+#' @inheritParams sorting_methods
 #' @param arrow Specification for arrow heads, created by [arrow()].
 #' @param lineend Line end style, one of "round", "butt", "square".
 #'

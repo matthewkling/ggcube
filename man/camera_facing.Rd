@@ -14,6 +14,10 @@ camera_facing(
 )
 }
 \arguments{
+\item{coord}{Optional objected created by \code{coord_3d}. If provided, coord
+parameters are drawn from this and the \code{pitch}, \code{roll}, \code{yaw}, \code{dist} arguments
+are ignored.}
+
 \item{pitch, roll, yaw}{Rotation angles in degrees, matching the values
 you'll use in \code{coord_3d()}.}
 

@@ -198,7 +198,8 @@ points_to_contours <- function(data,
 #'
 #' @param mapping Set of aesthetic mappings created by [aes()].
 #' @param data Point grid data with x, y, z coordinates.
-#' @param stat Statistical transformation. Defaults to [stat_surface_3d()].
+#' @param stat Statistical transformation. Defaults to `"surface_3d"`.
+#' @param geom Geometry function used to display the data. Defaults to `"surface_3d"`.
 #' @param position Position adjustment, defaults to "identity".
 #' @param ... Other arguments passed to the layer.
 #' @param bins Number of contour levels. Default is 20. Ignored if `breaks` or

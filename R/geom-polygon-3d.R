@@ -99,11 +99,12 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
 #' @param data The data to be displayed in this layer. Note that if you specify `light` or
 #'   `cull_backfaces`, behavior will depend on the "winding order" of polygon vertices, with
 #'   the counter-clockwise face considered the "front".
-#' @param stat The statistical transformation to use on the data. Defaults to [StatIdentity3D].
+#' @param stat The statistical transformation to use on the data. Defaults to `"identity_3d"`.
 #' @param rule Either `"evenodd"` or `"winding"`. If polygons with holes are
 #'   being drawn (using the `subgroup` aesthetic) this argument defines how the
 #'   hole coordinates are interpreted. See [ggplot2::geom_polygon()] for reference.
 #' @inheritParams polygon_params
+#' @inheritParams light_param
 #' @inheritParams position_param
 #'
 #' @section Aesthetics:

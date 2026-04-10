@@ -28,20 +28,40 @@ geom_polygon_3d(
 \code{cull_backfaces}, behavior will depend on the "winding order" of polygon vertices, with
 the counter-clockwise face considered the "front".}
 
-\item{stat}{The statistical transformation to use on the data. Defaults to \link{StatIdentity3D}.}
+\item{stat}{The statistical transformation to use on the data. Defaults to \code{"identity_3d"}.}
 
 \item{position}{Position adjustment, defaults to "identity". To collapse the result
 onto one 2D surface, use \code{position_on_face()}.}
 
-\item{...}{Other arguments passed on to the the layer function (typically GeomPolygon3D), such as
+\item{...}{Other arguments passed on to the layer function (typically GeomPolygon3D), such as
 aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc.}
 
 \item{rule}{Either \code{"evenodd"} or \code{"winding"}. If polygons with holes are
 being drawn (using the \code{subgroup} aesthetic) this argument defines how the
 hole coordinates are interpreted. See \code{\link[ggplot2:geom_polygon]{ggplot2::geom_polygon()}} for reference.}
 
-\item{cull_backfaces, sort_method, force_convex, scale_depth}{Advanced polygon
-rendering parameters. See \link{polygon_rendering} for details.}
+\item{sort_method}{Depth sorting algorithm. See \link{sorting_methods} for details.}
+
+\item{scale_depth}{Logical indicating whether polygon linewidths should be scaled to make closer lines
+wider and farther lines narrower. Default is TRUE. Scaling is based on the mean depth of a polygon.}
+
+\item{force_convex}{Logical indicating whether to remove polygon vertices that are not part of the
+convex hull. Default value varies by geom. Specifying TRUE can help reduce artifacts in surfaces
+that have polygon tiles that wrap over a visible horizon. For prism-type geoms like columns and
+voxels, FALSE is safe because polygons fill always be convex.}
+
+\item{cull_backfaces}{Logical indicating whether to remove back-facing polygons
+from rendering. This is primarily for performance optimization but may be useful
+for aesthetic reasons in some situations. Backfaces are determined using
+screen-space winding order after 3D transformation. Defaults vary by geometry
+type: FALSE for open surface-type geometries, TRUE for solid objects (hulls,
+voxels, etc. where backfaces are generally hidden unless frontfaces are transparent
+or explicitly disabled).}
+
+\item{light}{A lighting specification object created by \code{\link[=light]{light()}},\code{"none"} to disable
+lighting, or \code{NULL} to inherit plot-level lighting specs from the coord. Specify
+plot-level lighting in \code{coord_3d()} and layer-specific lighting in \verb{geom_*3d()}
+functions.}
 
 \item{na.rm}{If \code{FALSE}, missing values are removed.}
 

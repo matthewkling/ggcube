@@ -4,25 +4,13 @@
 \name{ggcube}
 \alias{ggcube-package}
 \alias{ggcube}
-\title{ggcube: 3D plotting extension for ggplot2}
+\title{ggcube: Extend ggplot2 into 3D}
 \description{
-ggcube extends ggplot2 into the third dimension, providing 3D coordinate
-systems, surface plotting, and volumetric visualization capabilities.
-}
-\details{
-To use ggcube, load both packages:
-\code{library(ggplot2)}
-\code{library(ggcube)}
-
-Key functions:
-\itemize{
-\item \code{coord_3d()}: 3D coordinate system with rotation and perspective
-\item \code{aes()}: Enhanced aesthetic mapping with positional z support
-\item \code{stat_surface_3d()}: Surface plotting from grid data
-\item \code{stat_hull_3d()}: 3D convex and alpha hulls
-\item \code{stat_column_3d()}: 3D pillar/bar charts
-\item \code{light()}: Lighting specifications for 3D surfaces
-}
+ggcube provides 3D geoms, stats, and coordinate systems for ggplot2.
+Add \code{\link[=coord_3d]{coord_3d()}} to any plot with a z aesthetic to render it in 3D
+with rotation, perspective, lighting, and depth sorting. Layer types
+include surfaces, hulls, contours, ridgelines, paths, points, segments,
+text, bars, and columns.
 }
 \seealso{
 Useful links:

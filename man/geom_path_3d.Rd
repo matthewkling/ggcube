@@ -41,7 +41,7 @@ coordinates. Grouping aesthetics determine separate paths.}
 
 \item{data}{The data to be displayed in this layer.}
 
-\item{stat}{The statistical transformation to use on the data. Defaults to \link{StatPath3D}.}
+\item{stat}{The statistical transformation to use on the data. Defaults to \code{"path_3d"}.}
 
 \item{position}{Position adjustment, defaults to "identity".}
 
@@ -80,7 +80,7 @@ appear thicker, and segments farther away appear thinner.}
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics.}
 
-\item{geom}{The geometric object used to display the data. Defaults to \link{GeomSegment3D}.}
+\item{geom}{The geometric object used to display the data. Defaults to \code{"segment_3d"}.}
 }
 \value{
 A \code{Layer} object that can be added to a ggplot.

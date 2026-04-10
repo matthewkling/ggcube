@@ -49,7 +49,7 @@ variables with \code{\link[=after_stat]{after_stat()}}.}
 \item{position}{Position adjustment, defaults to "identity". To collapse the result
 onto one 2D surface, use \code{position_on_face()}.}
 
-\item{...}{Other arguments passed on to the the layer function (typically GeomPolygon3D), such as
+\item{...}{Other arguments passed on to the layer function (typically GeomPolygon3D), such as
 aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc.}
 
 \item{method}{Triangulation method. Either:
@@ -67,6 +67,19 @@ Note that alpha shapes are quite sensitive to the coordinate scales of your data
 lighting, or \code{NULL} to inherit plot-level lighting specs from the coord. Specify
 plot-level lighting in \code{coord_3d()} and layer-specific lighting in \verb{geom_*3d()}
 functions.}
+
+\item{cull_backfaces}{Logical indicating whether to remove back-facing polygons
+from rendering. This is primarily for performance optimization but may be useful
+for aesthetic reasons in some situations. Backfaces are determined using
+screen-space winding order after 3D transformation. Defaults vary by geometry
+type: FALSE for open surface-type geometries, TRUE for solid objects (hulls,
+voxels, etc. where backfaces are generally hidden unless frontfaces are transparent
+or explicitly disabled).}
+
+\item{sort_method}{Depth sorting algorithm. See \link{sorting_methods} for details.}
+
+\item{scale_depth}{Logical indicating whether polygon linewidths should be scaled to make closer lines
+wider and farther lines narrower. Default is TRUE. Scaling is based on the mean depth of a polygon.}
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics.}
 

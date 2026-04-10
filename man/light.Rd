@@ -184,8 +184,4 @@ p + coord_3d(pitch = 0, roll = -70, yaw = 0,
 p + coord_3d(pitch = 0, roll = -70, yaw = 0,
              light = light(backface_scale = 1, mode = "hsl",
                            backface_offset = -.5))
-
-}
-\seealso{
-\code{\link{scale_colorbar_shade}}
 }

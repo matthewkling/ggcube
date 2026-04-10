@@ -8,8 +8,8 @@
 #' @param mapping Set of aesthetic mappings created by [aes()]. Requires x, y, z
 #'   coordinates. Grouping aesthetics determine separate paths.
 #' @param data The data to be displayed in this layer.
-#' @param stat The statistical transformation to use on the data. Defaults to [StatPath3D].
-#' @param geom The geometric object used to display the data. Defaults to [GeomSegment3D].
+#' @param stat The statistical transformation to use on the data. Defaults to `"path_3d"`.
+#' @param geom The geometric object used to display the data. Defaults to `"segment_3d"`.
 #' @param position Position adjustment, defaults to "identity".
 #' @param ... Other arguments passed on to [layer()].
 #' @param na.rm If `FALSE`, missing values are removed with a warning.
@@ -18,7 +18,7 @@
 #' @param scale_depth Logical indicating whether to apply depth-based scaling
 #'   to linewidth. When `TRUE` (default), path segments closer to the viewer
 #'   appear thicker, and segments farther away appear thinner.
-#' @inheritParams sort_method_param
+#' @inheritParams sorting_methods
 #' @param arrow Specification for arrow heads, created by [arrow()].
 #' @param lineend Line end style, one of "round", "butt", "square".
 #'
@@ -187,7 +187,7 @@ StatPath3D <- ggproto("StatPath3D", Stat,
 
 #' Lorenz butterfly attractor generator
 #'
-#' @export
+#' @keywords internal
 lorenz_attractor <- function(n_points = 5000, dt = 0.01,
                              sigma = 10, rho = 28, beta = 8/3) {
 

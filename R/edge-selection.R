@@ -180,6 +180,9 @@ score_edge_face_combinations <- function(combinations, axis, proj, effective_rat
       hull_indices <- chull(all_corners_2d$x, all_corners_2d$y)
       hull_vertices <- all_corners_2d[hull_indices, ]
 
+      # Compute max x+y across all projected cube corners for corner score normalization
+      max_corner_xy <- max(all_corners_2d$x + all_corners_2d$y)
+
       # Score each combination
       for (i in seq_along(combinations)) {
             edge <- combinations[[i]]$edge
@@ -225,7 +228,7 @@ score_edge_face_combinations <- function(combinations, axis, proj, effective_rat
             # 2. Face-specific perpendicularity score
             perpendicularity_score <- calculate_face_perpendicularity_score(combinations[[i]]$edge, face, axis, proj, effective_ratios)
 
-            # 3. Face area score (NEW)
+            # 3. Face area score
             face_area <- calculate_face_area_2d(face, proj, effective_ratios)
 
             # 4. Depth score (average z of endpoints - lower is better/closer)
@@ -244,18 +247,23 @@ score_edge_face_combinations <- function(combinations, axis, proj, effective_rat
             combinations[[i]]$depth_score <- avg_depth
             combinations[[i]]$corner_score <- avg_corner
             combinations[[i]]$edge_length <- edge_length
+            combinations[[i]]$max_corner_xy <- max_corner_xy
       }
 
       return(combinations)
 }
 
 # Select best edge-face combination with weighted scoring
-select_best_edge_face_combination <- function(scored_combinations, weights = c(0.5, 0.3, 0.2)) {
+select_best_edge_face_combination <- function(scored_combinations,
+                                              weights = c(perp = 5,
+                                                          length = 3,
+                                                          area = 2,
+                                                          position = 2)) {
       if (length(scored_combinations) == 0) return(NULL)
 
       # Validate and normalize weights
-      if (length(weights) != 3) {
-            stop("weights must be a vector of length 3: c(perpendicularity, length, area)")
+      if (length(weights) != 4) {
+            stop("weights must be a vector of length 4: c(perpendicularity, length, area, position)")
       }
       if (any(weights < 0)) {
             stop("All weights must be non-negative")
@@ -266,16 +274,20 @@ select_best_edge_face_combination <- function(scored_combinations, weights = c(0
       perp_weight <- weights[1]
       length_weight <- weights[2]
       area_weight <- weights[3]
+      position_weight <- weights[4]
 
       # STEP 1: Do any combinations have hull edges?
       hull_combinations <- scored_combinations[sapply(scored_combinations, function(c) c$on_hull)]
       combinations <- if(length(hull_combinations) > 0) hull_combinations else scored_combinations
 
-      # STEP 2: Calculate weighted scores with three factors
+      # STEP 2: Calculate weighted scores with four factors
       # Find max values for normalization
       max_length <- max(sapply(combinations, function(c) c$edge_length))
       max_area <- max(sapply(combinations, function(c) c$face_area))
       if (max_area == 0) max_area <- 1  # Avoid NaN from 0/0
+
+      # Corner normalization ceiling: max x+y across all projected cube corners
+      max_corner_xy <- combinations[[1]]$max_corner_xy
 
       for(i in seq_along(combinations)) {
             c <- combinations[[i]]
@@ -285,8 +297,14 @@ select_best_edge_face_combination <- function(scored_combinations, weights = c(0
             norm_length <- c$edge_length / max_length
             norm_area <- c$face_area / max_area
 
+            # Invert corner: lower corner_score (more bottom-left) = higher norm_position
+            inverted_corner <- max_corner_xy - c$corner_score
+            max_inverted <- max_corner_xy - min(sapply(combinations, function(c) c$corner_score))
+            norm_position <- inverted_corner / max_inverted
+
             # Multiplicative scoring - all factors must be decent
-            c$combined_score <- (norm_perp^perp_weight) * (norm_length^length_weight) * (norm_area^area_weight)
+            c$combined_score <- (norm_perp^perp_weight) * (norm_length^length_weight) *
+                  (norm_area^area_weight) * (norm_position^position_weight)
 
             combinations[[i]] <- c
       }
@@ -358,7 +376,7 @@ select_best_face_for_edge <- function(edge, visible_faces, proj) {
       return(as.character(score_df$name[1]))
 }
 
-select_axis_edge_and_face <- function(axis, visible_faces, proj, effective_ratios, weights = c(0.5, 0.3, 0.2)) {
+select_axis_edge_and_face <- function(axis, visible_faces, proj, effective_ratios) {
       # Step 1: Enumerate all possible edges for this axis
       all_edges <- enumerate_axis_edges(axis)
 
@@ -382,8 +400,8 @@ select_axis_edge_and_face <- function(axis, visible_faces, proj, effective_ratio
       # Step 3: Score each edge-face combination
       scored_combinations <- score_edge_face_combinations(edge_face_combinations, axis, proj, effective_ratios)
 
-      # Step 4: Select best combination (with weighted scoring including area)
-      best_combination <- select_best_edge_face_combination(scored_combinations, weights)
+      # Step 4: Select best combination
+      best_combination <- select_best_edge_face_combination(scored_combinations)
 
       if (is.null(best_combination)) {
             return(NULL)
@@ -399,7 +417,7 @@ select_axis_edge_and_face <- function(axis, visible_faces, proj, effective_ratio
       ))
 }
 
-get_axis_selection <- function(axis, self, panel_params, effective_ratios, weights = c(0.5, 0.3, 0.2)) {
+get_axis_selection <- function(axis, self, panel_params, effective_ratios) {
       # Get the appropriate text parameter for this axis
       axis_override <- switch(axis,
                               "x" = self$xlabels,
@@ -408,14 +426,14 @@ get_axis_selection <- function(axis, self, panel_params, effective_ratios, weigh
 
       if (length(axis_override) == 1 && axis_override == "auto") {
             # Use automatic selection (needs effective_ratios for scoring)
-            return(select_axis_edge_and_face(axis, panel_params$visible_faces, panel_params$proj, effective_ratios, weights))
+            return(select_axis_edge_and_face(axis, panel_params$visible_faces, panel_params$proj, effective_ratios))
       } else if (length(axis_override) == 2) {
             # Manual override (doesn't need effective_ratios)
             return(create_manual_axis_selection(axis, axis_override[1], axis_override[2],
                                                 panel_params$proj, panel_params$visible_faces))
       } else {
             warning("Invalid ", axis, "text specification, using auto")
-            return(select_axis_edge_and_face(axis, panel_params$visible_faces, panel_params$proj, effective_ratios, weights))
+            return(select_axis_edge_and_face(axis, panel_params$visible_faces, panel_params$proj, effective_ratios))
       }
 }
 

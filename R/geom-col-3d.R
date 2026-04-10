@@ -267,7 +267,7 @@ create_cols <- function(data, x_spacing, y_spacing, width, selected_faces) {
 #'
 #' @seealso [geom_bar_3d()] for automatic counting/binning, [stat_surface_3d()] for smooth
 #'   surface rendering, [coord_3d()] for 3D coordinate systems, [light()] for lighting
-#'   specifications, [GeomPolygon3D] for the default geometry.
+#'   specifications.
 #' @return A `Layer` object that can be added to a ggplot.
 #' @rdname geom_col_3d
 #' @export

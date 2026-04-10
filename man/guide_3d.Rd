@@ -14,10 +14,10 @@ guide_legend_3d(reverse_shade = FALSE, shade_range = c(-0.5, 0.5), ...)
 \item{reverse_shade}{Logical. If TRUE, reverses the lighting gradient direction. By default,
 shadows are placed on the left, or on the bottom for horizontal colorbars.}
 
-\item{...}{Additional arguments passed to \code{guide_colorbar()} or \code{guide_legend()}.}
-
-\item{shade_limits}{Length-2 numeric vector in the range -1 to 1, giving the limits
+\item{shade_range}{Length-2 numeric vector in the range -1 to 1, giving the limits
 of the shading gradient. -1 is full shade, and 1 is full highlight. Default is \code{c(-.5, 5)}.}
+
+\item{...}{Additional arguments passed to \code{guide_colorbar()} or \code{guide_legend()}.}
 }
 \value{
 A guide object that displays shading effects

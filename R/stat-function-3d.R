@@ -96,8 +96,11 @@ StatFunction3D <- ggproto("StatFunction3D", Stat,
 #'
 #' @param mapping Set of aesthetic mappings created by [aes()].
 #' @param data Ignored; this stat generates its own data.
-#' @param geom Geom to use for rendering. Defaults to [GeomSurface3D] for mesh
-#'   surfaces. Use [GeomRidgeline3D] for ridgeline rendering.
+#' @param xlim,ylim Length-2 numeric vectors giving the x and y ranges over which to
+#'   plot the function.
+#' @param geom Geom to use for rendering. Defaults to `"surface_3d"` for mesh
+#'   surfaces. Use `"ridgeline_3d"` for ridgeline rendering.
+#' @param stat Statistical transformation to use on the data. Defaults to `"surface_3d"`.
 #' @param position Position adjustment, defaults to "identity".
 #' @param ... Other arguments passed to the layer.
 #' @param fun Function to evaluate. Must accept (x, y) and return numeric z values.

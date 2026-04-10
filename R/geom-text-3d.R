@@ -92,6 +92,9 @@ text_outlines <- function(text,
 #' Creates a specification for camera-facing "billboard" text that will compute
 #' the appropriate facing direction for each label position.
 #'
+#' @param coord Optional objected created by `coord_3d`. If provided, coord
+#'   parameters are drawn from this and the `pitch`, `roll`, `yaw`, `dist` arguments
+#'   are ignored.
 #' @param pitch,roll,yaw Rotation angles in degrees, matching the values
 #'   you'll use in `coord_3d()`.
 #' @param dist Distance from viewer to center of the data cube, matching
@@ -473,7 +476,7 @@ rotation_matrix_around_axis <- function(axis, angle) {
 #' when the coord_3d scales axes differently. Returns a scalar to multiply
 #' the text's y-coordinates by.
 #'
-#' @param data_ranges List with x, y, z elements, each a length-2 vector of [min, max]
+#' @param data_ranges List with x, y, z elements, each a length-2 vector of `c(min, max)`
 #' @param coord A coord_3d object, or NULL
 #' @return Scalar aspect ratio correction (1 = no correction needed)
 #' @keywords internal
@@ -1318,7 +1321,6 @@ geom_text_3d <- function(mapping = NULL, data = NULL,
 
 #' @rdname geom_text_3d
 #' @param geom The geometric object to use. Defaults based on method.
-#' @param stat The statistical transformation to use. Defaults based on method.
 #' @export
 stat_text_3d <- function(mapping = NULL, data = NULL,
                          geom = NULL, position = "identity",

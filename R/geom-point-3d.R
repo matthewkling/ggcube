@@ -344,8 +344,8 @@ generate_point_elements <- function(data, raw_points,
 #' @param mapping Set of aesthetic mappings created by [aes()]. In addition to
 #'   the standard point aesthetics, `geom_point_3d()` requires x, y, and z coordinates.
 #' @param data The data to be displayed in this layer.
-#' @param stat The statistical transformation to use on the data. Defaults to [StatPoint3D].
-#' @param geom The geometric object used to display the data. Defaults to [GeomPoint3D].
+#' @param stat The statistical transformation to use on the data. Defaults to `"point_3d"`.
+#' @param geom The geometric object used to display the data. Defaults to `"point_3d"`.
 #' @param position Position adjustment, defaults to "identity".
 #' @param ... Other arguments passed on to [layer()].
 #' @param na.rm If `FALSE`, missing values are removed with a warning.
@@ -355,7 +355,7 @@ generate_point_elements <- function(data, raw_points,
 #'   to point sizes, point stroke widths, and reference line widths.
 #'   When `TRUE` (default), points/lines closer to the viewer appear larger/wider, and
 #'   points farther away appear smaller. When `FALSE`, all points/lines have uniform size/width.
-#' @inheritParams sort_method_param
+#' @inheritParams sorting_methods
 #' @param raw_points Logical indicating whether to show the original 3D points.
 #'   Default is `TRUE`.
 #' @param ref_lines Logical indicating whether to show reference lines projecting

@@ -45,8 +45,9 @@ StatSurface3D <- ggproto("StatSurface3D", Stat,
 #' @param mapping Set of aesthetic mappings created by [aes()]. Must include
 #'   `x`, `y`, and `z`.
 #' @param data Data frame containing point coordinates.
-#' @param geom Geom to use for rendering. Defaults to [GeomSurface3D].
-#'   Use [GeomRidgeline3D] for ridgeline rendering.
+#' @param geom Geom to use for rendering. Defaults to `"surface_3d"` for mesh
+#'   surfaces. Use `"ridgeline_3d"` for ridgeline rendering.
+#' @param stat Statistical transformation to use on the data. Defaults to `"surface_3d"`.
 #' @param position Position adjustment, defaults to "identity".
 #' @param ... Other arguments passed to the layer.
 #' @inheritParams ridgeline_params

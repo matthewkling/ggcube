@@ -9,7 +9,7 @@ create_grid_segments(grid_data, plot_bounds)
 \arguments{
 \item{grid_data}{Transformed grid data}
 
-\item{plot_bounds}{Bounds for the final plot \link{xmin, xmax, ymin, ymax}}
+\item{plot_bounds}{Bounds for the final plot {xmin, xmax, ymin, ymax}}
 }
 \value{
 Data frame with segment coordinates for grid grob

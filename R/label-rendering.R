@@ -636,7 +636,7 @@ render_axis_text <- function(self, panel_params, theme) {
             for (axis in c("x", "y", "z")) {
 
                   # Get edge + face (now passing effective_ratios and weights)
-                  axis_selection <- get_axis_selection(axis, self, panel_params, effective_ratios, weights = c(0.5, 0.3, 0.2))
+                  axis_selection <- get_axis_selection(axis, self, panel_params, effective_ratios)
 
                   # Skip this axis if no valid edge/face combination
                   if (is.null(axis_selection)) {

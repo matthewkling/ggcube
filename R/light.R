@@ -152,8 +152,6 @@
 #' p + coord_3d(pitch = 0, roll = -70, yaw = 0,
 #'              light = light(backface_scale = 1, mode = "hsl",
 #'                            backface_offset = -.5))
-#'
-#' @seealso \code{\link{scale_colorbar_shade}}
 #' @export
 light <- function(method = "diffuse",
                   direction = c(-.5, 0, 1),
@@ -847,8 +845,8 @@ apply_surface_light <- function(face_data, normals, face_centers, light) {
 
 #' Convert RGB to HSL color space
 #'
-#' @param rgb_matrix 3xN matrix with RGB values in [0,1] range
-#' @return 3xN matrix with HSL values (H in [0,1], S in [0,1], L in [0,1])
+#' @param rgb_matrix 3xN matrix with RGB values in 0-1 range
+#' @return 3xN matrix with HSL values (H in 0-1, S in 0-1, L in 0-1)
 #' @keywords internal
 rgb2hsl <- function(rgb_matrix) {
       if (!is.matrix(rgb_matrix) || nrow(rgb_matrix) != 3) {
@@ -901,8 +899,8 @@ rgb2hsl <- function(rgb_matrix) {
 
 #' Convert HSL to RGB color space
 #'
-#' @param hsl_matrix 3xN matrix with HSL values (H in [0,1], S in [0,1], L in [0,1])
-#' @return 3xN matrix with RGB values in [0,1] range
+#' @param hsl_matrix 3xN matrix with HSL values (H in 0-1, S in 0-1, L in 0-1)
+#' @return 3xN matrix with RGB values in 0-1 range
 #' @keywords internal
 hsl2rgb <- function(hsl_matrix) {
       if (!is.matrix(hsl_matrix) || nrow(hsl_matrix) != 3) {

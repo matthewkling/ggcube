@@ -138,8 +138,6 @@ outlines. Lower values give smoother curves but more vertices.}
 \item{inherit.aes}{If TRUE, inherit aesthetics from the plot's default.}
 
 \item{geom}{The geometric object to use. Defaults based on method.}
-
-\item{stat}{The statistical transformation to use. Defaults based on method.}
 }
 \value{
 A ggplot2 layer

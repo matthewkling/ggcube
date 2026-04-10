@@ -74,6 +74,7 @@
 #'     \item With \code{scales = "fixed"}: Ratios apply to original data coordinates
 #'   }
 #' @inheritParams light_param
+#' @param ... Additional arguments reserved for internal use.
 #'
 #' @examples
 #' # base plot used in examples
@@ -151,7 +152,7 @@
 #'
 #' @return A `Coord` object that can be added to a ggplot.
 #' @seealso [light()] for lighting specification, [cube_theming] for panel and
-#'   text styling, [polygon_rendering] for 3D-related parameters for polygon layers.
+#'   text styling, [polygon_params] for 3D-related parameters for polygon layers.
 #' @export
 coord_3d <- function(pitch = 0, roll = -60, yaw = -30,
                      persp = TRUE, dist = 2,
@@ -1065,7 +1066,7 @@ generate_circle_vertices <- function(x_std, y_std, z_std, face, radius, n_vertic
 #' Scale transformed coordinates to final npc coordinates
 #'
 #' @param result Data frame with transformed x, y coordinates
-#' @param plot_bounds Plot bounds vector [xmin, xmax, ymin, ymax]
+#' @param plot_bounds Plot bounds vector {xmin, xmax, ymin, ymax}
 #' @return Data frame with scaled coordinates
 #' @keywords internal
 scale_to_npc_coordinates <- function(result, plot_bounds) {
@@ -1115,7 +1116,7 @@ process_backfaces <- function(data) {
       }
 
       # Apply lighting effects if present
-      if("lighting_spec" %in% names(data)) {
+      if("lighting_spec" %in% names(data) && "light" %in% names(data)) {
             scl <- data$lighting_spec[[1]]$backface_scale %||% 1
             off <- data$lighting_spec[[1]]$backface_offset %||% 0
             if((scl != 1 || off != 0) &

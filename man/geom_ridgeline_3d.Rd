@@ -41,8 +41,23 @@ geom_ridgeline_3d(
 
 \item{base}{Z-value for ridge polygon bottoms. If NULL, uses min(z).}
 
-\item{cull_backfaces, sort_method, force_convex, scale_depth}{Advanced polygon
-rendering parameters. See \link{polygon_rendering} for details.}
+\item{cull_backfaces}{Logical indicating whether to remove back-facing polygons
+from rendering. This is primarily for performance optimization but may be useful
+for aesthetic reasons in some situations. Backfaces are determined using
+screen-space winding order after 3D transformation. Defaults vary by geometry
+type: FALSE for open surface-type geometries, TRUE for solid objects (hulls,
+voxels, etc. where backfaces are generally hidden unless frontfaces are transparent
+or explicitly disabled).}
+
+\item{sort_method}{Depth sorting algorithm. See \link{sorting_methods} for details.}
+
+\item{scale_depth}{Logical indicating whether polygon linewidths should be scaled to make closer lines
+wider and farther lines narrower. Default is TRUE. Scaling is based on the mean depth of a polygon.}
+
+\item{force_convex}{Logical indicating whether to remove polygon vertices that are not part of the
+convex hull. Default value varies by geom. Specifying TRUE can help reduce artifacts in surfaces
+that have polygon tiles that wrap over a visible horizon. For prism-type geoms like columns and
+voxels, FALSE is safe because polygons fill always be convex.}
 
 \item{light}{A lighting specification object created by \code{\link[=light]{light()}},\code{"none"} to disable
 lighting, or \code{NULL} to inherit plot-level lighting specs from the coord. Specify

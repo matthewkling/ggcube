@@ -7,10 +7,10 @@
 rgb2hsl(rgb_matrix)
 }
 \arguments{
-\item{rgb_matrix}{3xN matrix with RGB values in \link{0,1} range}
+\item{rgb_matrix}{3xN matrix with RGB values in 0-1 range}
 }
 \value{
-3xN matrix with HSL values (H in \link{0,1}, S in \link{0,1}, L in \link{0,1})
+3xN matrix with HSL values (H in 0-1, S in 0-1, L in 0-1)
 }
 \description{
 Convert RGB to HSL color space
