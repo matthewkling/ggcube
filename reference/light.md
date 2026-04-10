@@ -146,10 +146,6 @@ mapping color aesthestics to computed variables such as
 [`geom_surface_3d()`](https://matthewkling.github.io/ggcube/reference/stat_surface_3d.md)
 for examples.
 
-## See also
-
-`scale_colorbar_shade`
-
 ## Examples
 
 ``` r
@@ -249,5 +245,4 @@ p + coord_3d(pitch = 0, roll = -70, yaw = 0,
 p + coord_3d(pitch = 0, roll = -70, yaw = 0,
              light = light(backface_scale = 1, mode = "hsl",
                            backface_offset = -.5))
-
 ```

@@ -155,7 +155,7 @@ ggplot(d, aes(x, y, z)) +
 renders paths in 3D space with depth-based sorting and scaling:
 
 ``` r
-butterfly <- lorenz_attractor(n_points = 8000, dt = .01)
+butterfly <- ggcube:::lorenz_attractor(n_points = 8000, dt = .01)
 ggplot(butterfly, aes(x, y, z, color = time)) +
       geom_path_3d(linewidth = 0.1, color = "black",
                    position = position_on_face(c("xmax", "ymax", "zmin"))) +
@@ -366,10 +366,10 @@ ggplot(iris, aes(Sepal.Length, Sepal.Width, Petal.Length,
   : Using themes to style 3D panels and axis labels
 - [`element_rect()`](https://matthewkling.github.io/ggcube/reference/element_rect.md)
   : Rectangle theme element with alpha support
-- [`polygon_rendering`](https://matthewkling.github.io/ggcube/reference/polygon_rendering.md)
-  : Polygon rendering parameters
 - [`grid_generation`](https://matthewkling.github.io/ggcube/reference/grid_generation.md)
   : Grid generation
+- [`sorting_methods`](https://matthewkling.github.io/ggcube/reference/sorting_methods.md)
+  : Depth sorting method
 
 ## Animation
 

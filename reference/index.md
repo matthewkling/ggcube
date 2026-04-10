@@ -73,10 +73,10 @@
   : Using themes to style 3D panels and axis labels
 - [`element_rect()`](https://matthewkling.github.io/ggcube/reference/element_rect.md)
   : Rectangle theme element with alpha support
-- [`polygon_rendering`](https://matthewkling.github.io/ggcube/reference/polygon_rendering.md)
-  : Polygon rendering parameters
 - [`grid_generation`](https://matthewkling.github.io/ggcube/reference/grid_generation.md)
   : Grid generation
+- [`sorting_methods`](https://matthewkling.github.io/ggcube/reference/sorting_methods.md)
+  : Depth sorting method
 
 ## Animation
 

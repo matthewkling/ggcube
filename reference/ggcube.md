@@ -1,32 +1,11 @@
-# ggcube: 3D plotting extension for ggplot2
+# ggcube: Extend ggplot2 into 3D
 
-ggcube extends ggplot2 into the third dimension, providing 3D coordinate
-systems, surface plotting, and volumetric visualization capabilities.
-
-## Details
-
-To use ggcube, load both packages:
-[`library(ggplot2)`](https://ggplot2.tidyverse.org)
-[`library(ggcube)`](https://github.com/matthewkling/ggcube)
-
-Key functions:
-
-- [`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md):
-  3D coordinate system with rotation and perspective
-
-- [`aes()`](https://matthewkling.github.io/ggcube/reference/aes.md):
-  Enhanced aesthetic mapping with positional z support
-
-- [`stat_surface_3d()`](https://matthewkling.github.io/ggcube/reference/stat_surface_3d.md):
-  Surface plotting from grid data
-
-- [`stat_hull_3d()`](https://matthewkling.github.io/ggcube/reference/geom_hull_3d.md):
-  3D convex and alpha hulls
-
-- `stat_column_3d()`: 3D pillar/bar charts
-
-- [`light()`](https://matthewkling.github.io/ggcube/reference/light.md):
-  Lighting specifications for 3D surfaces
+ggcube provides 3D geoms, stats, and coordinate systems for ggplot2. Add
+[`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md)
+to any plot with a z aesthetic to render it in 3D with rotation,
+perspective, lighting, and depth sorting. Layer types include surfaces,
+hulls, contours, ridgelines, paths, points, segments, text, bars, and
+columns.
 
 ## See also
 

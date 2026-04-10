@@ -14,7 +14,7 @@ compute_text_aspect_ratios(data_ranges, coord)
 
 - data_ranges:
 
-  List with x, y, z elements, each a length-2 vector of min, max
+  List with x, y, z elements, each a length-2 vector of `c(min, max)`
 
 - coord:
 

@@ -20,18 +20,18 @@ guide_legend_3d(reverse_shade = FALSE, shade_range = c(-0.5, 0.5), ...)
   default, shadows are placed on the left, or on the bottom for
   horizontal colorbars.
 
+- shade_range:
+
+  Length-2 numeric vector in the range -1 to 1, giving the limits of the
+  shading gradient. -1 is full shade, and 1 is full highlight. Default
+  is `c(-.5, 5)`.
+
 - ...:
 
   Additional arguments passed to
   [`guide_colorbar()`](https://ggplot2.tidyverse.org/reference/guide_colourbar.html)
   or
   [`guide_legend()`](https://ggplot2.tidyverse.org/reference/guide_legend.html).
-
-- shade_limits:
-
-  Length-2 numeric vector in the range -1 to 1, giving the limits of the
-  shading gradient. -1 is full shade, and 1 is full highlight. Default
-  is `c(-.5, 5)`.
 
 ## Value
 

@@ -120,7 +120,7 @@ onto one 2D surface, use <code><a href="position_on_face.html">position_on_face(
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Other arguments passed on to the the layer function (typically GeomPolygon3D), such as
+<dd><p>Other arguments passed on to the layer function (typically GeomPolygon3D), such as
 aesthetics like <code>colour</code>, <code>fill</code>, <code>linewidth</code>, etc.</p></dd>
 
 
@@ -160,9 +160,30 @@ plot-level lighting in <code><a href="coord_3d.html">coord_3d()</a></code> and l
 functions.</p></dd>
 
 
-<dt id="arg-cull-backfaces-sort-method-force-convex-scale-depth">cull_backfaces, sort_method, force_convex, scale_depth<a class="anchor" aria-label="anchor" href="#arg-cull-backfaces-sort-method-force-convex-scale-depth"></a></dt>
-<dd><p>Advanced polygon
-rendering parameters. See <a href="polygon_rendering.html">polygon_rendering</a> for details.</p></dd>
+<dt id="arg-cull-backfaces">cull_backfaces<a class="anchor" aria-label="anchor" href="#arg-cull-backfaces"></a></dt>
+<dd><p>Logical indicating whether to remove back-facing polygons
+from rendering. This is primarily for performance optimization but may be useful
+for aesthetic reasons in some situations. Backfaces are determined using
+screen-space winding order after 3D transformation. Defaults vary by geometry
+type: FALSE for open surface-type geometries, TRUE for solid objects (hulls,
+voxels, etc. where backfaces are generally hidden unless frontfaces are transparent
+or explicitly disabled).</p></dd>
+
+
+<dt id="arg-sort-method">sort_method<a class="anchor" aria-label="anchor" href="#arg-sort-method"></a></dt>
+<dd><p>Depth sorting algorithm. See <a href="sorting_methods.html">sorting_methods</a> for details.</p></dd>
+
+
+<dt id="arg-force-convex">force_convex<a class="anchor" aria-label="anchor" href="#arg-force-convex"></a></dt>
+<dd><p>Logical indicating whether to remove polygon vertices that are not part of the
+convex hull. Default value varies by geom. Specifying TRUE can help reduce artifacts in surfaces
+that have polygon tiles that wrap over a visible horizon. For prism-type geoms like columns and
+voxels, FALSE is safe because polygons fill always be convex.</p></dd>
+
+
+<dt id="arg-scale-depth">scale_depth<a class="anchor" aria-label="anchor" href="#arg-scale-depth"></a></dt>
+<dd><p>Logical indicating whether polygon linewidths should be scaled to make closer lines
+wider and farther lines narrower. Default is TRUE. Scaling is based on the mean depth of a polygon.</p></dd>
 
 
 <dt id="arg-na-rm">na.rm<a class="anchor" aria-label="anchor" href="#arg-na-rm"></a></dt>

@@ -55,8 +55,8 @@ geom_surface_3d(
 
 - geom:
 
-  Geom to use for rendering. Defaults to GeomSurface3D. Use
-  GeomRidgeline3D for ridgeline rendering.
+  Geom to use for rendering. Defaults to `"surface_3d"` for mesh
+  surfaces. Use `"ridgeline_3d"` for ridgeline rendering.
 
 - position:
 
@@ -66,11 +66,16 @@ geom_surface_3d(
 
   Other arguments passed to the layer.
 
-- cull_backfaces, sort_method, force_convex, scale_depth:
+- cull_backfaces:
 
-  Advanced polygon rendering parameters. See
-  [polygon_rendering](https://matthewkling.github.io/ggcube/reference/polygon_rendering.md)
-  for details.
+  Logical indicating whether to remove back-facing polygons from
+  rendering. This is primarily for performance optimization but may be
+  useful for aesthetic reasons in some situations. Backfaces are
+  determined using screen-space winding order after 3D transformation.
+  Defaults vary by geometry type: FALSE for open surface-type
+  geometries, TRUE for solid objects (hulls, voxels, etc. where
+  backfaces are generally hidden unless frontfaces are transparent or
+  explicitly disabled).
 
 - light:
 
@@ -93,6 +98,11 @@ geom_surface_3d(
 
   If `FALSE`, overrides the default aesthetics.
 
+- stat:
+
+  Statistical transformation to use on the data. Defaults to
+  `"surface_3d"`.
+
 - method:
 
   Tessellation method passed to `geom_surface_3d()`: "auto" (default),
@@ -102,6 +112,26 @@ geom_surface_3d(
 
   Tile geometry for regular grids: "rectangle" (default), "right1", or
   "right2".
+
+- sort_method:
+
+  Depth sorting algorithm. See
+  [sorting_methods](https://matthewkling.github.io/ggcube/reference/sorting_methods.md)
+  for details.
+
+- scale_depth:
+
+  Logical indicating whether polygon linewidths should be scaled to make
+  closer lines wider and farther lines narrower. Default is TRUE.
+  Scaling is based on the mean depth of a polygon.
+
+- force_convex:
+
+  Logical indicating whether to remove polygon vertices that are not
+  part of the convex hull. Default value varies by geom. Specifying TRUE
+  can help reduce artifacts in surfaces that have polygon tiles that
+  wrap over a visible horizon. For prism-type geoms like columns and
+  voxels, FALSE is safe because polygons fill always be convex.
 
 ## Details
 

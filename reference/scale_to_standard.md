@@ -17,8 +17,8 @@ scale_to_standard(values, data_range, scales = "free", ratio = c(1, 1, 1))
 
 - data_range:
 
-  Original range of the data min, max (for single axis) OR list with
-  x,y,z scale ranges (for multi-axis)
+  Original range of the data `c(min, max)` (for single axis) OR list
+  with x,y,z scale ranges (for multi-axis)
 
 - scales:
 

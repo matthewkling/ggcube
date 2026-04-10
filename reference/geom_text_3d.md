@@ -204,10 +204,6 @@ stat_text_3d(
 
   The geometric object to use. Defaults based on method.
 
-- stat:
-
-  The statistical transformation to use. Defaults based on method.
-
 ## Value
 
 A ggplot2 layer
@@ -349,12 +345,7 @@ ggplot(df, aes(x, y, z, label = label)) +
   geom_text_3d() +
   coord_3d(scales = "fixed")
 #> Warning: `light` is ignored for billboard method.
-#> Error in geom_text_3d(): Problem while converting geom to grob.
-#> ℹ Error occurred in the 1st layer.
-#> Caused by error in `mutate()`:
-#> ℹ In argument: `light = ifelse(.backface, light * scl + off, light)`.
-#> Caused by error in `rep()`:
-#> ! attempt to replicate an object of type 'closure'
+
 
 # Polygon text - can face any direction
 ggplot(df, aes(x, y, z, label = label)) +

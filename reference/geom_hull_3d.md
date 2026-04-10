@@ -66,7 +66,7 @@ stat_hull_3d(
 
 - ...:
 
-  Other arguments passed on to the the layer function (typically
+  Other arguments passed on to the layer function (typically
   GeomPolygon3D), such as aesthetics like `colour`, `fill`, `linewidth`,
   etc.
 
@@ -96,6 +96,29 @@ stat_hull_3d(
   from the coord. Specify plot-level lighting in
   [`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md)
   and layer-specific lighting in `geom_*3d()` functions.
+
+- cull_backfaces:
+
+  Logical indicating whether to remove back-facing polygons from
+  rendering. This is primarily for performance optimization but may be
+  useful for aesthetic reasons in some situations. Backfaces are
+  determined using screen-space winding order after 3D transformation.
+  Defaults vary by geometry type: FALSE for open surface-type
+  geometries, TRUE for solid objects (hulls, voxels, etc. where
+  backfaces are generally hidden unless frontfaces are transparent or
+  explicitly disabled).
+
+- sort_method:
+
+  Depth sorting algorithm. See
+  [sorting_methods](https://matthewkling.github.io/ggcube/reference/sorting_methods.md)
+  for details.
+
+- scale_depth:
+
+  Logical indicating whether polygon linewidths should be scaled to make
+  closer lines wider and farther lines narrower. Default is TRUE.
+  Scaling is based on the mean depth of a polygon.
 
 - inherit.aes:
 
@@ -176,6 +199,9 @@ ggplot(sphere_points, aes(x, y, z)) +
 ggplot(sphere_points, aes(x, y, z)) +
   geom_hull_3d(method = "alpha", radius = 2, fill = "gray40") +
   coord_3d()
+#> Warning: RGL: unable to open X11 display
+#> Warning: 'rgl.init' failed, will use the null device.
+#> See '?rgl.useNULL' for ways to avoid this warning.
 
 
 # Use `cull_backfaces = FALSE` to render far side of hull

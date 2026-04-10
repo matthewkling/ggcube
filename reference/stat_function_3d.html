@@ -94,8 +94,8 @@ as a 3D surface or ridgeline plot.</p>
 
 
 <dt id="arg-geom">geom<a class="anchor" aria-label="anchor" href="#arg-geom"></a></dt>
-<dd><p>Geom to use for rendering. Defaults to GeomSurface3D for mesh
-surfaces. Use GeomRidgeline3D for ridgeline rendering.</p></dd>
+<dd><p>Geom to use for rendering. Defaults to <code>"surface_3d"</code> for mesh
+surfaces. Use <code>"ridgeline_3d"</code> for ridgeline rendering.</p></dd>
 
 
 <dt id="arg-position">position<a class="anchor" aria-label="anchor" href="#arg-position"></a></dt>
@@ -110,9 +110,24 @@ surfaces. Use GeomRidgeline3D for ridgeline rendering.</p></dd>
 <dd><p>Function to evaluate. Must accept (x, y) and return numeric z values.</p></dd>
 
 
+<dt id="arg-xlim-ylim">xlim, ylim<a class="anchor" aria-label="anchor" href="#arg-xlim-ylim"></a></dt>
+<dd><p>Length-2 numeric vectors giving the x and y ranges over which to
+plot the function.</p></dd>
+
+
 <dt id="arg-grid-n-direction-trim">grid, n, direction, trim<a class="anchor" aria-label="anchor" href="#arg-grid-n-direction-trim"></a></dt>
 <dd><p>Parameters determining the geometry, resolution, and
 orientation of the surface grid. See <a href="grid_generation.html">grid_generation</a> for details.</p></dd>
+
+
+<dt id="arg-cull-backfaces">cull_backfaces<a class="anchor" aria-label="anchor" href="#arg-cull-backfaces"></a></dt>
+<dd><p>Logical indicating whether to remove back-facing polygons
+from rendering. This is primarily for performance optimization but may be useful
+for aesthetic reasons in some situations. Backfaces are determined using
+screen-space winding order after 3D transformation. Defaults vary by geometry
+type: FALSE for open surface-type geometries, TRUE for solid objects (hulls,
+voxels, etc. where backfaces are generally hidden unless frontfaces are transparent
+or explicitly disabled).</p></dd>
 
 
 <dt id="arg-light">light<a class="anchor" aria-label="anchor" href="#arg-light"></a></dt>
@@ -132,6 +147,10 @@ functions.</p></dd>
 
 <dt id="arg-inherit-aes">inherit.aes<a class="anchor" aria-label="anchor" href="#arg-inherit-aes"></a></dt>
 <dd><p>If <code>FALSE</code>, overrides the default aesthetics.</p></dd>
+
+
+<dt id="arg-stat">stat<a class="anchor" aria-label="anchor" href="#arg-stat"></a></dt>
+<dd><p>Statistical transformation to use on the data. Defaults to <code>"surface_3d"</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">

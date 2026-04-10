@@ -16,8 +16,8 @@
 <script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="3D plotting with ggplot2">
-<meta name="description" content="Use ggplot2 to create 3d visualizations">
-<meta property="og:description" content="Use ggplot2 to create 3d visualizations">
+<meta name="description" content="Create 3D visualizations with ggplot2.">
+<meta property="og:description" content="Create 3D visualizations with ggplot2.">
 <meta property="og:image" content="https://matthewkling.github.io/ggcube/logo.png">
 </head>
 <body>
@@ -58,7 +58,7 @@
 </h1>
 </div>
 <!-- badges: start -->
-<!-- badges: end -->
+
 <p><strong>ggcube</strong> lets you build 3D figures using ggplot2. Use it to create 3D surfaces, volumes, scatter plots, and complex layered visualizations using familiar ggplot2 syntax with <code>aes(x, y, z)</code> and <code><a href="reference/coord_3d.html">coord_3d()</a></code>.</p>
 <p>The package provides a variety of 3D-specific <code>geoms</code> to render surfaces, prisms, points, paths, and text in 3D; it also works with some standard ggplot2 layer functions. You can control plot geometry with 3D projection parameters, apply a range of 3D lighting models, and mix 3D layers with 2D layers rendered on cube faces. Standard ggplot2 features like faceting, themes, scales, and legends work as expected.</p>
 <p>NOTE: 3D plots are wonderful for exploratory analysis, storytelling, and data art – but they are often a poor choice when precise quantitative communication is important, due to issues like occlusion and perspective distortion.</p>
@@ -164,7 +164,7 @@
 </h2>
 <p><code><a href="reference/geom_path_3d.html">geom_path_3d()</a></code> renders paths in 3D space with depth-based sorting and scaling:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">butterfly</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/lorenz_attractor.html">lorenz_attractor</a></span><span class="op">(</span>n_points <span class="op">=</span> <span class="fl">8000</span>, dt <span class="op">=</span> <span class="fl">.01</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">butterfly</span> <span class="op">&lt;-</span> <span class="fu">ggcube</span><span class="fu">:::</span><span class="fu"><a href="reference/lorenz_attractor.html">lorenz_attractor</a></span><span class="op">(</span>n_points <span class="op">=</span> <span class="fl">8000</span>, dt <span class="op">=</span> <span class="fl">.01</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">butterfly</span>, <span class="fu"><a href="reference/aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span>, color <span class="op">=</span> <span class="va">time</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>      <span class="fu"><a href="reference/geom_path_3d.html">geom_path_3d</a></span><span class="op">(</span>linewidth <span class="op">=</span> <span class="fl">0.1</span>, color <span class="op">=</span> <span class="st">"black"</span>,</span>
 <span>                   position <span class="op">=</span> <span class="fu"><a href="reference/position_on_face.html">position_on_face</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"xmax"</span>, <span class="st">"ymax"</span>, <span class="st">"zmin"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
@@ -303,7 +303,12 @@
 </ul>
 </div>
 
-
+<div class="dev-status">
+<h2 data-toc-skip>Dev status</h2>
+<ul class="list-unstyled">
+<li><a href="https://github.com/matthewkling/ggcube/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/matthewkling/ggcube/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a></li>
+</ul>
+</div>
 
   </aside>
 </div>

@@ -162,6 +162,10 @@ coord_3d(
   from the coord. Specify plot-level lighting in `coord_3d()` and
   layer-specific lighting in `geom_*3d()` functions.
 
+- ...:
+
+  Additional arguments reserved for internal use.
+
 ## Value
 
 A `Coord` object that can be added to a ggplot.
@@ -172,7 +176,7 @@ A `Coord` object that can be added to a ggplot.
 for lighting specification,
 [cube_theming](https://matthewkling.github.io/ggcube/reference/cube_theming.md)
 for panel and text styling,
-[polygon_rendering](https://matthewkling.github.io/ggcube/reference/polygon_rendering.md)
+[polygon_params](https://matthewkling.github.io/ggcube/reference/polygon_params.md)
 for 3D-related parameters for polygon layers.
 
 ## Examples

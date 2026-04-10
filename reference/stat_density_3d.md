@@ -86,7 +86,7 @@ stat_density_3d(
 
 - ...:
 
-  Other arguments passed on to the the layer function (typically
+  Other arguments passed on to the layer function (typically
   GeomPolygon3D), such as aesthetics like `colour`, `fill`, `linewidth`,
   etc.
 
@@ -134,11 +134,36 @@ stat_density_3d(
   [`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md)
   and layer-specific lighting in `geom_*3d()` functions.
 
-- cull_backfaces, sort_method, force_convex, scale_depth:
+- cull_backfaces:
 
-  Advanced polygon rendering parameters. See
-  [polygon_rendering](https://matthewkling.github.io/ggcube/reference/polygon_rendering.md)
+  Logical indicating whether to remove back-facing polygons from
+  rendering. This is primarily for performance optimization but may be
+  useful for aesthetic reasons in some situations. Backfaces are
+  determined using screen-space winding order after 3D transformation.
+  Defaults vary by geometry type: FALSE for open surface-type
+  geometries, TRUE for solid objects (hulls, voxels, etc. where
+  backfaces are generally hidden unless frontfaces are transparent or
+  explicitly disabled).
+
+- sort_method:
+
+  Depth sorting algorithm. See
+  [sorting_methods](https://matthewkling.github.io/ggcube/reference/sorting_methods.md)
   for details.
+
+- force_convex:
+
+  Logical indicating whether to remove polygon vertices that are not
+  part of the convex hull. Default value varies by geom. Specifying TRUE
+  can help reduce artifacts in surfaces that have polygon tiles that
+  wrap over a visible horizon. For prism-type geoms like columns and
+  voxels, FALSE is safe because polygons fill always be convex.
+
+- scale_depth:
+
+  Logical indicating whether polygon linewidths should be scaled to make
+  closer lines wider and farther lines narrower. Default is TRUE.
+  Scaling is based on the mean depth of a polygon.
 
 - na.rm:
 

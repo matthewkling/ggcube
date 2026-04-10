@@ -60,8 +60,8 @@ geom_function_3d(
 
 - geom:
 
-  Geom to use for rendering. Defaults to GeomSurface3D for mesh
-  surfaces. Use GeomRidgeline3D for ridgeline rendering.
+  Geom to use for rendering. Defaults to `"surface_3d"` for mesh
+  surfaces. Use `"ridgeline_3d"` for ridgeline rendering.
 
 - position:
 
@@ -75,12 +75,28 @@ geom_function_3d(
 
   Function to evaluate. Must accept (x, y) and return numeric z values.
 
+- xlim, ylim:
+
+  Length-2 numeric vectors giving the x and y ranges over which to plot
+  the function.
+
 - grid, n, direction, trim:
 
   Parameters determining the geometry, resolution, and orientation of
   the surface grid. See
   [grid_generation](https://matthewkling.github.io/ggcube/reference/grid_generation.md)
   for details.
+
+- cull_backfaces:
+
+  Logical indicating whether to remove back-facing polygons from
+  rendering. This is primarily for performance optimization but may be
+  useful for aesthetic reasons in some situations. Backfaces are
+  determined using screen-space winding order after 3D transformation.
+  Defaults vary by geometry type: FALSE for open surface-type
+  geometries, TRUE for solid objects (hulls, voxels, etc. where
+  backfaces are generally hidden unless frontfaces are transparent or
+  explicitly disabled).
 
 - light:
 
@@ -102,6 +118,11 @@ geom_function_3d(
 - inherit.aes:
 
   If `FALSE`, overrides the default aesthetics.
+
+- stat:
+
+  Statistical transformation to use on the data. Defaults to
+  `"surface_3d"`.
 
 ## Computed variables
 

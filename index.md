@@ -155,7 +155,7 @@ ggplot(d, aes(x, y, z)) +
 renders paths in 3D space with depth-based sorting and scaling:
 
 ``` r
-butterfly <- lorenz_attractor(n_points = 8000, dt = .01)
+butterfly <- ggcube:::lorenz_attractor(n_points = 8000, dt = .01)
 ggplot(butterfly, aes(x, y, z, color = time)) +
       geom_path_3d(linewidth = 0.1, color = "black",
                    position = position_on_face(c("xmax", "ymax", "zmin"))) +

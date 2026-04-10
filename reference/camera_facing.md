@@ -18,6 +18,12 @@ camera_facing(
 
 ## Arguments
 
+- coord:
+
+  Optional objected created by `coord_3d`. If provided, coord parameters
+  are drawn from this and the `pitch`, `roll`, `yaw`, `dist` arguments
+  are ignored.
+
 - pitch, roll, yaw:
 
   Rotation angles in degrees, matching the values you'll use in
