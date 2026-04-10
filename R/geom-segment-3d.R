@@ -174,6 +174,47 @@ GeomSegment3D <- ggproto("GeomSegment3D", Geom,
                                colour = "black", linewidth = 0.5, linetype = 1, alpha = 1
                          ),
 
+                         setup_data = function(data, params) {
+                               # Convert from wide format (x/y/z + xend/yend/zend) to
+                               # long format (two rows per segment) for the rendering
+                               # pipeline. Each segment becomes a pair of start/end rows
+                               # sharing a group ID.
+                               n_segments <- nrow(data)
+
+                               start_data <- data.frame(
+                                     x = data$x,
+                                     y = data$y,
+                                     z = data$z,
+                                     group = data$group,
+                                     segment_id = seq_len(n_segments),
+                                     point_type = "start",
+                                     stringsAsFactors = FALSE
+                               )
+
+                               end_data <- data.frame(
+                                     x = data$xend,
+                                     y = data$yend,
+                                     z = data$zend,
+                                     group = data$group,
+                                     segment_id = seq_len(n_segments),
+                                     point_type = "end",
+                                     stringsAsFactors = FALSE
+                               )
+
+                               # Preserve aesthetics and other columns for both points
+                               other_cols <- setdiff(names(data),
+                                                     c("x", "y", "z", "xend", "yend", "zend", "group"))
+                               for (col_name in other_cols) {
+                                     start_data[[col_name]] <- data[[col_name]]
+                                     end_data[[col_name]] <- data[[col_name]]
+                               }
+
+                               long_data <- rbind(start_data, end_data)
+                               long_data$.prim <- "segment"
+
+                               long_data
+                         },
+
                          draw_panel = function(data, panel_params, coord,
                                                sort_method = "painter",
                                                scale_depth = TRUE,
@@ -185,45 +226,11 @@ GeomSegment3D <- ggproto("GeomSegment3D", Geom,
                                      return(grid::nullGrob())
                                }
 
-                               # Convert wide to long format
-                               # Each segment becomes 2 rows sharing a group ID
-                               n_segments <- nrow(data)
-
-                               # Create start points
-                               start_data <- data.frame(
-                                     x = data$x,
-                                     y = data$y,
-                                     z = data$z,
-                                     group = data$group,
-                                     segment_id = 1:n_segments,
-                                     point_type = "start"
-                               )
-
-                               # Create end points
-                               end_data <- data.frame(
-                                     x = data$xend,
-                                     y = data$yend,
-                                     z = data$zend,
-                                     group = data$group,
-                                     segment_id = 1:n_segments,
-                                     point_type = "end"
-                               )
-
-                               # Preserve other aesthetics for both points
-                               other_cols <- setdiff(names(data), c("x", "y", "z", "xend", "yend", "zend", "group"))
-                               for (col_name in other_cols) {
-                                     start_data[[col_name]] <- data[[col_name]]
-                                     end_data[[col_name]] <- data[[col_name]]
-                               }
-
-                               # Combine into long format
-                               long_data <- rbind(start_data, end_data)
-                               long_data$.prim <- "segment"
                                sort_method <- match.arg(sort_method, c("auto", "pairwise", "painter"))
-                               long_data$.sort_method <- sort_method
+                               data$.sort_method <- sort_method
 
                                # Transform all points together (handles depth sorting)
-                               coords <- coord$transform(long_data, panel_params)
+                               coords <- coord$transform(data, panel_params)
 
                                # Apply depth scaling to linewidth
                                coords <- scale_depth(coords, scale_depth)
