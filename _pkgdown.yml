@@ -19,8 +19,8 @@ reference:
   - guide_3d
   - cube_theming
   - element_rect
-  - polygon_rendering
   - grid_generation
+  - sorting_methods
 - title: Animation
 - contents:
   - contains("anim")

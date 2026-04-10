@@ -4,6 +4,8 @@
 # ggcube <a href="https://matthewkling.github.io/ggcube/"><img src="man/figures/logo.png" align="right" height="139" alt="ggcube website" /></a>
 
 <!-- badges: start -->
+
+[![R-CMD-check](https://github.com/matthewkling/ggcube/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/matthewkling/ggcube/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 **ggcube** lets you build 3D figures using ggplot2. Use it to create 3D
