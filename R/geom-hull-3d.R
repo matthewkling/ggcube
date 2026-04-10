@@ -166,11 +166,6 @@ StatHull3D <- ggproto("StatHull3D", Stat,
 #'   geom_hull_3d(method = "convex", fill = "gray40") +
 #'   coord_3d()
 #'
-#' # Alpha shape (for sphere data, gives similar result to convex)
-#' ggplot(sphere_points, aes(x, y, z)) +
-#'   geom_hull_3d(method = "alpha", radius = 2, fill = "gray40") +
-#'   coord_3d()
-#'
 #' # Use `cull_backfaces = FALSE` to render far side of hull
 #' ggplot(sphere_points, aes(x, y, z)) +
 #'   geom_hull_3d( # default culling for comparison
@@ -187,6 +182,12 @@ StatHull3D <- ggproto("StatHull3D", Stat,
 #'                  color = Species, fill = Species)) +
 #'       geom_hull_3d() +
 #'       coord_3d(scales = "fixed")
+#'
+#' @examplesIf requireNamespace("alphashape3d", quietly = TRUE)
+#' # Alpha shape (for sphere data, gives similar result to convex)
+#' ggplot(sphere_points, aes(x, y, z)) +
+#'   geom_hull_3d(method = "alpha", radius = 2, fill = "gray40") +
+#'   coord_3d()
 #'
 #' @seealso [coord_3d()] for 3D coordinate systems, [geom_polygon_3d] for the
 #'   default geometry with depth sorting, [light()] for lighting specifications.
