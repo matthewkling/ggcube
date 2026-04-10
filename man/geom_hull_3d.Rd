@@ -139,6 +139,13 @@ ggplot(sphere_points, aes(x, y, z)) +
   geom_hull_3d(method = "convex", fill = "gray40") +
   coord_3d()
 
+# Alpha shape (for sphere data, gives similar result to convex)
+\donttest{
+ggplot(sphere_points, aes(x, y, z)) +
+  geom_hull_3d(method = "alpha", radius = 2, fill = "gray40") +
+  coord_3d()
+}
+
 # Use `cull_backfaces = FALSE` to render far side of hull
 ggplot(sphere_points, aes(x, y, z)) +
   geom_hull_3d( # default culling for comparison
@@ -156,12 +163,6 @@ ggplot(iris, aes(Petal.Length, Sepal.Length, Sepal.Width,
       geom_hull_3d() +
       coord_3d(scales = "fixed")
 
-\dontshow{if (requireNamespace("alphashape3d", quietly = TRUE)) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
-# Alpha shape (for sphere data, gives similar result to convex)
-ggplot(sphere_points, aes(x, y, z)) +
-  geom_hull_3d(method = "alpha", radius = 2, fill = "gray40") +
-  coord_3d()
-\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=coord_3d]{coord_3d()}} for 3D coordinate systems, \link{geom_polygon_3d} for the
