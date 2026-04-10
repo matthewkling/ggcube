@@ -195,15 +195,6 @@ ggplot(sphere_points, aes(x, y, z)) +
   coord_3d()
 
 
-# Alpha shape (for sphere data, gives similar result to convex)
-ggplot(sphere_points, aes(x, y, z)) +
-  geom_hull_3d(method = "alpha", radius = 2, fill = "gray40") +
-  coord_3d()
-#> Warning: RGL: unable to open X11 display
-#> Warning: 'rgl.init' failed, will use the null device.
-#> See '?rgl.useNULL' for ways to avoid this warning.
-
-
 # Use `cull_backfaces = FALSE` to render far side of hull
 ggplot(sphere_points, aes(x, y, z)) +
   geom_hull_3d( # default culling for comparison
@@ -222,4 +213,9 @@ ggplot(iris, aes(Petal.Length, Sepal.Length, Sepal.Width,
       geom_hull_3d() +
       coord_3d(scales = "fixed")
 
+
+# Alpha shape (for sphere data, gives similar result to convex)
+ggplot(sphere_points, aes(x, y, z)) +
+  geom_hull_3d(method = "alpha", radius = 2, fill = "gray40") +
+  coord_3d()
 ```
