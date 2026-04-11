@@ -30,5 +30,5 @@ scale_to_standard(values, data_range, scales = "free", ratio = c(1, 1, 1))
 
 ## Value
 
-Scaled values in -0.5, 0.5 domain (single axis) OR data frame with
+Scaled values in `[-0.5, 0.5]` domain (single axis) OR data frame with
 scaled coordinates (multi-axis)

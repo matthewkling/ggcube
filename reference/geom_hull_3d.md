@@ -74,7 +74,8 @@ stat_hull_3d(
 
   Triangulation method. Either:
 
-  - `"convex"`: Convex hull triangulation (default)
+  - `"convex"`: Convex hull triangulation (default). Requires the
+    geometry package.
 
   - `"alpha"`: Alpha shape triangulation (can capture non-convex
     topologies)
@@ -219,5 +220,4 @@ ggplot(iris, aes(Petal.Length, Sepal.Length, Sepal.Width,
                  color = Species, fill = Species)) +
       geom_hull_3d() +
       coord_3d(scales = "fixed")
-
 ```

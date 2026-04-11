@@ -12,7 +12,7 @@ scale_to_npc_coordinates(x, y = NULL, plot_bounds)
 
 - plot_bounds:
 
-  Plot bounds vector xmin, xmax, ymin, ymax
+  Plot bounds vector `xmin, xmax, ymin, ymax`
 
 - result:
 

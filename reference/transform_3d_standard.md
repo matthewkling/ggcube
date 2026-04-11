@@ -16,7 +16,7 @@ transform_3d_standard(
 
 - data:
 
-  Data frame with x, y, z columns (in standard -0.5, 0.5 domain)
+  Data frame with x, y, z columns (in standard `[-0.5, 0.5]` domain)
 
 - proj:
 

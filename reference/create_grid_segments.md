@@ -16,7 +16,7 @@ create_grid_segments(grid_data, plot_bounds)
 
 - plot_bounds:
 
-  Bounds for the final plot xmin, xmax, ymin, ymax
+  Bounds for the final plot `xmin, xmax, ymin, ymax`
 
 ## Value
 
