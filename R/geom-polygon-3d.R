@@ -4,15 +4,22 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
 
                          optional_aes = c("subgroup"),
 
+                         extra_params = c("na.rm", "annotate"),
+
                          default_aes = aes(
                                fill = "grey50", colour = "grey50", linewidth = 0.1, linetype = 1, alpha = 1
                          ),
+
+                         setup_data = function(data, params) {
+                               setup_annotations(data, params)
+                         },
 
                          draw_panel = function(data, panel_params, coord,
                                                sort_method = "auto",
                                                scale_depth = TRUE,
                                                force_convex = FALSE,
                                                rule = "evenodd",
+                                               annotate = NULL,
                                                point.colour = NULL, point.fill = NULL,
                                                point.size = NULL, point.shape = NULL,
                                                point.alpha = NULL, point.stroke = NULL,
@@ -21,6 +28,10 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
 
                                # Parameter validation
                                validate_coord3d(coord)
+
+                               # Resolve annotation sentinels that need panel range info
+                               # (no-op for v1 types; will expand plane extents when added)
+                               data <- prepare_annotations(data, panel_params)
 
                                # Transform data
                                sort_method <- match.arg(sort_method, c("auto", "pairwise", "painter"))
@@ -35,8 +46,11 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                                # Enforce convexity if requested (polygons only)
                                coords <- drop_nonconvex_vertices(coords, force_convex)
 
-                               # Apply annotation point styling (post-transform, pre-depth-scale).
-                               # Values come from geom_smooth_3d defaults/overrides via params.
+                               # Apply smooth overlay point styling (post-transform, pre-depth-scale).
+                               # Values come from geom_smooth_3d point.* params.
+                               # Only applied when params are non-NULL (i.e. when smooth overlay
+                               # is active). Annotation points are styled separately via
+                               # apply_annotation_styles().
                                if (".prim" %in% names(coords) && any(coords$.prim == "point", na.rm = TRUE)) {
                                      pt_mask <- coords$.prim == "point" & !is.na(coords$.prim)
 
@@ -45,23 +59,26 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                                            if (!col %in% names(coords)) coords[[col]] <- NA_real_
                                      }
 
-                                     coords$colour[pt_mask] <- point.colour
-                                     coords$fill[pt_mask] <- point.fill
-                                     coords$size[pt_mask] <- point.size
-                                     coords$shape[pt_mask] <- point.shape
-                                     coords$alpha[pt_mask] <- point.alpha
-                                     coords$stroke[pt_mask] <- point.stroke
+                                     if (!is.null(point.colour)) coords$colour[pt_mask] <- point.colour
+                                     if (!is.null(point.fill))   coords$fill[pt_mask]   <- point.fill
+                                     if (!is.null(point.size))   coords$size[pt_mask]   <- point.size
+                                     if (!is.null(point.shape))  coords$shape[pt_mask]  <- point.shape
+                                     if (!is.null(point.alpha))  coords$alpha[pt_mask]  <- point.alpha
+                                     if (!is.null(point.stroke)) coords$stroke[pt_mask] <- point.stroke
                                }
 
-                               # Apply annotation segment styling
+                               # Apply smooth overlay segment styling (residual lines)
                                if (".prim" %in% names(coords) && any(coords$.prim == "segment", na.rm = TRUE)) {
                                      seg_mask <- coords$.prim == "segment" & !is.na(coords$.prim)
 
-                                     coords$colour[seg_mask] <- residual.colour
-                                     coords$alpha[seg_mask] <- residual.alpha
-                                     coords$linewidth[seg_mask] <- residual.linewidth
-                                     coords$linetype[seg_mask] <- residual.linetype
+                                     if (!is.null(residual.colour))    coords$colour[seg_mask]    <- residual.colour
+                                     if (!is.null(residual.alpha))     coords$alpha[seg_mask]     <- residual.alpha
+                                     if (!is.null(residual.linewidth)) coords$linewidth[seg_mask] <- residual.linewidth
+                                     if (!is.null(residual.linetype))  coords$linetype[seg_mask]  <- residual.linetype
                                }
+
+                               # Apply annotate_3d styles (overrides blanket smooth overlay styling above for annotate_3d rows only)
+                               coords <- apply_annotation_styles(coords)
 
                                # Scale linewidths/sizes by depth
                                coords <- scale_depth(coords, scale_depth)
@@ -90,10 +107,6 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
 #' `geom_polygon_3d()` renders 3D polygons with proper depth sorting for realistic
 #' 3D surface visualization. It's designed to work with surface data
 #' from [stat_hull_3d()] and [stat_surface_3d()], as well as regular polygon data like maps.
-#'
-#' From R 3.6 and onwards it is possible to draw polygons with holes by providing
-#' a `subgroup` aesthetic that differentiates the outer ring points from those
-#' describing holes in the polygon, just as in [ggplot2::geom_polygon()].
 #'
 #' @param mapping Set of aesthetic mappings created by [aes()].
 #' @param data The data to be displayed in this layer. Note that if you specify `light` or

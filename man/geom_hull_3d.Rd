@@ -50,7 +50,7 @@ variables with \code{\link[=after_stat]{after_stat()}}.}
 onto one 2D surface, use \code{position_on_face()}.}
 
 \item{...}{Other arguments passed on to the layer function (typically GeomPolygon3D), such as
-aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc.}
+aesthetics like \code{colour}, \code{fill}, \code{linewidth}, \code{annotate = annotate_3d(...)}, etc.}
 
 \item{method}{Triangulation method. Either:
 \itemize{
@@ -140,7 +140,7 @@ ggplot(sphere_points, aes(x, y, z)) +
   coord_3d()
 
 # Alpha shape (for sphere data, gives similar result to convex)
-\donttest{
+\dontrun{
 ggplot(sphere_points, aes(x, y, z)) +
   geom_hull_3d(method = "alpha", radius = 2, fill = "gray40") +
   coord_3d()

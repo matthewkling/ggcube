@@ -167,7 +167,7 @@ StatHull3D <- ggproto("StatHull3D", Stat,
 #'   coord_3d()
 #'
 #' # Alpha shape (for sphere data, gives similar result to convex)
-#' \donttest{
+#' \dontrun{
 #' ggplot(sphere_points, aes(x, y, z)) +
 #'   geom_hull_3d(method = "alpha", radius = 2, fill = "gray40") +
 #'   coord_3d()

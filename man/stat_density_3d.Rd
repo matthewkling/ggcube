@@ -67,7 +67,7 @@ with point coordinates.}
 onto one 2D surface, use \code{position_on_face()}.}
 
 \item{...}{Other arguments passed on to the layer function (typically GeomPolygon3D), such as
-aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc.}
+aesthetics like \code{colour}, \code{fill}, \code{linewidth}, \code{annotate = annotate_3d(...)}, etc.}
 
 \item{grid, n, direction, trim}{Parameters determining the geometry, resolution, and
 orientation of the surface grid. See \link{grid_generation} for details.}

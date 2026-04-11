@@ -291,8 +291,8 @@ render_points <- function(data) {
 #' Segments are rendered in a single vectorized segmentsGrob call.
 #'
 #' @param data Segment data with x, y, group, and aesthetic columns.
-#'   Each group must have exactly 2 rows. The group must contain
-#'   `__start` and `__end` suffixed rows, or simply two rows in order.
+#'   Each group must have exactly 2 rows with `point_type` "start"/"end",
+#'   or simply two rows in order.
 #' @param arrow Arrow specification.
 #' @param lineend Line end style.
 #' @return A segmentsGrob.
@@ -306,10 +306,8 @@ render_segments <- function(data, arrow = NULL, lineend = "butt") {
       if ("point_type" %in% names(data)) {
             start_rows <- data[data$point_type == "start", ]
             end_rows <- data[data$point_type == "end", ]
-            # Match end rows to start rows by segment_id, preserving start row order
-            if ("segment_id" %in% names(data)) {
-                  end_rows <- end_rows[match(start_rows$segment_id, end_rows$segment_id), ]
-            }
+            # Match end rows to start rows by group, preserving start row order
+            end_rows <- end_rows[match(start_rows$group, end_rows$group), ]
       } else {
             # Generic: first row = start, second row = end within each group
             groups <- unique(data$group)

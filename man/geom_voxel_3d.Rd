@@ -52,7 +52,7 @@ stat_voxel_3d(
 onto one 2D surface, use \code{position_on_face()}.}
 
 \item{...}{Other arguments passed on to the layer function (typically GeomPolygon3D), such as
-aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc.}
+aesthetics like \code{colour}, \code{fill}, \code{linewidth}, \code{annotate = annotate_3d(...)}, etc.}
 
 \item{width}{Numeric value controlling box width as a fraction of grid spacing.
 Default is 1.0 (volumes touch each other). Use 0.8 for small gaps, 1.2 for overlap.

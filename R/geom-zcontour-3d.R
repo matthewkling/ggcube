@@ -14,7 +14,7 @@ GeomContour3D <- ggproto("GeomContour3D", GeomPolygon3D,
                                alpha = NA
                          ),
 
-                         extra_params = c("na.rm", "bins", "binwidth", "breaks",
+                         extra_params = c("na.rm", "annotate", "bins", "binwidth", "breaks",
                                           "cull_backfaces", "sort_method", "scale_depth", "force_convex"),
 
                          setup_params = function(data, params) {
@@ -52,6 +52,7 @@ GeomContour3D <- ggproto("GeomContour3D", GeomPolygon3D,
 
                                      # Transfer point-level aesthetic columns to contour data
                                      breaks <- c(unique(contour_data$z), Inf)
+
                                      distill <- function(x){
                                            ux <- unique(x)
                                            if(length(ux) == 1) return(ux)
@@ -71,7 +72,7 @@ GeomContour3D <- ggproto("GeomContour3D", GeomPolygon3D,
                                      mutate(group = gsub("__", "_", group),
                                             group = paste0("contour__layer", group))
 
-                               return(all_contour_data)
+                               setup_annotations(all_contour_data, params)
                          }
 )
 

@@ -174,6 +174,8 @@ GeomSegment3D <- ggproto("GeomSegment3D", Geom,
                                colour = "black", linewidth = 0.5, linetype = 1, alpha = 1
                          ),
 
+                         extra_params = c("na.rm", "annotate"),
+
                          setup_data = function(data, params) {
                                # Convert from wide format (x/y/z + xend/yend/zend) to
                                # long format (two rows per segment) for the rendering
@@ -212,10 +214,11 @@ GeomSegment3D <- ggproto("GeomSegment3D", Geom,
                                long_data <- rbind(start_data, end_data)
                                long_data$.prim <- "segment"
 
-                               long_data
+                               setup_annotations(long_data, params)
                          },
 
                          draw_panel = function(data, panel_params, coord,
+                                               annotate = NULL,
                                                sort_method = "painter",
                                                scale_depth = TRUE,
                                                arrow = NULL, lineend = "butt", na.rm = FALSE) {
@@ -226,11 +229,16 @@ GeomSegment3D <- ggproto("GeomSegment3D", Geom,
                                      return(grid::nullGrob())
                                }
 
+                               data <- prepare_annotations(data, panel_params)
+
                                sort_method <- match.arg(sort_method, c("auto", "pairwise", "painter"))
                                data$.sort_method <- sort_method
 
                                # Transform all points together (handles depth sorting)
                                coords <- coord$transform(data, panel_params)
+
+                               # Apply annotate_3d styles
+                               coords <- apply_annotation_styles(coords)
 
                                # Apply depth scaling to linewidth
                                coords <- scale_depth(coords, scale_depth)

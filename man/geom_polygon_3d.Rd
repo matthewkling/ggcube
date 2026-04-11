@@ -34,7 +34,7 @@ the counter-clockwise face considered the "front".}
 onto one 2D surface, use \code{position_on_face()}.}
 
 \item{...}{Other arguments passed on to the layer function (typically GeomPolygon3D), such as
-aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc.}
+aesthetics like \code{colour}, \code{fill}, \code{linewidth}, \code{annotate = annotate_3d(...)}, etc.}
 
 \item{rule}{Either \code{"evenodd"} or \code{"winding"}. If polygons with holes are
 being drawn (using the \code{subgroup} aesthetic) this argument defines how the
@@ -76,11 +76,6 @@ A \code{Layer} object that can be added to a ggplot.
 \code{geom_polygon_3d()} renders 3D polygons with proper depth sorting for realistic
 3D surface visualization. It's designed to work with surface data
 from \code{\link[=stat_hull_3d]{stat_hull_3d()}} and \code{\link[=stat_surface_3d]{stat_surface_3d()}}, as well as regular polygon data like maps.
-}
-\details{
-From R 3.6 and onwards it is possible to draw polygons with holes by providing
-a \code{subgroup} aesthetic that differentiates the outer ring points from those
-describing holes in the polygon, just as in \code{\link[ggplot2:geom_polygon]{ggplot2::geom_polygon()}}.
 }
 \section{Aesthetics}{
 

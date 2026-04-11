@@ -12,7 +12,7 @@ GeomRidgeline3D <- ggproto("GeomRidgeline3D", GeomPolygon3D,
                                  alpha = NA
                            ),
 
-                           extra_params = c("na.rm", "direction", "base", "cull_backfaces",
+                           extra_params = c("na.rm", "annotate", "direction", "base", "cull_backfaces",
                                             "sort_method", "scale_depth", "force_convex"),
 
                            setup_params = function(data, params) {
@@ -56,7 +56,7 @@ GeomRidgeline3D <- ggproto("GeomRidgeline3D", GeomPolygon3D,
                                        group_prefix = "ridgeline__"
                                  )
 
-                                 return(data)
+                                 setup_annotations(data, params)
                            }
 
                            # draw_panel inherited from GeomPolygon3D

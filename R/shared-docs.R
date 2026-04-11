@@ -53,7 +53,7 @@ NULL
 #' @param show.legend Logical indicating whether this layer should be included in legends.
 #' @param inherit.aes If `FALSE`, overrides the default aesthetics.
 #' @param ... Other arguments passed on to the layer function (typically GeomPolygon3D), such as
-#'   aesthetics like `colour`, `fill`, `linewidth`, etc.
+#'   aesthetics like `colour`, `fill`, `linewidth`, `annotate = annotate_3d(...)`, etc.
 #' @name polygon_params
 #' @keywords internal
 NULL

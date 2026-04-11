@@ -58,7 +58,7 @@ stat_bar_3d(
 onto one 2D surface, use \code{position_on_face()}.}
 
 \item{...}{Other arguments passed on to the layer function (typically GeomPolygon3D), such as
-aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc.}
+aesthetics like \code{colour}, \code{fill}, \code{linewidth}, \code{annotate = annotate_3d(...)}, etc.}
 
 \item{bins}{Number of bins in each dimension. Either a single value (used for both x and y)
 or a vector of length 2 giving \code{c(bins_x, bins_y)}. Default is 10. Ignored for discrete

@@ -1,17 +1,39 @@
-
 # Geom -------------------------------------------------------------------------
 
 GeomPoint3D <- ggproto("GeomPoint3D", GeomPoint,
 
+                       extra_params = c("na.rm", "annotate"),
+
+                       setup_data = function(data, params) {
+                             setup_annotations(data, params)
+                       },
+
                        draw_panel = function(data, panel_params, coord, na.rm = FALSE,
+                                             annotate = NULL,
                                              sort_method = "painter",
                                              scale_depth = TRUE,
                                              ref_line_colour = NULL, ref_line_linewidth = 0.25, ref_line_linetype = NULL, ref_line_alpha = NULL,
                                              ref_point_colour = NULL, ref_point_fill = NULL, ref_point_alpha = NULL, ref_point_size = NULL, ref_point_stroke = NULL, ref_point_shape = NULL) {
 
-                             # Transform data
                              validate_coord3d(coord)
+
+                             # Seed annotation rows with columns the point pipeline expects
+                             # (coord$transform calls points_to_circles which needs these)
+                             if (".ann" %in% names(data) && any(!is.na(data$.ann) & data$.ann)) {
+                                   ann_mask <- !is.na(data$.ann) & data$.ann
+                                   if (!"element_type" %in% names(data)) data$element_type <- NA_character_
+                                   if (!"ref_circle_radius" %in% names(data)) data$ref_circle_radius <- NA_real_
+                                   if (!"ref_circle_vertices" %in% names(data)) data$ref_circle_vertices <- NA_integer_
+                                   if (!"project_to_face" %in% names(data)) data$project_to_face <- NA_character_
+                                   data$element_type[ann_mask] <- "raw_point"
+                                   data$ref_circle_radius[ann_mask] <- 0
+                                   data$ref_circle_vertices[ann_mask] <- 0L
+                                   data$project_to_face[ann_mask] <- NA_character_
+                             }
+
+                             # Point-specific preprocessing
                              data$ref_circle_radius <- data$ref_circle_radius / 100
+                             data <- prepare_annotations(data, panel_params)
                              sort_method <- match.arg(sort_method, c("auto", "pairwise", "painter"))
                              data$.sort_method <- sort_method
                              coords <- coord$transform(data, panel_params)
@@ -22,6 +44,16 @@ GeomPoint3D <- ggproto("GeomPoint3D", GeomPoint,
 
                              if (nrow(coords) == 0) {
                                    return(grid::nullGrob())
+                             }
+
+                             # Save annotation .prim values (resolve_point_aesthetics
+                             # overwrites .prim based on element_type)
+                             ann_prim <- NULL
+                             if (".ann" %in% names(coords)) {
+                                   ann_idx <- which(!is.na(coords$.ann) & coords$.ann)
+                                   if (length(ann_idx) > 0) {
+                                         ann_prim <- coords$.prim[ann_idx]
+                                   }
                              }
 
                              # Resolve ref_* styling and assign .prim types
@@ -39,10 +71,18 @@ GeomPoint3D <- ggproto("GeomPoint3D", GeomPoint,
                                    ref_point_shape = ref_point_shape
                              )
 
+                             # Restore annotation .prim values
+                             if (!is.null(ann_prim)) {
+                                   coords$.prim[ann_idx] <- ann_prim
+                             }
+
+                             # Apply annotate_3d styles (overrides resolve_point_aesthetics
+                             # for annotation rows only)
+                             coords <- apply_annotation_styles(coords)
+
                              render_mixed_grobs(coords)
                        }
 )
-
 
 # Ref element aesthetic resolution ---------------------------------------------
 

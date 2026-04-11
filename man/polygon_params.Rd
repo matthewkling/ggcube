@@ -29,7 +29,7 @@ voxels, FALSE is safe because polygons fill always be convex.}
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics.}
 
 \item{...}{Other arguments passed on to the layer function (typically GeomPolygon3D), such as
-aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc.}
+aesthetics like \code{colour}, \code{fill}, \code{linewidth}, \code{annotate = annotate_3d(...)}, etc.}
 }
 \description{
 Parameters controlling depth sorting, backface culling, depth scaling, and

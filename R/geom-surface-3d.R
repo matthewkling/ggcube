@@ -12,7 +12,7 @@ GeomSurface3D <- ggproto("GeomSurface3D", GeomPolygon3D,
                                alpha = NA
                          ),
 
-                         extra_params = c("na.rm", "method", "grid", "cull_backfaces",
+                         extra_params = c("na.rm", "annotate", "method", "grid", "cull_backfaces",
                                           "sort_method", "scale_depth", "force_convex"),
 
                          setup_params = function(data, params) {
@@ -35,7 +35,7 @@ GeomSurface3D <- ggproto("GeomSurface3D", GeomPolygon3D,
                                # Average aesthetics per polygon
                                data <- average_aesthetics(data)
 
-                               return(data)
+                               setup_annotations(data, params)
                          }
 
                          # draw_panel inherited from GeomPolygon3D

@@ -8,8 +8,8 @@ render_segments(data, arrow = NULL, lineend = "butt")
 }
 \arguments{
 \item{data}{Segment data with x, y, group, and aesthetic columns.
-Each group must have exactly 2 rows. The group must contain
-\verb{__start} and \verb{__end} suffixed rows, or simply two rows in order.}
+Each group must have exactly 2 rows with \code{point_type} "start"/"end",
+or simply two rows in order.}
 
 \item{arrow}{Arrow specification.}
 
