@@ -215,7 +215,7 @@ ggplot(iris, aes(Petal.Length, Sepal.Length, fill = Species)) +
 
 }
 \seealso{
-\code{\link[=stat_density_2d]{stat_density_2d()}} for 2D density contours, \code{\link[=stat_surface_3d]{stat_surface_3d()}} for
+\code{\link[ggplot2:geom_density_2d]{ggplot2::stat_density_2d()}} for 2D density contours, \code{\link[=stat_surface_3d]{stat_surface_3d()}} for
 surfaces from existing grid data, \code{\link[=light]{light()}} for lighting specifications,
 \code{\link[=coord_3d]{coord_3d()}} for 3D coordinate systems.
 }

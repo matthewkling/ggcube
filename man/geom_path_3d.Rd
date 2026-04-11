@@ -45,7 +45,7 @@ coordinates. Grouping aesthetics determine separate paths.}
 
 \item{position}{Position adjustment, defaults to "identity".}
 
-\item{...}{Other arguments passed on to \code{\link[=layer]{layer()}}.}
+\item{...}{Other arguments passed on to \code{\link[ggplot2:layer]{ggplot2::layer()}}.}
 
 \item{sort_method}{Character indicating algorithm used to determine the order in which
 elements are rendered. This controls depth sorting for all geometry types within
@@ -147,6 +147,5 @@ ggplot(spiral, aes(x, y, z, color = x > 30)) +
 
 }
 \seealso{
-\code{\link[=geom_segment_3d]{geom_segment_3d()}} for individual segments, \code{\link[=geom_path]{geom_path()}} for 2D paths,
-\code{\link[=coord_3d]{coord_3d()}} for 3D coordinate systems.
+\code{\link[=geom_segment_3d]{geom_segment_3d()}} for individual segments.
 }

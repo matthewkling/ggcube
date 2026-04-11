@@ -387,7 +387,7 @@ generate_point_elements <- function(data, raw_points,
 #' @param stat The statistical transformation to use on the data. Defaults to `"point_3d"`.
 #' @param geom The geometric object used to display the data. Defaults to `"point_3d"`.
 #' @param position Position adjustment, defaults to "identity".
-#' @param ... Other arguments passed on to [layer()].
+#' @param ... Other arguments passed on to [ggplot2::layer()].
 #' @param na.rm If `FALSE`, missing values are removed with a warning.
 #' @param show.legend Logical indicating whether this layer should be included in legends.
 #' @param inherit.aes If `FALSE`, overrides the default aesthetics.
@@ -421,7 +421,7 @@ generate_point_elements <- function(data, raw_points,
 #'   Both American (`ref_point_color`) and British (`ref_point_colour`) spellings are accepted.
 #'
 #' @section Aesthetics:
-#' `geom_point_3d()` supports all the same aesthetics as [geom_point()], plus `z`:
+#' `geom_point_3d()` supports all the same aesthetics as [ggplot2::geom_point()], plus `z`:
 #' - **x**: X coordinate (required)
 #' - **y**: Y coordinate (required)
 #' - **z**: Z coordinate (required)

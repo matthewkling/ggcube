@@ -63,7 +63,7 @@ NULL
 #'
 #' @param width Numeric value controlling box width as a fraction of grid spacing.
 #'   Default is 1.0 (volumes touch each other). Use 0.8 for small gaps, 1.2 for overlap.
-#'   Grid spacing is determined automatically using [resolution()].
+#'   Grid spacing is determined automatically using `ggplot2::resolution()`
 #' @param faces Character vector specifying which faces to render. Options:
 #'   \itemize{
 #'     \item \code{"all"} (default): Render all 6 faces

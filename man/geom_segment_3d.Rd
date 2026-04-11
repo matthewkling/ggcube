@@ -45,7 +45,7 @@ for start coordinates and xend, yend, zend for end coordinates.}
 
 \item{position}{Position adjustment, defaults to "identity".}
 
-\item{...}{Other arguments passed on to \code{\link[=layer]{layer()}}.}
+\item{...}{Other arguments passed on to \code{\link[ggplot2:layer]{ggplot2::layer()}}.}
 
 \item{sort_method}{Character indicating algorithm used to determine the order in which
 elements are rendered. This controls depth sorting for all geometry types within
@@ -124,6 +124,5 @@ ggplot(data, aes(x, y, z,
 
 }
 \seealso{
-\code{\link[=geom_path_3d]{geom_path_3d()}} for connected paths, \code{\link[=geom_segment]{geom_segment()}} for 2D segments,
-\code{\link[=coord_3d]{coord_3d()}} for 3D coordinate systems.
+\code{\link[=geom_path_3d]{geom_path_3d()}} for connected paths.
 }

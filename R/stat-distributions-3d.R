@@ -193,7 +193,7 @@ StatDistributions3D <- ggproto("StatDistributions3D", Stat,
 #' 3D ridgeline distributions
 #'
 #' Computes 1D kernel density estimates for each group and arranges them as
-#' ridgeline polygons in 3D space. Similar to [ggridges::geom_density_ridges()],
+#' ridgeline polygons in 3D space. Similar to `ggridges::geom_density_ridges()`,
 #' but rendered as 3D surfaces using [geom_ridgeline_3d()].
 #'
 #' This stat is modeled after [ggplot2::stat_density()], with similar
@@ -234,7 +234,7 @@ StatDistributions3D <- ggproto("StatDistributions3D", Stat,
 #'   The cutoff is measured relative to the maximum height within each group.
 #'   For example, `rel_min_height = 0.01` removes points with density less than
 #'   1% of the peak. Default is 0 (no removal). This is similar to the
-#'   parameter of the same name in [ggridges::geom_density_ridges()].
+#'   parameter of the same name in `ggridges::geom_density_ridges()`.
 #' @param joint_bandwidth If `TRUE`, bandwidth is computed jointly across all
 #'   groups using the specified `bw` method, ensuring consistent smoothing
 #'   across all density curves. This matches the behavior of
@@ -320,7 +320,7 @@ StatDistributions3D <- ggproto("StatDistributions3D", Stat,
 #' @seealso [geom_ridgeline_3d()] for rendering pre-computed ridgeline data,
 #'   [stat_density_3d()] for 2D kernel density surfaces,
 #'   [ggplot2::stat_density()] for the parametrization this stat follows,
-#'   [ggridges::geom_density_ridges()] for the 2D ridgeline equivalent
+#'   `ggridges::geom_density_ridges()` for the 2D ridgeline equivalent.
 #'
 #' @return A `Layer` object that can be added to a ggplot.
 #' @rdname stat_distributions_3d

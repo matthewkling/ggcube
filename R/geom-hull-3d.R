@@ -118,7 +118,7 @@ StatHull3D <- ggproto("StatHull3D", Stat,
 #'
 #' @param mapping Set of aesthetic mappings created by [aes()]. The required
 #'   aesthetics are `x`, `y`, and `z`. Additional aesthetics can use computed
-#'   variables with [after_stat()].
+#'   variables with [ggplot2::after_stat()].
 #' @param data The data to be displayed in this layer.
 #' @param stat The statistical transformation to use on the data. Defaults to `StatHull3D`.
 #' @param geom The geometric object used to display the data. Defaults to `GeomPolygon3D.`

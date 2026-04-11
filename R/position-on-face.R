@@ -85,7 +85,7 @@
 #'     coord_3d() +
 #'   theme_light()
 #'
-#' @seealso [coord_3d()] for 3D coordinate systems, [stat_density_2d()] and other
+#' @seealso [coord_3d()] for 3D coordinate systems, [ggplot2::stat_density_2d()] and other
 #'   2D statistical transformations that can be projected onto faces.
 #' @return A ggplot position object that can be supplied to the `position` argument
 #'   to layer functions.

@@ -6,7 +6,7 @@
 \arguments{
 \item{width}{Numeric value controlling box width as a fraction of grid spacing.
 Default is 1.0 (volumes touch each other). Use 0.8 for small gaps, 1.2 for overlap.
-Grid spacing is determined automatically using \code{\link[=resolution]{resolution()}}.}
+Grid spacing is determined automatically using \code{ggplot2::resolution()}}
 
 \item{faces}{Character vector specifying which faces to render. Options:
 \itemize{

@@ -230,7 +230,7 @@ kde2d <- function(x, y, eval_x, eval_y, h) {
 #'                   color = "black", alpha = .7, light = NULL) +
 #'   coord_3d(ratio = c(3, 3, 1))
 #'
-#' @seealso [stat_density_2d()] for 2D density contours, [stat_surface_3d()] for
+#' @seealso [ggplot2::stat_density_2d()] for 2D density contours, [stat_surface_3d()] for
 #'   surfaces from existing grid data, [light()] for lighting specifications,
 #'   [coord_3d()] for 3D coordinate systems.
 #' @rdname stat_density_3d

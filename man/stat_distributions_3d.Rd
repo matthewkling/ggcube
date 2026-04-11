@@ -110,7 +110,7 @@ Default is \code{c(-Inf, Inf)} (unbounded).}
 The cutoff is measured relative to the maximum height within each group.
 For example, \code{rel_min_height = 0.01} removes points with density less than
 1\% of the peak. Default is 0 (no removal). This is similar to the
-parameter of the same name in \code{\link[ggridges:geom_density_ridges]{ggridges::geom_density_ridges()}}.}
+parameter of the same name in \code{ggridges::geom_density_ridges()}.}
 
 \item{joint_bandwidth}{If \code{TRUE}, bandwidth is computed jointly across all
 groups using the specified \code{bw} method, ensuring consistent smoothing
@@ -159,7 +159,7 @@ A \code{Layer} object that can be added to a ggplot.
 }
 \description{
 Computes 1D kernel density estimates for each group and arranges them as
-ridgeline polygons in 3D space. Similar to \code{\link[ggridges:geom_density_ridges]{ggridges::geom_density_ridges()}},
+ridgeline polygons in 3D space. Similar to \code{ggridges::geom_density_ridges()},
 but rendered as 3D surfaces using \code{\link[=geom_ridgeline_3d]{geom_ridgeline_3d()}}.
 }
 \details{
@@ -247,5 +247,5 @@ p + stat_distributions_3d(alpha = .7) +
 \code{\link[=geom_ridgeline_3d]{geom_ridgeline_3d()}} for rendering pre-computed ridgeline data,
 \code{\link[=stat_density_3d]{stat_density_3d()}} for 2D kernel density surfaces,
 \code{\link[ggplot2:geom_density]{ggplot2::stat_density()}} for the parametrization this stat follows,
-\code{\link[ggridges:geom_density_ridges]{ggridges::geom_density_ridges()}} for the 2D ridgeline equivalent
+\code{ggridges::geom_density_ridges()} for the 2D ridgeline equivalent.
 }

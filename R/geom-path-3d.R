@@ -11,7 +11,7 @@
 #' @param stat The statistical transformation to use on the data. Defaults to `"path_3d"`.
 #' @param geom The geometric object used to display the data. Defaults to `"segment_3d"`.
 #' @param position Position adjustment, defaults to "identity".
-#' @param ... Other arguments passed on to [layer()].
+#' @param ... Other arguments passed on to [ggplot2::layer()].
 #' @param na.rm If `FALSE`, missing values are removed with a warning.
 #' @param show.legend Logical indicating whether this layer should be included in legends.
 #' @param inherit.aes If `FALSE`, overrides the default aesthetics.
@@ -66,8 +66,7 @@
 #'   geom_path_3d(linewidth = 1, lineend = "round") +
 #'   coord_3d()
 #'
-#' @seealso [geom_segment_3d()] for individual segments, [geom_path()] for 2D paths,
-#'   [coord_3d()] for 3D coordinate systems.
+#' @seealso [geom_segment_3d()] for individual segments.
 #' @return A `Layer` object that can be added to a ggplot.
 #' @rdname geom_path_3d
 #' @export

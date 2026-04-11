@@ -24,6 +24,6 @@ participate in scale training.
 \details{
 For annotation types that need panel range information (e.g. planes),
 positional columns may contain sentinel values (NA) that are resolved
-later in \code{draw_panel} via \code{\link[=resolve_annotations]{resolve_annotations()}}.
+later in \code{draw_panel} via \code{resolve_annotations()}.
 }
 \keyword{internal}

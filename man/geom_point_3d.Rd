@@ -77,7 +77,7 @@ the standard point aesthetics, \code{geom_point_3d()} requires x, y, and z coord
 
 \item{position}{Position adjustment, defaults to "identity".}
 
-\item{...}{Other arguments passed on to \code{\link[=layer]{layer()}}.}
+\item{...}{Other arguments passed on to \code{\link[ggplot2:layer]{ggplot2::layer()}}.}
 
 \item{na.rm}{If \code{FALSE}, missing values are removed with a warning.}
 
@@ -157,7 +157,7 @@ generate reference lines and points projecting to cube faces.
 }
 \section{Aesthetics}{
 
-\code{geom_point_3d()} supports all the same aesthetics as \code{\link[=geom_point]{geom_point()}}, plus \code{z}:
+\code{geom_point_3d()} supports all the same aesthetics as \code{\link[ggplot2:geom_point]{ggplot2::geom_point()}}, plus \code{z}:
 \itemize{
 \item \strong{x}: X coordinate (required)
 \item \strong{y}: Y coordinate (required)

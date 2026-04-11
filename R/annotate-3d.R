@@ -124,7 +124,7 @@ annotate_3d <- function(type, ...) {
 #'
 #' For annotation types that need panel range information (e.g. planes),
 #' positional columns may contain sentinel values (NA) that are resolved
-#' later in `draw_panel` via [resolve_annotations()].
+#' later in `draw_panel` via `resolve_annotations()`.
 #'
 #' @param annotate A single `annotate_3d` object, or a list of them.
 #' @param max_group Numeric. The maximum existing group number, used to
