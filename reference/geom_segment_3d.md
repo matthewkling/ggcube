@@ -64,7 +64,7 @@ stat_segment_3d(
 - ...:
 
   Other arguments passed on to
-  [`layer()`](https://ggplot2.tidyverse.org/reference/layer.html).
+  [`ggplot2::layer()`](https://ggplot2.tidyverse.org/reference/layer.html).
 
 - sort_method:
 
@@ -145,11 +145,7 @@ A `Layer` object that can be added to a ggplot.
 ## See also
 
 [`geom_path_3d()`](https://matthewkling.github.io/ggcube/reference/geom_path_3d.md)
-for connected paths,
-[`geom_segment()`](https://ggplot2.tidyverse.org/reference/geom_segment.html)
-for 2D segments,
-[`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md)
-for 3D coordinate systems.
+for connected paths.
 
 ## Examples
 

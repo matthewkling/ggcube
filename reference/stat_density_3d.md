@@ -88,7 +88,7 @@ stat_density_3d(
 
   Other arguments passed on to the layer function (typically
   GeomPolygon3D), such as aesthetics like `colour`, `fill`, `linewidth`,
-  etc.
+  `annotate = annotate_3d(...)`, etc.
 
 - grid, n, direction, trim:
 
@@ -237,7 +237,7 @@ The following computed variables are available via
 
 ## See also
 
-[`stat_density_2d()`](https://ggplot2.tidyverse.org/reference/geom_density_2d.html)
+[`ggplot2::stat_density_2d()`](https://ggplot2.tidyverse.org/reference/geom_density_2d.html)
 for 2D density contours,
 [`stat_surface_3d()`](https://matthewkling.github.io/ggcube/reference/stat_surface_3d.md)
 for surfaces from existing grid data,

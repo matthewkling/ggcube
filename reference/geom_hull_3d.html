@@ -80,7 +80,7 @@ using either convex hull or alpha shape algorithms.</p>
 <dl><dt id="arg-mapping">mapping<a class="anchor" aria-label="anchor" href="#arg-mapping"></a></dt>
 <dd><p>Set of aesthetic mappings created by <code><a href="aes.html">aes()</a></code>. The required
 aesthetics are <code>x</code>, <code>y</code>, and <code>z</code>. Additional aesthetics can use computed
-variables with <code><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat()</a></code>.</p></dd>
+variables with <code><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">ggplot2::after_stat()</a></code>.</p></dd>
 
 
 <dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
@@ -98,7 +98,7 @@ onto one 2D surface, use <code><a href="position_on_face.html">position_on_face(
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Other arguments passed on to the layer function (typically GeomPolygon3D), such as
-aesthetics like <code>colour</code>, <code>fill</code>, <code>linewidth</code>, etc.</p></dd>
+aesthetics like <code>colour</code>, <code>fill</code>, <code>linewidth</code>, <code>annotate = annotate_3d(...)</code>, etc.</p></dd>
 
 
 <dt id="arg-method">method<a class="anchor" aria-label="anchor" href="#arg-method"></a></dt>
@@ -206,15 +206,11 @@ default geometry with depth sorting, <code><a href="light.html">light()</a></cod
 <span class="r-plt img"><img src="geom_hull_3d-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Alpha shape (for sphere data, gives similar result to convex)</span></span></span>
-<span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">sphere_points</span>, <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu">geom_hull_3d</span><span class="op">(</span>method <span class="op">=</span> <span class="st">"alpha"</span>, radius <span class="op">=</span> <span class="fl">2</span>, fill <span class="op">=</span> <span class="st">"gray40"</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>RGL: unable to open X11 display</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'rgl.init' failed, will use the null device.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> See '?rgl.useNULL' for ways to avoid this warning.</span>
-<span class="r-plt img"><img src="geom_hull_3d-2.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span><span class="co"># }</span></span></span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Use `cull_backfaces = FALSE` to render far side of hull</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">sphere_points</span>, <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
@@ -226,14 +222,14 @@ default geometry with depth sorting, <code><a href="light.html">light()</a></cod
 <span class="r-in"><span>    method <span class="op">=</span> <span class="st">"convex"</span>, light <span class="op">=</span> <span class="cn">NULL</span>,</span></span>
 <span class="r-in"><span>    fill <span class="op">=</span> <span class="st">"steelblue"</span>, color <span class="op">=</span> <span class="st">"darkred"</span>, linewidth <span class="op">=</span> <span class="fl">.5</span>, alpha <span class="op">=</span> <span class="fl">.5</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span>scales <span class="op">=</span> <span class="st">"fixed"</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="geom_hull_3d-3.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="geom_hull_3d-2.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Use grouping to build separate hulls for data subsets</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">iris</span>, <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span><span class="va">Petal.Length</span>, <span class="va">Sepal.Length</span>, <span class="va">Sepal.Width</span>,</span></span>
 <span class="r-in"><span>                 color <span class="op">=</span> <span class="va">Species</span>, fill <span class="op">=</span> <span class="va">Species</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>      <span class="fu">geom_hull_3d</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>      <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span>scales <span class="op">=</span> <span class="st">"fixed"</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="geom_hull_3d-4.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="geom_hull_3d-3.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

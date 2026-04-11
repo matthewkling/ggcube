@@ -97,7 +97,7 @@ stat_point_3d(
 - ...:
 
   Other arguments passed on to
-  [`layer()`](https://ggplot2.tidyverse.org/reference/layer.html).
+  [`ggplot2::layer()`](https://ggplot2.tidyverse.org/reference/layer.html).
 
 - na.rm:
 
@@ -214,7 +214,7 @@ projecting to cube faces.
 ## Aesthetics
 
 `geom_point_3d()` supports all the same aesthetics as
-[`geom_point()`](https://ggplot2.tidyverse.org/reference/geom_point.html),
+[`ggplot2::geom_point()`](https://ggplot2.tidyverse.org/reference/geom_point.html),
 plus `z`:
 
 - **x**: X coordinate (required)

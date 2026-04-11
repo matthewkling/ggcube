@@ -64,7 +64,7 @@ stat_path_3d(
 - ...:
 
   Other arguments passed on to
-  [`layer()`](https://ggplot2.tidyverse.org/reference/layer.html).
+  [`ggplot2::layer()`](https://ggplot2.tidyverse.org/reference/layer.html).
 
 - sort_method:
 
@@ -159,11 +159,7 @@ paths can be interleaved during depth sorting for proper 3D rendering.
 ## See also
 
 [`geom_segment_3d()`](https://matthewkling.github.io/ggcube/reference/geom_segment_3d.md)
-for individual segments,
-[`geom_path()`](https://ggplot2.tidyverse.org/reference/geom_path.html)
-for 2D paths,
-[`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md)
-for 3D coordinate systems.
+for individual segments.
 
 ## Examples
 

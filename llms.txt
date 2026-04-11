@@ -359,6 +359,8 @@ ggplot(iris, aes(Sepal.Length, Sepal.Width, Petal.Length,
 
 - [`light()`](https://matthewkling.github.io/ggcube/reference/light.md)
   : Lighting specification for 3D surface rendering
+- [`annotate_3d()`](https://matthewkling.github.io/ggcube/reference/annotate_3d.md)
+  : Create a 3D annotation specification
 - [`guide_colorbar_3d()`](https://matthewkling.github.io/ggcube/reference/guide_3d.md)
   [`guide_legend_3d()`](https://matthewkling.github.io/ggcube/reference/guide_3d.md)
   : Color guides showing lighting effects

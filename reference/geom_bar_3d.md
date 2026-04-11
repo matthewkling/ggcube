@@ -77,7 +77,7 @@ stat_bar_3d(
 
   Other arguments passed on to the layer function (typically
   GeomPolygon3D), such as aesthetics like `colour`, `fill`, `linewidth`,
-  etc.
+  `annotate = annotate_3d(...)`, etc.
 
 - bins:
 

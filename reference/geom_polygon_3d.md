@@ -58,7 +58,7 @@ geom_polygon_3d(
 
   Other arguments passed on to the layer function (typically
   GeomPolygon3D), such as aesthetics like `colour`, `fill`, `linewidth`,
-  etc.
+  `annotate = annotate_3d(...)`, etc.
 
 - rule:
 
@@ -123,13 +123,6 @@ geom_polygon_3d(
 ## Value
 
 A `Layer` object that can be added to a ggplot.
-
-## Details
-
-From R 3.6 and onwards it is possible to draw polygons with holes by
-providing a `subgroup` aesthetic that differentiates the outer ring
-points from those describing holes in the polygon, just as in
-[`ggplot2::geom_polygon()`](https://ggplot2.tidyverse.org/reference/geom_polygon.html).
 
 ## Aesthetics
 

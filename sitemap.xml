@@ -7,10 +7,13 @@
 <url><loc>https://matthewkling.github.io/ggcube/reference/aes.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/anim_save_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/animate_3d.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/annotate_3d.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/apply_annotation_styles.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/apply_perspective.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/apply_surface_light.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/attach_light.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/blend_light_with_colors.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/build_annotations.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/calculate_face_centers.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/calculate_positional_light_directions.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/camera_facing.html</loc></url>
@@ -73,11 +76,15 @@
 <url><loc>https://matthewkling.github.io/ggcube/reference/light.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/light_param.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/lorenz_attractor.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/make_annotation_point_rows.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/make_annotation_segment_rows.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/make_annotation_text_rows.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/make_point_grid.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/make_point_rows.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/make_residual_segment_rows.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/make_scale_grid.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/mountain.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/normalize_annotation_specs.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/normalize_light_direction.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/points_to_circles.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/points_to_contours.html</loc></url>
@@ -86,6 +93,7 @@
 <url><loc>https://matthewkling.github.io/ggcube/reference/polygon_params.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/position_on_face.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/position_param.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/prepare_annotations.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/rect_points_to_tiles.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/render_mixed_grobs.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/render_points.html</loc></url>
@@ -109,6 +117,7 @@
 <url><loc>https://matthewkling.github.io/ggcube/reference/scale_to_standard.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/scale_z_continuous.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/scale_z_discrete.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/setup_annotations.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/sorting_methods.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/sphere_points.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/split_interpenetrating_segments.html</loc></url>

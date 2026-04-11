@@ -88,7 +88,7 @@ example.
 
 [`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md)
 for 3D coordinate systems,
-[`stat_density_2d()`](https://ggplot2.tidyverse.org/reference/geom_density_2d.html)
+[`ggplot2::stat_density_2d()`](https://ggplot2.tidyverse.org/reference/geom_density_2d.html)
 and other 2D statistical transformations that can be projected onto
 faces.
 

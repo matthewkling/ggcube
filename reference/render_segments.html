@@ -49,8 +49,8 @@ Segments are rendered in a single vectorized segmentsGrob call.</p>
 
 <dl><dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
 <dd><p>Segment data with x, y, group, and aesthetic columns.
-Each group must have exactly 2 rows. The group must contain
-<code>__start</code> and <code>__end</code> suffixed rows, or simply two rows in order.</p></dd>
+Each group must have exactly 2 rows with <code>point_type</code> "start"/"end",
+or simply two rows in order.</p></dd>
 
 
 <dt id="arg-arrow">arrow<a class="anchor" aria-label="anchor" href="#arg-arrow"></a></dt>

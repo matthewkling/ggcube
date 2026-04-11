@@ -47,7 +47,7 @@ stat_hull_3d(
   [`aes()`](https://matthewkling.github.io/ggcube/reference/aes.md). The
   required aesthetics are `x`, `y`, and `z`. Additional aesthetics can
   use computed variables with
-  [`after_stat()`](https://ggplot2.tidyverse.org/reference/aes_eval.html).
+  [`ggplot2::after_stat()`](https://ggplot2.tidyverse.org/reference/aes_eval.html).
 
 - data:
 
@@ -68,7 +68,7 @@ stat_hull_3d(
 
   Other arguments passed on to the layer function (typically
   GeomPolygon3D), such as aesthetics like `colour`, `fill`, `linewidth`,
-  etc.
+  `annotate = annotate_3d(...)`, etc.
 
 - method:
 
@@ -196,15 +196,11 @@ ggplot(sphere_points, aes(x, y, z)) +
 
 
 # Alpha shape (for sphere data, gives similar result to convex)
-# \donttest{
+if (FALSE) { # \dontrun{
 ggplot(sphere_points, aes(x, y, z)) +
   geom_hull_3d(method = "alpha", radius = 2, fill = "gray40") +
   coord_3d()
-#> Warning: RGL: unable to open X11 display
-#> Warning: 'rgl.init' failed, will use the null device.
-#> See '?rgl.useNULL' for ways to avoid this warning.
-
-# }
+} # }
 
 # Use `cull_backfaces = FALSE` to render far side of hull
 ggplot(sphere_points, aes(x, y, z)) +

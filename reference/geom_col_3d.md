@@ -73,14 +73,14 @@ stat_col_3d(
 
   Other arguments passed on to the layer function (typically
   GeomPolygon3D), such as aesthetics like `colour`, `fill`, `linewidth`,
-  etc.
+  `annotate = annotate_3d(...)`, etc.
 
 - width:
 
   Numeric value controlling box width as a fraction of grid spacing.
   Default is 1.0 (volumes touch each other). Use 0.8 for small gaps, 1.2
   for overlap. Grid spacing is determined automatically using
-  [`resolution()`](https://ggplot2.tidyverse.org/reference/resolution.html).
+  [`ggplot2::resolution()`](https://ggplot2.tidyverse.org/reference/resolution.html)
 
 - faces:
 

@@ -318,7 +318,7 @@ for rendering pre-computed ridgeline data,
 for 2D kernel density surfaces,
 [`ggplot2::stat_density()`](https://ggplot2.tidyverse.org/reference/geom_density.html)
 for the parametrization this stat follows,
-`ggridges::geom_density_ridges()` for the 2D ridgeline equivalent
+`ggridges::geom_density_ridges()` for the 2D ridgeline equivalent.
 
 ## Examples
 

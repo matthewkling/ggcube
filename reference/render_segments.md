@@ -14,8 +14,8 @@ render_segments(data, arrow = NULL, lineend = "butt")
 - data:
 
   Segment data with x, y, group, and aesthetic columns. Each group must
-  have exactly 2 rows. The group must contain `__start` and `__end`
-  suffixed rows, or simply two rows in order.
+  have exactly 2 rows with `point_type` "start"/"end", or simply two
+  rows in order.
 
 - arrow:
 
