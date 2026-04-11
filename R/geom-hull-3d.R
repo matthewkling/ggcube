@@ -31,6 +31,11 @@ StatHull3D <- ggproto("StatHull3D", Stat,
                                                 }
                                           },
                                           convex = {
+                                                if (!requireNamespace("geometry", quietly = TRUE)) {
+                                                      stop('The geometry package is required for method = "convex". ',
+                                                           'Install it with install.packages("geometry").',
+                                                           call. = FALSE)
+                                                }
                                                 tryCatch({
                                                       hull_result <- geometry::convhulln(coords)
                                                       if (is.matrix(hull_result) && ncol(hull_result) == 3) {
@@ -124,7 +129,7 @@ StatHull3D <- ggproto("StatHull3D", Stat,
 #' @param geom The geometric object used to display the data. Defaults to `GeomPolygon3D.`
 #'
 #' @param method Triangulation method. Either:
-#'   - `"convex"`: Convex hull triangulation (default)
+#'   - `"convex"`: Convex hull triangulation (default). Requires the \pkg{geometry} package.
 #'   - `"alpha"`: Alpha shape triangulation (can capture non-convex topologies)
 #' @param radius Square root of "alpha" parameter when alpha method is used.
 #'   A face is included in the resulting alpha shape if it can be "exposed" by a sphere of this radius.
@@ -160,7 +165,7 @@ StatHull3D <- ggproto("StatHull3D", Stat,
 #' @section Computed variables:
 #' - `normal_x`, `normal_y`, `normal_z`: Surface normal components
 #'
-#' @examples
+#' @examplesIf requireNamespace("geometry", quietly = TRUE)
 #' # Convex hull
 #' ggplot(sphere_points, aes(x, y, z)) +
 #'   geom_hull_3d(method = "convex", fill = "gray40") +

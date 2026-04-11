@@ -1066,7 +1066,7 @@ generate_circle_vertices <- function(x_std, y_std, z_std, face, radius, n_vertic
 #' Scale transformed coordinates to final npc coordinates
 #'
 #' @param result Data frame with transformed x, y coordinates
-#' @param plot_bounds Plot bounds vector {xmin, xmax, ymin, ymax}
+#' @param plot_bounds Plot bounds vector `xmin, xmax, ymin, ymax`
 #' @return Data frame with scaled coordinates
 #' @keywords internal
 scale_to_npc_coordinates <- function(result, plot_bounds) {

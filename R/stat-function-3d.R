@@ -215,8 +215,8 @@ geom_function_3d <- function(mapping = NULL, data = ensure_nonempty_data,
 #' Ensure non-empty data for stats that generate their own data
 #' @keywords internal
 ensure_nonempty_data <- function(data) {
-      if (ggplot2:::empty(data)) {
-            ggplot2:::data_frame0(group = -1L, .size = 1)
+      if (is.null(data) || nrow(data) == 0 || ncol(data) == 0 || inherits(data, "waiver")) {
+            data.frame(group = -1L)
       } else {
             data
       }

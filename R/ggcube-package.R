@@ -14,7 +14,6 @@
 ## usethis namespace: start
 #' @import dplyr
 #' @import ggplot2
-#' @importFrom geometry convhulln
 #' @importFrom ggplot2 resolution
 #' @importFrom grDevices as.raster
 #' @importFrom grDevices chull
@@ -63,7 +62,7 @@ utils::globalVariables(c(
       "dzdx", "dzdy", "e",
       "e1x", "e1y", "e1z", "e2x", "e2y", "e2z",
       "element_type", "face", "facet", "far_corner", "foreground",
-      "free_axis", "fx", "fz", "group", "keep",
+      "free_axis", "fx", "fz", "group", "id", "keep",
       "level1", "level2",
       "n_pts", "near_corner", "normal_x", "normal_y", "normal_z",
       "on_hull", "ref_circle_radius", "ref_circle_vertices",

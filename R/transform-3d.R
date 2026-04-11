@@ -49,7 +49,7 @@ apply_perspective <- function(rotated, dist) {
 
 #' Transform 3D points using rotation and optional perspective with viewpoint distance
 #'
-#' @param data Data frame with x, y, z columns (in standard {-0.5, 0.5} domain)
+#' @param data Data frame with x, y, z columns (in standard `[-0.5, 0.5]` domain)
 #' @param proj A list of projection parameters
 #' @return Data frame with transformed coordinates, depth for sorting, and depth_scale for size scaling
 #' @keywords internal
@@ -109,7 +109,7 @@ transform_3d_standard <- function(data, proj = list(pitch = 0, roll = 0, yaw = 0
 #' @param data_range Original range of the data `c(min, max)` (for single axis) OR list with x,y,z scale ranges (for multi-axis)
 #' @param scales Aspect ratio behavior ("free" or "fixed") (only used for multi-axis)
 #' @param ratio Length-3 numeric vector of axis ratios (only used for multi-axis)
-#' @return Scaled values in {-0.5, 0.5} domain (single axis) OR data frame with scaled coordinates (multi-axis)
+#' @return Scaled values in `[-0.5, 0.5]` domain (single axis) OR data frame with scaled coordinates (multi-axis)
 #' @keywords internal
 scale_to_standard <- function(values, data_range, scales = "free", ratio = c(1, 1, 1)) {
 

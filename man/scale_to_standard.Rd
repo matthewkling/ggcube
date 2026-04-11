@@ -16,7 +16,7 @@ scale_to_standard(values, data_range, scales = "free", ratio = c(1, 1, 1))
 \item{ratio}{Length-3 numeric vector of axis ratios (only used for multi-axis)}
 }
 \value{
-Scaled values in {-0.5, 0.5} domain (single axis) OR data frame with scaled coordinates (multi-axis)
+Scaled values in \verb{[-0.5, 0.5]} domain (single axis) OR data frame with scaled coordinates (multi-axis)
 }
 \description{
 Scale data to standard domain with aspect ratio control

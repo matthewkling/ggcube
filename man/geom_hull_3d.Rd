@@ -54,7 +54,7 @@ aesthetics like \code{colour}, \code{fill}, \code{linewidth}, \code{annotate = a
 
 \item{method}{Triangulation method. Either:
 \itemize{
-\item \code{"convex"}: Convex hull triangulation (default)
+\item \code{"convex"}: Convex hull triangulation (default). Requires the \pkg{geometry} package.
 \item \code{"alpha"}: Alpha shape triangulation (can capture non-convex topologies)
 }}
 
@@ -134,6 +134,7 @@ Guidelines for choosing radius:
 }
 
 \examples{
+\dontshow{if (requireNamespace("geometry", quietly = TRUE)) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 # Convex hull
 ggplot(sphere_points, aes(x, y, z)) +
   geom_hull_3d(method = "convex", fill = "gray40") +
@@ -162,7 +163,7 @@ ggplot(iris, aes(Petal.Length, Sepal.Length, Sepal.Width,
                  color = Species, fill = Species)) +
       geom_hull_3d() +
       coord_3d(scales = "fixed")
-
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=coord_3d]{coord_3d()}} for 3D coordinate systems, \link{geom_polygon_3d} for the

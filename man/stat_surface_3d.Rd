@@ -166,6 +166,14 @@ ggplot(mountain, aes(x, y, z, fill = z, color = z)) +
       scale_color_gradientn(colors = c("darkgreen", "rosybrown4", "gray60")) +
       guides(fill = guide_colorbar_3d())
 
+# stack of flat surfaces (e.g. a time series of raster maps)
+d <- expand.grid(lon = 1:20, lat = 1:20, time = 1:6)
+d$value <- sin(-d$lon * d$lat / 10) + d$time / 2
+ggplot(d, aes(lon, lat, time, group = time,
+              fill = value, color = value)) +
+   geom_surface_3d(light = "none") +
+   coord_3d() +
+   scale_color_viridis_c() + scale_fill_viridis_c()
 
 # stat_surface_3d with alternative geoms ----------------------------
 
