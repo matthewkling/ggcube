@@ -16,6 +16,7 @@ reference:
 - title: Visual styling
 - contents:
   - light
+  - annotate_3d
   - guide_3d
   - cube_theming
   - element_rect
