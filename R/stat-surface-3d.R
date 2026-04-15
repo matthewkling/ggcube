@@ -2,7 +2,7 @@
 
 StatSurface3D <- ggproto("StatSurface3D", Stat,
                          required_aes = c("x", "y", "z"),
-                         default_aes = aes(fill = after_stat(fitted)),
+                         default_aes = aes(fill = after_stat(z)),
 
                          compute_group = function(data, scales, na.rm = FALSE,
                                                   cull_backfaces = FALSE, light = NULL) {
@@ -18,8 +18,6 @@ StatSurface3D <- ggproto("StatSurface3D", Stat,
                                }
 
                                data <- compute_point_gradients(data)
-
-                               data$fitted <- data$z
 
                                # Attach rendering parameters
                                data$cull_backfaces <- cull_backfaces
@@ -43,7 +41,7 @@ StatSurface3D <- ggproto("StatSurface3D", Stat,
 #' ridgeline rendering.
 #'
 #' @param mapping Set of aesthetic mappings created by [aes()]. Must include
-#'   `x`, `y`, and `z`.
+#'   `x`, `y`, and `z`. By default, fill is mapped to `after_stat(z)`.
 #' @param data Data frame containing point coordinates.
 #' @param geom Geom to use for rendering. Defaults to `"surface_3d"` for mesh
 #'   surfaces. Use `"ridgeline_3d"` for ridgeline rendering.

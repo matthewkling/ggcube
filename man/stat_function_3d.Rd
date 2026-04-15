@@ -46,7 +46,8 @@ geom_function_3d(
 )
 }
 \arguments{
-\item{mapping}{Set of aesthetic mappings created by \code{\link[=aes]{aes()}}.}
+\item{mapping}{Set of aesthetic mappings created by \code{\link[=aes]{aes()}}. By default, fill
+is mapped to \code{after_stat(z)}.}
 
 \item{data}{Ignored; this stat generates its own data.}
 
@@ -94,7 +95,6 @@ as a 3D surface or ridgeline plot.
 
 \describe{
 \item{x, y, z}{Grid coordinates and function values}
-\item{fitted}{Function values (same as \code{z}; used for default fill mapping)}
 \item{dzdx, dzdy}{Partial derivatives at each point}
 \item{slope}{Gradient magnitude: sqrt(dzdx^2 + dzdy^2)}
 \item{aspect}{Direction of steepest slope: atan2(dzdy, dzdx)}

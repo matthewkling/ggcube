@@ -5,7 +5,7 @@ StatFunction3D <- ggproto("StatFunction3D", Stat,
                           default_aes = aes(x = after_stat(x),
                                             y = after_stat(y),
                                             z = after_stat(z),
-                                            fill = after_stat(fitted)),
+                                            fill = after_stat(z)),
 
                           setup_data = function(data, params) {
                                 if (nrow(data) == 0) {
@@ -62,7 +62,6 @@ StatFunction3D <- ggproto("StatFunction3D", Stat,
                                 }
 
                                 grid_data$z <- z_values
-                                grid_data$fitted <- z_values
 
                                 # Remove NAs if requested
                                 if (na.rm) {
@@ -94,7 +93,8 @@ StatFunction3D <- ggproto("StatFunction3D", Stat,
 #' Evaluates a function f(x,y) = z over a regular grid and renders the result
 #' as a 3D surface or ridgeline plot.
 #'
-#' @param mapping Set of aesthetic mappings created by [aes()].
+#' @param mapping Set of aesthetic mappings created by [aes()]. By default, fill
+#'   is mapped to `after_stat(z)`.
 #' @param data Ignored; this stat generates its own data.
 #' @param xlim,ylim Length-2 numeric vectors giving the x and y ranges over which to
 #'   plot the function.
@@ -112,7 +112,6 @@ StatFunction3D <- ggproto("StatFunction3D", Stat,
 #' @section Computed variables:
 #' \describe{
 #'   \item{x, y, z}{Grid coordinates and function values}
-#'   \item{fitted}{Function values (same as `z`; used for default fill mapping)}
 #'   \item{dzdx, dzdy}{Partial derivatives at each point}
 #'   \item{slope}{Gradient magnitude: sqrt(dzdx^2 + dzdy^2)}
 #'   \item{aspect}{Direction of steepest slope: atan2(dzdy, dzdx)}

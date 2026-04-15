@@ -38,7 +38,7 @@ geom_surface_3d(
 }
 \arguments{
 \item{mapping}{Set of aesthetic mappings created by \code{\link[=aes]{aes()}}. Must include
-\code{x}, \code{y}, and \code{z}.}
+\code{x}, \code{y}, and \code{z}. By default, fill is mapped to \code{after_stat(z)}.}
 
 \item{data}{Data frame containing point coordinates.}
 
