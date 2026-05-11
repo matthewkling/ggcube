@@ -47,7 +47,8 @@ geom_surface_3d(
 
   Set of aesthetic mappings created by
   [`aes()`](https://matthewkling.github.io/ggcube/reference/aes.md).
-  Must include `x`, `y`, and `z`.
+  Must include `x`, `y`, and `z`. By default, fill is mapped to
+  `after_stat(z)`.
 
 - data:
 

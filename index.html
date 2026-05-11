@@ -37,7 +37,16 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
+<li class="nav-item"><a class="nav-link" href="articles/ggcube.html">Get started</a></li>
 <li class="nav-item"><a class="nav-link" href="reference/index.html">Reference</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
+<li><a class="dropdown-item" href="articles/coord_3d.html">Controlling the 3D view</a></li>
+    <li><a class="dropdown-item" href="articles/lighting.html">Lighting and shading</a></li>
+    <li><a class="dropdown-item" href="articles/surfaces.html">Surfaces</a></li>
+  </ul>
+</li>
       </ul>
 <ul class="navbar-nav">
 <li class="nav-item"><form class="form-inline" role="search">
@@ -62,13 +71,25 @@
 <p><strong>ggcube</strong> lets you build 3D figures using ggplot2. Use it to create 3D surfaces, volumes, scatter plots, and complex layered visualizations using familiar ggplot2 syntax with <code>aes(x, y, z)</code> and <code><a href="reference/coord_3d.html">coord_3d()</a></code>.</p>
 <p>The package provides a variety of 3D-specific <code>geoms</code> to render surfaces, prisms, points, paths, and text in 3D; it also works with some standard ggplot2 layer functions. You can control plot geometry with 3D projection parameters, apply a range of 3D lighting models, and mix 3D layers with 2D layers rendered on cube faces. Standard ggplot2 features like faceting, themes, scales, and legends work as expected.</p>
 <p>NOTE: 3D plots are wonderful for exploratory analysis, storytelling, and data art – but they are often a poor choice when precise quantitative communication is important, due to issues like occlusion and perspective distortion.</p>
-<p>WARNING: This package is in development and has not yet been officially released. There are bugs, and future API changes are possible.</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>ggcube isn’t yet available on CRAN as it’s still in initial development. You can install the development version of ggcube from <a href="https://github.com/matthewkling/ggcube" class="external-link">GitHub</a> with:</p>
+<p>ggcube isn’t yet on CRAN. You can install it from <a href="https://github.com/matthewkling/ggcube" class="external-link">GitHub</a>:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"matthewkling/ggcube"</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="related-packages">Related packages<a class="anchor" aria-label="anchor" href="#related-packages"></a>
+</h2>
+<p>R has several other tools for 3D visualization. ggcube is designed for users who want to stay within the ggplot2 ecosystem. Other packages offer different tradeoffs:</p>
+<ul>
+<li>
+<a href="https://plotly.com/r/" class="external-link"><strong>plotly</strong></a> and <a href="https://dmurdoch.github.io/rgl/" class="external-link"><strong>rgl</strong></a> provide interactive 3D viewers with rotation and zoom via WebGL/OpenGL, using their own APIs.</li>
+<li>
+<a href="https://www.rayshader.com/" class="external-link"><strong>rayshader</strong></a> produces ray-traced renderings of terrain data with photorealistic lighting and shadows; it also makes 3D popups of ggplot2 figures, but not 3D ggplots per se.</li>
+<li>
+<a href="https://github.com/mikebesso/ggxyz" class="external-link"><strong>ggxyz</strong></a> was another ggplot2 extension for 3D plotting, but is no longer actively maintained.</li>
+</ul>
 </div>
 <div class="section level2">
 <h2 id="quick-start">Quick start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
@@ -83,7 +104,7 @@
 <span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>      <span class="fu"><a href="reference/coord_3d.html">coord_3d</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p><img src="reference/figures/README-quickstart-1.png" width="100%"></p>
-<p>You can control plot rotation, perspective, and dimensions, as well as axis label placement and panel selection, via parameters to <code><a href="reference/coord_3d.html">coord_3d()</a></code>:</p>
+<p>You can control plot rotation, perspective, and dimensions, as well as axis label placement and panel selection, via parameters to <code><a href="reference/coord_3d.html">coord_3d()</a></code>. See the <a href="https://matthewkling.github.io/ggcube/articles/coord-3d.html">Controlling the 3D view</a> article for a comprehensive guide.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mpg</span>, <span class="fu"><a href="reference/aes.html">aes</a></span><span class="op">(</span><span class="va">displ</span>, <span class="va">hwy</span>, <span class="va">drv</span>, color <span class="op">=</span> <span class="va">class</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
@@ -112,6 +133,7 @@
 <li>
 <code><a href="reference/geom_hull_3d.html">stat_hull_3d()</a></code> plots triangulated volumes based on convex or alpha hulls of 3D points</li>
 </ul>
+<p>See the <a href="https://matthewkling.github.io/ggcube/articles/surfaces.html">Surfaces</a> article for a full guide to the surface system.</p>
 <p>Example: a terrain surface using <code><a href="reference/stat_surface_3d.html">geom_surface_3d()</a></code>:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mountain</span>, <span class="fu"><a href="reference/aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
@@ -222,7 +244,7 @@
 <div class="section level2">
 <h2 id="lighting-effects">Lighting effects<a class="anchor" aria-label="anchor" href="#lighting-effects"></a>
 </h2>
-<p>Lighting of 3D polygon layers is controlled by providing a <code><a href="reference/light.html">light()</a></code> specification to the layer function or to <code><a href="reference/coord_3d.html">coord_3d()</a></code>.</p>
+<p>Lighting of 3D polygon layers is controlled by providing a <code><a href="reference/light.html">light()</a></code> specification to the layer function or to <code><a href="reference/coord_3d.html">coord_3d()</a></code>. See the <a href="https://matthewkling.github.io/ggcube/articles/lighting.html">Lighting and shading</a> article for a comprehensive guide.</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">sphere_points</span>, <span class="fu"><a href="reference/aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>      <span class="fu"><a href="reference/coord_3d.html">coord_3d</a></span><span class="op">(</span>scales <span class="op">=</span> <span class="st">"fixed"</span><span class="op">)</span> <span class="op">+</span></span>

@@ -52,7 +52,8 @@ geom_function_3d(
 - mapping:
 
   Set of aesthetic mappings created by
-  [`aes()`](https://matthewkling.github.io/ggcube/reference/aes.md).
+  [`aes()`](https://matthewkling.github.io/ggcube/reference/aes.md). By
+  default, fill is mapped to `after_stat(z)`.
 
 - data:
 
@@ -129,10 +130,6 @@ geom_function_3d(
 - x, y, z:
 
   Grid coordinates and function values
-
-- fitted:
-
-  Function values (same as `z`; used for default fill mapping)
 
 - dzdx, dzdy:
 

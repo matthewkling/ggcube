@@ -17,7 +17,14 @@ as a 3D surface or ridgeline plot."><meta property="og:image" content="https://m
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/ggcube.html">Get started</a></li>
+<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/coord_3d.html">Controlling the 3D view</a></li>
+    <li><a class="dropdown-item" href="../articles/lighting.html">Lighting and shading</a></li>
+    <li><a class="dropdown-item" href="../articles/surfaces.html">Surfaces</a></li>
+  </ul></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://github.com/matthewkling/ggcube/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
@@ -86,7 +93,8 @@ as a 3D surface or ridgeline plot.</p>
 
 
 <dl><dt id="arg-mapping">mapping<a class="anchor" aria-label="anchor" href="#arg-mapping"></a></dt>
-<dd><p>Set of aesthetic mappings created by <code><a href="aes.html">aes()</a></code>.</p></dd>
+<dd><p>Set of aesthetic mappings created by <code><a href="aes.html">aes()</a></code>. By default, fill
+is mapped to <code>after_stat(z)</code>.</p></dd>
 
 
 <dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
@@ -159,9 +167,6 @@ functions.</p></dd>
 
 <dl><dt>x, y, z</dt>
 <dd><p>Grid coordinates and function values</p></dd>
-
-<dt>fitted</dt>
-<dd><p>Function values (same as <code>z</code>; used for default fill mapping)</p></dd>
 
 <dt>dzdx, dzdy</dt>
 <dd><p>Partial derivatives at each point</p></dd>

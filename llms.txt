@@ -17,18 +17,30 @@ data art – but they are often a poor choice when precise quantitative
 communication is important, due to issues like occlusion and perspective
 distortion.
 
-WARNING: This package is in development and has not yet been officially
-released. There are bugs, and future API changes are possible.
-
 ## Installation
 
-ggcube isn’t yet available on CRAN as it’s still in initial development.
-You can install the development version of ggcube from
-[GitHub](https://github.com/matthewkling/ggcube) with:
+ggcube isn’t yet on CRAN. You can install it from
+[GitHub](https://github.com/matthewkling/ggcube):
 
 ``` r
+
 devtools::install_github("matthewkling/ggcube")
 ```
+
+## Related packages
+
+R has several other tools for 3D visualization. ggcube is designed for
+users who want to stay within the ggplot2 ecosystem. Other packages
+offer different tradeoffs:
+
+- [**plotly**](https://plotly.com/r/) and
+  [**rgl**](https://dmurdoch.github.io/rgl/) provide interactive 3D
+  viewers with rotation and zoom via WebGL/OpenGL, using their own APIs.
+- [**rayshader**](https://www.rayshader.com/) produces ray-traced
+  renderings of terrain data with photorealistic lighting and shadows;
+  it also makes 3D popups of ggplot2 figures, but not 3D ggplots per se.
+- [**ggxyz**](https://github.com/mikebesso/ggxyz) was another ggplot2
+  extension for 3D plotting, but is no longer actively maintained.
 
 ## Quick start
 
@@ -38,6 +50,7 @@ Adding this to a standard ggplot, and providing a `z` aesthetic
 variable, creates a 3D plot:
 
 ``` r
+
 library(ggplot2)
 library(ggcube)
 
@@ -51,9 +64,13 @@ ggplot(mpg, aes(x = displ, y = hwy, z = drv, color = class)) +
 
 You can control plot rotation, perspective, and dimensions, as well as
 axis label placement and panel selection, via parameters to
-[`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md):
+[`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md).
+See the [Controlling the 3D
+view](https://matthewkling.github.io/ggcube/articles/coord-3d.html)
+article for a comprehensive guide.
 
 ``` r
+
 ggplot(mpg, aes(displ, hwy, drv, color = class)) +
       geom_point() +
       coord_3d(pitch = 0, roll = 60, yaw = 0, dist = 1.4, 
@@ -82,10 +99,15 @@ ggplot(mpg, aes(displ, hwy, drv, color = class)) +
 - [`stat_hull_3d()`](https://matthewkling.github.io/ggcube/reference/geom_hull_3d.md)
   plots triangulated volumes based on convex or alpha hulls of 3D points
 
+See the
+[Surfaces](https://matthewkling.github.io/ggcube/articles/surfaces.html)
+article for a full guide to the surface system.
+
 Example: a terrain surface using
 [`geom_surface_3d()`](https://matthewkling.github.io/ggcube/reference/stat_surface_3d.md):
 
 ``` r
+
 ggplot(mountain, aes(x, y, z)) +
       geom_surface_3d(aes(fill = z, color = z)) +
       scale_fill_viridis_c() + scale_color_viridis_c() +
@@ -102,6 +124,7 @@ Example: a terrain surface using
 also showing functionality for animation as a rotating GIF:
 
 ``` r
+
 p <- ggplot(mountain, aes(x, y, z)) +
       geom_contour_3d(fill = "black", color = "white", linewidth = .5) +
       coord_3d(ratio = c(1.5, 2, 1), light = "none", zoom = 1.5) +
@@ -115,6 +138,7 @@ Example: a mathematical surface using
 [`geom_function_3d()`](https://matthewkling.github.io/ggcube/reference/stat_function_3d.md):
 
 ``` r
+
 ggplot() +
       geom_function_3d(fun = function(x, y) cos(x) * sin(y),
                        xlim = c(-pi, pi), ylim = c(-2*pi, 2*pi),
@@ -131,6 +155,7 @@ surface using
 [`geom_smooth_3d()`](https://matthewkling.github.io/ggcube/reference/geom_smooth_3d.md):
 
 ``` r
+
 # Generate scattered 3D data
 set.seed(123)
 d <- data.frame(x = rnorm(50),
@@ -155,6 +180,7 @@ ggplot(d, aes(x, y, z)) +
 renders paths in 3D space with depth-based sorting and scaling:
 
 ``` r
+
 butterfly <- ggcube:::lorenz_attractor(n_points = 8000, dt = .01)
 ggplot(butterfly, aes(x, y, z, color = time)) +
       geom_path_3d(linewidth = 0.1, color = "black",
@@ -178,6 +204,7 @@ point sizes, and options to include reference lines and reference points
 projecting 3D points onto 2D face panels:
 
 ``` r
+
 ggplot(mpg, aes(x = displ, y = hwy, z = drv, fill = class)) +
       geom_point_3d(size = 3, shape = 21, color = "black", stroke = .1,
                     ref_lines = TRUE, ref_points = TRUE,
@@ -200,6 +227,7 @@ Example: a 3D histogram chart using
 [`geom_bar_3d()`](https://matthewkling.github.io/ggcube/reference/geom_bar_3d.md):
 
 ``` r
+
 ggplot(iris, aes(Species, Sepal.Length, fill = Species)) +
       geom_bar_3d(bins = 20, width = c(.5, 1)) +
       coord_3d(scales = "fixed", ratio = c(1, 3, .25), yaw = 60) +
@@ -216,6 +244,7 @@ creates 3D-aware text, rendered either as”billboard” text that faces the
 viewing plane or as 3D polygons that can face any direction:
 
 ``` r
+
 df <- expand.grid(x = c("H", "B"), y = c("a", "o", "u"), z = c("g", "t"))
 df$label <- paste0(df$x, df$y, df$z)
 ggplot(df, aes(x, y, z, label = label, fill = x)) +
@@ -232,8 +261,12 @@ Lighting of 3D polygon layers is controlled by providing a
 [`light()`](https://matthewkling.github.io/ggcube/reference/light.md)
 specification to the layer function or to
 [`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md).
+See the [Lighting and
+shading](https://matthewkling.github.io/ggcube/articles/lighting.html)
+article for a comprehensive guide.
 
 ``` r
+
 ggplot(sphere_points, aes(x, y, z)) +
       coord_3d(scales = "fixed") +
       scale_fill_viridis_c() +
@@ -269,6 +302,7 @@ including natively-2D layers like
 [`ggplot2::stat_density_2d()`](https://ggplot2.tidyverse.org/reference/geom_density_2d.html):
 
 ``` r
+
 
 ggplot(iris, aes(Sepal.Length, Sepal.Width, Petal.Length, 
                  color = Species, fill = Species)) +
@@ -404,3 +438,14 @@ ggplot(iris, aes(Sepal.Length, Sepal.Width, Petal.Length,
 - [`text_outlines()`](https://matthewkling.github.io/ggcube/reference/text_outlines.md)
   : Convert text to polygon outlines
 
+# Articles
+
+### All vignettes
+
+- [Controlling the 3D
+  view](https://matthewkling.github.io/ggcube/articles/coord_3d.md):
+- [Introduction to
+  ggcube](https://matthewkling.github.io/ggcube/articles/ggcube.md):
+- [Lighting and
+  shading](https://matthewkling.github.io/ggcube/articles/lighting.md):
+- [Surfaces](https://matthewkling.github.io/ggcube/articles/surfaces.md):
