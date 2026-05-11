@@ -26,16 +26,23 @@ The package provides a variety of 3D-specific `geoms` to render surfaces, prisms
 
 NOTE: 3D plots are wonderful for exploratory analysis, storytelling, and data art -- but they are often a poor choice when precise quantitative communication is important, due to issues like occlusion and perspective distortion.
 
-WARNING: This package is in development and has not yet been officially released. There are bugs, and future API changes are possible.
-
 
 ## Installation
 
-ggcube isn't yet available on CRAN as it's still in initial development. You can install the development version of ggcube from [GitHub](https://github.com/matthewkling/ggcube) with:
+ggcube isn't yet on CRAN. You can install it from [GitHub](https://github.com/matthewkling/ggcube):
 
 ``` r
 devtools::install_github("matthewkling/ggcube")
 ```
+
+
+## Related packages
+
+R has several other tools for 3D visualization. ggcube is designed for users who want to stay within the ggplot2 ecosystem. Other packages offer different tradeoffs:
+
+- [**plotly**](https://plotly.com/r/) and [**rgl**](https://dmurdoch.github.io/rgl/) provide interactive 3D viewers with rotation and zoom via WebGL/OpenGL, using their own APIs.
+- [**rayshader**](https://www.rayshader.com/) produces ray-traced renderings of terrain data with photorealistic lighting and shadows; it also makes 3D popups of ggplot2 figures, but not 3D ggplots per se.
+- [**ggxyz**](https://github.com/mikebesso/ggxyz) was another ggplot2 extension for 3D plotting, but is no longer actively maintained.
 
 
 ## Quick start
@@ -52,7 +59,7 @@ ggplot(mpg, aes(x = displ, y = hwy, z = drv, color = class)) +
       coord_3d()
 ```
 
-You can control plot rotation, perspective, and dimensions, as well as axis label placement and panel selection, via parameters to `coord_3d()`:
+You can control plot rotation, perspective, and dimensions, as well as axis label placement and panel selection, via parameters to `coord_3d()`. See the [Controlling the 3D view](https://matthewkling.github.io/ggcube/articles/coord-3d.html) article for a comprehensive guide.
 
 ```{r rotation, warning = FALSE, message = FALSE}
 ggplot(mpg, aes(displ, hwy, drv, color = class)) +
@@ -72,6 +79,8 @@ ggplot(mpg, aes(displ, hwy, drv, color = class)) +
 - `stat_smooth_3d()` fits statistical models with two predictors and visualizes fitted surfaces with confidence intervals
 - `stat_density_3d()` creates perspective visualizations of 2D kernel density estimates 
 - `stat_hull_3d()` plots triangulated volumes based on convex or alpha hulls of 3D points
+
+See the [Surfaces](https://matthewkling.github.io/ggcube/articles/surfaces.html) article for a full guide to the surface system.
 
 Example: a terrain surface using `geom_surface_3d()`:
 
@@ -189,7 +198,7 @@ ggplot(df, aes(x, y, z, label = label, fill = x)) +
 
 ## Lighting effects
 
-Lighting of 3D polygon layers is controlled by providing a `light()` specification to the layer function or to `coord_3d()`.
+Lighting of 3D polygon layers is controlled by providing a `light()` specification to the layer function or to `coord_3d()`. See the [Lighting and shading](https://matthewkling.github.io/ggcube/articles/lighting.html) article for a comprehensive guide.
 
 ```{r lighting, warning = FALSE, message = FALSE}
 ggplot(sphere_points, aes(x, y, z)) +

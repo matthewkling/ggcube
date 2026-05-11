@@ -3,6 +3,10 @@
 .RData
 .Ruserdata
 docs
+doc
 data-raw/hex.R
 notes
 bugs.R
+inst/doc
+/doc/
+/Meta/

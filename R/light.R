@@ -529,7 +529,7 @@ compute_light_in_coord <- function(data, standardized_coords, scale_ranges, scal
                   setNames(names(standardized_coords))
 
             # Flip light direction
-            light$direction[1:2] <- -light$direction[1:2]
+            # light$direction[1:2] <- -light$direction[1:2]
       }
 
       # Filter to polygon groups only — points and segments don't have
