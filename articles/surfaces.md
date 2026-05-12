@@ -16,22 +16,38 @@ or columnar surfaces
 ([`geom_col_3d()`](https://matthewkling.github.io/ggcube/reference/geom_col_3d.md)).
 
 Surfaces can be rendered from several data sources and in several visual
-styles, using a system of interchangeable geoms and stats.
+styles, using a system of interchangeable geoms and stats. ggcube
+currently includes three surface geoms:
+
+- [`geom_surface_3d()`](https://matthewkling.github.io/ggcube/reference/stat_surface_3d.md):
+  tessellated mesh, rendered as a solid surface or a wireframe
+- [`geom_contour_3d()`](https://matthewkling.github.io/ggcube/reference/geom_contour_3d.md):
+  stacks of elevation contour polygons
+- [`geom_ridgeline_3d()`](https://matthewkling.github.io/ggcube/reference/geom_ridgeline_3d.md):
+  arrays of horizontal cross-section polygons
+
+Each of these geoms can render data produced by one of four surface
+stats:
+
+- [`stat_surface_3d()`](https://matthewkling.github.io/ggcube/reference/stat_surface_3d.md):
+  user-supplied irregular or gridded data
+- [`stat_function_3d()`](https://matthewkling.github.io/ggcube/reference/stat_function_3d.md):
+  mathematical functions
+- [`stat_smooth_3d()`](https://matthewkling.github.io/ggcube/reference/geom_smooth_3d.md):
+  statistical models fit to user-supplied data
+- [`stat_density_3d()`](https://matthewkling.github.io/ggcube/reference/stat_density_3d.md):
+  2D kernel density surface
 
 ## Data sources
 
 Surface data comes in two forms:
 
-**Regular grids** have a z value at every combination of x and y
-positions — like a raster or DEM. Grid data can be supplied directly by
-the user, or generated internally by a stat
-([`stat_function_3d()`](https://matthewkling.github.io/ggcube/reference/stat_function_3d.md),
-[`stat_smooth_3d()`](https://matthewkling.github.io/ggcube/reference/geom_smooth_3d.md),
-[`stat_density_3d()`](https://matthewkling.github.io/ggcube/reference/stat_density_3d.md)).
-
-**Irregular points** are scattered (x, y, z) observations with no grid
-structure. These are triangulated via Delaunay tessellation to produce a
-surface mesh.
+- **Regular grids** have a z value at every combination of x and y
+  positions — like a raster or DEM. Grid data can be supplied directly
+  by the user, or generated internally by a stat.
+- **Irregular points** are scattered (x, y, z) observations with no grid
+  structure. These are triangulated via Delaunay tessellation to produce
+  a surface mesh.
 
 [`stat_surface_3d()`](https://matthewkling.github.io/ggcube/reference/stat_surface_3d.md)
 auto-detects which type of data it receives and handles both. All three
@@ -246,7 +262,10 @@ p + geom_surface_3d(aes(fill = after_stat(slope)), grid = "right2") +
 
 Surfaces often benefit from ggcube’s lighting system, which modifies
 polygon face colors based on their orientation relative to a light
-source:
+source. Note that since contours and ridgelines have uniform polygon
+orientation, they typically do not benefit from lighting. See
+[`vignette("lighting")`](https://matthewkling.github.io/ggcube/articles/lighting.md)
+for details.
 
 ``` r
 
@@ -264,8 +283,3 @@ p <- ggplot(mountain, aes(x, y, z)) +
 ```
 
 ![](surfaces_files/figure-html/lighting-1.png)
-
-Lighting can be specified at the layer level or at the coord level via
-`coord_3d(light = light(...))`. See
-[`vignette("lighting")`](https://matthewkling.github.io/ggcube/articles/lighting.md)
-for details.

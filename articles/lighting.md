@@ -4,14 +4,26 @@
 
 library(ggcube)
 library(patchwork)
+theme_set(theme_gray())
+theme_update(axis.text = element_blank(),
+             axis.title = element_blank())
 ```
 
 Lighting modifies the fill and/or color of polygon faces based on their
 orientation relative to a light source, giving surfaces and volumes a
 sense of depth and shape. It applies to any polygon-based 3D layer —
-surfaces, hulls, bars, voxels, and polygon text.
+surfaces, hulls, bars, voxels, and polygon text — but is useful mainly
+for layers where polygon orientation varies.
 
-We’ll use a common base plot throughout:
+This vignette covers how to control [what parts](#lighting-targets) of
+your plot lighting is applied to, how lighting model parameters change
+the [visual qualities](#light-qualities) of the lighting, how to change
+the direction of the [light source](#light-sources), how to control how
+the [underside](#backface-lighting) of a polygon is lit, and how to add
+[lighting-aware guides](#id_3d-guides) to your plot.
+
+We’ll use a common base plot throughout. Here it is with default
+lighting:
 
 ``` r
 
@@ -25,8 +37,6 @@ p
 
 ## Lighting targets
 
-### Layers
-
 Lighting can be set at two levels:
 
 - **Coord-level**: `coord_3d(light = light(...))` applies to all layers
@@ -35,7 +45,9 @@ Lighting can be set at two levels:
   coord-level setting for that layer.
 
 Use `light = "none"` to disable lighting entirely, or `light = NULL` in
-a layer to inherit the coord-level setting (the default layer behavior):
+a layer to inherit the coord-level setting (the default layer behavior).
+Here we add a second layer to our plot, and override the inherited light
+settings to disable lighting for this layer:
 
 ``` r
 
@@ -44,8 +56,6 @@ p + geom_hull_3d(aes(x = x + 2.5), fill = "#9e2602", color = "#5e1600",
 ```
 
 ![](lighting_files/figure-html/where-1.png)
-
-### Aesthetic targets
 
 The `fill` and `color` parameters control which aesthetics get modified
 by lighting. By default both are `TRUE`:

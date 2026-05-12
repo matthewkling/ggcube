@@ -127,7 +127,7 @@ also showing functionality for animation as a rotating GIF:
 
 p <- ggplot(mountain, aes(x, y, z)) +
       geom_contour_3d(fill = "black", color = "white", linewidth = .5) +
-      coord_3d(ratio = c(1.5, 2, 1), light = "none", zoom = 1.5) +
+      coord_3d(ratio = c(1.5, 2, 1), light = "none") +
       theme_void()
 animate_3d(p, yaw = c(0, 360))
 ```

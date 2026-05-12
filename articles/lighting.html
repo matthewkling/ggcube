@@ -73,12 +73,22 @@
     
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/matthewkling/ggcube" class="external-link">ggcube</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://patchwork.data-imaginist.com" class="external-link">patchwork</a></span><span class="op">)</span></span></code></pre></div>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://patchwork.data-imaginist.com" class="external-link">patchwork</a></span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/get_theme.html" class="external-link">theme_set</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_gray</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/get_theme.html" class="external-link">theme_update</a></span><span class="op">(</span>axis.text <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>             axis.title <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>Lighting modifies the fill and/or color of polygon faces based on
 their orientation relative to a light source, giving surfaces and
 volumes a sense of depth and shape. It applies to any polygon-based 3D
-layer — surfaces, hulls, bars, voxels, and polygon text.</p>
-<p>We’ll use a common base plot throughout:</p>
+layer — surfaces, hulls, bars, voxels, and polygon text — but is useful
+mainly for layers where polygon orientation varies.</p>
+<p>This vignette covers how to control <a href="#lighting-targets">what
+parts</a> of your plot lighting is applied to, how lighting model
+parameters change the <a href="#light-qualities">visual qualities</a> of
+the lighting, how to change the direction of the <a href="#light-sources">light source</a>, how to control how the <a href="#backface-lighting">underside</a> of a polygon is lit, and how to
+add <a href="#id_3d-guides">lighting-aware guides</a> to your plot.</p>
+<p>We’ll use a common base plot throughout. Here it is with default
+lighting:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">sphere_points</span>, <span class="fu"><a href="../reference/aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="../reference/geom_hull_3d.html">geom_hull_3d</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="st">"#9e2602"</span>, color <span class="op">=</span> <span class="st">"#5e1600"</span><span class="op">)</span> <span class="op">+</span></span>
@@ -88,9 +98,6 @@ layer — surfaces, hulls, bars, voxels, and polygon text.</p>
 <div class="section level2">
 <h2 id="lighting-targets">Lighting targets<a class="anchor" aria-label="anchor" href="#lighting-targets"></a>
 </h2>
-<div class="section level3">
-<h3 id="layers">Layers<a class="anchor" aria-label="anchor" href="#layers"></a>
-</h3>
 <p>Lighting can be set at two levels:</p>
 <ul>
 <li>
@@ -104,15 +111,13 @@ setting for that layer.</li>
 </ul>
 <p>Use <code>light = "none"</code> to disable lighting entirely, or
 <code>light = NULL</code> in a layer to inherit the coord-level setting
-(the default layer behavior):</p>
+(the default layer behavior). Here we add a second layer to our plot,
+and override the inherited light settings to disable lighting for this
+layer:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/geom_hull_3d.html">geom_hull_3d</a></span><span class="op">(</span><span class="fu"><a href="../reference/aes.html">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">x</span> <span class="op">+</span> <span class="fl">2.5</span><span class="op">)</span>, fill <span class="op">=</span> <span class="st">"#9e2602"</span>, color <span class="op">=</span> <span class="st">"#5e1600"</span>,</span>
 <span>                 light <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="lighting_files/figure-html/where-1.png" class="r-plt" alt="" width="1050"></p>
-</div>
-<div class="section level3">
-<h3 id="aesthetic-targets">Aesthetic targets<a class="anchor" aria-label="anchor" href="#aesthetic-targets"></a>
-</h3>
 <p>The <code>fill</code> and <code>color</code> parameters control which
 aesthetics get modified by lighting. By default both are
 <code>TRUE</code>:</p>
@@ -130,7 +135,6 @@ aesthetics get modified by lighting. By default both are
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/guides.html" class="external-link">guides</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="fu"><a href="../reference/guide_3d.html">guide_colorbar_3d</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="../reference/coord_3d.html">coord_3d</a></span><span class="op">(</span>light <span class="op">=</span> <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span><span class="st">"direct"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p><img src="lighting_files/figure-html/mapped_colors-1.png" class="r-plt" alt="" width="1050"></p>
-</div>
 </div>
 <div class="section level2">
 <h2 id="light-qualities">Light qualities<a class="anchor" aria-label="anchor" href="#light-qualities"></a>

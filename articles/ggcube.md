@@ -369,12 +369,6 @@ ggplot(iris, aes(Sepal.Length, Sepal.Width, Petal.Length,
                       geom = "polygon", alpha = .1, linewidth = .25) +
       geom_hull_3d(position = position_on_face("ymax"), alpha = .5) +
       geom_point_3d(shape = 21, color = "black", stroke = .25)
-#> Warning: The following aesthetics were dropped during statistical transformation: z.
-#> ℹ This can happen when ggplot fails to infer the correct grouping structure in
-#>   the data.
-#> ℹ Did you forget to specify a `group` aesthetic or to convert a numerical
-#>   variable into a factor?
-#> Warning: Unknown or uninitialised column: `subgroup`.
 ```
 
 ![](ggcube_files/figure-html/face_projection-1.png)

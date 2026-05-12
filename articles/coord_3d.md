@@ -23,7 +23,9 @@ p <- ggplot() +
     n = 50, light = light("direct", contrast = .7)) +
   scale_fill_viridis_c() +
   scale_color_viridis_c() +
-  theme(legend.position = "none")
+  theme_light() +
+  theme(legend.position = "none",
+        axis.text = element_blank())
 ```
 
 ## Rotation
@@ -31,7 +33,7 @@ p <- ggplot() +
 Three angles control how the plot is oriented: `pitch`, `roll`, and
 `yaw` rotate the plot around the x-, y-, and z-axes, respectively. All
 are specified in degrees. When they’re all zero, the plot resembles a
-standard 2D plot (+x = right, +y = up, +z = toward you). The defaults
+standard 2D plot (+x = right, +y = up, +z = toward viewer). The defaults
 (`pitch = 0`, `roll = -60`, `yaw = -30`) give an overhead corner view
 that can work well for many plots.
 
@@ -68,9 +70,9 @@ technical or schematic plots.
 
 ``` r
 
-(p + coord_3d(dist = 1.1) + ggtitle("dist = 1")) +
-  (p + coord_3d(dist = 2.5) + ggtitle("dist = 3")) +
-  (p + coord_3d(persp = FALSE) + ggtitle("persp = FALSE")) +
+(p + coord_3d(yaw = 45, dist = 1.1) + ggtitle("dist = 1.1")) +
+  (p + coord_3d(yaw = 45, dist = 2) + ggtitle("dist = 2")) +
+  (p + coord_3d(yaw = 45, persp = FALSE) + ggtitle("persp = FALSE")) +
   plot_layout(ncol = 3)
 ```
 
@@ -90,7 +92,7 @@ in 2D:
 
 (p + coord_3d(scales = "free") + ggtitle('scales = "free"')) +
   (p + coord_3d(scales = "fixed") + ggtitle('scales = "fixed"')) +
-  plot_layout(ncol = 2)
+  plot_layout(ncol = 2) & theme_light()
 ```
 
 ![](coord_3d_files/figure-html/scales-1.png)
@@ -102,30 +104,14 @@ coordinates:
 
 ``` r
 
-(p + coord_3d(scales = "free", ratio = c(1, 2, 1)) +
-    ggtitle('free, ratio = c(1, 2, 1)')) +
-  (p + coord_3d(scales = "fixed", ratio = c(1, 2, 1)) +
-      ggtitle('fixed, ratio = c(1, 2, 1)')) +
-  plot_layout(ncol = 2)
+(p + coord_3d(scales = "free", ratio = c(1, 3, 1)) +
+    ggtitle('free, ratio = c(1, 3, 1)')) +
+  (p + coord_3d(scales = "fixed", ratio = c(1, 3, 1)) +
+      ggtitle('fixed, ratio = c(1, 3, 1)')) +
+  plot_layout(ncol = 2) & theme_light()
 ```
 
 ![](coord_3d_files/figure-html/ratio-1.png)
-
-## Zoom
-
-`zoom` adjusts the overall framing without changing the rotation or
-projection. Values greater than 1 zoom in (tighter framing, may crop
-edges), while values less than 1 zoom out (more whitespace):
-
-``` r
-
-(p + coord_3d(zoom = 0.7) + ggtitle("zoom = 0.7")) +
-  (p + coord_3d(zoom = 1) + ggtitle("zoom = 1 (default)")) +
-  (p + coord_3d(zoom = 1.5) + ggtitle("zoom = 1.5")) +
-  plot_layout(ncol = 3)
-```
-
-![](coord_3d_files/figure-html/zoom-1.png)
 
 ## Panel selection
 
@@ -147,18 +133,52 @@ entirely:
       ggtitle('c("xmin", "xmax", "zmax")')) +
   (p + coord_3d(panels = "all") + ggtitle('"all"')) +
   (p + coord_3d(panels = "none") + ggtitle('"none"')) +
-  plot_layout(ncol = 2) & theme_bw()
+  plot_layout(ncol = 2)
 ```
 
 ![](coord_3d_files/figure-html/panels-1.png)
 
-## Axis labels
+## Zooming, clipping, and expansion
+
+`zoom` adjusts the overall framing without changing the rotation or
+projection. Values less than 1 zoom out (more whitespace), while values
+greater than 1 zoom in (tighter framing).
+
+The `clip` parameter controls whether graphical elements can be drawn
+outside the panel area (ggplot2’s rectangular canvas, not the projected
+3D panel). The default `"off"` allows this, which is generally
+recommended for 3D plots where elements may extend beyond the projected
+panel area.
+
+``` r
+
+(p + coord_3d(zoom = 0.7) + ggtitle("zoom = 0.7")) +
+  (p + coord_3d(zoom = 1) + ggtitle("zoom = 1\n(default)")) +
+  (p + coord_3d(zoom = 1.5, clip = "on") + ggtitle('zoom = 1.5\nclip = "on"')) +
+  plot_layout(ncol = 3)
+```
+
+![](coord_3d_files/figure-html/zoom-1.png) The `expand` parameter works
+like the `expand` argument in standard ggplot2 scales — when `TRUE` (the
+default), axis ranges are padded slightly beyond the data range. You can
+fine-tune expansion per axis using the standard scale functions.
+
+``` r
+
+(p + coord_3d(expand = TRUE) + ggtitle("expand = TRUE (default)")) +
+  (p + coord_3d(expand = FALSE) + ggtitle("expand = FALSE")) +
+  plot_layout(ncol = 2)
+```
+
+![](coord_3d_files/figure-html/expand-1.png)
+
+## Axis label placement
 
 The `xlabels`, `ylabels`, and `zlabels` parameters control where axis
-tick labels and titles are placed. Each axis has multiple possible edges
-where labels could appear (depending on which faces are visible). The
-default `"auto"` uses a heuristic that prioritizes edges on the
-periphery of the plot for readability.
+tick labels and titles are placed. Each axis potentially has multiple
+possible edges where labels could appear (depending on which faces are
+visible). The default `"auto"` uses a heuristic that prioritizes edges
+on the periphery of the plot for readability.
 
 For manual control, pass a length-2 character vector naming two adjacent
 faces — the shared edge between them is where the labels go. The first
@@ -170,7 +190,7 @@ face determines the alignment plane:
   (p + coord_3d(xlabels = c("ymax", "zmax"),
                 zlabels = c("xmax", "ymin")) +
       ggtitle("manual placement")) +
-  plot_layout(ncol = 2)
+  plot_layout(ncol = 2) & theme_light()
 ```
 
 ![](coord_3d_files/figure-html/labels-1.png)
@@ -183,7 +203,7 @@ uses the angle specified in theme settings instead:
 
 (p + coord_3d(rotate_labels = TRUE) + ggtitle("rotate_labels = TRUE")) +
   (p + coord_3d(rotate_labels = FALSE) + ggtitle("rotate_labels = FALSE")) +
-  plot_layout(ncol = 2)
+  plot_layout(ncol = 2) & theme_light()
 ```
 
 ![](coord_3d_files/figure-html/labels_rotate-1.png)
@@ -191,27 +211,6 @@ uses the angle specified in theme settings instead:
 The `title_position` parameter affects axis titles that fall on internal
 (non-peripheral) edges. `"auto"` places them at the near end of the axis
 outside the plot area, while `"center"` centers them along the edge.
-
-## Expansion and clipping
-
-The `expand` parameter works like the `expand` argument in standard
-ggplot2 scales — when `TRUE` (the default), axis ranges are padded
-slightly beyond the data range. You can fine-tune expansion per axis
-using the standard scale functions:
-
-``` r
-
-(p + coord_3d(expand = TRUE) + ggtitle("expand = TRUE (default)")) +
-  (p + coord_3d(expand = FALSE) + ggtitle("expand = FALSE")) +
-  plot_layout(ncol = 2)
-```
-
-![](coord_3d_files/figure-html/expand-1.png)
-
-The `clip` parameter controls whether graphical elements can be drawn
-outside the plot canvas. The default `"off"` allows this, which is
-generally recommended for 3D plots where elements may extend beyond the
-projected panel area.
 
 ## Theming the 3D cube
 
@@ -227,8 +226,8 @@ behaves as expected:
 
 ![](coord_3d_files/figure-html/themes-1.png)
 
-ggcube also adds several theme elements for 3D-specific styling. The
-most important are the foreground panel elements, which control cube
+ggcube also adds several theme elements for 3D-specific styling. One
+important category is foreground panel elements, which control cube
 faces rendered in front of the data. These inherit from their background
 counterparts, so styling `panel.background` affects both background and
 foreground faces, while `panel.foreground` targets only the front faces.
@@ -236,16 +235,15 @@ ggcube’s
 [`element_rect()`](https://matthewkling.github.io/ggcube/reference/element_rect.md)
 extends ggplot2’s version with an `alpha` parameter for transparency.
 This is particularly useful for foreground panels — the default
-`panel.foreground` uses `alpha = .2` so front faces don’t obscure the
+`panel.foreground` uses `alpha = 0.2` so front faces don’t obscure the
 data:
 
 ``` r
 
-ggplot(sphere_points, aes(x, y, z)) +
-  geom_hull_3d(fill = "darkred", color = "darkred") +
+p +
   coord_3d(panels = "all") +
-  theme(panel.background = element_rect(color = "black"),
-        panel.border = element_rect(color = "black"),
+  theme_gray() +
+  theme(panel.border = element_rect(color = "black"),
         panel.foreground = element_rect(alpha = .3),
         panel.grid.foreground = element_line(color = "gray", linewidth = .25))
 ```
@@ -263,14 +261,13 @@ to be manually adjusted more often than in base ggplot2 figures.
 
 ``` r
 
-ggplot(sphere_points, aes(x, y, z)) +
-  geom_hull_3d() +
+p +
   coord_3d(panels = "all") +
   theme(panel.background = element_rect(color = "black"),
         panel.border = element_rect(color = "black"),
         panel.foreground = element_rect(alpha = .3),
         panel.grid.foreground = element_line(color = "gray", linewidth = .25),
-        axis.text = element_text(color = "darkblue"),
+        axis.text = element_text(color = "darkblue", size = 12),
         axis.text.z = element_text(color = "darkred"),
         axis.title = element_text(margin = margin(t = 30)),
         axis.title.x = element_text(color = "magenta"))
