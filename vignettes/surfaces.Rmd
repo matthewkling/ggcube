@@ -11,9 +11,11 @@ vignette: >
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  fig.width = 5,
-  fig.height = 4,
-  dpi = 150
+  fig.width = 7,
+  fig.height = 5,
+  dpi = 150,
+  warning = FALSE,
+  message = FALSE
 )
 ```
 
@@ -26,21 +28,31 @@ Surfaces are ggcube's richest feature area. This article gives an overview of th
 stats that work together to render continuous surfaces from various data sources. "Surface" here
 means a data object with a single z value for each (x, y) position, like a heightmap or 
 terrain model. This vignette doesn't cover hulls (`geom_hull_3d()`) or columnar surfaces 
-(`geom_col_3d()`).
+(`geom_col_3d()`). 
 
-Surfaces can be rendered from several data sources and in several visual styles, using a
-system of interchangeable geoms and stats.
+Surfaces can be rendered from several data sources and in several visual styles, using a 
+system of interchangeable geoms and stats. ggcube currently includes three surface geoms:
+
+- `geom_surface_3d()`: tessellated mesh, rendered as a solid surface or a wireframe
+- `geom_contour_3d()`: stacks of elevation contour polygons
+- `geom_ridgeline_3d()`: arrays of horizontal cross-section polygons
+
+Each of these geoms can render data produced by one of four surface stats:
+
+- `stat_surface_3d()`: user-supplied irregular or gridded data
+- `stat_function_3d()`: mathematical functions
+- `stat_smooth_3d()`: statistical models fit to user-supplied data
+- `stat_density_3d()`: 2D kernel density surface
 
 
 ## Data sources
 
 Surface data comes in two forms:
 
-**Regular grids** have a z value at every combination of x and y positions --- like a
+- **Regular grids** have a z value at every combination of x and y positions --- like a
 raster or DEM. Grid data can be supplied directly by the user, or generated internally by
-a stat (`stat_function_3d()`, `stat_smooth_3d()`, `stat_density_3d()`).
-
-**Irregular points** are scattered (x, y, z) observations with no grid structure. These
+a stat.
+- **Irregular points** are scattered (x, y, z) observations with no grid structure. These
 are triangulated via Delaunay tessellation to produce a surface mesh.
 
 `stat_surface_3d()` auto-detects which type of data it receives and handles both. All 
@@ -209,9 +221,11 @@ p + geom_surface_3d(aes(fill = after_stat(slope)), grid = "right2") +
 ### Lighting
 
 Surfaces often benefit from ggcube's lighting system, which modifies polygon face
-colors based on their orientation relative to a light source:
+colors based on their orientation relative to a light source. Note that since 
+contours and ridgelines have uniform polygon orientation, they typically do
+not benefit from lighting. See `vignette("lighting")` for details.
 
-```{r lighting, fig.width = 7, fig.height = 3.5}
+```{r lighting, fig.height = 3.5}
 p <- ggplot(mountain, aes(x, y, z)) +
   coord_3d(ratio = c(1, 1.5, .75)) +
   scale_fill_viridis_c() + scale_color_viridis_c() +
@@ -225,5 +239,3 @@ p <- ggplot(mountain, aes(x, y, z)) +
   plot_layout(ncol = 2)
 ```
 
-Lighting can be specified at the layer level or at the coord level via
-`coord_3d(light = light(...))`. See `vignette("lighting")` for details.

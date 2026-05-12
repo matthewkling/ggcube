@@ -10,7 +10,9 @@ knitr::opts_chunk$set(
       comment = "#>",
       fig.path = "man/figures/README-",
       out.width = "100%",
-      dpi = 96
+      dpi = 96,
+      warning = FALSE,
+      message = FALSE
 )
 ```
 
@@ -99,7 +101,7 @@ Example: a terrain surface using `geom_contour_3d()`, also showing functionality
 ```{r contour_anim, warning = FALSE, message = FALSE}
 p <- ggplot(mountain, aes(x, y, z)) +
       geom_contour_3d(fill = "black", color = "white", linewidth = .5) +
-      coord_3d(ratio = c(1.5, 2, 1), light = "none", zoom = 1.5) +
+      coord_3d(ratio = c(1.5, 2, 1), light = "none") +
       theme_void()
 animate_3d(p, yaw = c(0, 360))
 ```

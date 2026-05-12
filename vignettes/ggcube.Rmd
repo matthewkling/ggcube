@@ -9,11 +9,13 @@ vignette: >
   
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
-collapse = TRUE,
-comment = "#>",
-fig.width = 5,
-fig.height = 4,
-dpi = 150
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5,
+  dpi = 150,
+  warning = FALSE,
+  message = FALSE
 )
 ```
 
@@ -57,7 +59,7 @@ require some thought about stacking.
 three angles --- `pitch` (tilt around the x-axis), `roll` (tilt around the y-axis), and
 `yaw` (spin around the z-axis):
 
-```{r rotation}
+```{r rotation, fig.height = 4}
 ggplot(mpg, aes(displ, hwy, drv, color = class)) +
       geom_point() +
       coord_3d(pitch = 0, roll = 60, yaw = 0, dist = 1.4,

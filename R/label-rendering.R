@@ -673,6 +673,7 @@ render_axis_text <- function(self, panel_params, theme) {
                         axis_uses_start <- label_result$axis_uses_start
                   } else {
                         # Still need to calculate axis_uses_start for title positioning
+                        on_hull <- axis_selection$on_hull %||% TRUE
                         axis_uses_start <- determine_endpoint_preference_by_boundary(chosen_edge, edge_gridlines)
                   }
 

@@ -15,21 +15,32 @@ knitr::opts_chunk$set(
   comment = "#>",
   fig.width = 7,
   fig.height = 5,
-  dpi = 150
+  dpi = 150,
+  warning = FALSE,
+  message = FALSE
 )
 ```
 
-```{r setup, message = FALSE}
+```{r setup}
 library(ggcube)
 library(patchwork)
+theme_set(theme_gray())
+theme_update(axis.text = element_blank(),
+             axis.title = element_blank())
 ```
 
 Lighting modifies the fill and/or color of polygon faces based on their orientation
 relative to a light source, giving surfaces and volumes a sense of depth and shape.
 It applies to any polygon-based 3D layer --- surfaces, hulls, bars, voxels, and polygon
-text.
+text --- but is useful mainly for layers where polygon orientation varies. 
 
-We'll use a common base plot throughout:
+This vignette covers how to control [what parts](#lighting-targets) of your plot lighting 
+is applied to, how lighting model parameters change the [visual qualities](#light-qualities) 
+of the lighting, how to change the direction of the [light source](#light-sources), how to
+control how the [underside](#backface-lighting) of a polygon is lit, and how to add
+[lighting-aware guides](#3d-guides) to your plot.
+
+We'll use a common base plot throughout. Here it is with default lighting:
 
 ```{r base}
 p <- ggplot(sphere_points, aes(x, y, z)) +
@@ -42,8 +53,6 @@ p
 
 ## Lighting targets
 
-### Layers
-
 Lighting can be set at two levels:
 
 - **Coord-level**: `coord_3d(light = light(...))` applies to all layers in the plot.
@@ -51,19 +60,19 @@ Lighting can be set at two levels:
   that layer.
 
 Use `light = "none"` to disable lighting entirely, or `light = NULL` in a layer to
-inherit the coord-level setting (the default layer behavior):
+inherit the coord-level setting (the default layer behavior). Here we add a second
+layer to our plot, and override the inherited light settings to disable lighting for 
+this layer:
 
 ```{r where}
 p + geom_hull_3d(aes(x = x + 2.5), fill = "#9e2602", color = "#5e1600",
                  light = "none")
 ```
 
-### Aesthetic targets
-
 The `fill` and `color` parameters control which aesthetics get modified by lighting. 
 By default both are `TRUE`:
 
-```{r targets}
+```{r targets, fig.height = 3.5}
 (p + ggtitle("fill + color (default)")) +
   (p + coord_3d(light = light(fill = TRUE, color = FALSE)) +
       ggtitle("fill only"))
@@ -94,7 +103,7 @@ The `method` parameter controls the lighting model:
   entirely.
  
 
-```{r methods}
+```{r methods, fig.height = 3}
 (p + coord_3d(light = light(method = "diffuse")) + ggtitle('"diffuse" (default)')) +
   (p + coord_3d(light = light(method = "direct")) + ggtitle('"direct"')) +
   (p + coord_3d(light = light(method = "rgb")) + ggtitle('"rgb"')) +
@@ -116,7 +125,7 @@ The `mode` parameter controls how lighting modifies colors. This applies to the
 
 The two modes give identical results for grayscale base colors.
 
-```{r modes}
+```{r modes, fig.height = 3.5}
 (p + coord_3d(light = light(mode = "hsv")) +
     ggtitle('"hsv" (default)')) +
   (p + coord_3d(light = light(mode = "hsl")) +
@@ -129,7 +138,7 @@ The two modes give identical results for grayscale base colors.
 The `contrast` parameter scales the intensity of lighting effects. Values less than 1
 give subtler effects; values greater than 1 give more dramatic ones:
 
-```{r contrast}
+```{r contrast, fig.height = 3}
 (p + coord_3d(light = light(mode = "hsl", contrast = 0.5)) +
     ggtitle("contrast = 0.5")) +
   (p + coord_3d(light = light(mode = "hsl", contrast = 1)) +
@@ -155,7 +164,7 @@ controls whether this direction is relative to the data axes or the camera:
   `direction = c(1, 0, 0)` always lights surfaces facing the right side of the plot,
   regardless of rotation.
 
-```{r direction}
+```{r direction, fig.height = 3.5}
 (p + coord_3d(light = light("direct", direction = c(0, -1, 0))) +
     ggtitle('anchor = "scene"')) +
   (p + coord_3d(light = light("direct", direction = c(0, -1, 0), anchor = "camera")) +
@@ -189,7 +198,7 @@ Setting `backface_scale = 1` lights backfaces the same as frontfaces. Modifying
 `backface_offset` to uniformly darkens or brightens all backfaces.
 
 
-```{r backface}
+```{r backface, fig.height = 3}
 pb <- ggplot() +
   geom_function_3d(fun = function(x, y) x^2 + y^2,
                    xlim = c(-3, 3), ylim = c(-3, 3),
