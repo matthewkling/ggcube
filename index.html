@@ -70,7 +70,7 @@
 
 <p><strong>ggcube</strong> lets you build 3D figures using ggplot2. Use it to create 3D surfaces, volumes, scatter plots, and complex layered visualizations using familiar ggplot2 syntax with <code>aes(x, y, z)</code> and <code><a href="reference/coord_3d.html">coord_3d()</a></code>.</p>
 <p>The package provides a variety of 3D-specific <code>geoms</code> to render surfaces, prisms, points, paths, and text in 3D; it also works with some standard ggplot2 layer functions. You can control plot geometry with 3D projection parameters, apply a range of 3D lighting models, and mix 3D layers with 2D layers rendered on cube faces. Standard ggplot2 features like faceting, themes, scales, and legends work as expected.</p>
-<p>NOTE: 3D plots are wonderful for exploratory analysis, storytelling, and data art – but they are often a poor choice when precise quantitative communication is important, due to issues like occlusion and perspective distortion.</p>
+<p>NOTE: 3D plots are wonderful for exploratory analysis, storytelling, and data art — but they are often a poor choice when precise quantitative communication is important, due to issues like occlusion and perspective distortion.</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
@@ -104,7 +104,7 @@
 <span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>      <span class="fu"><a href="reference/coord_3d.html">coord_3d</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p><img src="reference/figures/README-quickstart-1.png" width="100%"></p>
-<p>You can control plot rotation, perspective, and dimensions, as well as axis label placement and panel selection, via parameters to <code><a href="reference/coord_3d.html">coord_3d()</a></code>. See the <a href="https://matthewkling.github.io/ggcube/articles/coord-3d.html">Controlling the 3D view</a> article for a comprehensive guide.</p>
+<p>You can control plot rotation, perspective, and dimensions, as well as axis label placement and panel selection, via parameters to <code><a href="reference/coord_3d.html">coord_3d()</a></code>. See the <a href="https://matthewkling.github.io/ggcube/articles/coord-3d.html">3D view</a> article for a comprehensive guide.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mpg</span>, <span class="fu"><a href="reference/aes.html">aes</a></span><span class="op">(</span><span class="va">displ</span>, <span class="va">hwy</span>, <span class="va">drv</span>, color <span class="op">=</span> <span class="va">class</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
@@ -133,7 +133,7 @@
 <li>
 <code><a href="reference/geom_hull_3d.html">stat_hull_3d()</a></code> plots triangulated volumes based on convex or alpha hulls of 3D points</li>
 </ul>
-<p>See the <a href="https://matthewkling.github.io/ggcube/articles/surfaces.html">Surfaces</a> article for a full guide to the surface system.</p>
+<p>See the <a href="https://matthewkling.github.io/ggcube/articles/surfaces.html">surfaces</a> article for a full guide to the surface system.</p>
 <p>Example: a terrain surface using <code><a href="reference/stat_surface_3d.html">geom_surface_3d()</a></code>:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mountain</span>, <span class="fu"><a href="reference/aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
@@ -244,7 +244,7 @@
 <div class="section level2">
 <h2 id="lighting-effects">Lighting effects<a class="anchor" aria-label="anchor" href="#lighting-effects"></a>
 </h2>
-<p>Lighting of 3D polygon layers is controlled by providing a <code><a href="reference/light.html">light()</a></code> specification to the layer function or to <code><a href="reference/coord_3d.html">coord_3d()</a></code>. See the <a href="https://matthewkling.github.io/ggcube/articles/lighting.html">Lighting and shading</a> article for a comprehensive guide.</p>
+<p>Lighting of 3D polygon layers is controlled by providing a <code><a href="reference/light.html">light()</a></code> specification to the layer function or to <code><a href="reference/coord_3d.html">coord_3d()</a></code>. See the <a href="https://matthewkling.github.io/ggcube/articles/lighting.html">lighting and shading</a> article for a comprehensive guide.</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">sphere_points</span>, <span class="fu"><a href="reference/aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>      <span class="fu"><a href="reference/coord_3d.html">coord_3d</a></span><span class="op">(</span>scales <span class="op">=</span> <span class="st">"fixed"</span><span class="op">)</span> <span class="op">+</span></span>

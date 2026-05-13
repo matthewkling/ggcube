@@ -13,7 +13,7 @@ layers with 2D layers rendered on cube faces. Standard ggplot2 features
 like faceting, themes, scales, and legends work as expected.
 
 NOTE: 3D plots are wonderful for exploratory analysis, storytelling, and
-data art – but they are often a poor choice when precise quantitative
+data art — but they are often a poor choice when precise quantitative
 communication is important, due to issues like occlusion and perspective
 distortion.
 
@@ -65,7 +65,7 @@ ggplot(mpg, aes(x = displ, y = hwy, z = drv, color = class)) +
 You can control plot rotation, perspective, and dimensions, as well as
 axis label placement and panel selection, via parameters to
 [`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md).
-See the [Controlling the 3D
+See the [3D
 view](https://matthewkling.github.io/ggcube/articles/coord-3d.html)
 article for a comprehensive guide.
 
@@ -100,7 +100,7 @@ ggplot(mpg, aes(displ, hwy, drv, color = class)) +
   plots triangulated volumes based on convex or alpha hulls of 3D points
 
 See the
-[Surfaces](https://matthewkling.github.io/ggcube/articles/surfaces.html)
+[surfaces](https://matthewkling.github.io/ggcube/articles/surfaces.html)
 article for a full guide to the surface system.
 
 Example: a terrain surface using
@@ -261,7 +261,7 @@ Lighting of 3D polygon layers is controlled by providing a
 [`light()`](https://matthewkling.github.io/ggcube/reference/light.md)
 specification to the layer function or to
 [`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md).
-See the [Lighting and
+See the [lighting and
 shading](https://matthewkling.github.io/ggcube/articles/lighting.html)
 article for a comprehensive guide.
 

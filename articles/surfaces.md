@@ -263,9 +263,9 @@ p + geom_surface_3d(aes(fill = after_stat(slope)), grid = "right2") +
 Surfaces often benefit from ggcube’s lighting system, which modifies
 polygon face colors based on their orientation relative to a light
 source. Note that since contours and ridgelines have uniform polygon
-orientation, they typically do not benefit from lighting. See
-[`vignette("lighting")`](https://matthewkling.github.io/ggcube/articles/lighting.md)
-for details.
+orientation, they typically do not benefit from lighting. See the
+[lighting](https://matthewkling.github.io/ggcube/articles/lighting.md)
+article for details.
 
 ``` r
 

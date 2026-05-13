@@ -72,8 +72,9 @@ in 2D). The `ratio` parameter lets you set custom proportions for the
 three axes. And `zoom` adjusts overall framing without changing the
 rotation or projection.
 
-For a comprehensive guide to all view parameters, see
-`vignette("coord-3d")`.
+See the [3D
+view](https://matthewkling.github.io/ggcube/articles/coord_3d.md)
+article for a comprehensive guide to all view parameters.
 
 ## 3D layers
 
@@ -118,9 +119,10 @@ Stats like
 and
 [`stat_density_3d()`](https://matthewkling.github.io/ggcube/reference/stat_density_3d.md)
 generate surface data from functions, model fits, or kernel density
-estimates. These stats can be paired with any of the surface geoms. For
-a full treatment, see
-[`vignette("surfaces")`](https://matthewkling.github.io/ggcube/articles/surfaces.md).
+estimates. These stats can be paired with any of the surface geoms. See
+the [3D
+surfaces](https://matthewkling.github.io/ggcube/articles/surfaces.md)
+article for more detail on surface plotting options.
 
 ### Points
 
@@ -256,8 +258,9 @@ p + coord_3d(light = light(method = "direct", mode = "hsl",
 Use `light = "none"` to disable lighting entirely, or `light = NULL` in
 a layer to inherit the coord-level setting. For a comprehensive guide to
 lighting methods, color modes, light direction, and backface handling,
-see
-[`vignette("lighting")`](https://matthewkling.github.io/ggcube/articles/lighting.md).
+see the
+[lighting](https://matthewkling.github.io/ggcube/articles/lighting.md)
+article.
 
 ## Scales, guides, and themes
 
@@ -328,7 +331,9 @@ customization work as expected. ggcube adds foreground-specific elements
 and z-axis text elements (`axis.text.z`, `axis.title.z`). ggcube’s
 [`element_rect()`](https://matthewkling.github.io/ggcube/reference/element_rect.md)
 extends ggplot2’s version with an `alpha` parameter for transparency.
-For details, see the theming section of `vignette("coord-3d")`.
+For details, see the theming section of the [3D
+coordinates](https://matthewkling.github.io/ggcube/articles/coord_3d.md)
+article.
 
 ## Annotations
 

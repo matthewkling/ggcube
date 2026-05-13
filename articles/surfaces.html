@@ -65,7 +65,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>Surfaces</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/matthewkling/ggcube/blob/main/vignettes/surfaces.Rmd" class="external-link"><code>vignettes/surfaces.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/matthewkling/ggcube/blob/main/vignettes/articles/surfaces.Rmd" class="external-link"><code>vignettes/articles/surfaces.Rmd</code></a></small>
       <div class="d-none name"><code>surfaces.Rmd</code></div>
     </div>
 
@@ -311,8 +311,7 @@ available via <code><a href="https://ggplot2.tidyverse.org/reference/aes_eval.ht
 <p>Surfaces often benefit from ggcube’s lighting system, which modifies
 polygon face colors based on their orientation relative to a light
 source. Note that since contours and ridgelines have uniform polygon
-orientation, they typically do not benefit from lighting. See
-<code><a href="../articles/lighting.html">vignette("lighting")</a></code> for details.</p>
+orientation, they typically do not benefit from lighting. See the <a href="../articles/lighting.html">lighting</a> article for details.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mountain</span>, <span class="fu"><a href="../reference/aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="../reference/coord_3d.html">coord_3d</a></span><span class="op">(</span>ratio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1.5</span>, <span class="fl">.75</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>

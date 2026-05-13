@@ -65,7 +65,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>Lighting and shading</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/matthewkling/ggcube/blob/main/vignettes/lighting.Rmd" class="external-link"><code>vignettes/lighting.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/matthewkling/ggcube/blob/main/vignettes/articles/lighting.Rmd" class="external-link"><code>vignettes/articles/lighting.Rmd</code></a></small>
       <div class="d-none name"><code>lighting.Rmd</code></div>
     </div>
 
@@ -79,9 +79,11 @@
 <span>             axis.title <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>Lighting modifies the fill and/or color of polygon faces based on
 their orientation relative to a light source, giving surfaces and
-volumes a sense of depth and shape. It applies to any polygon-based 3D
-layer — surfaces, hulls, bars, voxels, and polygon text — but is useful
-mainly for layers where polygon orientation varies.</p>
+volumes a sense of depth and shape. ggcube’s lighting system only
+renders <strong>form</strong> shadows, not <strong>cast</strong>
+shadows. Lighting can be applied to any polygon-based 3D layer —
+surfaces, hulls, bars, voxels, and polygon text — but is useful mainly
+for layers where polygon orientation varies.</p>
 <p>This vignette covers how to control <a href="#lighting-targets">what
 parts</a> of your plot lighting is applied to, how lighting model
 parameters change the <a href="#light-qualities">visual qualities</a> of
