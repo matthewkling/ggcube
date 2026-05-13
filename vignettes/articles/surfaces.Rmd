@@ -1,10 +1,5 @@
 ---
 title: "Surfaces"
-output: rmarkdown::html_vignette
-vignette: >
-  %\VignetteIndexEntry{Surfaces}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r, include = FALSE}
@@ -223,7 +218,7 @@ p + geom_surface_3d(aes(fill = after_stat(slope)), grid = "right2") +
 Surfaces often benefit from ggcube's lighting system, which modifies polygon face
 colors based on their orientation relative to a light source. Note that since 
 contours and ridgelines have uniform polygon orientation, they typically do
-not benefit from lighting. See `vignette("lighting")` for details.
+not benefit from lighting. See the [lighting](../articles/lighting.html) article for details.
 
 ```{r lighting, fig.height = 3.5}
 p <- ggplot(mountain, aes(x, y, z)) +

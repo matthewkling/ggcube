@@ -79,7 +79,8 @@ the relative scale of the data (like `coord_fixed()` in 2D). The `ratio` paramet
 you set custom proportions for the three axes. And `zoom` adjusts overall framing without
 changing the rotation or projection.
 
-For a comprehensive guide to all view parameters, see `vignette("coord-3d")`.
+See the [3D view](../articles/coord_3d.html) article for a comprehensive guide to 
+all view parameters.
 
 
 ## 3D layers
@@ -110,7 +111,8 @@ ggplot(mountain, aes(x, y, z)) +
 
 Stats like `stat_function_3d()`, `stat_smooth_3d()`, and `stat_density_3d()` generate
 surface data from functions, model fits, or kernel density estimates. These stats can be
-paired with any of the surface geoms. For a full treatment, see `vignette("surfaces")`.
+paired with any of the surface geoms. See the [3D surfaces](../articles/surfaces.html) article
+for more detail on surface plotting options.
 
 ### Points
 
@@ -210,7 +212,7 @@ p + coord_3d(light = light(method = "direct", mode = "hsl",
 
 Use `light = "none"` to disable lighting entirely, or `light = NULL` in a layer to
 inherit the coord-level setting. For a comprehensive guide to lighting methods, color
-modes, light direction, and backface handling, see `vignette("lighting")`.
+modes, light direction, and backface handling, see the [lighting](../articles/lighting.html) article.
 
 
 ## Scales, guides, and themes
@@ -265,7 +267,8 @@ Standard ggplot2 themes and `theme()` customization work as expected. ggcube add
 foreground-specific elements (`panel.foreground`, `panel.grid.foreground`,
 `panel.border.foreground`) and z-axis text elements (`axis.text.z`, `axis.title.z`).
 ggcube's `element_rect()` extends ggplot2's version with an `alpha` parameter for
-transparency. For details, see the theming section of `vignette("coord-3d")`.
+transparency. For details, see the theming section of the [3D coordinates](../articles/coord_3d.html)
+article.
 
 
 ## Annotations

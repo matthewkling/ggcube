@@ -26,7 +26,7 @@ knitr::opts_chunk$set(
 
 The package provides a variety of 3D-specific `geoms` to render surfaces, prisms, points, paths, and text in 3D; it also works with some standard ggplot2 layer functions. You can control plot geometry with 3D projection parameters, apply a range of 3D lighting models, and mix 3D layers with 2D layers rendered on cube faces. Standard ggplot2 features like faceting, themes, scales, and legends work as expected.
 
-NOTE: 3D plots are wonderful for exploratory analysis, storytelling, and data art -- but they are often a poor choice when precise quantitative communication is important, due to issues like occlusion and perspective distortion.
+NOTE: 3D plots are wonderful for exploratory analysis, storytelling, and data art --- but they are often a poor choice when precise quantitative communication is important, due to issues like occlusion and perspective distortion.
 
 
 ## Installation
@@ -61,7 +61,7 @@ ggplot(mpg, aes(x = displ, y = hwy, z = drv, color = class)) +
       coord_3d()
 ```
 
-You can control plot rotation, perspective, and dimensions, as well as axis label placement and panel selection, via parameters to `coord_3d()`. See the [Controlling the 3D view](https://matthewkling.github.io/ggcube/articles/coord-3d.html) article for a comprehensive guide.
+You can control plot rotation, perspective, and dimensions, as well as axis label placement and panel selection, via parameters to `coord_3d()`. See the [3D view](https://matthewkling.github.io/ggcube/articles/coord-3d.html) article for a comprehensive guide.
 
 ```{r rotation, warning = FALSE, message = FALSE}
 ggplot(mpg, aes(displ, hwy, drv, color = class)) +
@@ -82,7 +82,7 @@ ggplot(mpg, aes(displ, hwy, drv, color = class)) +
 - `stat_density_3d()` creates perspective visualizations of 2D kernel density estimates 
 - `stat_hull_3d()` plots triangulated volumes based on convex or alpha hulls of 3D points
 
-See the [Surfaces](https://matthewkling.github.io/ggcube/articles/surfaces.html) article for a full guide to the surface system.
+See the [surfaces](https://matthewkling.github.io/ggcube/articles/surfaces.html) article for a full guide to the surface system.
 
 Example: a terrain surface using `geom_surface_3d()`:
 
@@ -200,7 +200,7 @@ ggplot(df, aes(x, y, z, label = label, fill = x)) +
 
 ## Lighting effects
 
-Lighting of 3D polygon layers is controlled by providing a `light()` specification to the layer function or to `coord_3d()`. See the [Lighting and shading](https://matthewkling.github.io/ggcube/articles/lighting.html) article for a comprehensive guide.
+Lighting of 3D polygon layers is controlled by providing a `light()` specification to the layer function or to `coord_3d()`. See the [lighting and shading](https://matthewkling.github.io/ggcube/articles/lighting.html) article for a comprehensive guide.
 
 ```{r lighting, warning = FALSE, message = FALSE}
 ggplot(sphere_points, aes(x, y, z)) +

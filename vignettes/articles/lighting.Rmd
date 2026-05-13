@@ -1,10 +1,5 @@
 ---
 title: "Lighting and shading"
-output: rmarkdown::html_vignette
-vignette: >
-  %\VignetteIndexEntry{Lighting and shading}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r, include = FALSE}
@@ -31,8 +26,9 @@ theme_update(axis.text = element_blank(),
 
 Lighting modifies the fill and/or color of polygon faces based on their orientation
 relative to a light source, giving surfaces and volumes a sense of depth and shape.
-It applies to any polygon-based 3D layer --- surfaces, hulls, bars, voxels, and polygon
-text --- but is useful mainly for layers where polygon orientation varies. 
+ggcube's lighting system only renders **form** shadows, not **cast** shadows. Lighting 
+can be applied to any polygon-based 3D layer --- surfaces, hulls, bars, voxels, and 
+polygon text --- but is useful mainly for layers where polygon orientation varies. 
 
 This vignette covers how to control [what parts](#lighting-targets) of your plot lighting 
 is applied to, how lighting model parameters change the [visual qualities](#light-qualities) 

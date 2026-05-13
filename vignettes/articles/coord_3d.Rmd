@@ -1,10 +1,5 @@
 ---
 title: "Controlling the 3D view"
-output: rmarkdown::html_vignette
-vignette: >
-  %\VignetteIndexEntry{Controlling the 3D view}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r, include = FALSE}
