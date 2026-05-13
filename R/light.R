@@ -59,7 +59,7 @@
 #'   Mutually exclusive with \code{direction}. Default is NULL (use directional lighting).
 #' @param distance_falloff Logical indicating whether to apply distance-based
 #'   intensity falloff for positional lighting using inverse square law
-#'   (intensity ∝ 1/distance²). Only used when \code{position} is specified.
+#'   (intensity proportional to 1/distance²). Only used when \code{position} is specified.
 #'   Default is FALSE.
 #' @param backface_scale,backface_offset Numeric values that determine how "frontface" light values get
 #'   modified (scaled and then offset) to derive "backface" light values. A backface is the side of a
@@ -288,7 +288,7 @@ print.light <- function(x, ...) {
 #'
 #' @param normals Matrix with 3 columns (x, y, z normal components), where each
 #'   row represents a face normal vector. Should be unit vectors (normalized).
-#' @param light A lighting specification object created by \code{light()}
+#' @param lighting A lighting specification object created by \code{light()}
 #' @param face_centers Matrix with 3 columns (x, y, z coordinates) representing
 #'   the center position of each face in data coordinate space. Required for
 #'   positional lighting, optional for directional lighting.
@@ -296,6 +296,7 @@ print.light <- function(x, ...) {
 #'   For \code{method = "rgb"}, returns hex color strings with \code{I()}
 #'   class for identity scaling.
 #' @keywords internal
+#' @noRd
 compute_light <- function(normals, lighting, face_centers = NULL) {
 
       # Validate inputs
@@ -406,6 +407,7 @@ compute_light <- function(normals, lighting, face_centers = NULL) {
 #' @param light_position Numeric vector of length 3 (x, y, z light position)
 #' @return Matrix with 3 columns (normalized light direction vectors)
 #' @keywords internal
+#' @noRd
 calculate_positional_light_directions <- function(face_centers, light_position) {
       # Calculate light directions from each face center TO the light position
       light_vectors <- matrix(rep(light_position, nrow(face_centers)),
@@ -425,6 +427,7 @@ calculate_positional_light_directions <- function(face_centers, light_position) 
 #' @param light_dir Numeric vector of length 3
 #' @return Normalized light direction vector
 #' @keywords internal
+#' @noRd
 normalize_light_direction <- function(light_dir) {
       light_dir / sqrt(sum(light_dir^2))
 }
@@ -435,6 +438,7 @@ normalize_light_direction <- function(light_dir) {
 #' @param light_dir_norm Normalized light direction vector
 #' @return Vector of dot products
 #' @keywords internal
+#' @noRd
 compute_light_dot_products <- function(normals, light_dir_norm) {
       rowSums(normals * matrix(rep(light_dir_norm, nrow(normals)),
                                nrow = nrow(normals), byrow = TRUE))
@@ -449,6 +453,7 @@ compute_light_dot_products <- function(normals, light_dir_norm) {
 #' @param light_dir_norm Normalized light direction vector
 #' @return Character vector of hex color codes
 #' @keywords internal
+#' @noRd
 compute_rgb_light <- function(normals, light_dir_norm) {
 
       # Target direction for white color in RGB space
@@ -511,6 +516,7 @@ compute_rgb_light <- function(normals, light_dir_norm) {
 #' @param proj List with pitch, roll, yaw, persp, dist (projection parameters)
 #' @return data frame with lighting values and normal components added
 #' @keywords internal
+#' @noRd
 compute_light_in_coord <- function(data, standardized_coords, scale_ranges, scales, ratio, proj = NULL) {
 
       # Extract lighting specification from first row (all rows have same spec)
@@ -635,6 +641,7 @@ compute_light_in_coord <- function(data, standardized_coords, scale_ranges, scal
 #' @param proj Projection parameters (needed for camera anchor rotation)
 #' @return Matrix with 3 columns of transformed normals
 #' @keywords internal
+#' @noRd
 transform_normals_to_standard <- function(normals, scale_ranges, scales, ratio, anchor, proj = NULL) {
 
       # Compute effective ratios (same logic as scale_to_standard multi-axis path)
@@ -712,6 +719,7 @@ compute_surface_gradients_from_vertices <- function(data) {
 #' @param gradients Data frame with group, dzdx, dzdy columns
 #' @return Matrix with 3 columns (x, y, z normal components)
 #' @keywords internal
+#' @noRd
 compute_surface_normals <- function(gradients) {
       # Compute raw normals from gradients
       # For a surface z = f(x,y), the normal is (-dz/dx, -dz/dy, 1) (unnormalized)
@@ -734,6 +742,7 @@ compute_surface_normals <- function(gradients) {
 #' @param faces Data frame with one row per face (group column required)
 #' @return Matrix with 3 columns (x, y, z normal components)
 #' @keywords internal
+#' @noRd
 compute_triangle_normals <- function(data, faces) {
       # For each face, get three vertices and compute cross product
       face_normals <- data %>%
@@ -772,6 +781,7 @@ compute_triangle_normals <- function(data, faces) {
 #' @param faces Data frame with face_type column indicating face orientation
 #' @return Matrix with 3 columns (x, y, z normal components)
 #' @keywords internal
+#' @noRd
 compute_axis_aligned_normals <- function(faces) {
       # Map face types to normal directions
       face_normals <- faces %>%
@@ -808,6 +818,7 @@ compute_axis_aligned_normals <- function(faces) {
 #' @param data Data frame with x, y, z coordinates and group column
 #' @return Matrix with 3 columns (x, y, z face center coordinates)
 #' @keywords internal
+#' @noRd
 calculate_face_centers <- function(data) {
       centers <- data %>%
             group_by(group) %>%
@@ -829,6 +840,7 @@ calculate_face_centers <- function(data) {
 #' @param light Lighting specification object
 #' @return Data frame with lighting values and normal components
 #' @keywords internal
+#' @noRd
 apply_surface_light <- function(face_data, normals, face_centers, light) {
       # Apply lighting models to the normals
       light_vals <- compute_light(normals, light, face_centers)
@@ -848,6 +860,7 @@ apply_surface_light <- function(face_data, normals, face_centers, light) {
 #' @param rgb_matrix 3xN matrix with RGB values in 0-1 range
 #' @return 3xN matrix with HSL values (H in 0-1, S in 0-1, L in 0-1)
 #' @keywords internal
+#' @noRd
 rgb2hsl <- function(rgb_matrix) {
       if (!is.matrix(rgb_matrix) || nrow(rgb_matrix) != 3) {
             stop("rgb_matrix must be a 3xN matrix")
@@ -902,6 +915,7 @@ rgb2hsl <- function(rgb_matrix) {
 #' @param hsl_matrix 3xN matrix with HSL values (H in 0-1, S in 0-1, L in 0-1)
 #' @return 3xN matrix with RGB values in 0-1 range
 #' @keywords internal
+#' @noRd
 hsl2rgb <- function(hsl_matrix) {
       if (!is.matrix(hsl_matrix) || nrow(hsl_matrix) != 3) {
             stop("hsl_matrix must be a 3xN matrix")
@@ -950,6 +964,7 @@ hsl2rgb <- function(hsl_matrix) {
 #' @param lighting Lighting specification with shade_mode and shade_strength
 #' @return Vector of modified colors
 #' @keywords internal
+#' @noRd
 blend_light_with_colors <- function(colors, light_values, lighting) {
       # Handle NA or NULL colors
       if (is.null(colors) || length(colors) == 0) {
@@ -1101,6 +1116,7 @@ blend_light <- function(coords) {
 #' @param ratio Numeric vector of length 3
 #' @return Position vector in visual space, or NULL if position is NULL
 #' @keywords internal
+#' @noRd
 transform_light_position <- function(position, scale_ranges, scales, ratio) {
       if(is.null(position)) return(NULL)
       light_data <- data.frame(x = position[1], y = position[2], z = position[3])
@@ -1114,6 +1130,7 @@ transform_light_position <- function(position, scale_ranges, scales, ratio) {
 #' @param light Lighting specification object, "none", or NULL
 #' @return Data frame with lighting_spec column added (if light is not NULL)
 #' @keywords internal
+#' @noRd
 attach_light <- function(data, light){
       if(!is.null(light)){
             if(!inherits(light, "light") && light == "none") light <- light(fill = FALSE, color = FALSE)

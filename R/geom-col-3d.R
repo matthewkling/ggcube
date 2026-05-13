@@ -88,6 +88,7 @@ StatCol3D <- ggproto("StatCol3D", Stat,
 #' @param selected_faces Character vector of face names to render
 #' @return Data frame with column face vertices
 #' @keywords internal
+#' @noRd
 create_cols <- function(data, x_spacing, y_spacing, width, selected_faces) {
 
       # Calculate actual column dimensions

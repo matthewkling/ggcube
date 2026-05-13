@@ -83,12 +83,12 @@ GeomContour3D <- ggproto("GeomContour3D", GeomPolygon3D,
 #'   breaks are computed automatically using `bins` or `binwidth`.
 #' @param bins Number of contour bins. Ignored if `breaks` or `binwidth` is provided.
 #' @param binwidth Width of contour bins. Ignored if `breaks` is provided.
-#' @param group_prefix String prefix for polygon group IDs.
 #'
 #' @return Data frame with polygon vertices for contour band rendering, including
 #'   `group` and `subgroup` columns for proper hole handling.
 #'
 #' @keywords internal
+#' @noRd
 points_to_contours <- function(data,
                                breaks = NULL,
                                bins = NULL,

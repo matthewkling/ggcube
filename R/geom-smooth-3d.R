@@ -201,6 +201,7 @@ clip_polys_to_chull <- function(d, point_data){
 #' @param level Confidence level (not used here, passed to create_confidence_surfaces)
 #' @return List with $fitted and optionally $se vectors
 #' @keywords internal
+#' @noRd
 fit_and_predict <- function(data, new_data, method, formula, method.args,
                             se = FALSE, level = 0.95){
 

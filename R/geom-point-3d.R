@@ -99,6 +99,7 @@ GeomPoint3D <- ggproto("GeomPoint3D", GeomPoint,
 #'   Overrides for reference point/circle styling.
 #' @return Data frame with resolved aesthetics and .prim column.
 #' @keywords internal
+#' @noRd
 resolve_point_aesthetics <- function(coords,
                                      ref_line_colour = NULL,
                                      ref_line_linewidth = 0.25,
@@ -312,6 +313,7 @@ StatPoint3D <- ggproto("StatPoint3D", Stat,
 #' @param ref_circle_vertices Number of vertices for circular reference points
 #' @return Data frame with reference elements
 #' @keywords internal
+#' @noRd
 generate_point_elements <- function(data, raw_points,
                                     ref_faces, ref_points, ref_lines,
                                     ref_circle_radius, ref_circle_vertices) {

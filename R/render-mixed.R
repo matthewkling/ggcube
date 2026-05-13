@@ -18,6 +18,7 @@
 #' @param scale_depth Logical; if FALSE, no scaling is applied.
 #' @return Data frame with scaled aesthetics.
 #' @keywords internal
+#' @noRd
 scale_depth <- function(coords, scale_depth){
       if (scale_depth && "depth_scale" %in% names(coords)) {
             if("size" %in% names(coords)) {
@@ -53,6 +54,7 @@ scale_depth <- function(coords, scale_depth){
 #' @param lineend Line end style for segments.
 #' @return A grid grob.
 #' @keywords internal
+#' @noRd
 render_mixed_grobs <- function(data, rule = "evenodd",
                                arrow = NULL, lineend = "butt") {
 
@@ -96,6 +98,7 @@ render_mixed_grobs <- function(data, rule = "evenodd",
 #' @param data Data frame with `.prim` and `group` columns.
 #' @return Data frame with columns `.prim`, `start`, `end` (row indices).
 #' @keywords internal
+#' @noRd
 compute_prim_runs <- function(data) {
       prims <- data$.prim
       # Detect where .prim changes
@@ -116,6 +119,7 @@ compute_prim_runs <- function(data) {
 
 #' Dispatch to the correct renderer for a single primitive type
 #' @keywords internal
+#' @noRd
 render_single_type <- function(data, prim_type, rule, arrow, lineend) {
       switch(prim_type,
              polygon = render_polygons(data, rule),
@@ -139,6 +143,7 @@ render_single_type <- function(data, prim_type, rule, arrow, lineend) {
 #' @param rule Fill rule for polygons with holes.
 #' @return A polygonGrob or pathGrob.
 #' @keywords internal
+#' @noRd
 render_polygons <- function(data, rule = "evenodd") {
       if (nrow(data) == 0) return(grid::nullGrob())
 
@@ -225,6 +230,7 @@ render_polygons <- function(data, rule = "evenodd") {
 #' @param data Point data with x, y, and aesthetic columns.
 #' @return A pointsGrob or grobTree.
 #' @keywords internal
+#' @noRd
 render_points <- function(data) {
       if (nrow(data) == 0) return(grid::nullGrob())
 
@@ -297,6 +303,7 @@ render_points <- function(data) {
 #' @param lineend Line end style.
 #' @return A segmentsGrob.
 #' @keywords internal
+#' @noRd
 render_segments <- function(data, arrow = NULL, lineend = "butt") {
       if (nrow(data) == 0) return(grid::nullGrob())
 
@@ -353,6 +360,7 @@ render_segments <- function(data, arrow = NULL, lineend = "butt") {
 #' @param data Text data with x, y, label, and aesthetic columns.
 #' @return A grobTree of textGrobs.
 #' @keywords internal
+#' @noRd
 render_texts <- function(data) {
       if (nrow(data) == 0) return(grid::nullGrob())
 

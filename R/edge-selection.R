@@ -47,19 +47,6 @@ enumerate_axis_edges <- function(axis) {
       return(edges)
 }
 
-filter_edges_by_visible_faces <- function(edges, visible_faces) {
-      # Keep only edges where at least one touching face is visible
-      visible_edges <- list()
-
-      for (edge in edges) {
-            if (any(edge$touching_faces %in% visible_faces)) {
-                  visible_edges[[length(visible_edges) + 1]] <- edge
-            }
-      }
-
-      return(visible_edges)
-}
-
 # Calculate 2D projected area of a face
 calculate_face_area_2d <- function(face_name, proj, effective_ratios) {
       corners_3d <- get_face_corners(face_name)
@@ -321,59 +308,6 @@ select_best_edge_face_combination <- function(scored_combinations,
       best_combination <- combinations[[combo_data$index[1]]]
 
       return(best_combination)
-}
-
-select_best_face_for_edge <- function(edge, visible_faces, proj) {
-      candidate_faces <- intersect(edge$touching_faces, visible_faces)
-      if (length(candidate_faces) <= 1) return(candidate_faces[1])
-
-      face_scores <- list()
-
-      for (face_name in candidate_faces) {
-            # Get all 4 corners of this face
-            face_corners <- get_face_corners(face_name)
-
-            # Find the two corners that are NOT on the focal edge
-            non_edge_corners <- face_corners[
-                  !(abs(face_corners$x - edge$p1[1]) < 1e-10 &
-                          abs(face_corners$y - edge$p1[2]) < 1e-10 &
-                          abs(face_corners$z - edge$p1[3]) < 1e-10) &
-                        !(abs(face_corners$x - edge$p2[1]) < 1e-10 &
-                                abs(face_corners$y - edge$p2[2]) < 1e-10 &
-                                abs(face_corners$z - edge$p2[3]) < 1e-10), ]
-
-            # Transform corners to 2D for perpendicular distance
-            corners_2d <- transform_3d_standard(non_edge_corners, proj)
-            perpendicular_distance <- sqrt((corners_2d$x[1] - corners_2d$x[2])^2 +
-                                                 (corners_2d$y[1] - corners_2d$y[2])^2)
-
-            # Calculate existing tie-breaker scores
-            face_corners_2d <- transform_3d_standard(face_corners, proj)
-            avg_depth <- mean(face_corners_2d$z)
-            avg_y <- mean(face_corners_2d$y)
-            avg_x <- mean(face_corners_2d$x)
-
-            face_scores[[face_name]] <- list(
-                  name = face_name,
-                  perpendicular_distance = perpendicular_distance,
-                  depth = avg_depth,
-                  y_pos = avg_y,
-                  x_pos = avg_x
-            )
-      }
-
-      # Convert to data frame and sort by: perpendicular distance (desc), depth (asc), y_pos (asc), x_pos (asc)
-      score_df <- data.frame(
-            name = names(face_scores),
-            perpendicular_distance = sapply(face_scores, function(f) f$perpendicular_distance),
-            depth = sapply(face_scores, function(f) f$depth),
-            y_pos = sapply(face_scores, function(f) f$y_pos),
-            x_pos = sapply(face_scores, function(f) f$x_pos)
-      )
-
-      score_df <- score_df[order(-score_df$perpendicular_distance, score_df$depth, score_df$y_pos, score_df$x_pos), ]
-
-      return(as.character(score_df$name[1]))
 }
 
 select_axis_edge_and_face <- function(axis, visible_faces, proj, effective_ratios) {

@@ -6,6 +6,7 @@
 #' @param yaw Rotation around z-axis in degrees
 #' @return Rotated coordinates matrix
 #' @keywords internal
+#' @noRd
 rotate_3d <- function(xyz, pitch, roll, yaw) {
       # Convert angles to radians
       pitch_rad <- pitch * pi / 180
@@ -39,6 +40,7 @@ rotate_3d <- function(xyz, pitch, roll, yaw) {
 #' @param dist Distance from viewer to center of scene
 #' @return Matrix with perspective effect applied
 #' @keywords internal
+#' @noRd
 apply_perspective <- function(rotated, dist) {
       z_offset <- rotated[, 3] + dist
       perspective_factor <- dist / z_offset
@@ -53,6 +55,7 @@ apply_perspective <- function(rotated, dist) {
 #' @param proj A list of projection parameters
 #' @return Data frame with transformed coordinates, depth for sorting, and depth_scale for size scaling
 #' @keywords internal
+#' @noRd
 transform_3d_standard <- function(data, proj = list(pitch = 0, roll = 0, yaw = 0, persp = TRUE, dist = 2)) {
 
       pitch <- proj$pitch
@@ -111,6 +114,7 @@ transform_3d_standard <- function(data, proj = list(pitch = 0, roll = 0, yaw = 0
 #' @param ratio Length-3 numeric vector of axis ratios (only used for multi-axis)
 #' @return Scaled values in `[-0.5, 0.5]` domain (single axis) OR data frame with scaled coordinates (multi-axis)
 #' @keywords internal
+#' @noRd
 scale_to_standard <- function(values, data_range, scales = "free", ratio = c(1, 1, 1)) {
 
       # Handle single-axis case

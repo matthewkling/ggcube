@@ -131,6 +131,7 @@ annotate_3d <- function(type, ...) {
 #'   generate non-colliding group IDs for annotation rows.
 #' @return A data frame of annotation rows, or `NULL` if `annotate` is NULL.
 #' @keywords internal
+#' @noRd
 build_annotations <- function(annotate, max_group = 0) {
 
       if (is.null(annotate)) return(NULL)
@@ -167,6 +168,7 @@ build_annotations <- function(annotate, max_group = 0) {
 #' @param annotate Input annotation spec(s).
 #' @return A flat list of `annotate_3d` objects.
 #' @keywords internal
+#' @noRd
 normalize_annotation_specs <- function(annotate) {
 
       if (inherits(annotate, "annotate_3d")) {
@@ -210,6 +212,7 @@ normalize_annotation_specs <- function(annotate) {
 #' @return Data frame with annotation rows appended, or original data if
 #'   no annotations.
 #' @keywords internal
+#' @noRd
 setup_annotations <- function(data, params) {
       annotate <- params$annotate
       if (is.null(annotate)) return(data)
@@ -251,6 +254,7 @@ setup_annotations <- function(data, params) {
 #'   ranges.
 #' @return Data frame with sentinel values resolved.
 #' @keywords internal
+#' @noRd
 prepare_annotations <- function(data, panel_params) {
       # v1: no-op. Point, text, and segment annotations are fully specified.
       # When plane annotations are added, this function will resolve NA extents
@@ -271,6 +275,7 @@ prepare_annotations <- function(data, panel_params) {
 #' @param data Transformed data frame potentially containing annotation rows.
 #' @return Data frame with annotation styles applied.
 #' @keywords internal
+#' @noRd
 apply_annotation_styles <- function(data) {
 
       if (!".ann" %in% names(data)) return(data)
@@ -307,6 +312,7 @@ apply_annotation_styles <- function(data) {
 
 #' Generate point annotation rows
 #' @keywords internal
+#' @noRd
 make_annotation_point_rows <- function(spec, group_offset) {
 
       d <- spec$data
@@ -345,6 +351,7 @@ make_annotation_point_rows <- function(spec, group_offset) {
 
 #' Generate text annotation rows
 #' @keywords internal
+#' @noRd
 make_annotation_text_rows <- function(spec, group_offset) {
 
       d <- spec$data
@@ -386,6 +393,7 @@ make_annotation_text_rows <- function(spec, group_offset) {
 
 #' Generate segment annotation rows
 #' @keywords internal
+#' @noRd
 make_annotation_segment_rows <- function(spec, group_offset) {
 
       d <- spec$data

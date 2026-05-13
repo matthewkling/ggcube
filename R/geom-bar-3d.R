@@ -109,6 +109,7 @@ StatBar3D <- ggproto("StatBar3D", Stat,
 #' @param selected_faces Character vector of face names to render
 #' @return Data frame with column face vertices including z0 column
 #' @keywords internal
+#' @noRd
 create_bar_cols <- function(data, x_spacing, y_spacing, width, selected_faces) {
 
       # Calculate actual column dimensions (separate x and y widths)
@@ -208,6 +209,7 @@ create_bar_cols <- function(data, x_spacing, y_spacing, width, selected_faces) {
 #' @param drop Whether to drop empty combinations
 #' @return Data frame with x, y, count, bin_area columns
 #' @keywords internal
+#' @noRd
 compute_count_2d <- function(data, drop = TRUE) {
 
       # Aggregate counts
@@ -245,6 +247,7 @@ compute_count_2d <- function(data, drop = TRUE) {
 #' @param drop Whether to drop empty bins
 #' @return Data frame with x, y, count, bin_area columns
 #' @keywords internal
+#' @noRd
 compute_bin_2d <- function(data, bins, binwidth, drop = TRUE) {
 
       # Compute bin edges
@@ -309,6 +312,7 @@ compute_bin_2d <- function(data, bins, binwidth, drop = TRUE) {
 #' @param x_discrete Logical indicating if x is discrete (y is continuous) or vice versa
 #' @return Data frame with x, y, count, bin_area columns
 #' @keywords internal
+#' @noRd
 compute_bin_mixed <- function(data, bins, binwidth, drop = TRUE, x_discrete) {
 
       if (x_discrete) {
@@ -385,6 +389,7 @@ compute_bin_mixed <- function(data, bins, binwidth, drop = TRUE, x_discrete) {
 #' @param agg_data Data frame with count and bin_area columns
 #' @return Data frame with added proportion, ncount, density, ndensity columns
 #' @keywords internal
+#' @noRd
 compute_bar_stats <- function(agg_data) {
 
       n <- sum(agg_data$count)

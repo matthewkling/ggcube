@@ -1,39 +1,3 @@
-# Aesthetic override resolution
-#
-# Shared infrastructure for applying aesthetic overrides to sub-elements
-# within a layer (e.g. reference points/lines in geom_point_3d, data points
-# in geom_smooth_3d). The pattern is: explicit override > mapped value in
-# data > default.
-
-
-#' Resolve aesthetic overrides for sub-elements
-#'
-#' For each aesthetic, applies the first available value from:
-#' (1) explicit override parameter, (2) existing value in data, (3) default.
-#'
-#' @param data Data frame with current aesthetic columns.
-#' @param overrides Named list of override values (NULL entries are skipped).
-#' @param defaults Named list of default values for aesthetics not in data.
-#' @return Data frame with resolved aesthetic values.
-#' @keywords internal
-resolve_aesthetic_overrides <- function(data, overrides = list(), defaults = list()) {
-      aes_names <- union(names(overrides), names(defaults))
-
-      for (aes_name in aes_names) {
-            override <- overrides[[aes_name]]
-            default <- defaults[[aes_name]]
-
-            if (!is.null(override)) {
-                  data[[aes_name]] <- override
-            } else if (!aes_name %in% names(data) && !is.null(default)) {
-                  data[[aes_name]] <- default
-            }
-            # else: keep existing mapped value in data
-      }
-
-      return(data)
-}
-
 
 #' Create point rows from raw data for mixed-geometry rendering
 #'
@@ -47,6 +11,7 @@ resolve_aesthetic_overrides <- function(data, overrides = list(), defaults = lis
 #' @param group_prefix Prefix for point group IDs.
 #' @return Data frame with one row per point, tagged with `.prim = "point"`.
 #' @keywords internal
+#' @noRd
 make_point_rows <- function(data, group_prefix = "data_point") {
 
       n <- nrow(data)
@@ -77,6 +42,7 @@ make_point_rows <- function(data, group_prefix = "data_point") {
 #' @param group_prefix Prefix for segment group IDs.
 #' @return Data frame with two rows per segment, tagged with `.prim = "segment"`.
 #' @keywords internal
+#' @noRd
 make_residual_segment_rows <- function(data, fitted,
                                        group_prefix = "residual_line") {
 
@@ -116,6 +82,7 @@ make_residual_segment_rows <- function(data, fitted,
 #' @param ... Data frames to bind.
 #' @return Combined data frame.
 #' @keywords internal
+#' @noRd
 safe_bind_rows <- function(...) {
       dfs <- list(...)
       colour_cols <- c("colour", "fill")

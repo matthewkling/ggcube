@@ -148,6 +148,7 @@ position_on_face <- function(faces = "zmin", axes = NULL) {
 #'
 #' @return NULL if compatible, otherwise issues a warning
 #' @keywords internal
+#' @noRd
 validate_position_stat <- function() {
       # Known incompatible stats
       incompatible_stats <- c(

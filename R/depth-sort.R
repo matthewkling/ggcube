@@ -297,6 +297,7 @@ point_in_polygon <- function(px, py, poly_x, poly_y) {
 #' @param prim_lookup Named character vector of primitive types per group.
 #' @return List of beta vectors (or NULL for non-polygons / degenerate cases).
 #' @keywords internal
+#' @noRd
 compute_poly_betas <- function(grp_data, prim_lookup) {
       betas <- vector("list", length(grp_data))
       for (i in seq_along(grp_data)) {
@@ -795,6 +796,7 @@ sort_by_depth <- function(data) {
 #' @param data Data frame with `group`, `depth`, and optionally `.prim`.
 #' @return Data frame with `.prim_depth` column added.
 #' @keywords internal
+#' @noRd
 compute_prim_depth <- function(data) {
       depth_col <- if("depth_3d" %in% names(data)) "depth_3d" else "depth"
 
@@ -832,6 +834,7 @@ compute_prim_depth <- function(data) {
 #' @return Data frame with interpenetrating segments replaced by sub-segments.
 #'   Non-segment rows are returned unchanged.
 #' @keywords internal
+#' @noRd
 split_interpenetrating_segments <- function(data, grp_data, grp_idx,
                                             prim_lookup, poly_betas) {
 

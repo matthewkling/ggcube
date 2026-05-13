@@ -171,6 +171,7 @@ camera_facing <- function(coord = NULL,
 #' @param coord Optional coord_3d object for proper axis scaling
 #' @return Matrix with one row per anchor, columns for facing x, y, z
 #' @keywords internal
+#' @noRd
 compute_camera_facing_vectors <- function(anchors, spec, coord = NULL) {
       # Extract view parameters
       pitch <- spec$pitch
@@ -303,6 +304,7 @@ compute_camera_facing_vectors <- function(anchors, spec, coord = NULL) {
 #'   or numeric vector of length 3
 #' @return Normalized vector of length 3
 #' @keywords internal
+#' @noRd
 facing_to_normal <- function(facing) {
       if (is.numeric(facing)) {
             if (length(facing) != 3) {
@@ -328,52 +330,6 @@ facing_to_normal <- function(facing) {
 }
 
 
-#' Compute rotation matrix from one vector to another using Rodrigues' formula
-#'
-#' @param from Unit vector to rotate from
-#' @param to Unit vector to rotate to
-#' @return 3x3 rotation matrix
-#' @keywords internal
-rotation_matrix_between_vectors <- function(from, to) {
-      # Cross product for rotation axis
-      v <- c(
-            from[2] * to[3] - from[3] * to[2],
-            from[3] * to[1] - from[1] * to[3],
-            from[1] * to[2] - from[2] * to[1]
-      )
-
-      s <- sqrt(sum(v^2))  # sine of angle
-      c <- sum(from * to)   # cosine of angle
-
-      if (s < 1e-10) {
-            # Vectors are aligned or opposite
-            if (c > 0) {
-                  return(diag(3))  # Identity
-            } else {
-                  # 180 degree rotation - find perpendicular axis
-                  if (abs(from[1]) < 0.9) {
-                        perp <- c(1, 0, 0)
-                  } else {
-                        perp <- c(0, 1, 0)
-                  }
-                  axis <- perp - from * sum(from * perp)
-                  axis <- axis / sqrt(sum(axis^2))
-                  # 180 degree rotation around axis: R = 2 * axis %*% t(axis) - I
-                  return(2 * outer(axis, axis) - diag(3))
-            }
-      }
-
-      # Rodrigues' rotation formula: R = I + [v]x + [v]x^2 * (1-c)/s^2
-      v_cross <- matrix(c(
-            0, -v[3], v[2],
-            v[3], 0, -v[1],
-            -v[2], v[1], 0
-      ), nrow = 3, byrow = TRUE)
-
-      diag(3) + v_cross + v_cross %*% v_cross * ((1 - c) / s^2)
-}
-
-
 #' Compute text rotation matrix with intuitive "up" direction
 #'
 #' Creates a rotation matrix that orients text to face a given direction,
@@ -384,6 +340,7 @@ rotation_matrix_between_vectors <- function(from, to) {
 #' @param angle Additional rotation around facing axis (degrees)
 #' @return 3x3 rotation matrix
 #' @keywords internal
+#' @noRd
 compute_text_rotation_matrix <- function(facing_normal, angle) {
       # We need to build an orthonormal basis where:
       # - The "forward" direction (original +z) maps to facing_normal
@@ -450,6 +407,7 @@ compute_text_rotation_matrix <- function(facing_normal, angle) {
 #' @param angle Angle in degrees
 #' @return 3x3 rotation matrix
 #' @keywords internal
+#' @noRd
 rotation_matrix_around_axis <- function(axis, angle) {
       if (angle == 0) return(diag(3))
 
@@ -480,6 +438,7 @@ rotation_matrix_around_axis <- function(axis, angle) {
 #' @param coord A coord_3d object, or NULL
 #' @return Scalar aspect ratio correction (1 = no correction needed)
 #' @keywords internal
+#' @noRd
 compute_text_aspect_ratios <- function(data_ranges, coord) {
       if (is.null(coord)) {
             return(1)
@@ -542,6 +501,7 @@ compute_text_aspect_ratios <- function(data_ranges, coord) {
 #'   Values > 1 make text taller, values < 1 make text wider.
 #' @return Data frame with x, y, z columns in data coordinates
 #' @keywords internal
+#' @noRd
 rotate_text_to_facing <- function(vertices, facing_normal, angle,
                                   anchor_x, anchor_y, anchor_z,
                                   size_mm, data_span, aspect_adjust = 1) {

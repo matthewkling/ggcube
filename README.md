@@ -45,7 +45,7 @@ offer different tradeoffs:
 - [**rayshader**](https://www.rayshader.com/) produces ray-traced
   renderings of terrain data with photorealistic lighting and shadows;
   it also makes 3D popups of ggplot2 figures, but not 3D ggplots per se.
-- [**ggxyz**](https://github.com/mikebesso/ggxyz) was another ggplot2
+- [**gg3D**](https://github.com/AckerDWM/gg3D) was another ggplot2
   extension for 3D plotting, but is no longer actively maintained.
 
 ## Quick start

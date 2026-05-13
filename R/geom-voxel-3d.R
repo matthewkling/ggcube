@@ -51,6 +51,7 @@ StatVoxel3D <- ggproto("StatVoxel3D", Stat,
 #' @param selected_faces Character vector of face names to render
 #' @return Data frame with voxel face vertices
 #' @keywords internal
+#' @noRd
 create_voxels <- function(data, x_spacing, y_spacing, z_spacing, width, selected_faces) {
 
       voxel_width_x <- x_spacing * width

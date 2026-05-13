@@ -58,7 +58,7 @@ Mutually exclusive with \code{direction}. Default is NULL (use directional light
 
 \item{distance_falloff}{Logical indicating whether to apply distance-based
 intensity falloff for positional lighting using inverse square law
-(intensity ∝ 1/distance²). Only used when \code{position} is specified.
+(intensity proportional to 1/distance²). Only used when \code{position} is specified.
 Default is FALSE.}
 
 \item{fill}{Logical indicating whether to apply lighting to fill colors. Default is TRUE.}

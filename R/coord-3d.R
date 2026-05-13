@@ -214,6 +214,7 @@ coord_3d <- function(pitch = 0, roll = -60, yaw = -30,
 #' @param scale_obj A ggplot2 scale object
 #' @return Logical indicating if the scale transform flips direction
 #' @keywords internal
+#' @noRd
 detect_scale_direction_flip <- function(scale_obj) {
       if (is.null(scale_obj)) return(FALSE)
 
@@ -230,31 +231,13 @@ detect_scale_direction_flip <- function(scale_obj) {
       return(test_output[1] > test_output[2])
 }
 
-#' Translate face names using stored flip information
-#'
-#' @param faces Character vector of face names
-#' @param flips List with x, y, z flip indicators
-#' @return Character vector of translated face names
-#' @keywords internal
-translate_face_names_from_flips <- function(faces, flips) {
-      if (length(faces) == 0) return(faces)
-      for(flip in names(flips)){
-            if(flips[[flip]]){
-                  i <- which(faces == paste0(flip, "min"))
-                  j <- which(faces == paste0(flip, "max"))
-                  faces[i] <- paste0(flip, "max")
-                  faces[j] <- paste0(flip, "min")
-            }
-      }
-      return(faces)
-}
-
 #' Translate face names to account for scale direction flips
 #'
 #' @param face_names Character vector of face names
-#' @param scale_x,scale_y,scale_z Scale objects for each axis
+#' @param scale_flips Scales flipped for each axis
 #' @return Character vector of translated face names
 #' @keywords internal
+#' @noRd
 translate_face_names_from_flips <- function(face_names, scale_flips) {
       if (length(face_names) == 0) return(face_names)
 
@@ -292,6 +275,7 @@ translate_face_names_from_flips <- function(face_names, scale_flips) {
 
       return(translated)
 }
+
 translate_face_names <- function(faces, scale_x, scale_y, scale_z) {
       if (length(faces) == 0) return(faces)
 
@@ -423,62 +407,6 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                                      # Calculate bounds including potential title positions
                                      all_bounds_x <- full_grid_transformed$x
                                      all_bounds_y <- full_grid_transformed$y
-
-                                     if(F){
-                                           # Add title positions to bounds calculation
-                                           for (axis in c("x", "y", "z")) {
-
-                                                 # Use same edge selection logic as the rendering
-                                                 axis_selection <- select_axis_edge_and_face(axis, visible_faces, panel_params$proj, effective_ratios)
-
-                                                 if (!is.null(axis_selection)) {
-                                                       # Use the selected edge center for title position in bounds calculation
-                                                       edge_center_x <- (axis_selection$edge_p1_2d$x + axis_selection$edge_p2_2d$x) / 2
-                                                       edge_center_y <- (axis_selection$edge_p1_2d$y + axis_selection$edge_p2_2d$y) / 2
-
-                                                       # Add some offset for the title (approximate)
-                                                       title_offset <- 0.15 * effective_ratios[match(axis, c("x", "y", "z"))]
-
-                                                       # Calculate perpendicular offset direction (same logic as in rendering)
-                                                       edge_dx <- axis_selection$edge_p2_2d$x - axis_selection$edge_p1_2d$x
-                                                       edge_dy <- axis_selection$edge_p2_2d$y - axis_selection$edge_p1_2d$y
-                                                       edge_length <- sqrt(edge_dx^2 + edge_dy^2)
-
-                                                       if (edge_length > 0) {
-                                                             # Get cube center for offset direction
-                                                             cube_center_3d <- data.frame(x = 0, y = 0, z = 0)
-                                                             cube_center_2d <- transform_3d_standard(cube_center_3d, panel_params$proj)
-
-                                                             # Calculate perpendicular directions
-                                                             perp1_dx <- -edge_dy / edge_length
-                                                             perp1_dy <- edge_dx / edge_length
-                                                             perp2_dx <- edge_dy / edge_length
-                                                             perp2_dy <- -edge_dx / edge_length
-
-                                                             # Choose direction away from cube center
-                                                             to_edge_dx <- edge_center_x - cube_center_2d$x
-                                                             to_edge_dy <- edge_center_y - cube_center_2d$y
-
-                                                             dot1 <- perp1_dx * to_edge_dx + perp1_dy * to_edge_dy
-                                                             dot2 <- perp2_dx * to_edge_dx + perp2_dy * to_edge_dy
-
-                                                             if (abs(dot1) > abs(dot2)) {
-                                                                   offset_dx <- sign(dot1) * perp1_dx * title_offset
-                                                                   offset_dy <- sign(dot1) * perp1_dy * title_offset
-                                                             } else {
-                                                                   offset_dx <- sign(dot2) * perp2_dx * title_offset
-                                                                   offset_dy <- sign(dot2) * perp2_dy * title_offset
-                                                             }
-
-                                                             # Add title position to bounds
-                                                             title_x <- edge_center_x + offset_dx
-                                                             title_y <- edge_center_y + offset_dy
-                                                             all_bounds_x <- c(all_bounds_x, title_x)
-                                                             all_bounds_y <- c(all_bounds_y, title_y)
-                                                       }
-                                                 }
-                                           }
-                                     }
 
                                      bounds_info <- calculate_plot_bounds(all_bounds_x, all_bounds_y)
                                      panel_params$plot_bounds <- bounds_info$bounds
@@ -712,6 +640,7 @@ calculate_plot_bounds <- function(all_bounds_x, all_bounds_y){
 #' @param plot_obj A ggplot object
 #' @return A list with x, y, z character vectors of variable names
 #' @keywords internal
+#' @noRd
 extract_aesthetic_vars <- function(plot_obj) {
       x_vars <- character(0)
       y_vars <- character(0)
@@ -772,6 +701,7 @@ extract_aesthetic_vars <- function(plot_obj) {
 #' @param axis_name Axis name ("x", "y", or "z")
 #' @return Single axis name string
 #' @keywords internal
+#' @noRd
 get_scale_names <- function(scale_obj, axis_name) {
 
       # CAPTURE SCALE NAME BEFORE BLANKING IT OUT
@@ -900,6 +830,7 @@ train_z_scale <- function(){
 #' @param theme_obj Theme object or theme list
 #' @return Logical indicating if theme appears to be void-like
 #' @keywords internal
+#' @noRd
 is_theme_void_like <- function(theme_obj) {
       if (is.null(theme_obj)) return(FALSE)
 
@@ -997,6 +928,7 @@ project_to_face <- function(data, data_std, proj, effective_ratios = c(1, 1, 1))
 #' @param data_std Standardized data frame
 #' @return Data frame with circular polygons replacing ref_circle points
 #' @keywords internal
+#' @noRd
 points_to_circles <- function(data, data_std, effective_ratios = c(1, 1, 1)) {
 
       # Keep std coords and all other vars
@@ -1032,6 +964,7 @@ points_to_circles <- function(data, data_std, effective_ratios = c(1, 1, 1)) {
 #' @param n_vertices Number of vertices for the circle
 #' @return Data frame with x, y, z coordinates for circle vertices
 #' @keywords internal
+#' @noRd
 generate_circle_vertices <- function(x_std, y_std, z_std, face, radius, n_vertices,
                                      effective_ratios = c(1, 1, 1)) {
       # Generate angles for circle vertices
@@ -1060,19 +993,6 @@ generate_circle_vertices <- function(x_std, y_std, z_std, face, radius, n_vertic
       }
 
       return(data.frame(x = x_coords, y = y_coords, z = z_coords))
-}
-
-
-#' Scale transformed coordinates to final npc coordinates
-#'
-#' @param result Data frame with transformed x, y coordinates
-#' @param plot_bounds Plot bounds vector `xmin, xmax, ymin, ymax`
-#' @return Data frame with scaled coordinates
-#' @keywords internal
-scale_to_npc_coordinates <- function(result, plot_bounds) {
-      result$x <- (result$x - plot_bounds[1]) / (plot_bounds[2] - plot_bounds[1])
-      result$y <- (result$y - plot_bounds[3]) / (plot_bounds[4] - plot_bounds[3])
-      return(result)
 }
 
 validate_coord3d <- function(coord){

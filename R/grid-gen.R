@@ -44,6 +44,7 @@ compute_surface_vars <- function(tiles){
 #' @return A data frame with columns `x`, `y`.
 #'
 #' @keywords internal
+#' @noRd
 make_point_grid <- function(grid = c("rectangle", "right1", "right2", "equilateral"),
                             n = 40,
                             direction = c("x", "y"),
@@ -132,6 +133,7 @@ is_regular_grid <- function(data){
 #' @return Data frame with added columns: dzdx, dzdy, slope, aspect
 #'
 #' @keywords internal
+#' @noRd
 compute_point_gradients <- function(data) {
 
       if(is_regular_grid(data)){
@@ -322,6 +324,7 @@ compute_irregular_point_gradients <- function(data) {
 #' @return Data frame with polygon vertices including `group` and `order` columns.
 #'
 #' @keywords internal
+#' @noRd
 points_to_tiles <- function(data,
                             method = "auto",
                             grid_type = "rectangle",
@@ -355,6 +358,7 @@ points_to_tiles <- function(data,
 
 #' Convert regular grid points to tiles
 #' @keywords internal
+#' @noRd
 rect_points_to_tiles <- function(data, grid_type, group_prefix) {
 
       grid_type <- match.arg(grid_type, c("rectangle", "right1", "right2"))
@@ -418,6 +422,7 @@ rect_points_to_tiles <- function(data, grid_type, group_prefix) {
 
 #' Split quadrilateral tiles into triangles
 #' @keywords internal
+#' @noRd
 split_quads_to_triangles <- function(tile_vertices, grid_type) {
       # Input quad vertices in CCW order when viewed from above:
       # 1 = bottom-left, 2 = bottom-right, 3 = top-right, 4 = top-left
@@ -448,6 +453,7 @@ split_quads_to_triangles <- function(tile_vertices, grid_type) {
 
 #' Convert irregular points to triangular tiles via Delaunay triangulation
 #' @keywords internal
+#' @noRd
 delaunay_points_to_tiles <- function(data, group_prefix) {
 
       if (!requireNamespace("geometry", quietly = TRUE)) {
@@ -541,6 +547,7 @@ delaunay_points_to_tiles <- function(data, group_prefix) {
 #' @return Data frame with polygon vertices for ridgeline rendering.
 #'
 #' @keywords internal
+#' @noRd
 points_to_ridgelines <- function(data,
                                  direction = "x",
                                  base = NULL,

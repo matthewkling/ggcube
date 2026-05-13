@@ -6,6 +6,7 @@
 #' @param ratio Length-3 numeric vector of axis ratios
 #' @return Data frame with grid lines in standard domain, including break values
 #' @keywords internal
+#' @noRd
 make_scale_grid <- function(visible_faces, scale_info, scales = "free", ratio = c(1, 1, 1)) {
 
       # Calculate effective ratios using scale ranges (includes expansion)
@@ -151,6 +152,7 @@ make_face_panels <- function(visible_faces, scales = "free", ratio = c(1, 1, 1),
 #' @param plot_bounds Bounds for the final plot `xmin, xmax, ymin, ymax`
 #' @return Data frame with segment coordinates for grid grob
 #' @keywords internal
+#' @noRd
 create_grid_segments <- function(grid_data, plot_bounds) {
       if (is.null(grid_data) || nrow(grid_data) == 0) {
             return(NULL)

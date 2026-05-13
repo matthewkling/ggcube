@@ -117,6 +117,7 @@ guide_legend_3d <- function(reverse_shade = FALSE, shade_range = c(-.5, .5), ...
 #'
 #' @return List with lighting specification or NULL if none found
 #' @keywords internal
+#' @noRd
 extract_light_from_plot <- function() {
       # Walk up the call stack to find the plot object
       for (i in 1:20) {
@@ -174,6 +175,7 @@ extract_light_from_plot <- function() {
 #' @param n_steps Number of lighting gradient steps (default 10)
 #' @return Matrix of colors with lighting applied
 #' @keywords internal
+#' @noRd
 create_light_gradients <- function(base_colors,
                                       lighting_info,
                                       shade_range = c(-1, 1),
@@ -216,6 +218,7 @@ create_light_gradients <- function(base_colors,
 #' @param grad Matrix of gradient colors
 #' @return Modified grob with gradients
 #' @keywords internal
+#' @noRd
 replace_colorbar_colors <- function(grob, grad) {
 
       # Handle gtable (grid table) structure

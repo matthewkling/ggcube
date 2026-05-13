@@ -213,6 +213,7 @@ geom_function_3d <- function(mapping = NULL, data = ensure_nonempty_data,
 
 #' Ensure non-empty data for stats that generate their own data
 #' @keywords internal
+#' @noRd
 ensure_nonempty_data <- function(data) {
       if (is.null(data) || nrow(data) == 0 || ncol(data) == 0 || inherits(data, "waiver")) {
             data.frame(group = -1L)
