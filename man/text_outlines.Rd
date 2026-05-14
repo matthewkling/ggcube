@@ -55,8 +55,9 @@ Converts a text string into polygon vertices suitable for plotting with
 ggplot2's geom_polygon. Uses systemfonts for font matching and glyph extraction.
 }
 \examples{
-text_outlines("Howdy, partner", family = "Arial") |>
-  ggplot2::ggplot(ggplot2::aes(x, y, group = letter, subgroup = poly_id)) +
+data <- text_outlines("Howdy, partner", family = "Arial")
+
+ggplot2::ggplot(data, ggplot2::aes(x, y, group = letter, subgroup = poly_id)) +
   ggplot2::geom_polygon() +
   ggplot2::coord_fixed()
 

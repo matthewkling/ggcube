@@ -124,6 +124,8 @@ StatFunction3D <- ggproto("StatFunction3D", Stat,
 #'                    xlim = c(-pi, pi), ylim = c(-pi, pi)) +
 #'   coord_3d()
 #'
+#' \donttest{
+#'
 #' # Fill by slope
 #' ggplot() +
 #'   geom_function_3d(fun = function(x, y) x^2 + y^2,
@@ -140,6 +142,8 @@ StatFunction3D <- ggproto("StatFunction3D", Stat,
 #'                    geom = "ridgeline_3d", base = 0, light = "none",
 #'                    fill = "black", color = "white") +
 #'   coord_3d()
+#'
+#' }
 #'
 #' @seealso [geom_surface_3d()], [geom_ridgeline_3d()], [coord_3d()]
 #' @export

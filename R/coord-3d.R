@@ -91,6 +91,7 @@
 #' # 3D plot with default coord settings
 #' p + coord_3d()
 #'
+#' \donttest{
 #'
 #' # Use `pitch`, `roll`, `yaw` to control plot rotation ----------------------
 #'
@@ -149,6 +150,8 @@
 #'              zlabels = c("xmax", "ymin"))
 #'
 #' p + coord_3d(rotate_labels = FALSE)
+#'
+#' }
 #'
 #' @return A `Coord` object that can be added to a ggplot.
 #' @seealso [light()] for lighting specification, [cube_theming] for panel and

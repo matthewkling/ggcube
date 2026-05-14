@@ -280,6 +280,8 @@ p <- ggplot(d, aes(x, y, z)) +
 # Basic smooth surface with default loess model
 p + geom_smooth_3d()
 
+\donttest{
+
 # Show data points
 p + geom_smooth_3d(points = TRUE)
 
@@ -328,6 +330,8 @@ ggplot(mtcars, aes(wt, mpg, qsec, fill = factor(cyl))) +
   geom_smooth_3d(method = "lm", alpha = .7,
     xlim = c(0, 5), ylim = c(0, 40)) + # specify shared domain
   coord_3d() + theme_light()
+
+}
 
 }
 \seealso{

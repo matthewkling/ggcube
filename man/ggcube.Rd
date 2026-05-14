@@ -21,4 +21,8 @@ Useful links:
 }
 
 }
+\author{
+\strong{Maintainer}: Matthew Kling \email{mattkling@berkeley.edu}
+
+}
 \keyword{internal}

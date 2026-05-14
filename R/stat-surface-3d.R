@@ -82,6 +82,8 @@ StatSurface3D <- ggproto("StatSurface3D", Stat,
 #' # surface with 3d lighting
 #' p + geom_surface_3d(fill = "steelblue", color = "steelblue", linewidth = .2)
 #'
+#' \donttest{
+#'
 #' # mesh wireframe (`fill = NA`) with aes line color
 #' p + geom_surface_3d(aes(color = z), fill = NA,
 #'                     linewidth = .5, light = "none") +
@@ -154,6 +156,8 @@ StatSurface3D <- ggproto("StatSurface3D", Stat,
 #'   stat_surface_3d(sort_method = "pairwise") +
 #'   scale_fill_viridis_c() +
 #'   coord_3d(light = "none")
+#'
+#' }
 #'
 #' @seealso [geom_surface_3d()], [geom_ridgeline_3d()], [stat_function_3d()],
 #'   [coord_3d()]

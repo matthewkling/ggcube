@@ -79,6 +79,8 @@
 #' # default `"diffuse"` lighting
 #' p + coord_3d()
 #'
+#' \donttest{
+#'
 #' # use `"direct"` lighting to apply full shade to unlit surfaces
 #' p + coord_3d(light = light(method = "direct"))
 #'
@@ -152,6 +154,9 @@
 #' p + coord_3d(pitch = 0, roll = -70, yaw = 0,
 #'              light = light(backface_scale = 1, mode = "hsl",
 #'                            backface_offset = -.5))
+#'
+#' }
+#'
 #' @export
 light <- function(method = "diffuse",
                   direction = c(-.5, 0, 1),

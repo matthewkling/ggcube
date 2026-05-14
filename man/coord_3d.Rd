@@ -137,6 +137,7 @@ p <- ggplot() +
 # 3D plot with default coord settings
 p + coord_3d()
 
+\donttest{
 
 # Use `pitch`, `roll`, `yaw` to control plot rotation ----------------------
 
@@ -195,6 +196,8 @@ p + coord_3d(xlabels = c("ymax", "zmax"),
              zlabels = c("xmax", "ymin"))
 
 p + coord_3d(rotate_labels = FALSE)
+
+}
 
 }
 \seealso{

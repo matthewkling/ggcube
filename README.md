@@ -69,7 +69,7 @@ ggplot(mpg, aes(x = displ, y = hwy, z = drv, color = class)) +
 You can control plot rotation, perspective, and dimensions, as well as
 axis label placement and panel selection, via parameters to
 `coord_3d()`. See the [3D
-view](https://matthewkling.github.io/ggcube/articles/coord-3d.html)
+view](https://matthewkling.github.io/ggcube/articles/coord_3d.html)
 article for a comprehensive guide.
 
 ``` r

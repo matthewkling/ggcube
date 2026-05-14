@@ -411,6 +411,8 @@ gam_model <- function(){
 #' # Basic smooth surface with default loess model
 #' p + geom_smooth_3d()
 #'
+#' \donttest{
+#'
 #' # Show data points
 #' p + geom_smooth_3d(points = TRUE)
 #'
@@ -459,6 +461,8 @@ gam_model <- function(){
 #'   geom_smooth_3d(method = "lm", alpha = .7,
 #'     xlim = c(0, 5), ylim = c(0, 40)) + # specify shared domain
 #'   coord_3d() + theme_light()
+#'
+#' }
 #'
 #' @seealso [stat_surface_3d()] for surfaces from existing grid data,
 #'   [stat_function_3d()] for mathematical function surfaces.

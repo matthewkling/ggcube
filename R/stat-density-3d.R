@@ -197,6 +197,8 @@ kde2d <- function(x, y, eval_x, eval_y, h) {
 #'   scale_fill_viridis_c()
 #' p + geom_density_3d() + guides(fill = guide_colorbar_3d())
 #'
+#' \donttest{
+#'
 #' # Specify alternative grid geometry and light model
 #' p + geom_density_3d(grid = "equilateral", n = 30, direction = "y",
 #'                     light = light("direct"),
@@ -229,6 +231,8 @@ kde2d <- function(x, y, eval_x, eval_y, h) {
 #'                   pad = .3, min_ndensity = .001,
 #'                   color = "black", alpha = .7, light = NULL) +
 #'   coord_3d(ratio = c(3, 3, 1))
+#'
+#' }
 #'
 #' @seealso [ggplot2::stat_density_2d()] for 2D density contours, [stat_surface_3d()] for
 #'   surfaces from existing grid data, [light()] for lighting specifications,
