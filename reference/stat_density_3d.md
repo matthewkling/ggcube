@@ -256,6 +256,8 @@ p <- ggplot(faithful, aes(eruptions, waiting)) +
 p + geom_density_3d() + guides(fill = guide_colorbar_3d())
 
 
+# \donttest{
+
 # Specify alternative grid geometry and light model
 p + geom_density_3d(grid = "equilateral", n = 30, direction = "y",
                     light = light("direct"),
@@ -295,4 +297,6 @@ ggplot(iris, aes(Petal.Length, Sepal.Length, fill = Species)) +
                   color = "black", alpha = .7, light = NULL) +
   coord_3d(ratio = c(3, 3, 1))
 
+
+# }
 ```

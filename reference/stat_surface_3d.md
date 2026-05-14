@@ -189,6 +189,8 @@ p <- ggplot(d, aes(x, y, z)) +
 p + geom_surface_3d(fill = "steelblue", color = "steelblue", linewidth = .2)
 
 
+# \donttest{
+
 # mesh wireframe (`fill = NA`) with aes line color
 p + geom_surface_3d(aes(color = z), fill = NA,
                     linewidth = .5, light = "none") +
@@ -270,4 +272,6 @@ ggplot(pts, aes(x, y, z = z, fill = z)) +
   scale_fill_viridis_c() +
   coord_3d(light = "none")
 
+
+# }
 ```

@@ -390,6 +390,8 @@ p <- ggplot(d, aes(x, y, z)) +
 p + geom_smooth_3d()
 
 
+# \donttest{
+
 # Show data points
 p + geom_smooth_3d(points = TRUE)
 
@@ -453,4 +455,6 @@ ggplot(mtcars, aes(wt, mpg, qsec, fill = factor(cyl))) +
     xlim = c(0, 5), ylim = c(0, 40)) + # specify shared domain
   coord_3d() + theme_light()
 
+
+# }
 ```

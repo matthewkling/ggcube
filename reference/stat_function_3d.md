@@ -159,6 +159,8 @@ ggplot() +
   coord_3d()
 
 
+# \donttest{
+
 # Fill by slope
 ggplot() +
   geom_function_3d(fun = function(x, y) x^2 + y^2,
@@ -177,4 +179,6 @@ ggplot() +
                    fill = "black", color = "white") +
   coord_3d()
 
+
+# }
 ```

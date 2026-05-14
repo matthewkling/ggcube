@@ -88,9 +88,9 @@ light(
 - distance_falloff:
 
   Logical indicating whether to apply distance-based intensity falloff
-  for positional lighting using inverse square law (intensity ∝
-  1/distance²). Only used when `position` is specified. Default is
-  FALSE.
+  for positional lighting using inverse square law (intensity
+  proportional to 1/distance²). Only used when `position` is specified.
+  Default is FALSE.
 
 - fill:
 
@@ -158,6 +158,8 @@ p <- ggplot(sphere_points, aes(x, y, z)) +
 # default `"diffuse"` lighting
 p + coord_3d()
 
+
+# \donttest{
 
 # use `"direct"` lighting to apply full shade to unlit surfaces
 p + coord_3d(light = light(method = "direct"))
@@ -245,4 +247,7 @@ p + coord_3d(pitch = 0, roll = -70, yaw = 0,
 p + coord_3d(pitch = 0, roll = -70, yaw = 0,
              light = light(backface_scale = 1, mode = "hsl",
                            backface_offset = -.5))
+
+
+# }
 ```

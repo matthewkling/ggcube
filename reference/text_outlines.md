@@ -83,8 +83,9 @@ y are vertex coordinates, in point units.
 ## Examples
 
 ``` r
-text_outlines("Howdy, partner", family = "Arial") |>
-  ggplot2::ggplot(ggplot2::aes(x, y, group = letter, subgroup = poly_id)) +
+data <- text_outlines("Howdy, partner", family = "Arial")
+
+ggplot2::ggplot(data, ggplot2::aes(x, y, group = letter, subgroup = poly_id)) +
   ggplot2::geom_polygon() +
   ggplot2::coord_fixed()
 

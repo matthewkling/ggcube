@@ -106,7 +106,5 @@
   : Volcano terrain data
 - [`sphere_points`](https://matthewkling.github.io/ggcube/reference/sphere_points.md)
   : Sphere surface points
-- [`lorenz_attractor()`](https://matthewkling.github.io/ggcube/reference/lorenz_attractor.md)
-  : Lorenz butterfly attractor generator
 - [`text_outlines()`](https://matthewkling.github.io/ggcube/reference/text_outlines.md)
   : Convert text to polygon outlines

@@ -16,3 +16,7 @@ Useful links:
 - <https://matthewkling.github.io/ggcube/>
 
 - Report bugs at <https://github.com/matthewkling/ggcube/issues>
+
+## Author
+
+**Maintainer**: Matthew Kling <mattkling@berkeley.edu>

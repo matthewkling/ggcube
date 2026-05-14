@@ -39,7 +39,7 @@ offer different tradeoffs:
 - [**rayshader**](https://www.rayshader.com/) produces ray-traced
   renderings of terrain data with photorealistic lighting and shadows;
   it also makes 3D popups of ggplot2 figures, but not 3D ggplots per se.
-- [**ggxyz**](https://github.com/mikebesso/ggxyz) was another ggplot2
+- [**gg3D**](https://github.com/AckerDWM/gg3D) was another ggplot2
   extension for 3D plotting, but is no longer actively maintained.
 
 ## Quick start
@@ -66,7 +66,7 @@ You can control plot rotation, perspective, and dimensions, as well as
 axis label placement and panel selection, via parameters to
 [`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md).
 See the [3D
-view](https://matthewkling.github.io/ggcube/articles/coord-3d.html)
+view](https://matthewkling.github.io/ggcube/articles/coord_3d.html)
 article for a comprehensive guide.
 
 ``` r
@@ -433,8 +433,6 @@ ggplot(iris, aes(Sepal.Length, Sepal.Width, Petal.Length,
   : Volcano terrain data
 - [`sphere_points`](https://matthewkling.github.io/ggcube/reference/sphere_points.md)
   : Sphere surface points
-- [`lorenz_attractor()`](https://matthewkling.github.io/ggcube/reference/lorenz_attractor.md)
-  : Lorenz butterfly attractor generator
 - [`text_outlines()`](https://matthewkling.github.io/ggcube/reference/text_outlines.md)
   : Convert text to polygon outlines
 

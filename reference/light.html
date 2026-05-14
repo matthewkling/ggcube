@@ -121,7 +121,7 @@ Mutually exclusive with <code>direction</code>. Default is NULL (use directional
 <dt id="arg-distance-falloff">distance_falloff<a class="anchor" aria-label="anchor" href="#arg-distance-falloff"></a></dt>
 <dd><p>Logical indicating whether to apply distance-based
 intensity falloff for positional lighting using inverse square law
-(intensity ∝ 1/distance²). Only used when <code>position</code> is specified.
+(intensity proportional to 1/distance²). Only used when <code>position</code> is specified.
 Default is FALSE.</p></dd>
 
 
@@ -178,6 +178,8 @@ for examples.</p>
 <span class="r-in"><span><span class="co"># default `"diffuse"` lighting</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="light-1.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># use `"direct"` lighting to apply full shade to unlit surfaces</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span>light <span class="op">=</span> <span class="fu">light</span><span class="op">(</span>method <span class="op">=</span> <span class="st">"direct"</span><span class="op">)</span><span class="op">)</span></span></span>
@@ -266,6 +268,9 @@ for examples.</p>
 <span class="r-in"><span>             light <span class="op">=</span> <span class="fu">light</span><span class="op">(</span>backface_scale <span class="op">=</span> <span class="fl">1</span>, mode <span class="op">=</span> <span class="st">"hsl"</span>,</span></span>
 <span class="r-in"><span>                           backface_offset <span class="op">=</span> <span class="op">-</span><span class="fl">.5</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="light-15.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
+<span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
