@@ -305,27 +305,27 @@ bold):
 
 - `alpha`
 
-**Billboard method:**
+**Billboard method only:**
 
 - `colour` - text color
 
-- `size` - font size in mm
-
-- `family`, `fontface`
-
-- `hjust`, `vjust`
-
-- `angle` - rotation in view plane
-
-- `lineheight`
-
-**Polygon method:**
+**Polygon method only:**
 
 - `fill` - text fill color
 
 - `colour` - text outline color
 
 - `linewidth` - outline thickness
+
+- `linetype` - outline line type
+
+- `group`
+
+Other text properties (`size`, `hjust`, `vjust`, `angle`, `family`,
+`fontface`, `lineheight`, and for the polygon method `weight`, `italic`,
+`spacing`, `tolerance`) are currently accepted only as fixed values
+passed as arguments to `geom_text_3d()`, not as mappable aesthetics in
+[`aes()`](https://matthewkling.github.io/ggcube/reference/aes.md).
 
 ## See also
 
@@ -344,7 +344,6 @@ df$label <- paste0(df$x, df$y, df$z)
 ggplot(df, aes(x, y, z, label = label)) +
   geom_text_3d() +
   coord_3d(scales = "fixed")
-#> Warning: `light` is ignored for billboard method.
 
 
 # Polygon text - can face any direction

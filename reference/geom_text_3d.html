@@ -13,7 +13,7 @@ be oriented in any direction.'><meta property="og:image" content="https://matthe
 
     <a class="navbar-brand me-2" href="../index.html">ggcube</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -322,16 +322,17 @@ projection).</p>
 <p><code>geom_text_3d()</code> understands the following aesthetics (required in bold):</p>
 <p><strong>Both methods:</strong></p><ul><li><p><strong>x</strong>, <strong>y</strong>, <strong>z</strong>, <strong>label</strong></p></li>
 <li><p><code>alpha</code></p></li>
-</ul><p><strong>Billboard method:</strong></p><ul><li><p><code>colour</code> - text color</p></li>
-<li><p><code>size</code> - font size in mm</p></li>
-<li><p><code>family</code>, <code>fontface</code></p></li>
-<li><p><code>hjust</code>, <code>vjust</code></p></li>
-<li><p><code>angle</code> - rotation in view plane</p></li>
-<li><p><code>lineheight</code></p></li>
-</ul><p><strong>Polygon method:</strong></p><ul><li><p><code>fill</code> - text fill color</p></li>
+</ul><p><strong>Billboard method only:</strong></p><ul><li><p><code>colour</code> - text color</p></li>
+</ul><p><strong>Polygon method only:</strong></p><ul><li><p><code>fill</code> - text fill color</p></li>
 <li><p><code>colour</code> - text outline color</p></li>
 <li><p><code>linewidth</code> - outline thickness</p></li>
-</ul></div>
+<li><p><code>linetype</code> - outline line type</p></li>
+<li><p><code>group</code></p></li>
+</ul><p>Other text properties (<code>size</code>, <code>hjust</code>, <code>vjust</code>, <code>angle</code>, <code>family</code>,
+<code>fontface</code>, <code>lineheight</code>, and for the polygon method <code>weight</code>, <code>italic</code>,
+<code>spacing</code>, <code>tolerance</code>) are currently accepted only as fixed values passed
+as arguments to <code>geom_text_3d()</code>, not as mappable aesthetics in <code><a href="aes.html">aes()</a></code>.</p>
+    </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="camera_facing.html">camera_facing()</a></code> for camera-facing specifications, <code><a href="text_outlines.html">text_outlines()</a></code>
@@ -347,7 +348,6 @@ for text-to-polygon conversion</p></div>
 <span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df</span>, <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span>, label <span class="op">=</span> <span class="va">label</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu">geom_text_3d</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span>scales <span class="op">=</span> <span class="st">"fixed"</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>`light` is ignored for billboard method.</span>
 <span class="r-plt img"><img src="geom_text_3d-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Polygon text - can face any direction</span></span></span>
