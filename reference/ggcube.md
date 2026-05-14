@@ -19,4 +19,5 @@ Useful links:
 
 ## Author
 
-**Maintainer**: Matthew Kling <mattkling@berkeley.edu>
+**Maintainer**: Matthew Kling <mattkling@berkeley.edu> \[copyright
+holder\]
