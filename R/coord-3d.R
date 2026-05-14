@@ -862,11 +862,13 @@ is_theme_void_like <- function(theme_obj) {
 
 get_scale_info <- function(scale_obj, expand = TRUE, axis_name = NULL) {
 
-      expansion <- ggplot2:::default_expansion(scale_obj, expand = expand)
-      limits <- scale_obj$get_limits()
+      default_expansion <- utils::getFromNamespace("default_expansion", "ggplot2")
+      expand_limits_scale <- utils::getFromNamespace("expand_limits_scale", "ggplot2")
 
+      expansion <- default_expansion(scale_obj, expand = expand)
+      limits <- scale_obj$get_limits()
       # Pass NULL for coord_limits since coord_3d doesn't support them yet
-      expanded_range <- ggplot2:::expand_limits_scale(scale_obj, expansion, limits, coord_limits = NULL)
+      expanded_range <- expand_limits_scale(scale_obj, expansion, limits, coord_limits = NULL)
 
       # Get all breaks and labels
       all_breaks <- scale_obj$get_breaks()
