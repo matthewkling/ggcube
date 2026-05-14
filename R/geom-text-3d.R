@@ -1112,22 +1112,24 @@ GeomText3DBillboard <- ggproto("GeomText3DBillboard", Geom,
 #'   \item `alpha`
 #' }
 #'
-#' **Billboard method:**
+#' **Billboard method only:**
 #' \itemize{
 #'   \item `colour` - text color
-#'   \item `size` - font size in mm
-#'   \item `family`, `fontface`
-#'   \item `hjust`, `vjust`
-#'   \item `angle` - rotation in view plane
-#'   \item `lineheight`
 #' }
 #'
-#' **Polygon method:**
+#' **Polygon method only:**
 #' \itemize{
 #'   \item `fill` - text fill color
 #'   \item `colour` - text outline color
 #'   \item `linewidth` - outline thickness
+#'   \item `linetype` - outline line type
+#'   \item `group`
 #' }
+#'
+#' Other text properties (`size`, `hjust`, `vjust`, `angle`, `family`,
+#' `fontface`, `lineheight`, and for the polygon method `weight`, `italic`,
+#' `spacing`, `tolerance`) are currently accepted only as fixed values passed
+#' as arguments to `geom_text_3d()`, not as mappable aesthetics in `aes()`.
 #'
 #' @return A ggplot2 layer
 #'
@@ -1207,7 +1209,7 @@ geom_text_3d <- function(mapping = NULL, data = NULL,
             if (aspect_adjust != 1) {
                   warning("`aspect_adjust` is ignored for billboard method.", call. = FALSE)
             }
-            if (!is.null(light)) {
+            if (!missing(light) && !identical(light, "none")) {
                   warning("`light` is ignored for billboard method.", call. = FALSE)
             }
 
@@ -1327,7 +1329,7 @@ stat_text_3d <- function(mapping = NULL, data = NULL,
             if (aspect_adjust != 1) {
                   warning("`aspect_adjust` is ignored for billboard method.", call. = FALSE)
             }
-            if (!is.null(light)) {
+            if (!missing(light) && !identical(light, "none")) {
                   warning("`light` is ignored for billboard method.", call. = FALSE)
             }
 

@@ -245,22 +245,24 @@ projection).
 \item \code{alpha}
 }
 
-\strong{Billboard method:}
+\strong{Billboard method only:}
 \itemize{
 \item \code{colour} - text color
-\item \code{size} - font size in mm
-\item \code{family}, \code{fontface}
-\item \code{hjust}, \code{vjust}
-\item \code{angle} - rotation in view plane
-\item \code{lineheight}
 }
 
-\strong{Polygon method:}
+\strong{Polygon method only:}
 \itemize{
 \item \code{fill} - text fill color
 \item \code{colour} - text outline color
 \item \code{linewidth} - outline thickness
+\item \code{linetype} - outline line type
+\item \code{group}
 }
+
+Other text properties (\code{size}, \code{hjust}, \code{vjust}, \code{angle}, \code{family},
+\code{fontface}, \code{lineheight}, and for the polygon method \code{weight}, \code{italic},
+\code{spacing}, \code{tolerance}) are currently accepted only as fixed values passed
+as arguments to \code{geom_text_3d()}, not as mappable aesthetics in \code{aes()}.
 }
 
 \examples{
