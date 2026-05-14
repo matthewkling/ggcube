@@ -12,3 +12,4 @@
 ^notes$
 ^Meta$
 ^vignettes/articles$
+^cran-comments\.md$

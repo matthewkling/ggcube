@@ -22,7 +22,7 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Matthew Kling \email{mattkling@berkeley.edu}
+\strong{Maintainer}: Matthew Kling \email{mattkling@berkeley.edu} [copyright holder]
 
 }
 \keyword{internal}

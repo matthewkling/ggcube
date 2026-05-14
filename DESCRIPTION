@@ -1,14 +1,13 @@
 Package: ggcube
 Type: Package
 Title: 3D Plotting with 'ggplot2'
-Version: 0.1.0.9000
+Version: 0.0.0.9000
 Authors@R: 
-    person("Matthew", "Kling", , "mattkling@berkeley.edu", role = c("aut", "cre"))
+    person("Matthew", "Kling", , "mattkling@berkeley.edu", 
+    role = c("aut", "cre", "cph"))
 Description: A 'ggplot2' extension for creating 3D figures.
     Provides 3D geoms, stats, and a coord_3d() coordinate
-    system supporting rotation, perspective, depth sorting,
-    and lighting. Standard 'ggplot2' features such as faceting,
-    themes, scales, and legends work as expected.
+    system supporting rotation, perspective, and lighting.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true

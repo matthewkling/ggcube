@@ -26,10 +26,11 @@ distortion.
 
 ## Installation
 
-ggcube isn’t yet on CRAN. You can install it from
-[GitHub](https://github.com/matthewkling/ggcube):
-
 ``` r
+# You can install the package from CRAN:
+install.packages("ggcube")
+
+# Or get the development version from GitHub:
 devtools::install_github("matthewkling/ggcube")
 ```
 
