@@ -278,7 +278,7 @@ create_panel_polygons = function(face_corners_transformed, panel_params, theme, 
                   lwd = border_width,
                   lty = border_type
             ),
-            name = "panel.faces.3d"
+            name = paste0("panel.faces.", layer, ".3d")
       )
 }
 
@@ -289,7 +289,7 @@ render_cube <- function(self, panel_params, theme, layer = "background"){
       bg <- grid::rectGrob(
             x = 0.5, y = 0.5, width = 1, height = 1,
             gp = grid::gpar(fill = "transparent", col = NA),
-            name = "panel.background.transparent"
+            name = paste0("panel.", layer, ".transparent")
       )
 
       # Get theme elements
@@ -330,7 +330,7 @@ render_cube <- function(self, panel_params, theme, layer = "background"){
                         # Use background fill only
                         panel_grobs <- create_panel_polygons(face_corners_transformed, panel_params, theme, layer)
                         if (!is.null(panel_grobs)) {
-                              bg <- grid::grobTree(bg, panel_grobs, name = "panel.background.with.3d.panels")
+                              bg <- grid::grobTree(bg, panel_grobs, name = paste0("panel.", layer, ".with.3d.panels"))
                         }
                   }
             }, error = function(e) {
@@ -354,9 +354,9 @@ render_cube <- function(self, panel_params, theme, layer = "background"){
                                     lwd = base_lwd * segments$depth_scale,
                                     lty = grid_element$linetype %||% 1
                               ),
-                              name = "grid.3d"
+                              name = paste0("grid.", layer, ".3d")
                         )
-                        bg <- grid::grobTree(bg, grid_grob, name = "panel.background.with.grid")
+                        bg <- grid::grobTree(bg, grid_grob, name = paste0("panel.", layer, ".with.grid"))
                   }
             }, error = function(e) {
                   warning("Grid rendering failed: ", e$message)
@@ -431,7 +431,7 @@ render_cube <- function(self, panel_params, theme, layer = "background"){
                                     ),
                                     name = paste0("panel.border.", layer, ".3d")
                               )
-                              bg <- grid::grobTree(bg, border_grob, name = "panel.background.with.border")
+                              bg <- grid::grobTree(bg, border_grob, name = paste0("panel.", layer, ".with.border"))
                         }
                   }, error = function(e) {
                         warning("Border rendering failed: ", e$message)
@@ -461,7 +461,7 @@ render_cube <- function(self, panel_params, theme, layer = "background"){
                               })
 
                               if (!is.null(labels_grob)) {
-                                    bg <- grid::grobTree(bg, labels_grob, name = "panel.background.with.labels")
+                                    bg <- grid::grobTree(bg, labels_grob, name = paste0("panel.", layer, ".with.labels"))
                               }
                         }
                   }
@@ -478,7 +478,7 @@ render_cube <- function(self, panel_params, theme, layer = "background"){
                               })
 
                               if (!is.null(titles_grob)) {
-                                    bg <- grid::grobTree(bg, titles_grob, name = "panel.background.with.titles")
+                                    bg <- grid::grobTree(bg, titles_grob, name = paste0("panel.", layer, ".with.titles"))
                               }
                         }
                   }
