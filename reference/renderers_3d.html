@@ -55,7 +55,7 @@ rendering function.</p>
 <span></span>
 <span><span class="fu">av_renderer_3d</span><span class="op">(</span>file <span class="op">=</span> <span class="cn">NULL</span>, vfilter <span class="op">=</span> <span class="st">"null"</span>, codec <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">file_renderer_3d</span><span class="op">(</span>dir <span class="op">=</span> <span class="st">"."</span>, prefix <span class="op">=</span> <span class="st">"ggcube_frame"</span>, overwrite <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">file_renderer_3d</span><span class="op">(</span>dir <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, prefix <span class="op">=</span> <span class="st">"ggcube_frame"</span>, overwrite <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -79,7 +79,9 @@ rendering function.</p>
 
 
 <dt id="arg-dir">dir<a class="anchor" aria-label="anchor" href="#arg-dir"></a></dt>
-<dd><p>Directory to copy frame files into.</p></dd>
+<dd><p>Directory to copy frame files into. Defaults to a session
+temporary directory (<code><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir()</a></code>). For animations you want to keep,
+pass an explicit directory.</p></dd>
 
 
 <dt id="arg-prefix">prefix<a class="anchor" aria-label="anchor" href="#arg-prefix"></a></dt>
@@ -98,7 +100,7 @@ that produces the animation output.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="stat_function_3d.html">geom_function_3d</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>    fun <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cos</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span>,</span></span>
@@ -108,15 +110,122 @@ that produces the animation output.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># GIF output (default)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="animate_3d.html">animate_3d</a></span><span class="op">(</span><span class="va">p</span>, yaw <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">360</span><span class="op">)</span>, renderer <span class="op">=</span> <span class="fu">gifski_renderer_3d</span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Rendering 100 frames...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Assembling animation...</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Video output</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="animate_3d.html">animate_3d</a></span><span class="op">(</span><span class="va">p</span>, yaw <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">360</span><span class="op">)</span>, renderer <span class="op">=</span> <span class="fu">av_renderer_3d</span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Rendering 100 frames...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Assembling animation...</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Keep individual frame files</span></span></span>
+<span class="r-in"><span><span class="co"># Keep individual frame files in a chosen directory</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="animate_3d.html">animate_3d</a></span><span class="op">(</span><span class="va">p</span>, yaw <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">360</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>           renderer <span class="op">=</span> <span class="fu">file_renderer_3d</span><span class="op">(</span>dir <span class="op">=</span> <span class="st">"my_frames"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
-<span class="r-in"><span></span></span>
+<span class="r-in"><span>    renderer <span class="op">=</span> <span class="fu">file_renderer_3d</span><span class="op">(</span>dir <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"my_frames"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Rendering 100 frames...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Assembling animation...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [1] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0001.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [2] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0002.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [3] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0003.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [4] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0004.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [5] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0005.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [6] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0006.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [7] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0007.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [8] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0008.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [9] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0009.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [10] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0010.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [11] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0011.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [12] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0012.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [13] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0013.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [14] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0014.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [15] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0015.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [16] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0016.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [17] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0017.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [18] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0018.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [19] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0019.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [20] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0020.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [21] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0021.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [22] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0022.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [23] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0023.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [24] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0024.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [25] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0025.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [26] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0026.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [27] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0027.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [28] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0028.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [29] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0029.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [30] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0030.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [31] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0031.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [32] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0032.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [33] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0033.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [34] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0034.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [35] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0035.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [36] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0036.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [37] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0037.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [38] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0038.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [39] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0039.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [40] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0040.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [41] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0041.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [42] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0042.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [43] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0043.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [44] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0044.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [45] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0045.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [46] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0046.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [47] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0047.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [48] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0048.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [49] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0049.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [50] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0050.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [51] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0051.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [52] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0052.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [53] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0053.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [54] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0054.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [55] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0055.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [56] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0056.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [57] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0057.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [58] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0058.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [59] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0059.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [60] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0060.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [61] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0061.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [62] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0062.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [63] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0063.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [64] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0064.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [65] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0065.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [66] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0066.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [67] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0067.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [68] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0068.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [69] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0069.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [70] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0070.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [71] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0071.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [72] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0072.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [73] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0073.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [74] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0074.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [75] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0075.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [76] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0076.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [77] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0077.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [78] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0078.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [79] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0079.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [80] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0080.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [81] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0081.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [82] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0082.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [83] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0083.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [84] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0084.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [85] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0085.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [86] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0086.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [87] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0087.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [88] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0088.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [89] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0089.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [90] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0090.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [91] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0091.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [92] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0092.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [93] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0093.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [94] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0094.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [95] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0095.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [96] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0096.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [97] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0097.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [98] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0098.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [99] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0099.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [100] "/tmp/RtmpL9dXYx/my_frames/ggcube_frame_0100.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "frame_files_3d" "character"     </span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

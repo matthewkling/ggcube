@@ -117,6 +117,10 @@ geom_ridgeline_3d(
 
   If `FALSE`, overrides the default aesthetics.
 
+## Value
+
+A `Layer` object that can be added to a ggplot.
+
 ## Aesthetics
 
 - x, y, z:

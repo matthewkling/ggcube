@@ -12,10 +12,10 @@ projection parameters, apply a range of 3D lighting models, and mix 3D
 layers with 2D layers rendered on cube faces. Standard ggplot2 features
 like faceting, themes, scales, and legends work as expected.
 
-NOTE: 3D plots are wonderful for exploratory analysis, storytelling, and
-data art — but they are often a poor choice when precise quantitative
-communication is important, due to issues like occlusion and perspective
-distortion.
+3D plots are wonderful for exploration, storytelling, and data art. But
+note that for precise quantitative communication, where occlusion and
+perspective distortion can be problematic, 2D is usually the better
+choice.
 
 ## Installation
 

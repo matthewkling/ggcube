@@ -23,10 +23,15 @@ anim_save_3d(animation = NULL, filename)
 
   Output file path.
 
+## Value
+
+Invisibly returns the output file path (a character string). Called
+primarily for its side effect of copying the animation to `filename`.
+
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 p <- ggplot() +
   geom_function_3d(
     fun = function(x, y) sin(x) * cos(y),
@@ -35,6 +40,9 @@ p <- ggplot() +
   coord_3d()
 
 animate_3d(p, yaw = c(0, 360))
-anim_save_3d(filename = "my_animation.gif")
-} # }
+#> Rendering 100 frames...
+#> Assembling animation...
+anim_save_3d(filename = file.path(tempdir(), "my_animation.gif"))
+#> Animation saved to /tmp/RtmpL9dXYx/my_animation.gif
+# }
 ```

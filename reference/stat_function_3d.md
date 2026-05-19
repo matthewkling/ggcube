@@ -125,6 +125,10 @@ geom_function_3d(
   Statistical transformation to use on the data. Defaults to
   `"surface_3d"`.
 
+## Value
+
+A `Layer` object that can be added to a ggplot.
+
 ## Computed variables
 
 - x, y, z:

@@ -337,7 +337,7 @@ for text-to-polygon conversion
 ## Examples
 
 ``` r
-df <- expand.grid(x = c("H", "B"), y = c("a", "o", "u"), z = c("g", "t"))
+df <- expand.grid(x = c("B", "H", "N"), y = c("a", "o", "u"), z = c("g", "t"))
 df$label <- paste0(df$x, df$y, df$z)
 
 # Billboard text (default) - automatically faces camera
@@ -347,7 +347,7 @@ ggplot(df, aes(x, y, z, label = label)) +
 
 
 # Polygon text - can face any direction
-ggplot(df, aes(x, y, z, label = label)) +
+ggplot(df, aes(x, y, z, label = label, fill = z)) +
   geom_text_3d(method = "polygon", facing = "zmax") +
   coord_3d(scales = "fixed")
 
@@ -360,11 +360,11 @@ ggplot(df, aes(x, y, z, label = label)) +
   my_coord
 
 
-# Larger text with styling
-my_coord2 <- coord_3d(scales = "fixed")
+# Text with styling
 ggplot(df, aes(x, y, z, label = label, fill = factor(x))) +
-  geom_text_3d(method = "polygon", facing = "xmin", coord = my_coord2,
-               family = "serif", weight = "bold", italic = TRUE) +
-  my_coord2
+  geom_text_3d(method = "polygon", facing = "xmin",
+               family = "serif", weight = "bold", italic = TRUE,
+               size = 6, aspect_adjust = 2) +
+  coord_3d(scales = "fixed")
 
 ```

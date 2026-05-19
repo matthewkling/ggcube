@@ -75,16 +75,23 @@ for rendering 3D text labels
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
 # Parallel billboard text (default) - all labels face same direction
+df <- expand.grid(x = c("H", "B"), y = c("a", "o", "u"), z = c("g", "t"))
+df$label <- paste0(df$x, df$y, df$z)
+
 ggplot(df, aes(x, y, z = z, label = label)) +
-  geom_text_3d(facing = camera_facing(pitch = 20, roll = -60, yaw = -30)) +
+  geom_text_3d(method = "polygon",
+               facing = camera_facing(pitch = 20, roll = -60, yaw = -30)) +
   coord_3d(pitch = 20, roll = -60, yaw = -30)
+
 
 # Point-facing text - labels angle toward camera position
 ggplot(df, aes(x, y, z = z, label = label)) +
-  geom_text_3d(facing = camera_facing(pitch = 20, roll = -60, yaw = -30,
+  geom_text_3d(method = "polygon",
+               facing = camera_facing(pitch = 20, roll = -60, yaw = -30,
                                       mode = "point")) +
   coord_3d(pitch = 20, roll = -60, yaw = -30)
-} # }
+
+# }
 ```

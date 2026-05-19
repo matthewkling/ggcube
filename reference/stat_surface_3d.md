@@ -134,6 +134,10 @@ geom_surface_3d(
   wrap over a visible horizon. For prism-type geoms like columns and
   voxels, FALSE is safe because polygons fill always be convex.
 
+## Value
+
+A `Layer` object that can be added to a ggplot.
+
 ## Details
 
 For regular grids, computes point-level gradients. Works with both

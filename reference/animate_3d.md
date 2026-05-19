@@ -118,13 +118,15 @@ The return value of the renderer function. For
 [`gifski_renderer_3d()`](https://matthewkling.github.io/ggcube/reference/renderers_3d.md),
 a `gif_3d` object (a file path with class attributes for display in
 RStudio and knitr). For
+[`av_renderer_3d()`](https://matthewkling.github.io/ggcube/reference/renderers_3d.md),
+a `video_3d` object (a file path with class attributes for display). For
 [`file_renderer_3d()`](https://matthewkling.github.io/ggcube/reference/renderers_3d.md),
-a character vector of file paths.
+a character vector of file paths to the rendered frame images.
 
 ## See also
 
-[`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md)
-for the 3D coordinate system,
+[`anim_save_3d()`](https://matthewkling.github.io/ggcube/reference/anim_save_3d.md)
+for saving animations to file.
 [`gifski_renderer_3d()`](https://matthewkling.github.io/ggcube/reference/renderers_3d.md)
 and
 [`file_renderer_3d()`](https://matthewkling.github.io/ggcube/reference/renderers_3d.md)
@@ -133,7 +135,8 @@ for renderer options.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
+# \donttest{
+# Plot to animate. Note `anchor = "camera"` keeps light source from rotating.
 p <- ggplot() +
   geom_function_3d(
     fun = function(x, y) sin(x) * cos(y),
@@ -145,13 +148,20 @@ p <- ggplot() +
 
 # Simple turntable rotation
 animate_3d(p, yaw = c(-30, 330))
+#> Rendering 100 frames...
+#> Assembling animation...
 
 # Multi-segment orbit with pitch change
 animate_3d(p, yaw = c(0, 720), roll = c(-90, 0, -90),
-           nframes = 120, fps = 15, cores = 10)
+           nframes = 120, fps = 15)
+#> Rendering 120 frames...
+#> Assembling animation...
 
-# Save to file
+# Save to file (writes to a temporary path; specify your own to keep it)
 anim <- animate_3d(p, yaw = c(0, 360))
-anim_save_3d(anim, "rotating_surface.gif")
-} # }
+#> Rendering 100 frames...
+#> Assembling animation...
+anim_save_3d(anim, file.path(tempdir(), "rotating_surface.gif"))
+#> Animation saved to /tmp/RtmpL9dXYx/rotating_surface.gif
+# }
 ```
