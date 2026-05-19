@@ -87,6 +87,9 @@ functions.}
 
 \item{stat}{Statistical transformation to use on the data. Defaults to \code{"surface_3d"}.}
 }
+\value{
+A \code{Layer} object that can be added to a ggplot.
+}
 \description{
 Evaluates a function f(x,y) = z over a regular grid and renders the result
 as a 3D surface or ridgeline plot.

@@ -126,15 +126,20 @@ text_outlines <- function(text,
 #' `coord_3d()`.
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Parallel billboard text (default) - all labels face same direction
+#' df <- expand.grid(x = c("H", "B"), y = c("a", "o", "u"), z = c("g", "t"))
+#' df$label <- paste0(df$x, df$y, df$z)
+#'
 #' ggplot(df, aes(x, y, z = z, label = label)) +
-#'   geom_text_3d(facing = camera_facing(pitch = 20, roll = -60, yaw = -30)) +
+#'   geom_text_3d(method = "polygon",
+#'                facing = camera_facing(pitch = 20, roll = -60, yaw = -30)) +
 #'   coord_3d(pitch = 20, roll = -60, yaw = -30)
 #'
 #' # Point-facing text - labels angle toward camera position
 #' ggplot(df, aes(x, y, z = z, label = label)) +
-#'   geom_text_3d(facing = camera_facing(pitch = 20, roll = -60, yaw = -30,
+#'   geom_text_3d(method = "polygon",
+#'                facing = camera_facing(pitch = 20, roll = -60, yaw = -30,
 #'                                       mode = "point")) +
 #'   coord_3d(pitch = 20, roll = -60, yaw = -30)
 #' }
@@ -1134,7 +1139,7 @@ GeomText3DBillboard <- ggproto("GeomText3DBillboard", Geom,
 #' @return A ggplot2 layer
 #'
 #' @examples
-#' df <- expand.grid(x = c("H", "B"), y = c("a", "o", "u"), z = c("g", "t"))
+#' df <- expand.grid(x = c("B", "H", "N"), y = c("a", "o", "u"), z = c("g", "t"))
 #' df$label <- paste0(df$x, df$y, df$z)
 #'
 #' # Billboard text (default) - automatically faces camera
@@ -1143,7 +1148,7 @@ GeomText3DBillboard <- ggproto("GeomText3DBillboard", Geom,
 #'   coord_3d(scales = "fixed")
 #'
 #' # Polygon text - can face any direction
-#' ggplot(df, aes(x, y, z, label = label)) +
+#' ggplot(df, aes(x, y, z, label = label, fill = z)) +
 #'   geom_text_3d(method = "polygon", facing = "zmax") +
 #'   coord_3d(scales = "fixed")
 #'
@@ -1154,12 +1159,12 @@ GeomText3DBillboard <- ggproto("GeomText3DBillboard", Geom,
 #'                color = "red", linewidth = .1) +
 #'   my_coord
 #'
-#' # Larger text with styling
-#' my_coord2 <- coord_3d(scales = "fixed")
+#' # Text with styling
 #' ggplot(df, aes(x, y, z, label = label, fill = factor(x))) +
-#'   geom_text_3d(method = "polygon", facing = "xmin", coord = my_coord2,
-#'                family = "serif", weight = "bold", italic = TRUE) +
-#'   my_coord2
+#'   geom_text_3d(method = "polygon", facing = "xmin",
+#'                family = "serif", weight = "bold", italic = TRUE,
+#'                size = 6, aspect_adjust = 2) +
+#'   coord_3d(scales = "fixed")
 #'
 #' @seealso [camera_facing()] for camera-facing specifications, [text_outlines()]
 #'   for text-to-polygon conversion

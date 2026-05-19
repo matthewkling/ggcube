@@ -52,6 +52,8 @@ StatSurface3D <- ggproto("StatSurface3D", Stat,
 #' @inheritParams polygon_params
 #' @inheritParams light_param
 #'
+#' @return A `Layer` object that can be added to a ggplot.
+#'
 #' @section Computed variables:
 #' For regular grid data:
 #' \describe{

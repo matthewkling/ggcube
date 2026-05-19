@@ -85,14 +85,18 @@ Default is \code{"png"}. Other options include \code{"ragg_png"}
 The return value of the renderer function. For
 \code{gifski_renderer_3d()}, a \code{gif_3d} object (a file path with
 class attributes for display in RStudio and knitr). For
-\code{file_renderer_3d()}, a character vector of file paths.
+\code{av_renderer_3d()}, a \code{video_3d} object (a file path with
+class attributes for display). For \code{file_renderer_3d()}, a
+character vector of file paths to the rendered frame images.
 }
 \description{
 Renders an animated GIF or MP4 of a rotating ggplot with \code{\link[=coord_3d]{coord_3d()}},
 smoothly interpolating rotation angles across frames.
 }
 \examples{
-\dontrun{
+\dontshow{if (requireNamespace("gifski", quietly = TRUE)) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\donttest{
+# Plot to animate. Note `anchor = "camera"` keeps light source from rotating.
 p <- ggplot() +
   geom_function_3d(
     fun = function(x, y) sin(x) * cos(y),
@@ -107,15 +111,15 @@ animate_3d(p, yaw = c(-30, 330))
 
 # Multi-segment orbit with pitch change
 animate_3d(p, yaw = c(0, 720), roll = c(-90, 0, -90),
-           nframes = 120, fps = 15, cores = 10)
+           nframes = 120, fps = 15)
 
-# Save to file
+# Save to file (writes to a temporary path; specify your own to keep it)
 anim <- animate_3d(p, yaw = c(0, 360))
-anim_save_3d(anim, "rotating_surface.gif")
+anim_save_3d(anim, file.path(tempdir(), "rotating_surface.gif"))
 }
-
+\dontshow{\}) # examplesIf}
 }
 \seealso{
-\code{\link[=coord_3d]{coord_3d()}} for the 3D coordinate system,
+\code{\link[=anim_save_3d]{anim_save_3d()}} for saving animations to file.
 \code{\link[=gifski_renderer_3d]{gifski_renderer_3d()}} and \code{\link[=file_renderer_3d]{file_renderer_3d()}} for renderer options.
 }

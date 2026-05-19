@@ -11,7 +11,7 @@ gifski_renderer_3d(file = NULL, loop = TRUE)
 
 av_renderer_3d(file = NULL, vfilter = "null", codec = NULL)
 
-file_renderer_3d(dir = ".", prefix = "ggcube_frame", overwrite = FALSE)
+file_renderer_3d(dir = tempdir(), prefix = "ggcube_frame", overwrite = FALSE)
 }
 \arguments{
 \item{file}{Output file path. If \code{NULL}, a temporary file is used.}
@@ -22,7 +22,9 @@ file_renderer_3d(dir = ".", prefix = "ggcube_frame", overwrite = FALSE)
 
 \item{codec}{Video codec name. Default lets \pkg{av} choose.}
 
-\item{dir}{Directory to copy frame files into.}
+\item{dir}{Directory to copy frame files into. Defaults to a session
+temporary directory (\code{tempdir()}). For animations you want to keep,
+pass an explicit directory.}
 
 \item{prefix}{Filename prefix for copied frame files.}
 
@@ -38,7 +40,8 @@ animation file. These are factory functions that return the actual
 rendering function.
 }
 \examples{
-\dontrun{
+\dontshow{if (requireNamespace("gifski", quietly = TRUE) && requireNamespace("av", quietly = TRUE)) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\donttest{
 p <- ggplot() +
   geom_function_3d(
     fun = function(x, y) sin(x) * cos(y),
@@ -52,9 +55,9 @@ animate_3d(p, yaw = c(0, 360), renderer = gifski_renderer_3d())
 # Video output
 animate_3d(p, yaw = c(0, 360), renderer = av_renderer_3d())
 
-# Keep individual frame files
+# Keep individual frame files in a chosen directory
 animate_3d(p, yaw = c(0, 360),
-           renderer = file_renderer_3d(dir = "my_frames"))
+    renderer = file_renderer_3d(dir = file.path(tempdir(), "my_frames")))
 }
-
+\dontshow{\}) # examplesIf}
 }

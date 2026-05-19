@@ -141,7 +141,7 @@ ggplot(sphere_points, aes(x, y, z)) +
   coord_3d()
 
 # Alpha shape (for sphere data, gives similar result to convex)
-\dontrun{
+\donttest{
 ggplot(sphere_points, aes(x, y, z)) +
   geom_hull_3d(method = "alpha", radius = 2, fill = "gray40") +
   coord_3d()

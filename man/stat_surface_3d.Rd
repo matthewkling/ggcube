@@ -86,6 +86,9 @@ convex hull. Default value varies by geom. Specifying TRUE can help reduce artif
 that have polygon tiles that wrap over a visible horizon. For prism-type geoms like columns and
 voxels, FALSE is safe because polygons fill always be convex.}
 }
+\value{
+A \code{Layer} object that can be added to a ggplot.
+}
 \description{
 Takes user-provided (x, y, z) point data and prepares it for surface
 rendering. If data form a regular grid, can render either a GeomSurface3D

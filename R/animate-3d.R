@@ -52,10 +52,13 @@
 #' @return The return value of the renderer function. For
 #'   \code{gifski_renderer_3d()}, a \code{gif_3d} object (a file path with
 #'   class attributes for display in RStudio and knitr). For
-#'   \code{file_renderer_3d()}, a character vector of file paths.
+#'   \code{av_renderer_3d()}, a \code{video_3d} object (a file path with
+#'   class attributes for display). For \code{file_renderer_3d()}, a
+#'   character vector of file paths to the rendered frame images.
 #'
-#' @examples
-#' \dontrun{
+#' @examplesIf requireNamespace("gifski", quietly = TRUE)
+#' \donttest{
+#' # Plot to animate. Note `anchor = "camera"` keeps light source from rotating.
 #' p <- ggplot() +
 #'   geom_function_3d(
 #'     fun = function(x, y) sin(x) * cos(y),
@@ -70,14 +73,14 @@
 #'
 #' # Multi-segment orbit with pitch change
 #' animate_3d(p, yaw = c(0, 720), roll = c(-90, 0, -90),
-#'            nframes = 120, fps = 15, cores = 10)
+#'            nframes = 120, fps = 15)
 #'
-#' # Save to file
+#' # Save to file (writes to a temporary path; specify your own to keep it)
 #' anim <- animate_3d(p, yaw = c(0, 360))
-#' anim_save_3d(anim, "rotating_surface.gif")
+#' anim_save_3d(anim, file.path(tempdir(), "rotating_surface.gif"))
 #' }
 #'
-#' @seealso [coord_3d()] for the 3D coordinate system,
+#' @seealso [anim_save_3d()] for saving animations to file.
 #'   [gifski_renderer_3d()] and [file_renderer_3d()] for renderer options.
 #' @export
 animate_3d <- function(plot,
@@ -538,7 +541,9 @@ render_frame <- function(plot, file, width, height, res, device) {
 #'
 #' @param file Output file path. If \code{NULL}, a temporary file is used.
 #' @param loop Logical. Should the GIF loop? Default is \code{TRUE}.
-#' @param dir Directory to copy frame files into.
+#' @param dir Directory to copy frame files into. Defaults to a session
+#'   temporary directory (\code{tempdir()}). For animations you want to keep,
+#'   pass an explicit directory.
 #' @param prefix Filename prefix for copied frame files.
 #' @param overwrite Logical. Overwrite existing files? Default is \code{FALSE}.
 #' @param vfilter A video filter string for ffmpeg (passed to \pkg{av}).
@@ -547,8 +552,8 @@ render_frame <- function(plot, file, width, height, res, device) {
 #' @return A function with signature \code{function(frames, fps, width, height)}
 #'   that produces the animation output.
 #'
-#' @examples
-#' \dontrun{
+#' @examplesIf requireNamespace("gifski", quietly = TRUE) && requireNamespace("av", quietly = TRUE)
+#' \donttest{
 #' p <- ggplot() +
 #'   geom_function_3d(
 #'     fun = function(x, y) sin(x) * cos(y),
@@ -562,9 +567,9 @@ render_frame <- function(plot, file, width, height, res, device) {
 #' # Video output
 #' animate_3d(p, yaw = c(0, 360), renderer = av_renderer_3d())
 #'
-#' # Keep individual frame files
+#' # Keep individual frame files in a chosen directory
 #' animate_3d(p, yaw = c(0, 360),
-#'            renderer = file_renderer_3d(dir = "my_frames"))
+#'     renderer = file_renderer_3d(dir = file.path(tempdir(), "my_frames")))
 #' }
 #'
 #' @name renderers_3d
@@ -617,7 +622,7 @@ av_renderer_3d <- function(file = NULL, vfilter = "null", codec = NULL) {
 
 #' @rdname renderers_3d
 #' @export
-file_renderer_3d <- function(dir = ".", prefix = "ggcube_frame",
+file_renderer_3d <- function(dir = tempdir(), prefix = "ggcube_frame",
                              overwrite = FALSE) {
       function(frames, fps, width, height) {
             if (!dir.exists(dir)) {
@@ -753,8 +758,12 @@ knit_print.video_3d <- function(x, options, ...) {
 #'   to use the last rendered animation.
 #' @param filename Output file path.
 #'
-#' @examples
-#' \dontrun{
+#' @return Invisibly returns the output file path (a character string).
+#'   Called primarily for its side effect of copying the animation to
+#'   \code{filename}.
+#'
+#' @examplesIf requireNamespace("gifski", quietly = TRUE)
+#' \donttest{
 #' p <- ggplot() +
 #'   geom_function_3d(
 #'     fun = function(x, y) sin(x) * cos(y),
@@ -763,7 +772,7 @@ knit_print.video_3d <- function(x, options, ...) {
 #'   coord_3d()
 #'
 #' animate_3d(p, yaw = c(0, 360))
-#' anim_save_3d(filename = "my_animation.gif")
+#' anim_save_3d(filename = file.path(tempdir(), "my_animation.gif"))
 #' }
 #'
 #' @export

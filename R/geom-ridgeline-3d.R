@@ -78,6 +78,8 @@ GeomRidgeline3D <- ggproto("GeomRidgeline3D", GeomPolygon3D,
 #' @inheritParams polygon_params
 #' @inheritParams light_param
 #'
+#' @return A `Layer` object that can be added to a ggplot.
+#'
 #' @section Aesthetics:
 #' \describe{
 #'   \item{x, y, z}{Point coordinates (required)}

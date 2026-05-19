@@ -109,6 +109,8 @@ StatFunction3D <- ggproto("StatFunction3D", Stat,
 #' @inheritParams polygon_params
 #' @inheritParams light_param
 #'
+#' @return A `Layer` object that can be added to a ggplot.
+#'
 #' @section Computed variables:
 #' \describe{
 #'   \item{x, y, z}{Grid coordinates and function values}

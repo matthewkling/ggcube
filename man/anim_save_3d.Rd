@@ -12,12 +12,18 @@ to use the last rendered animation.}
 
 \item{filename}{Output file path.}
 }
+\value{
+Invisibly returns the output file path (a character string).
+Called primarily for its side effect of copying the animation to
+\code{filename}.
+}
 \description{
 Saves an animation object produced by \code{\link[=animate_3d]{animate_3d()}} to a file.
 If no animation is provided, saves the most recently rendered animation.
 }
 \examples{
-\dontrun{
+\dontshow{if (requireNamespace("gifski", quietly = TRUE)) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\donttest{
 p <- ggplot() +
   geom_function_3d(
     fun = function(x, y) sin(x) * cos(y),
@@ -26,7 +32,7 @@ p <- ggplot() +
   coord_3d()
 
 animate_3d(p, yaw = c(0, 360))
-anim_save_3d(filename = "my_animation.gif")
+anim_save_3d(filename = file.path(tempdir(), "my_animation.gif"))
 }
-
+\dontshow{\}) # examplesIf}
 }

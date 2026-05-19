@@ -70,6 +70,9 @@ functions.}
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics.}
 }
+\value{
+A \code{Layer} object that can be added to a ggplot.
+}
 \description{
 Renders a point grid as ridgeline polygons (Joy Division style). Each slice
 along one axis becomes a filled polygon, creating a cross-sectional view
