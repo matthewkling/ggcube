@@ -114,6 +114,12 @@ make_equilateral_grid <- function(n, trim = FALSE){
 
 is_regular_grid <- function(data){
       if(! "group" %in% names(data)) data$group <- 1
+
+      # If row/column indices are present, trust them as grid structure.
+      # This allows downstream tiling to handle grid subsets (e.g. data filtered
+      # by min_ndensity) without falling back to Delaunay triangulation.
+      if(all(c("row", "column") %in% names(data))) return(TRUE)
+
       data <- split(data, data$group)
       reg <- sapply(data, function(d){
             x_vals <- sort(unique(d$x))
@@ -398,9 +404,25 @@ rect_points_to_tiles <- function(data, grid_type, group_prefix) {
             left_join(data, by = c("column", "row")) %>%
             select(-d_col, -d_row, -tile_col, -tile_row)
 
-      # Handle triangle splitting
+      # Handle triangle splitting before culling so that each triangle can be
+      # evaluated independently; with right1/right2 a quad with one missing
+      # corner still yields one valid triangle.
       if (grid_type %in% c("right1", "right2")) {
             tile_vertices <- split_quads_to_triangles(tile_vertices, grid_type)
+      }
+
+      # Drop tiles with missing corners. When the input is a sparse subset of a
+      # regular grid (e.g. data filtered by min_ndensity in stat_density_3d),
+      # the left_join leaves NA coordinates at corners that don't exist in the
+      # data; removing those tiles preserves the rectangular tiling on the
+      # surviving cells without falling back to Delaunay triangulation.
+      incomplete_tiles <- unique(tile_vertices$tile_id[is.na(tile_vertices$x) |
+                                                             is.na(tile_vertices$y)])
+      if (length(incomplete_tiles) > 0) {
+            tile_vertices <- filter(tile_vertices, !tile_id %in% incomplete_tiles)
+            if (nrow(tile_vertices) == 0) {
+                  stop("No complete tiles remain after dropping cells with missing corners.")
+            }
       }
 
       # Create hierarchical group column

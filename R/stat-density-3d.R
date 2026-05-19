@@ -13,6 +13,12 @@ StatDensity3D <- ggproto("StatDensity3D", Stat,
                                      data <- data[complete.cases(data[c("x", "y")]), ]
                                }
 
+                               # Error if grid is incompatible with min_ndensity
+                               if (min_ndensity > 0 && identical(grid, "equilateral")) {
+                                     stop("`min_ndensity` is not supported with `grid = \"equilateral\"`; ",
+                                             "ignoring. Use `grid = \"rectangle\"`, `\"right1\"`, or `\"right2\"`.")
+                               }
+
                                # Check we have enough data
                                if (nrow(data) < 3) {
                                      stop("stat_density_3d requires at least 3 points per group")
@@ -70,11 +76,11 @@ StatDensity3D <- ggproto("StatDensity3D", Stat,
 
                                d <- compute_point_gradients(d)
 
-                               # Remove data below ndensity threshold
+                               # Remove data below ndensity threshold. Row/column indices are
+                               # retained so the geom can tile the surviving sparse grid without
+                               # falling back to Delaunay triangulation.
                                if(min_ndensity > 0){
-                                     d <- d %>%
-                                           select(-column, -row) %>% # to trigger triangulation
-                                           filter(ndensity >= min_ndensity)
+                                     d <- filter(d, ndensity >= min_ndensity)
                                }
 
                                # Add computed variables and light info
