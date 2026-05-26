@@ -36,7 +36,7 @@ StatHull3D <- ggproto("StatHull3D", Stat,
                                                            'Install it with install.packages("geometry").',
                                                            call. = FALSE)
                                                 }
-                                                geometry::convhulln(coords, options = "")
+                                                geometry::convhulln(coords)
                                           },
                                           stop("Unknown method: use 'alpha' or 'convex'")
                             )

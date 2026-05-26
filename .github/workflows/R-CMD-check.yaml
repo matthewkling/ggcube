@@ -45,6 +45,10 @@ jobs:
           extra-packages: any::rcmdcheck
           needs: check
 
+      - name: Install XQuartz (macOS)
+        if: runner.os == 'macOS'
+        run: brew install --cask xquartz
+
       - uses: r-lib/actions/check-r-package@v2
         with:
           upload-snapshots: true
