@@ -36,16 +36,7 @@ StatHull3D <- ggproto("StatHull3D", Stat,
                                                            'Install it with install.packages("geometry").',
                                                            call. = FALSE)
                                                 }
-                                                tryCatch({
-                                                      hull_result <- geometry::convhulln(coords)
-                                                      if (is.matrix(hull_result) && ncol(hull_result) == 3) {
-                                                            hull_result
-                                                      } else {
-                                                            stop("Invalid hull result format")
-                                                      }
-                                                }, error = function(e) {
-                                                      stop("Convex hull computation failed: ", e$message)
-                                                })
+                                                geometry::convhulln(coords, options = "")
                                           },
                                           stop("Unknown method: use 'alpha' or 'convex'")
                             )
