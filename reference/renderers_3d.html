@@ -11,7 +11,7 @@ rendering function."><meta property="og:image" content="https://matthewkling.git
 
     <a class="navbar-brand me-2" href="../index.html">ggcube</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -39,7 +39,7 @@ rendering function."><meta property="og:image" content="https://matthewkling.git
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Animation renderers for animate_3d</h1>
-      <small class="dont-index">Source: <a href="https://github.com/matthewkling/ggcube/blob/v0.1.0/R/animate-3d.R" class="external-link"><code>R/animate-3d.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/matthewkling/ggcube/blob/main/R/animate-3d.R" class="external-link"><code>R/animate-3d.R</code></a></small>
       <div class="d-none name"><code>renderers_3d.Rd</code></div>
     </div>
 
@@ -123,106 +123,106 @@ that produces the animation output.</p>
 <span class="r-in"><span>    renderer <span class="op">=</span> <span class="fu">file_renderer_3d</span><span class="op">(</span>dir <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"my_frames"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Rendering 100 frames...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Assembling animation...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   [1] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0001.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   [2] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0002.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   [3] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0003.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   [4] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0004.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   [5] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0005.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   [6] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0006.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   [7] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0007.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   [8] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0008.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   [9] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0009.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [10] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0010.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [11] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0011.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [12] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0012.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [13] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0013.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [14] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0014.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [15] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0015.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [16] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0016.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [17] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0017.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [18] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0018.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [19] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0019.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [20] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0020.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [21] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0021.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [22] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0022.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [23] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0023.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [24] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0024.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [25] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0025.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [26] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0026.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [27] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0027.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [28] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0028.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [29] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0029.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [30] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0030.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [31] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0031.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [32] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0032.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [33] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0033.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [34] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0034.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [35] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0035.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [36] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0036.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [37] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0037.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [38] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0038.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [39] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0039.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [40] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0040.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [41] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0041.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [42] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0042.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [43] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0043.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [44] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0044.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [45] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0045.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [46] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0046.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [47] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0047.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [48] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0048.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [49] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0049.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [50] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0050.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [51] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0051.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [52] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0052.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [53] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0053.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [54] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0054.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [55] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0055.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [56] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0056.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [57] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0057.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [58] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0058.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [59] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0059.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [60] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0060.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [61] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0061.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [62] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0062.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [63] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0063.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [64] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0064.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [65] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0065.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [66] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0066.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [67] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0067.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [68] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0068.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [69] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0069.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [70] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0070.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [71] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0071.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [72] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0072.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [73] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0073.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [74] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0074.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [75] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0075.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [76] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0076.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [77] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0077.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [78] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0078.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [79] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0079.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [80] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0080.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [81] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0081.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [82] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0082.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [83] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0083.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [84] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0084.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [85] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0085.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [86] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0086.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [87] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0087.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [88] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0088.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [89] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0089.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [90] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0090.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [91] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0091.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [92] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0092.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [93] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0093.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [94] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0094.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [95] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0095.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [96] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0096.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [97] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0097.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [98] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0098.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [99] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0099.png"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [100] "/tmp/Rtmpw9uXwI/my_frames/ggcube_frame_0100.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [1] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0001.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [2] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0002.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [3] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0003.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [4] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0004.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [5] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0005.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [6] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0006.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [7] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0007.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [8] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0008.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [9] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0009.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [10] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0010.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [11] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0011.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [12] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0012.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [13] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0013.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [14] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0014.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [15] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0015.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [16] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0016.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [17] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0017.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [18] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0018.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [19] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0019.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [20] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0020.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [21] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0021.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [22] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0022.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [23] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0023.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [24] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0024.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [25] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0025.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [26] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0026.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [27] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0027.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [28] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0028.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [29] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0029.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [30] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0030.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [31] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0031.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [32] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0032.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [33] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0033.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [34] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0034.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [35] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0035.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [36] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0036.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [37] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0037.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [38] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0038.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [39] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0039.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [40] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0040.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [41] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0041.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [42] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0042.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [43] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0043.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [44] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0044.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [45] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0045.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [46] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0046.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [47] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0047.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [48] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0048.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [49] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0049.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [50] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0050.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [51] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0051.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [52] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0052.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [53] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0053.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [54] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0054.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [55] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0055.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [56] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0056.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [57] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0057.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [58] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0058.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [59] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0059.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [60] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0060.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [61] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0061.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [62] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0062.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [63] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0063.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [64] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0064.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [65] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0065.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [66] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0066.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [67] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0067.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [68] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0068.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [69] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0069.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [70] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0070.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [71] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0071.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [72] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0072.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [73] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0073.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [74] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0074.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [75] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0075.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [76] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0076.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [77] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0077.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [78] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0078.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [79] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0079.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [80] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0080.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [81] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0081.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [82] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0082.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [83] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0083.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [84] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0084.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [85] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0085.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [86] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0086.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [87] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0087.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [88] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0088.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [89] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0089.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [90] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0090.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [91] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0091.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [92] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0092.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [93] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0093.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [94] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0094.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [95] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0095.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [96] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0096.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [97] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0097.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [98] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0098.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [99] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0099.png"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [100] "/tmp/RtmpTeUAYF/my_frames/ggcube_frame_0100.png"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "frame_files_3d" "character"     </span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
