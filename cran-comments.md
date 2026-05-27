@@ -1,22 +1,30 @@
+## Resubmission Notes
+
+This is a resubmission of ggcube. I have made the following changes to
+address issues flagged in the previous review:
+
+* All `\dontrun{}` tags have been changed to `\donttest{}`.
+
+* All functions now have a return `\value` tag.
+
+* The `file_renderer_3d()` function now writes to `tempdir()` by 
+default instead of `"."`.
+
+The resubmission also includes a few minor bugfixes, and a refactor that
+avoids importing internal ggplot2 functions.
+
+
 ## R CMD check results
 
-0 errors | 0 warnings | 2 notes
+0 errors | 0 warnings | 1 note
 
-* This is a new release.
+* New submission
 
-* The package uses `ggplot2:::default_expansion` and
-  `ggplot2:::expand_limits_scale` from the `ggplot2` internals. These
-  are needed because `coord_3d()` extends `CoordCartesian` and must
-  reproduce ggplot2's exact scale expansion behavior to ensure
-  consistent axis limits between 2D and 3D coordinate systems.
-  Reimplementing this logic in the package would create a risk of
-  silent drift from ggplot2's behavior across versions, with no
-  user-visible benefit. The ggplot2 extension documentation notes
-  that coord extensions may require access to internal coordinate
-  system functionality.
-  
+
 ## Test environments
 
+* Local: macOS, R-release
+* win-builder: R-devel
 * GitHub Actions (ubuntu-latest): R-release, R-oldrel
 * GitHub Actions (windows-latest): R-release
 * GitHub Actions (macos-latest): R-release

@@ -6,6 +6,8 @@
 <!-- badges: start -->
 
 [![R-CMD-check](https://github.com/matthewkling/ggcube/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/matthewkling/ggcube/actions/workflows/R-CMD-check.yaml)
+[![CRAN
+status](https://www.r-pkg.org/badges/version/ggcube)](https://CRAN.R-project.org/package=ggcube)
 <!-- badges: end -->
 
 **ggcube** lets you build 3D figures using ggplot2. Use it to create 3D
@@ -299,3 +301,18 @@ ggplot(iris, aes(Sepal.Length, Sepal.Width, Petal.Length,
 ```
 
 <img src="man/figures/README-position-1.png" width="100%" />
+
+## Learn more
+
+- The [getting
+  started](https://matthewkling.github.io/ggcube/articles/ggcube.html)
+  vignette gives a tour of the main features.
+- The [3D
+  view](https://matthewkling.github.io/ggcube/articles/coord_3d.html),
+  [surfaces](https://matthewkling.github.io/ggcube/articles/surfaces.html),
+  and [lighting and
+  shading](https://matthewkling.github.io/ggcube/articles/lighting.html)
+  articles go deeper on those topics.
+- The [function
+  reference](https://matthewkling.github.io/ggcube/reference/index.html)
+  documents every exported function.
