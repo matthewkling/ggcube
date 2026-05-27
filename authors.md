@@ -7,7 +7,7 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/matthewkling/ggcube/blob/main/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/matthewkling/ggcube/blob/v0.1.0/DESCRIPTION)
 
 Kling M (2026). *ggcube: 3D Plotting with 'ggplot2'*. R package version
 0.1.0, <https://github.com/matthewkling/ggcube>.
