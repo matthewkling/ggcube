@@ -52,35 +52,34 @@ NULL
 
 
 
-#' Enhanced rectangle theme element with alpha support
+#' Enhanced rectangle element with alpha support
 #'
 #' This function extends \code{ggplot2::element_rect()} to support transparency
-#' via an \code{alpha} parameter. This is particularly useful for styling
-#' foreground panels in 3D plots to create layered visual effects.
-#'
-#' This function delegates to \code{ggplot2::element_rect()} to construct a fully
-#' valid theme element, then attaches the \code{alpha} field.
+#' via an \code{alpha} parameter. When both \code{fill} and \code{alpha} are
+#' supplied, the alpha level is blended into the fill color (via
+#' \code{scales::alpha()}) before the element is constructed, and a standard
+#' \code{ggplot2::element_rect()} is returned. The \code{alpha} parameter is
+#' particularly useful for styling foreground panels in 3D plots to prevent
+#' them from obscuring data layers.
 #'
 #' @param fill Fill colour for the rectangle.
-#' @param colour,color Border colour for the rectangle.
-#' @param linewidth Border width.
-#' @param linetype Border line type.
-#' @param inherit.blank Should this element inherit the existence of an
-#'   \code{element_blank} among its parents? See
-#'   \code{\link[ggplot2]{element_rect}} for details.
-#' @param alpha Transparency level for the rectangle fill, ranging from 0
-#'   (completely transparent) to 1 (completely opaque). Particularly useful for
-#'   styling foreground panels in 3D plots to create layered visual effects.
+#' @param alpha Transparency level applied to the fill, ranging from 0
+#'   (completely transparent) to 1 (completely opaque). Has an effect only when
+#'   \code{fill} is also supplied. Particularly useful for styling foreground
+#'   panels in 3D plots to create layered visual effects.
+#' @param ... Additional arguments passed to \code{\link[ggplot2]{element_rect}},
+#'   such as \code{color}, \code{linewidth}, \code{linetype}, and
+#'   \code{inherit.blank}.
 #'
-#' @return A theme element object that can be used in \code{theme()}
-#'   specifications.
+#' @return A \code{ggplot2::element_rect} theme element that can be used in
+#'   \code{theme()} specifications.
 #'
 #' @examples
 #' # Basic 3D plot with semi-transparent foreground panels
 #' ggplot(mountain, aes(x, y, z)) +
 #'   stat_surface_3d(fill = "darkblue", color = "lightblue", linewidth = .1) +
 #'   coord_3d(panels = c("background", "ymin")) +
-#'   theme(panel.foreground = element_rect(alpha = 0.6))
+#'   theme(panel.foreground = element_rect(fill = "white", alpha = 0.6))
 #'
 #' # Completely transparent foreground panels
 #' ggplot(mtcars, aes(mpg, wt, qsec)) +
@@ -91,14 +90,11 @@ NULL
 #'
 #' @seealso \code{\link[ggplot2]{element_rect}} for the original function,
 #'   \code{\link{coord_3d}} for 3D coordinate systems that utilise foreground panels
+#' @importFrom scales alpha
 #' @export
-element_rect <- function(fill = NULL, colour = NULL, linewidth = NULL,
-                         linetype = NULL, color = NULL,
-                         inherit.blank = FALSE, alpha = NULL) {
-      el <- ggplot2::element_rect(
-            fill = fill, colour = colour, linewidth = linewidth,
-            linetype = linetype, color = color, inherit.blank = inherit.blank
-      )
-      el$alpha <- alpha
-      el
+element_rect <- function(fill = NULL, alpha = NULL, ...) {
+      if (!is.null(fill) && !is.null(alpha)) {
+            fill <- scales::alpha(fill, alpha)
+      }
+      ggplot2::element_rect(fill = fill, ...)
 }
