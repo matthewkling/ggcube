@@ -417,7 +417,7 @@ ggplot(iris, aes(Sepal.Length, Sepal.Width, Petal.Length,
 - [`cube_theming`](https://matthewkling.github.io/ggcube/reference/cube_theming.md)
   : Using themes to style 3D panels and axis labels
 - [`element_rect()`](https://matthewkling.github.io/ggcube/reference/element_rect.md)
-  : Rectangle theme element with alpha support
+  : Enhanced rectangle element with alpha support
 - [`grid_generation`](https://matthewkling.github.io/ggcube/reference/grid_generation.md)
   : Grid generation
 - [`sorting_methods`](https://matthewkling.github.io/ggcube/reference/sorting_methods.md)

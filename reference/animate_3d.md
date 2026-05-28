@@ -162,6 +162,6 @@ anim <- animate_3d(p, yaw = c(0, 360))
 #> Rendering 100 frames...
 #> Assembling animation...
 anim_save_3d(anim, file.path(tempdir(), "rotating_surface.gif"))
-#> Animation saved to /tmp/RtmpZCJlB9/rotating_surface.gif
+#> Animation saved to /tmp/RtmplCyGtt/rotating_surface.gif
 # }
 ```
