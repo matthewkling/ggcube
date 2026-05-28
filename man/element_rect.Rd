@@ -2,7 +2,7 @@
 % Please edit documentation in R/theme.R
 \name{element_rect}
 \alias{element_rect}
-\title{Rectangle theme element with alpha support}
+\title{Enhanced rectangle theme element with alpha support}
 \usage{
 element_rect(
   fill = NULL,
@@ -11,36 +11,38 @@ element_rect(
   linetype = NULL,
   color = NULL,
   inherit.blank = FALSE,
-  size = lifecycle::deprecated(),
   alpha = NULL
 )
 }
 \arguments{
-\item{fill}{Fill color for the rectangle. Use \code{NA} for no fill.}
+\item{fill}{Fill colour for the rectangle.}
 
-\item{colour, color}{Line color for the rectangle border. Use \code{NA} for no border.}
+\item{colour, color}{Border colour for the rectangle.}
 
-\item{linewidth}{Line width for the rectangle border.}
+\item{linewidth}{Border width.}
 
-\item{linetype}{Line type for the rectangle border (e.g., "solid", "dashed").}
+\item{linetype}{Border line type.}
 
-\item{inherit.blank}{Should this element inherit from \code{element_blank}?}
+\item{inherit.blank}{Should this element inherit the existence of an
+\code{element_blank} among its parents? See
+\code{\link[ggplot2]{element_rect}} for details.}
 
-\item{size}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}
-Use \code{linewidth} instead.}
-
-\item{alpha}{Transparency level for the rectangle fill, ranging from 0 (completely transparent)
-to 1 (completely opaque). Particularly useful for styling foreground panels in 3D plots
-to create layered visual effects.}
+\item{alpha}{Transparency level for the rectangle fill, ranging from 0
+(completely transparent) to 1 (completely opaque). Particularly useful for
+styling foreground panels in 3D plots to create layered visual effects.}
 }
 \value{
-A theme element object that can be used in \code{theme()} specifications.
+A theme element object that can be used in \code{theme()}
+specifications.
 }
 \description{
 This function extends \code{ggplot2::element_rect()} to support transparency
-via an alpha parameter. It maintains full backward compatibility with the original
-\code{element_rect()} function while enabling transparent panel styling, which is
-particularly useful for foreground panels in 3D plots.
+via an \code{alpha} parameter. This is particularly useful for styling
+foreground panels in 3D plots to create layered visual effects.
+}
+\details{
+This function delegates to \code{ggplot2::element_rect()} to construct a fully
+valid theme element, then attaches the \code{alpha} field.
 }
 \examples{
 # Basic 3D plot with semi-transparent foreground panels
@@ -59,6 +61,5 @@ ggplot(mtcars, aes(mpg, wt, qsec)) +
 }
 \seealso{
 \code{\link[ggplot2]{element_rect}} for the original function,
-\code{\link{coord_3d}} for 3D coordinate systems that utilize foreground panels,
-\link{cube_theming} for details on panel/gridline/axis label styling.
+\code{\link{coord_3d}} for 3D coordinate systems that utilise foreground panels
 }
