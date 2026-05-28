@@ -106,28 +106,26 @@ measure_axis_text_dimensions <- function(edge_gridlines, theme_elements, axis_la
                   gridline_data <- edge_gridlines[edge_gridlines$group == group_id, ]
                   if (nrow(gridline_data) >= 1) {
 
-                        # NEW: Use custom labels if available
+                        # Use custom labels if available, preserving language
+                        # objects (plotmath) rather than coercing to character.
                         if (!is.null(axis_labels) && !is.null(axis_breaks)) {
-                              # Find which break this gridline corresponds to
                               break_value <- gridline_data$break_value[1]
-
-                              #break_index <- which.min(abs(axis_breaks - break_value))
                               break_index <- match(break_value, axis_breaks)
 
-                              if (length(break_index) > 0 && break_index <= length(axis_labels)) {
-                                    label_text <- as.character(axis_labels[break_index])
+                              if (length(break_index) > 0 && !is.na(break_index) &&
+                                  break_index <= length(axis_labels)) {
+                                    label_value <- as_grob_label(axis_labels[[break_index]])
                               } else {
-                                    # Fallback to break value
-                                    label_text <- as.character(break_value)
+                                    label_value <- as.character(break_value)
                               }
                         } else {
-                              # Fallback to break value
-                              label_text <- as.character(gridline_data$break_value[1])
+                              label_value <- as.character(gridline_data$break_value[1])
                         }
 
-                        if (!is.na(label_text) && nchar(label_text) > max_chars) {
-                              max_chars <- nchar(label_text)
-                              longest_label <- label_text
+                        label_chars <- label_width_proxy(label_value)
+                        if (label_chars > max_chars) {
+                              max_chars <- label_chars
+                              longest_label <- label_value
                         }
                   }
             }
@@ -136,7 +134,7 @@ measure_axis_text_dimensions <- function(edge_gridlines, theme_elements, axis_la
             max_text_width <- 0.05  # Default fallback
             max_text_height <- 0.02  # Default fallback
 
-            if (max_chars > 0 && longest_label != "") {
+            if (max_chars > 0) {
                   sample_grob <- tryCatch({
                         grid::textGrob(
                               label = longest_label,
@@ -329,13 +327,43 @@ calculate_text_rotation_and_justification <- function(gridline_data, rotate_labe
       }
 }
 
-# Helper function to resolve label text
+# Helper to normalise a single label into a value grid::textGrob accepts.
+# Character and numeric labels pass through as strings; language objects
+# (calls, names) and expression elements are preserved so plotmath renders.
+# An expression vector of length >= 1 is reduced to its first element.
+as_grob_label <- function(x) {
+      if (is.expression(x)) {
+            if (length(x) == 0) return("")
+            return(x[[1]])
+      }
+      if (is.language(x)) {
+            return(x)
+      }
+      as.character(x)
+}
+
+# Helper to estimate the rendered width of a label for "longest label"
+# ranking. Language objects have no nchar(), so deparse them first.
+label_width_proxy <- function(x) {
+      if (is.expression(x)) {
+            if (length(x) == 0) return(0L)
+            return(nchar(paste(deparse(x[[1]]), collapse = "")))
+      }
+      if (is.language(x)) {
+            return(nchar(paste(deparse(x), collapse = "")))
+      }
+      if (is.na(x)) return(0L)
+      nchar(as.character(x))
+}
+
+# Helper function to resolve label text. May return a character string or a
+# language object (for plotmath labels); callers must not coerce the result.
 resolve_label_text <- function(break_value, axis_labels, axis_breaks) {
       if (!is.null(axis_labels) && !is.null(axis_breaks)) {
-            # break_index <- which.min(abs(axis_breaks - break_value))
             break_index <- match(break_value, axis_breaks)
-            if (length(break_index) > 0 && break_index <= length(axis_labels)) {
-                  return(as.character(axis_labels[break_index]))
+            if (length(break_index) > 0 && !is.na(break_index) &&
+                break_index <= length(axis_labels)) {
+                  return(as_grob_label(axis_labels[[break_index]]))
             }
       }
       return(as.character(break_value))
@@ -375,7 +403,7 @@ create_text_grob <- function(text, x_npc, y_npc, rotation_info, theme_elements, 
 
       tryCatch({
             grid::textGrob(
-                  label = as.character(text),
+                  label = as_grob_label(text),
                   x = as.numeric(x_npc),
                   y = as.numeric(y_npc),
                   hjust = as.numeric(rotation_info$hjust),
@@ -494,7 +522,7 @@ create_axis_title <- function(axis, edge_gridlines, theme_elements, offsets, tex
             axis_name <- axis
       }
 
-      if (is.null(axis_name) || axis_name == "") {
+      if (is.null(axis_name) || (is.character(axis_name) && axis_name == "")) {
             return(list())  # Return empty list if no title
       }
 
@@ -680,8 +708,8 @@ render_axis_text <- function(self, panel_params, theme) {
                   # Create axis titles if theme allows
                   if (should_render_axis_title) {
                         title_result <- create_axis_title(axis, edge_gridlines, theme_elements_axis, offsets, text_dimensions,
-                                                         panel_params, self$rotate_labels, panel_params$plot_bounds, chosen_edge, axis_uses_start,
-                                                         on_hull, axis_selection, self$title_position %||% "auto")
+                                                          panel_params, self$rotate_labels, panel_params$plot_bounds, chosen_edge, axis_uses_start,
+                                                          on_hull, axis_selection, self$title_position %||% "auto")
                         all_titles <- c(all_titles, title_result)
                   }
             }
