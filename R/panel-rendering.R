@@ -227,8 +227,6 @@ create_panel_polygons = function(face_corners_transformed, panel_params, theme, 
             border_type <- 1
       }
 
-      alpha_val <- panel_bg$alpha %||% 1
-
       # Scale to [0, 1] based on plot bounds
       x_scaled <- (face_corners_transformed$x - panel_params$plot_bounds[1]) /
             (panel_params$plot_bounds[2] - panel_params$plot_bounds[1])
@@ -273,7 +271,7 @@ create_panel_polygons = function(face_corners_transformed, panel_params, theme, 
             id = polygon_ids,
             default.units = "npc",
             gp = grid::gpar(
-                  fill = alpha(fill_color, alpha_val),
+                  fill = fill_color,
                   col = border_color,
                   lwd = border_width,
                   lty = border_type
