@@ -39,8 +39,8 @@ ggplot(mtcars, aes(mpg, wt, z = qsec)) +
 \code{\link{scale_z_continuous}} for more control over z-axis scaling,
 \code{\link{xlim}}, \code{\link{ylim}} for x and y axis limits
 
-Other 3D scale functions: 
-\code{\link{scale_z_continuous}()},
-\code{\link{scale_z_discrete}()}
+Other 3D scale functions:
+\code{\link[=scale_z_continuous]{scale_z_continuous()}},
+\code{\link[=scale_z_discrete]{scale_z_discrete()}}
 }
 \concept{3D scale functions}

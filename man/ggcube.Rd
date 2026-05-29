@@ -24,5 +24,10 @@ Useful links:
 \author{
 \strong{Maintainer}: Matthew Kling \email{mattkling@berkeley.edu} [copyright holder]
 
+Authors:
+\itemize{
+  \item Matthew Kling \email{mattkling@berkeley.edu} [copyright holder]
+}
+
 }
 \keyword{internal}

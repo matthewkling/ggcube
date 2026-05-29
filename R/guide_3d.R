@@ -11,11 +11,10 @@
 #' uses the color aesthetic. Only use the color guide when color and fill
 #' map to different variables and you want separate guides for each.
 #'
-#' @param ... Arguments passed to \code{guide_colorbar()} or \code{guide_legend()}
 #' @param reverse_shade Logical. If TRUE, reverses the lighting gradient direction. By default,
 #'   shadows are placed on the left, or on the bottom for horizontal colorbars.
 #' @param shade_range Length-2 numeric vector in the range -1 to 1, giving the limits
-#'   of the shading gradient. -1 is full shade, and 1 is full highlight. Default is `c(-.5, 5)`.
+#'   of the shading gradient. -1 is full shade, and 1 is full highlight. Default is `c(-.5, .5)`.
 #' @param ... Additional arguments passed to \code{guide_colorbar()} or \code{guide_legend()}.
 #' @return A guide object that displays shading effects
 #' @examples
@@ -177,9 +176,9 @@ extract_light_from_plot <- function() {
 #' @keywords internal
 #' @noRd
 create_light_gradients <- function(base_colors,
-                                      lighting_info,
-                                      shade_range = c(-1, 1),
-                                      n_steps = 20) {
+                                   lighting_info,
+                                   shade_range = c(-1, 1),
+                                   n_steps = 20) {
 
       # Reverse order for proper gradient direction
       base_colors <- rev(base_colors)
@@ -284,45 +283,145 @@ replace_colorbar_colors <- function(grob, grad) {
       return(grob)
 }
 
+#' Replace legend key colors with shading gradients
+#'
+#' Locates the colored key cells structurally rather than by matching a
+#' specific gtable layout-name scheme, so it works across ggplot2 versions
+#' whose internal naming and nesting differ. In ggplot2 >= 4.0 the legend is
+#' wrapped in an outer "guide-box" gtable and each key cell is a gTree
+#' containing both a background rect and the layer's drawn glyph rect; in
+#' earlier versions the legend gtable is passed directly and key cells are
+#' bare rects.
+#'
+#' @param grob Original legend grob
+#' @param grad Matrix of gradient colors
+#' @return Modified grob with gradients
+#' @keywords internal
+#' @noRd
 replace_legend_colors <- function(grob, grad) {
-      if (inherits(grob, "gtable")) {
+      if (!inherits(grob, "gtable")) {
+            return(grob)
+      }
 
-            # Find color key grobs (the actual colored rectangles, not backgrounds)
-            key_indices <- grep("key-.*-.*-\\d+$", grob$layout$name)
-
-            for (i in seq_along(key_indices)) {
-                  idx <- key_indices[i]
-                  rect_grob <- grob$grobs[[idx]]
-
-                  # Get gradient for this legend item (row i of gradient_matrix)
-                  gradient_colors <- grad[i, ]
-
-                  # Create raster grob with same position/size as original rect
-                  raster_grob <- create_legend_gradient_raster(rect_grob, gradient_colors)
-
-                  # Replace rect with raster
-                  grob$grobs[[idx]] <- raster_grob
+      # In ggplot2 >= 4.0 the legend gtable is nested inside an outer
+      # "guide-box" wrapper. Descend into any child gtables that themselves
+      # contain key cells, operate on them, and write them back.
+      key_cells_here <- find_legend_key_cells(grob)
+      if (length(key_cells_here) == 0) {
+            modified <- FALSE
+            for (i in seq_along(grob$grobs)) {
+                  child <- grob$grobs[[i]]
+                  if (inherits(child, "gtable") &&
+                      length(find_legend_key_cells(child)) > 0) {
+                        grob$grobs[[i]] <- replace_legend_colors(child, grad)
+                        modified <- TRUE
+                  }
             }
+            return(grob)
+      }
+
+      # Order key cells by grid position (top-to-bottom, then left-to-right)
+      # so cell i corresponds to row i of the gradient matrix, matching the
+      # base-colour order regardless of layout naming.
+      ord <- order(grob$layout$t[key_cells_here], grob$layout$l[key_cells_here])
+      key_cells <- key_cells_here[ord]
+
+      n <- min(length(key_cells), nrow(grad))
+      for (i in seq_len(n)) {
+            idx <- key_cells[i]
+            grob$grobs[[idx]] <- replace_key_glyph(grob$grobs[[idx]], grad[i, ])
       }
 
       return(grob)
 }
 
-create_legend_gradient_raster <- function(rect_grob, gradient_colors) {
+#' Identify the colored key cells within a legend gtable
+#'
+#' @param grob A gtable
+#' @return Integer indices into grob$grobs / grob$layout for key cells
+#' @keywords internal
+#' @noRd
+find_legend_key_cells <- function(grob) {
+      if (!inherits(grob, "gtable") || is.null(grob$layout$name)) {
+            return(integer(0))
+      }
+      nm <- grob$layout$name
+      # ggplot2 >= 4.0: "key-1-1-bg"; ggplot2 3.5.x: "key-1-1-1" etc.
+      grep("^key-\\d+-\\d+(-bg|-\\d+)?$", nm)
+}
 
-      # Extract position and size from rect grob
-      x <- rect_grob$x
-      y <- rect_grob$y
-      width <- rect_grob$width
-      height <- rect_grob$height
+#' Replace the layer glyph in a single legend key cell with a gradient raster
+#'
+#' Handles both a bare rect cell (older ggplot2) and a gTree cell containing a
+#' background rect plus the layer's drawn glyph (ggplot2 >= 4.0). For the gTree
+#' case the layer glyph is identified via childrenOrder, where the background
+#' carries an empty name and the layer glyph is named after its layer.
+#'
+#' @param cell A grob (rect or gTree) for one legend key
+#' @param gradient_colors Character vector of colors for this key
+#' @return Modified grob
+#' @keywords internal
+#' @noRd
+replace_key_glyph <- function(cell, gradient_colors) {
+
+      # Bare rect cell: replace directly.
+      if (inherits(cell, "rect")) {
+            return(legend_key_raster_grob(cell, gradient_colors))
+      }
+
+      # gTree cell: replace the layer glyph rect among the children.
+      if (inherits(cell, "gTree") && length(cell$children) > 0) {
+            child_names <- names(cell$children)
+            order_names <- names(cell$childrenOrder)
+
+            # The layer glyph is the child whose childrenOrder name is non-empty
+            # (the key background's name is ""). Fall back to the last rect child.
+            glyph_name <- NULL
+            if (!is.null(order_names)) {
+                  named <- cell$childrenOrder[nzchar(order_names)]
+                  if (length(named) > 0) {
+                        glyph_name <- unname(named[length(named)])
+                  }
+            }
+
+            rect_children <- child_names[vapply(
+                  cell$children, function(g) inherits(g, "rect"), logical(1)
+            )]
+
+            if (is.null(glyph_name) || !(glyph_name %in% child_names) ||
+                !inherits(cell$children[[glyph_name]], "rect")) {
+                  if (length(rect_children) == 0) return(cell)
+                  glyph_name <- rect_children[length(rect_children)]
+            }
+
+            ref_rect <- cell$children[[glyph_name]]
+            cell$children[[glyph_name]] <- legend_key_raster_grob(ref_rect, gradient_colors)
+            return(cell)
+      }
+
+      return(cell)
+}
+
+#' Build a gradient raster grob matching a reference rect's geometry
+#'
+#' @param rect_grob Reference rect grob whose position/size/just are reused
+#' @param gradient_colors Character vector of colors (shadow to highlight)
+#' @return A rasterGrob
+#' @keywords internal
+#' @noRd
+legend_key_raster_grob <- function(rect_grob, gradient_colors) {
+
+      x <- rect_grob$x %||% grid::unit(0.5, "npc")
+      y <- rect_grob$y %||% grid::unit(0.5, "npc")
+      width <- rect_grob$width %||% grid::unit(1, "npc")
+      height <- rect_grob$height %||% grid::unit(1, "npc")
       just <- rect_grob$just %||% c(0.5, 0.5)
 
-      # Create horizontal gradient raster (left to right = shadow to highlight)
+      # Horizontal gradient raster (left to right = shadow to highlight)
       n_steps <- length(gradient_colors)
       raster_matrix <- matrix(gradient_colors, nrow = 1, ncol = n_steps)
       raster_obj <- as.raster(raster_matrix)
 
-      # Create raster grob with same position/size as original rect
       grid::rasterGrob(
             image = raster_obj,
             x = x,

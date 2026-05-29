@@ -171,5 +171,5 @@ ggplot() +
 \code{\link[=stat_function_3d]{stat_function_3d()}} for mathematical function surfaces,
 \code{\link[=stat_smooth_3d]{stat_smooth_3d()}} for fitted model surfaces,
 \code{\link[=coord_3d]{coord_3d()}} for 3D coordinate systems,
-\code{\link[ggplot2:geom_contour]{ggplot2::geom_contour_filled()}} for the 2D equivalent.
+\code{\link[ggplot2:geom_contour_filled]{ggplot2::geom_contour_filled()}} for the 2D equivalent.
 }

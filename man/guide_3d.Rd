@@ -15,7 +15,7 @@ guide_legend_3d(reverse_shade = FALSE, shade_range = c(-0.5, 0.5), ...)
 shadows are placed on the left, or on the bottom for horizontal colorbars.}
 
 \item{shade_range}{Length-2 numeric vector in the range -1 to 1, giving the limits
-of the shading gradient. -1 is full shade, and 1 is full highlight. Default is \code{c(-.5, 5)}.}
+of the shading gradient. -1 is full shade, and 1 is full highlight. Default is \code{c(-.5, .5)}.}
 
 \item{...}{Additional arguments passed to \code{guide_colorbar()} or \code{guide_legend()}.}
 }

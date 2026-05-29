@@ -70,7 +70,7 @@ and end of the animation. Default is 0.}
 after completing, creating a seamless loop. Default is \code{FALSE}.}
 
 \item{cores}{Number of CPU cores for parallel frame rendering. Default
-is 1 (sequential). Values greater than 1 use \code{\link[parallel:clusterApply]{parallel::parLapply()}}
+is 1 (sequential). Values greater than 1 use \code{\link[parallel:parLapply]{parallel::parLapply()}}
 to render frames in parallel, which can significantly speed up
 animation of complex plots. Note that progress reporting is not
 available during parallel rendering.}
@@ -94,7 +94,7 @@ Renders an animated GIF or MP4 of a rotating ggplot with \code{\link[=coord_3d]{
 smoothly interpolating rotation angles across frames.
 }
 \examples{
-\dontshow{if (requireNamespace("gifski", quietly = TRUE)) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (requireNamespace("gifski", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 \donttest{
 # Plot to animate. Note `anchor = "camera"` keeps light source from rotating.
 p <- ggplot() +

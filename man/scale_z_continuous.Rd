@@ -67,7 +67,7 @@ padding around the data to ensure that they are placed some distance away from t
 
 \item{transform}{The name of a transformation object or the object itself. Default is "identity",
 but works with standard transform options such as "log10", "sqrt", and "reverse",
-detailed in the documentation for \code{\link[ggplot2:scale_continuous]{ggplot2::scale_x_continuous()}}.}
+detailed in the documentation for \code{\link[ggplot2:scale_x_continuous]{ggplot2::scale_x_continuous()}}.}
 
 \item{guide}{A function used to create a guide or its name. Since z-axis guides are not
 yet supported, this defaults to \code{"none"}.}
@@ -103,8 +103,8 @@ ggplot(mtcars, aes(mpg, wt, z = qsec)) +
 \code{\link{zlim}} for a shorthand way to set z-axis limits,
 \code{\link{coord_3d}} for the 3D coordinate system
 
-Other 3D scale functions: 
-\code{\link{scale_z_discrete}()},
-\code{\link{zlim}()}
+Other 3D scale functions:
+\code{\link[=scale_z_discrete]{scale_z_discrete()}},
+\code{\link[=zlim]{zlim()}}
 }
 \concept{3D scale functions}

@@ -83,8 +83,8 @@ ggplot(mpg, aes(displ, cty, drv, color = drv)) +
 \code{\link{scale_z_continuous}} for continuous z-axis scaling,
 \code{\link{coord_3d}} for the 3D coordinate system
 
-Other 3D scale functions: 
-\code{\link{scale_z_continuous}()},
-\code{\link{zlim}()}
+Other 3D scale functions:
+\code{\link[=scale_z_continuous]{scale_z_continuous()}},
+\code{\link[=zlim]{zlim()}}
 }
 \concept{3D scale functions}
