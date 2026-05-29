@@ -67,7 +67,7 @@ ggplot(mpg, aes(x = displ, y = hwy, z = drv, color = class)) +
       coord_3d()
 ```
 
-<img src="man/figures/README-quickstart-1.png" width="100%" />
+<img src="man/figures/README-quickstart-1.png" alt="" width="100%" />
 
 You can control plot rotation, perspective, and dimensions, as well as
 axis label placement and panel selection, via parameters to
@@ -84,7 +84,7 @@ ggplot(mpg, aes(displ, hwy, drv, color = class)) +
             panel.foreground = element_rect(alpha = .1))
 ```
 
-<img src="man/figures/README-rotation-1.png" width="100%" />
+<img src="man/figures/README-rotation-1.png" alt="" width="100%" />
 
 ## 3D surfaces
 
@@ -117,7 +117,7 @@ ggplot(mountain, aes(x, y, z)) +
       theme_light()
 ```
 
-<img src="man/figures/README-surfaces-1.png" width="100%" />
+<img src="man/figures/README-surfaces-1.png" alt="" width="100%" />
 
 Example: a terrain surface using `geom_contour_3d()`, also showing
 functionality for animation as a rotating GIF:
@@ -130,24 +130,26 @@ p <- ggplot(mountain, aes(x, y, z)) +
 animate_3d(p, yaw = c(0, 360))
 ```
 
-<img src="man/figures/README-contour_anim-1.gif" width="100%" />
+<img src="man/figures/README-contour_anim-1.gif" alt="" width="100%" />
 
 Example: a mathematical surface using `geom_function_3d()`:
 
 ``` r
 ggplot() +
-      geom_function_3d(fun = function(x, y) cos(x) * sin(y),
+      geom_function_3d(fun = function(x1, x2) cos(x1) * sin(x2),
                        xlim = c(-pi, pi), ylim = c(-2*pi, 2*pi),
                        fill = "#7a2100", color = "#b3725b", 
-                       grid = "right1") +
+                       grid = "right1", linewidth = .2) +
       coord_3d(yaw = 160, roll = -70, 
                scales = "fixed", ratio = c(1, 1, 2)) +
-      labs(z = "cos(x) * sin(y)") +
+      labs(x = expression(x[1]),
+           y = expression(x[2]),
+           z = expression(cos(x[1]) %*% sin(x[2]))) +
       theme_minimal()
 ```
 
-<img src="man/figures/README-functions-1.png" width="100%" /> Example: a
-fitted model surface using `geom_smooth_3d()`:
+<img src="man/figures/README-functions-1.png" alt="" width="100%" />
+Example: a fitted model surface using `geom_smooth_3d()`:
 
 ``` r
 # Generate scattered 3D data
@@ -166,7 +168,7 @@ ggplot(d, aes(x, y, z)) +
       coord_3d(light = NULL)
 ```
 
-<img src="man/figures/README-smooth-1.png" width="100%" />
+<img src="man/figures/README-smooth-1.png" alt="" width="100%" />
 
 ## 3D paths
 
@@ -184,7 +186,7 @@ ggplot(butterfly, aes(x, y, z, color = time)) +
       theme_light()
 ```
 
-<img src="man/figures/README-paths-1.png" width="100%" />
+<img src="man/figures/README-paths-1.png" alt="" width="100%" />
 
 ## 3D points
 
@@ -201,7 +203,7 @@ ggplot(mpg, aes(x = displ, y = hwy, z = drv, fill = class)) +
       coord_3d()
 ```
 
-<img src="man/figures/README-points-1.png" width="100%" />
+<img src="man/figures/README-points-1.png" alt="" width="100%" />
 
 ## 3D prisms
 
@@ -210,34 +212,35 @@ ggplot(mpg, aes(x = displ, y = hwy, z = drv, fill = class)) +
   variables
 - `geom_voxel_3d()` renders sparse 3D pixel data as arrays of cubes
 
-Example: a 3D histogram chart using `geom_bar_3d()`:
+Example: a 3D histogram using `geom_bar_3d()`:
 
 ``` r
-ggplot(iris, aes(Species, Sepal.Length, fill = Species)) +
-      geom_bar_3d(bins = 20, width = c(.5, 1)) +
-      coord_3d(scales = "fixed", ratio = c(1, 3, .25), yaw = 60) +
-      scale_z_continuous(expand = c(0, 0)) +
-      theme(legend.position = "none")
+ggplot(faithful, aes(waiting, eruptions)) +
+      geom_bar_3d(fill = "steelblue", color = "steelblue", 
+                  bins = 15, width = .9) +
+      coord_3d(yaw = 60) +
+      scale_z_continuous(expand = c(0, 0))
 ```
 
-<img src="man/figures/README-bar-1.png" width="100%" />
+<img src="man/figures/README-bar-1.png" alt="" width="100%" />
 
 ## 3D text
 
-`geom_text_3d()` creates 3D-aware text, rendered either as”billboard”
+`geom_text_3d()` creates 3D-aware text, rendered either as “billboard”
 text that faces the viewing plane or as 3D polygons that can face any
 direction:
 
 ``` r
-df <- expand.grid(x = c("H", "B"), y = c("a", "o", "u"), z = c("g", "t"))
+df <- expand.grid(x = c("B", "H", "N"), y = c("a", "o", "u"), z = c("g", "t"))
 df$label <- paste0(df$x, df$y, df$z)
 ggplot(df, aes(x, y, z, label = label, fill = x)) +
-   geom_text_3d(method = "polygon", facing = "zmax", 
-                size = 5, weight = "bold") +
-   coord_3d(scales = "fixed", light = NULL)
+      geom_text_3d(method = "polygon", facing = "zmax", 
+                   size = 5, weight = "bold") +
+      coord_3d(scales = "fixed", rotate_labels = FALSE) +
+      theme(axis.title = element_blank())
 ```
 
-<img src="man/figures/README-text-1.png" width="100%" />
+<img src="man/figures/README-text-1.png" alt="" width="100%" />
 
 ## Lighting effects
 
@@ -270,7 +273,7 @@ ggplot(sphere_points, aes(x, y, z)) +
                    light = light(method = "rgb", direction = c(1, 0, -1)))
 ```
 
-<img src="man/figures/README-lighting-1.png" width="100%" />
+<img src="man/figures/README-lighting-1.png" alt="" width="100%" />
 
 ## Face projection
 
@@ -300,7 +303,7 @@ ggplot(iris, aes(Sepal.Length, Sepal.Width, Petal.Length,
       geom_point_3d( shape = 21, color = "black", stroke = .25)
 ```
 
-<img src="man/figures/README-position-1.png" width="100%" />
+<img src="man/figures/README-position-1.png" alt="" width="100%" />
 
 ## Learn more
 
