@@ -40,7 +40,7 @@ animation file. These are factory functions that return the actual
 rendering function.
 }
 \examples{
-\dontshow{if (requireNamespace("gifski", quietly = TRUE) && requireNamespace("av", quietly = TRUE)) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (requireNamespace("gifski", quietly = TRUE) && requireNamespace("av", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 \donttest{
 p <- ggplot() +
   geom_function_3d(

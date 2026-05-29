@@ -81,7 +81,7 @@ onto one 2D surface, use \code{position_on_face()}.}
 
 \item{bw}{The smoothing bandwidth to be used. If numeric, the standard
 deviation of the smoothing kernel. If character, a rule to choose the
-bandwidth, as listed in \code{\link[stats:bandwidth]{stats::bw.nrd()}}. Options include \code{"nrd0"} (default),
+bandwidth, as listed in \code{\link[stats:bw.nrd]{stats::bw.nrd()}}. Options include \code{"nrd0"} (default),
 \code{"nrd"}, \code{"ucv"}, \code{"bcv"}, \code{"SJ"}, \code{"SJ-ste"}, and \code{"SJ-dpi"}. Note that
 
 automatic calculation is performed per-group unless \code{joint_bandwidth = TRUE}.}
@@ -116,7 +116,7 @@ parameter of the same name in \code{ggridges::geom_density_ridges()}.}
 groups using the specified \code{bw} method, ensuring consistent smoothing
 across all density curves. This matches the behavior of
 \code{\link[ggridges:stat_density_ridges]{ggridges::stat_density_ridges()}}. If \code{FALSE} (the default), bandwidth is
-computed separately for each group, matching \code{\link[ggplot2:geom_density]{ggplot2::stat_density()}}.
+computed separately for each group, matching \code{\link[ggplot2:stat_density]{ggplot2::stat_density()}}.
 Only applies when \code{bw} is a character string (bandwidth rule), not when
 \code{bw} is provided as a numeric value.}
 
@@ -163,7 +163,7 @@ ridgeline polygons in 3D space. Similar to \code{ggridges::geom_density_ridges()
 but rendered as 3D surfaces using \code{\link[=geom_ridgeline_3d]{geom_ridgeline_3d()}}.
 }
 \details{
-This stat is modeled after \code{\link[ggplot2:geom_density]{ggplot2::stat_density()}}, with similar
+This stat is modeled after \code{\link[ggplot2:stat_density]{ggplot2::stat_density()}}, with similar
 parametrization for bandwidth selection, kernel choice, and boundary handling.
 }
 \section{Aesthetics}{
@@ -246,6 +246,6 @@ p + stat_distributions_3d(alpha = .7) +
 \seealso{
 \code{\link[=geom_ridgeline_3d]{geom_ridgeline_3d()}} for rendering pre-computed ridgeline data,
 \code{\link[=stat_density_3d]{stat_density_3d()}} for 2D kernel density surfaces,
-\code{\link[ggplot2:geom_density]{ggplot2::stat_density()}} for the parametrization this stat follows,
+\code{\link[ggplot2:stat_density]{ggplot2::stat_density()}} for the parametrization this stat follows,
 \code{ggridges::geom_density_ridges()} for the 2D ridgeline equivalent.
 }

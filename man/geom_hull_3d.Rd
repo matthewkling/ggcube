@@ -40,7 +40,7 @@ stat_hull_3d(
 \arguments{
 \item{mapping}{Set of aesthetic mappings created by \code{\link[=aes]{aes()}}. The required
 aesthetics are \code{x}, \code{y}, and \code{z}. Additional aesthetics can use computed
-variables with \code{\link[ggplot2:aes_eval]{ggplot2::after_stat()}}.}
+variables with \code{\link[ggplot2:after_stat]{ggplot2::after_stat()}}.}
 
 \item{data}{The data to be displayed in this layer.}
 
@@ -134,7 +134,7 @@ Guidelines for choosing radius:
 }
 
 \examples{
-\dontshow{if (requireNamespace("geometry", quietly = TRUE)) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (requireNamespace("geometry", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 # Convex hull
 ggplot(sphere_points, aes(x, y, z)) +
   geom_hull_3d(method = "convex", fill = "gray40") +

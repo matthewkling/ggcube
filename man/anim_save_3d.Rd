@@ -22,7 +22,7 @@ Saves an animation object produced by \code{\link[=animate_3d]{animate_3d()}} to
 If no animation is provided, saves the most recently rendered animation.
 }
 \examples{
-\dontshow{if (requireNamespace("gifski", quietly = TRUE)) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (requireNamespace("gifski", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 \donttest{
 p <- ggplot() +
   geom_function_3d(

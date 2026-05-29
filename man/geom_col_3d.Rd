@@ -115,7 +115,7 @@ regular grid. Works with both complete and sparse grid data. Each data point bec
 a rectangular 3D column extending from a base level to the data value.
 }
 \details{
-This is analogous to \code{\link[ggplot2:geom_bar]{ggplot2::geom_col()}} for 3D plots. For automatic counting or
+This is analogous to \code{\link[ggplot2:geom_col]{ggplot2::geom_col()}} for 3D plots. For automatic counting or
 binning, see \code{\link[=geom_bar_3d]{geom_bar_3d()}}.
 
 Note that column geometries often require pairwise depth sorting for correct rendering.

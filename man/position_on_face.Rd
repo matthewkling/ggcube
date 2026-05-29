@@ -104,6 +104,6 @@ ggplot(mtcars) +
 
 }
 \seealso{
-\code{\link[=coord_3d]{coord_3d()}} for 3D coordinate systems, \code{\link[ggplot2:geom_density_2d]{ggplot2::stat_density_2d()}} and other
+\code{\link[=coord_3d]{coord_3d()}} for 3D coordinate systems, \code{\link[ggplot2:stat_density_2d]{ggplot2::stat_density_2d()}} and other
 2D statistical transformations that can be projected onto faces.
 }
