@@ -24,7 +24,7 @@ guide_legend_3d(reverse_shade = FALSE, shade_range = c(-0.5, 0.5), ...)
 
   Length-2 numeric vector in the range -1 to 1, giving the limits of the
   shading gradient. -1 is full shade, and 1 is full highlight. Default
-  is `c(-.5, 5)`.
+  is `c(-.5, .5)`.
 
 - ...:
 

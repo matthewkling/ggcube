@@ -21,3 +21,7 @@ Useful links:
 
 **Maintainer**: Matthew Kling <mattkling@berkeley.edu> \[copyright
 holder\]
+
+Authors:
+
+- Matthew Kling <mattkling@berkeley.edu> \[copyright holder\]
