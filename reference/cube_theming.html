@@ -62,7 +62,7 @@ and labels.</p>
 
 <ul><li><p><code>axis.text.z</code>: Styling for z-axis tick labels (inherits from <code>axis.text</code>)</p></li>
 <li><p><code>axis.title.z</code>: Styling for z-axis title (inherits from <code>axis.title</code>)</p></li>
-<li><p><code>axis.text</code>, <code>axis.text</code>: Standard styling with <code><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text()</a></code>.</p></li>
+<li><p><code>axis.text</code>, <code>axis.title</code>: Standard styling with <code><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text()</a></code>.</p></li>
 </ul><p>Use <code>element_text(margin = margin(...))</code> to adjust text padding, with left/right
 margins affecting axis text and top/bottom margins affecting axis titles;
 since placement and justification of these elements varies dynamically,
@@ -74,20 +74,24 @@ bottom margins – you can set either, and the maximum of the two will be used.<
 
 
 <ul><li><p><code>panel.foreground</code>: Styling for cube faces rendered in front of data (inherits from <code>panel.background</code>).
-Uses <code>element_rect(alpha = .2)</code> by default, to prevent foreground panels from obscuring the data.</p></li>
+Foreground panels default to 20% opacity to keep them from obscuring the data; this can be
+overridden by setting <code>alpha</code> on either <code>panel.foreground</code> or <code>panel.background</code>.</p></li>
 <li><p><code>panel.border.foreground</code>: Styling for cube faces rendered in front of data (inherits from <code>panel.border</code>)</p></li>
 <li><p><code>panel.grid.foreground</code>: Styling for grid lines on foreground faces (inherits from <code>panel.grid</code>)</p></li>
 <li><p><code>panel.grid.major.foreground</code>: Major grid lines on foreground faces (inherits from <code>panel.grid.foreground</code>)</p></li>
 </ul><p>Background panels use standard <code>panel.background</code>, <code>panel.border</code>, <code>panel.grid</code>, etc., while foreground panels
 use the <code>*.foreground</code> variants listed above. Since the foreground elements inherit from the standard background
-and grid elements, you can use <code>panel.background</code>, etc. to style both background and foreground faces simultaneously.</p>
+and grid elements, you can use <code>panel.background</code>, etc. to style both background and foreground faces simultaneously.
+This also extends to <code>alpha</code> set via the enhanced <code><a href="element_rect.html">element_rect()</a></code> below: setting <code>alpha</code> on <code>panel.background</code>
+will tint both background and foreground panels (overriding the foreground's 20% default), unless an explicit
+<code>alpha</code> is also set on <code>panel.foreground</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="enhanced-elements">Enhanced elements<a class="anchor" aria-label="anchor" href="#enhanced-elements"></a></h2>
 
 
-<ul><li><p><code><a href="element_rect.html">element_rect()</a></code> extends <code><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">ggplot2::element_rect()</a></code> by adding an <code>alpha</code> parameter for transparency effects.
-This is particularly useful for <code>panel.foreground</code> components that sit in front of the data.</p></li>
+<ul><li><p><code><a href="element_rect.html">element_rect()</a></code> extends <code><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">ggplot2::element_rect()</a></code> by adding an <code>alpha</code> parameter for transparency effects
+on <code><a href="coord_3d.html">coord_3d()</a></code>'s foreground and background panels.</p></li>
 </ul></div>
 
     <div class="section level2">

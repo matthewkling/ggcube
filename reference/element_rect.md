@@ -2,19 +2,18 @@
 
 This function extends
 [`ggplot2::element_rect()`](https://ggplot2.tidyverse.org/reference/element.html)
-to support transparency via an `alpha` parameter. When both `fill` and
-`alpha` are supplied, the alpha level is blended into the fill color
-(via [`scales::alpha()`](https://scales.r-lib.org/reference/alpha.html))
-before the element is constructed, and a standard
-[`ggplot2::element_rect()`](https://ggplot2.tidyverse.org/reference/element.html)
-is returned. The `alpha` parameter is particularly useful for styling
-foreground panels in 3D plots to prevent them from obscuring data
-layers.
+to support transparency via an `alpha` parameter, which is attached to
+the returned element as an R attribute (`"ggcube_alpha"`). The attribute
+survives ggplot2's theme inheritance machinery, so the alpha value set
+here is available to the renderer at draw time. The `alpha` parameter is
+consumed only by
+[`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md)'s
+panel rendering and has no effect on other theme elements.
 
 ## Usage
 
 ``` r
-element_rect(fill = NULL, alpha = NULL, ...)
+element_rect(fill = NULL, alpha = NA, ...)
 ```
 
 ## Arguments
@@ -25,31 +24,34 @@ element_rect(fill = NULL, alpha = NULL, ...)
 
 - alpha:
 
-  Transparency level applied to the fill, ranging from 0 (completely
-  transparent) to 1 (completely opaque). Has an effect only when `fill`
-  is also supplied. Particularly useful for styling foreground panels in
-  3D plots to create layered visual effects.
+  Transparency level applied to the fill of foreground or background
+  panels in
+  [`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md),
+  ranging from 0 (completely transparent) to 1 (completely opaque). For
+  `panel.foreground`, the alpha resolves in order: an explicit value
+  here, then alpha inherited from `panel.background`, then a default of
+  0.2. For `panel.background`, an explicit value is used directly;
+  otherwise the panel is fully opaque. Has no effect on other theme
+  elements or in plots without a 3D coordinate system.
 
 - ...:
 
   Additional arguments passed to
   [`element_rect`](https://ggplot2.tidyverse.org/reference/element.html),
-  such as `color`, `linewidth`, `linetype`, and `inherit.blank`.
+  such as `colour`, `linewidth`, `linetype`, and `inherit.blank`.
 
 ## Value
 
 A
 [`ggplot2::element_rect`](https://ggplot2.tidyverse.org/reference/element.html)
-theme element that can be used in
-[`theme()`](https://ggplot2.tidyverse.org/reference/theme.html)
-specifications.
+theme element with an attached `"ggcube_alpha"` attribute.
 
 ## See also
 
 [`element_rect`](https://ggplot2.tidyverse.org/reference/element.html)
 for the original function,
 [`coord_3d`](https://matthewkling.github.io/ggcube/reference/coord_3d.md)
-for 3D coordinate systems that utilise foreground panels
+for 3D coordinate systems that utilize foreground panels
 
 ## Examples
 
@@ -58,7 +60,7 @@ for 3D coordinate systems that utilise foreground panels
 ggplot(mountain, aes(x, y, z)) +
   stat_surface_3d(fill = "darkblue", color = "lightblue", linewidth = .1) +
   coord_3d(panels = c("background", "ymin")) +
-  theme(panel.foreground = element_rect(fill = "white", alpha = 0.6))
+  theme(panel.foreground = element_rect(alpha = 0.6))
 
 
 # Completely transparent foreground panels

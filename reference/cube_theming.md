@@ -15,7 +15,7 @@ styling of panels and labels.
 
 - `axis.title.z`: Styling for z-axis title (inherits from `axis.title`)
 
-- `axis.text`, `axis.text`: Standard styling with
+- `axis.text`, `axis.title`: Standard styling with
   [`element_text()`](https://ggplot2.tidyverse.org/reference/element.html).
 
 Use `element_text(margin = margin(...))` to adjust text padding, with
@@ -28,8 +28,9 @@ the two will be used.
 ## Panel elements
 
 - `panel.foreground`: Styling for cube faces rendered in front of data
-  (inherits from `panel.background`). Uses `element_rect(alpha = .2)` by
-  default, to prevent foreground panels from obscuring the data.
+  (inherits from `panel.background`). Foreground panels default to 20%
+  opacity to keep them from obscuring the data; this can be overridden
+  by setting `alpha` on either `panel.foreground` or `panel.background`.
 
 - `panel.border.foreground`: Styling for cube faces rendered in front of
   data (inherits from `panel.border`)
@@ -44,16 +45,21 @@ Background panels use standard `panel.background`, `panel.border`,
 `panel.grid`, etc., while foreground panels use the `*.foreground`
 variants listed above. Since the foreground elements inherit from the
 standard background and grid elements, you can use `panel.background`,
-etc. to style both background and foreground faces simultaneously.
+etc. to style both background and foreground faces simultaneously. This
+also extends to `alpha` set via the enhanced
+[`element_rect()`](https://matthewkling.github.io/ggcube/reference/element_rect.md)
+below: setting `alpha` on `panel.background` will tint both background
+and foreground panels (overriding the foreground's 20% default), unless
+an explicit `alpha` is also set on `panel.foreground`.
 
 ## Enhanced elements
 
 - [`element_rect()`](https://matthewkling.github.io/ggcube/reference/element_rect.md)
   extends
   [`ggplot2::element_rect()`](https://ggplot2.tidyverse.org/reference/element.html)
-  by adding an `alpha` parameter for transparency effects. This is
-  particularly useful for `panel.foreground` components that sit in
-  front of the data.
+  by adding an `alpha` parameter for transparency effects on
+  [`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md)'s
+  foreground and background panels.
 
 ## Examples
 
