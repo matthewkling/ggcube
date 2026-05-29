@@ -147,21 +147,22 @@ p <- ggplot() +
   theme_void()
 
 # Simple turntable rotation
-animate_3d(p, yaw = c(-30, 330))
-#> Rendering 100 frames...
+# (using small `nframes` to minimize runtime)
+animate_3d(p, yaw = c(-30, 330), nframes = 12)
+#> Rendering 12 frames...
 #> Assembling animation...
 
 # Multi-segment orbit with pitch change
 animate_3d(p, yaw = c(0, 720), roll = c(-90, 0, -90),
-           nframes = 120, fps = 15)
-#> Rendering 120 frames...
+           nframes = 12, fps = 15)
+#> Rendering 12 frames...
 #> Assembling animation...
 
 # Save to file (writes to a temporary path; specify your own to keep it)
-anim <- animate_3d(p, yaw = c(0, 360))
-#> Rendering 100 frames...
+anim <- animate_3d(p, yaw = c(0, 360), nframes = 12)
+#> Rendering 12 frames...
 #> Assembling animation...
 anim_save_3d(anim, file.path(tempdir(), "rotating_surface.gif"))
-#> Animation saved to /tmp/RtmplCyGtt/rotating_surface.gif
+#> Animation saved to /tmp/RtmpiRNaOa/rotating_surface.gif
 # }
 ```
