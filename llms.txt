@@ -141,13 +141,15 @@ Example: a mathematical surface using
 ``` r
 
 ggplot() +
-      geom_function_3d(fun = function(x, y) cos(x) * sin(y),
+      geom_function_3d(fun = function(x1, x2) cos(x1) * sin(x2),
                        xlim = c(-pi, pi), ylim = c(-2*pi, 2*pi),
                        fill = "#7a2100", color = "#b3725b", 
-                       grid = "right1") +
+                       grid = "right1", linewidth = .2) +
       coord_3d(yaw = 160, roll = -70, 
                scales = "fixed", ratio = c(1, 1, 2)) +
-      labs(z = "cos(x) * sin(y)") +
+      labs(x = expression(x[1]),
+           y = expression(x[2]),
+           z = expression(cos(x[1]) %*% sin(x[2]))) +
       theme_minimal()
 ```
 
@@ -224,16 +226,16 @@ ggplot(mpg, aes(x = displ, y = hwy, z = drv, fill = class)) +
 - [`geom_voxel_3d()`](https://matthewkling.github.io/ggcube/reference/geom_voxel_3d.md)
   renders sparse 3D pixel data as arrays of cubes
 
-Example: a 3D histogram chart using
+Example: a 3D histogram using
 [`geom_bar_3d()`](https://matthewkling.github.io/ggcube/reference/geom_bar_3d.md):
 
 ``` r
 
-ggplot(iris, aes(Species, Sepal.Length, fill = Species)) +
-      geom_bar_3d(bins = 20, width = c(.5, 1)) +
-      coord_3d(scales = "fixed", ratio = c(1, 3, .25), yaw = 60) +
-      scale_z_continuous(expand = c(0, 0)) +
-      theme(legend.position = "none")
+ggplot(faithful, aes(waiting, eruptions)) +
+      geom_bar_3d(fill = "steelblue", color = "steelblue", 
+                  bins = 15, width = .9) +
+      coord_3d(yaw = 60) +
+      scale_z_continuous(expand = c(0, 0))
 ```
 
 ![](reference/figures/README-bar-1.png)
@@ -241,17 +243,18 @@ ggplot(iris, aes(Species, Sepal.Length, fill = Species)) +
 ## 3D text
 
 [`geom_text_3d()`](https://matthewkling.github.io/ggcube/reference/geom_text_3d.md)
-creates 3D-aware text, rendered either as”billboard” text that faces the
-viewing plane or as 3D polygons that can face any direction:
+creates 3D-aware text, rendered either as “billboard” text that faces
+the viewing plane or as 3D polygons that can face any direction:
 
 ``` r
 
-df <- expand.grid(x = c("H", "B"), y = c("a", "o", "u"), z = c("g", "t"))
+df <- expand.grid(x = c("B", "H", "N"), y = c("a", "o", "u"), z = c("g", "t"))
 df$label <- paste0(df$x, df$y, df$z)
 ggplot(df, aes(x, y, z, label = label, fill = x)) +
-   geom_text_3d(method = "polygon", facing = "zmax", 
-                size = 5, weight = "bold") +
-   coord_3d(scales = "fixed", light = NULL)
+      geom_text_3d(method = "polygon", facing = "zmax", 
+                   size = 5, weight = "bold") +
+      coord_3d(scales = "fixed", rotate_labels = FALSE) +
+      theme(axis.title = element_blank())
 ```
 
 ![](reference/figures/README-text-1.png)
