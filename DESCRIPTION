@@ -37,6 +37,7 @@ Suggests:
     base64enc,
     geometry,
     gifski,
+    gtable,
     knitr,
     MASS,
     mgcv,
