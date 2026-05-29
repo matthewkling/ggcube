@@ -4,39 +4,43 @@
 \alias{element_rect}
 \title{Enhanced rectangle element with alpha support}
 \usage{
-element_rect(fill = NULL, alpha = NULL, ...)
+element_rect(fill = NULL, alpha = NA, ...)
 }
 \arguments{
 \item{fill}{Fill colour for the rectangle.}
 
-\item{alpha}{Transparency level applied to the fill, ranging from 0
-(completely transparent) to 1 (completely opaque). Has an effect only when
-\code{fill} is also supplied. Particularly useful for styling foreground
-panels in 3D plots to create layered visual effects.}
+\item{alpha}{Transparency level applied to the fill of foreground or
+background panels in \code{coord_3d()}, ranging from 0 (completely
+transparent) to 1 (completely opaque). For \code{panel.foreground}, the
+alpha resolves in order: an explicit value here, then alpha inherited
+from \code{panel.background}, then a default of 0.2. For
+\code{panel.background}, an explicit value is used directly; otherwise
+the panel is fully opaque. Has no effect on other theme elements or in
+plots without a 3D coordinate system.}
 
 \item{...}{Additional arguments passed to \code{\link[ggplot2]{element_rect}},
-such as \code{color}, \code{linewidth}, \code{linetype}, and
+such as \code{colour}, \code{linewidth}, \code{linetype}, and
 \code{inherit.blank}.}
 }
 \value{
-A \code{ggplot2::element_rect} theme element that can be used in
-\code{theme()} specifications.
+A \code{ggplot2::element_rect} theme element with an attached
+\code{"ggcube_alpha"} attribute.
 }
 \description{
 This function extends \code{ggplot2::element_rect()} to support transparency
-via an \code{alpha} parameter. When both \code{fill} and \code{alpha} are
-supplied, the alpha level is blended into the fill color (via
-\code{scales::alpha()}) before the element is constructed, and a standard
-\code{ggplot2::element_rect()} is returned. The \code{alpha} parameter is
-particularly useful for styling foreground panels in 3D plots to prevent
-them from obscuring data layers.
+via an \code{alpha} parameter, which is attached to the returned element as
+an R attribute (\code{"ggcube_alpha"}). The attribute survives ggplot2's
+theme inheritance machinery, so the alpha value set here is available to
+the renderer at draw time. The \code{alpha} parameter is consumed only by
+\code{coord_3d()}'s panel rendering and has no effect on other theme
+elements.
 }
 \examples{
 # Basic 3D plot with semi-transparent foreground panels
 ggplot(mountain, aes(x, y, z)) +
   stat_surface_3d(fill = "darkblue", color = "lightblue", linewidth = .1) +
   coord_3d(panels = c("background", "ymin")) +
-  theme(panel.foreground = element_rect(fill = "white", alpha = 0.6))
+  theme(panel.foreground = element_rect(alpha = 0.6))
 
 # Completely transparent foreground panels
 ggplot(mtcars, aes(mpg, wt, qsec)) +
@@ -48,5 +52,5 @@ ggplot(mtcars, aes(mpg, wt, qsec)) +
 }
 \seealso{
 \code{\link[ggplot2]{element_rect}} for the original function,
-\code{\link{coord_3d}} for 3D coordinate systems that utilise foreground panels
+\code{\link{coord_3d}} for 3D coordinate systems that utilize foreground panels
 }

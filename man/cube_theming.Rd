@@ -15,7 +15,7 @@ and labels.
 \itemize{
 \item \code{axis.text.z}: Styling for z-axis tick labels (inherits from \code{axis.text})
 \item \code{axis.title.z}: Styling for z-axis title (inherits from \code{axis.title})
-\item \code{axis.text}, \code{axis.text}: Standard styling with \code{element_text()}.
+\item \code{axis.text}, \code{axis.title}: Standard styling with \code{element_text()}.
 }
 
 Use \code{element_text(margin = margin(...))} to adjust text padding, with left/right
@@ -29,7 +29,8 @@ bottom margins -- you can set either, and the maximum of the two will be used.
 
 \itemize{
 \item \code{panel.foreground}: Styling for cube faces rendered in front of data (inherits from \code{panel.background}).
-Uses \code{element_rect(alpha = .2)} by default, to prevent foreground panels from obscuring the data.
+Foreground panels default to 20\% opacity to keep them from obscuring the data; this can be
+overridden by setting \code{alpha} on either \code{panel.foreground} or \code{panel.background}.
 \item \code{panel.border.foreground}: Styling for cube faces rendered in front of data (inherits from \code{panel.border})
 \item \code{panel.grid.foreground}: Styling for grid lines on foreground faces (inherits from \code{panel.grid})
 \item \code{panel.grid.major.foreground}: Major grid lines on foreground faces (inherits from \code{panel.grid.foreground})
@@ -38,13 +39,16 @@ Uses \code{element_rect(alpha = .2)} by default, to prevent foreground panels fr
 Background panels use standard \code{panel.background}, \code{panel.border}, \code{panel.grid}, etc., while foreground panels
 use the \verb{*.foreground} variants listed above. Since the foreground elements inherit from the standard background
 and grid elements, you can use \code{panel.background}, etc. to style both background and foreground faces simultaneously.
+This also extends to \code{alpha} set via the enhanced \code{element_rect()} below: setting \code{alpha} on \code{panel.background}
+will tint both background and foreground panels (overriding the foreground's 20\% default), unless an explicit
+\code{alpha} is also set on \code{panel.foreground}.
 }
 
 \section{Enhanced elements}{
 
 \itemize{
-\item \code{element_rect()} extends \code{ggplot2::element_rect()} by adding an \code{alpha} parameter for transparency effects.
-This is particularly useful for \code{panel.foreground} components that sit in front of the data.
+\item \code{element_rect()} extends \code{ggplot2::element_rect()} by adding an \code{alpha} parameter for transparency effects
+on \code{coord_3d()}'s foreground and background panels.
 }
 }
 

@@ -1,10 +1,16 @@
 .onLoad <- function(libname, pkgname) {
-
       # Define custom theme elements
       register_theme_elements(
             axis.text.z = element_text(),
             axis.title.z = element_text(),
-            panel.foreground = element_rect(alpha = .2),
+
+            # No alpha set here intentionally: leaving the foreground default
+            # without an explicit alpha lets it inherit from panel.background
+            # at render time. The final 0.2 fallback (when neither layer has
+            # an explicit alpha) lives in create_panel_polygons() in
+            # R/panel-rendering.R.
+            panel.foreground = element_rect(),
+
             panel.grid.foreground = element_line(),
             panel.grid.major.foreground = element_line(),
             panel.border.foreground = element_rect(),
@@ -17,7 +23,6 @@
                   panel.border.foreground = el_def("element_rect", "panel.border")
             )
       )
-
       # Initialize cache environment
       assign(".z_scale_cache", new.env(), envir = parent.env(environment()))
 }
