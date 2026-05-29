@@ -69,14 +69,15 @@
 #'   theme_void()
 #'
 #' # Simple turntable rotation
-#' animate_3d(p, yaw = c(-30, 330))
+#' # (using small `nframes` to minimize runtime)
+#' animate_3d(p, yaw = c(-30, 330), nframes = 12)
 #'
 #' # Multi-segment orbit with pitch change
 #' animate_3d(p, yaw = c(0, 720), roll = c(-90, 0, -90),
-#'            nframes = 120, fps = 15)
+#'            nframes = 12, fps = 15)
 #'
 #' # Save to file (writes to a temporary path; specify your own to keep it)
-#' anim <- animate_3d(p, yaw = c(0, 360))
+#' anim <- animate_3d(p, yaw = c(0, 360), nframes = 12)
 #' anim_save_3d(anim, file.path(tempdir(), "rotating_surface.gif"))
 #' }
 #'
