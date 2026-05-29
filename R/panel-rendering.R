@@ -227,6 +227,27 @@ create_panel_polygons = function(face_corners_transformed, panel_params, theme, 
             border_type <- 1
       }
 
+      # Panel opacity. An explicit alpha attribute (set via
+      # element_rect(alpha = ...)) is honoured on either layer. For foreground
+      # panels, alpha additionally inherits from panel.background before
+      # falling back to the package default 0.2; the 0.2 here is the canonical
+      # location for that default (no longer set in .onLoad(), so leaving the
+      # registered panel.foreground without an explicit alpha enables the
+      # background-inheritance step above). Background panels are fully opaque
+      # if no alpha is set.
+      alpha_val <- attr(panel_bg, "ggcube_alpha")
+      if (is.null(alpha_val) || is.na(alpha_val)) {
+            if (layer == "foreground") {
+                  bg_el <- calc_element("panel.background", theme)
+                  alpha_val <- attr(bg_el, "ggcube_alpha")
+                  if (is.null(alpha_val) || is.na(alpha_val)) {
+                        alpha_val <- 0.2
+                  }
+            } else {
+                  alpha_val <- 1
+            }
+      }
+
       # Scale to [0, 1] based on plot bounds
       x_scaled <- (face_corners_transformed$x - panel_params$plot_bounds[1]) /
             (panel_params$plot_bounds[2] - panel_params$plot_bounds[1])
@@ -271,7 +292,7 @@ create_panel_polygons = function(face_corners_transformed, panel_params, theme, 
             id = polygon_ids,
             default.units = "npc",
             gp = grid::gpar(
-                  fill = fill_color,
+                  fill = scales::alpha(fill_color, alpha_val),
                   col = border_color,
                   lwd = border_width,
                   lty = border_type

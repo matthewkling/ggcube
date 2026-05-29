@@ -35,8 +35,8 @@ compute_surface_vars <- function(tiles){
 #' Generate a grid of unique vertex points
 #'
 #' Creates a regular grid of unique vertex positions for use by surface-generating
-#' stats. The grid is tessellated into polygon tiles by [points_to_tiles()] in
-#' the geom layer (or in the stat for [stat_smooth_3d()]).
+#' stats. The grid is tessellated into polygon tiles in the geom layer (or in the
+#' stat for [stat_smooth_3d()]).
 #'
 #' @inheritParams grid_params
 #' @param xlim,ylim Length-two numeric vectors defining bounding box.
