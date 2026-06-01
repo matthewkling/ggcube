@@ -23,6 +23,7 @@ p <- ggplot() +
     n = 50, light = light("direct", contrast = .7)) +
   scale_fill_viridis_c() +
   scale_color_viridis_c() +
+  guides(fill = guide_colorbar_3d()) +
   theme_light() +
   theme(legend.position = "none",
         axis.text = element_blank())
