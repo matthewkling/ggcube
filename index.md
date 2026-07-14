@@ -102,7 +102,7 @@ ggplot(mpg, aes(displ, hwy, drv, color = class)) +
 
 See the
 [surfaces](https://matthewkling.github.io/ggcube/articles/surfaces.html)
-article for a full guide to the surface system.
+article for a full guide to surface options.
 
 Example: a terrain surface using
 [`geom_surface_3d()`](https://matthewkling.github.io/ggcube/reference/stat_surface_3d.md):
@@ -121,19 +121,17 @@ ggplot(mountain, aes(x, y, z)) +
 ![](reference/figures/README-surfaces-1.png)
 
 Example: a terrain surface using
-[`geom_contour_3d()`](https://matthewkling.github.io/ggcube/reference/geom_contour_3d.md),
-also showing functionality for animation as a rotating GIF:
+[`geom_contour_3d()`](https://matthewkling.github.io/ggcube/reference/geom_contour_3d.md):
 
 ``` r
 
-p <- ggplot(mountain, aes(x, y, z)) +
+ggplot(mountain, aes(x, y, z)) +
       geom_contour_3d(fill = "black", color = "white", linewidth = .5) +
-      coord_3d(ratio = c(1.5, 2, 1), light = "none") +
+      coord_3d(yaw = 60, ratio = c(1.5, 2, 1), light = "none") +
       theme_void()
-animate_3d(p, yaw = c(0, 360))
 ```
 
-![](reference/figures/README-contour_anim-1.gif)
+![](reference/figures/README-contour-1.png)
 
 Example: a mathematical surface using
 [`geom_function_3d()`](https://matthewkling.github.io/ggcube/reference/stat_function_3d.md):
@@ -153,8 +151,9 @@ ggplot() +
       theme_minimal()
 ```
 
-![](reference/figures/README-functions-1.png) Example: a fitted model
-surface using
+![](reference/figures/README-functions-1.png)
+
+Example: a fitted model surface using
 [`geom_smooth_3d()`](https://matthewkling.github.io/ggcube/reference/geom_smooth_3d.md):
 
 ``` r
@@ -294,6 +293,32 @@ ggplot(sphere_points, aes(x, y, z)) +
 ```
 
 ![](reference/figures/README-lighting-1.png)
+
+## Animation and interaction
+
+A major limitation of 3D figures is that you can’t get a full view of
+the data from any single angle. One way to mitigate this is by rotating
+the figure to view the data from different directions. ggcube offers
+animated rotation via
+[`animate_3d()`](https://matthewkling.github.io/ggcube/reference/animate_3d.md),
+and interactive drag-to-rotate plots via
+[`flipbook_3d()`](https://matthewkling.github.io/ggcube/reference/flipbook_3d.md).
+See the [animation and
+interaction](https://matthewkling.github.io/ggcube/articles/animation.html)
+article for details.
+
+Here’s an animation example:
+
+``` r
+
+p <- ggplot(mountain, aes(x, y, z)) +
+      geom_contour_3d(fill = "black", color = "white", linewidth = .5) +
+      coord_3d(ratio = c(1.5, 2, 1), light = "none") +
+      theme_void()
+animate_3d(p, yaw = c(0, 360))
+```
+
+![](reference/figures/README-anim-1.gif)
 
 ## Face projection
 

@@ -131,6 +131,8 @@ for saving animations to file.
 and
 [`file_renderer_3d()`](https://matthewkling.github.io/ggcube/reference/renderers_3d.md)
 for renderer options.
+[`flipbook_3d()`](https://matthewkling.github.io/ggcube/reference/flipbook_3d.md)
+for interactive drag-to-rotate ggcubes.
 
 ## Examples
 
@@ -163,6 +165,6 @@ anim <- animate_3d(p, yaw = c(0, 360), nframes = 12)
 #> Rendering 12 frames...
 #> Assembling animation...
 anim_save_3d(anim, file.path(tempdir(), "rotating_surface.gif"))
-#> Animation saved to /tmp/RtmpNKMoMl/rotating_surface.gif
+#> Animation saved to /tmp/RtmprWMpf1/rotating_surface.gif
 # }
 ```

@@ -2,6 +2,8 @@
 
 ### All vignettes
 
+- [Animated and interactive
+  rotation](https://matthewkling.github.io/ggcube/articles/animation.md):
 - [Controlling the 3D
   view](https://matthewkling.github.io/ggcube/articles/coord_3d.md):
 - [Introduction to

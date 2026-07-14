@@ -378,11 +378,18 @@ ggplot(iris, aes(Sepal.Length, Sepal.Width, Petal.Length,
 
 ![](ggcube_files/figure-html/face_projection-1.png)
 
-## Animation
+## Interactivity & animation
 
-[`animate_3d()`](https://matthewkling.github.io/ggcube/reference/animate_3d.md)
-creates animated rotations of any ggcube plot. Rotation angles are
-specified as keyframe vectors that get interpolated across frames:
+A major limitation of 3D figures is that you can’t get a full view of
+the data from any single angle. One way to mitigate this is by rotating
+the figure to view the data from different directions. ggcube offers
+interactive drag-to-rotate plots via
+[`flipbook_3d()`](https://matthewkling.github.io/ggcube/reference/flipbook_3d.md)
+and animated rotations via
+[`animate_3d()`](https://matthewkling.github.io/ggcube/reference/animate_3d.md).
+
+For animation, rotation angles are specified as keyframe vectors that
+get interpolated across frames:
 
 ``` r
 

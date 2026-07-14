@@ -1,12 +1,13 @@
 pandoc: 3.8.3
-pkgdown: 2.2.0
+pkgdown: 2.2.1
 pkgdown_sha: ~
 articles:
+  articles/animation: animation.html
   articles/coord_3d: coord_3d.html
   ggcube: ggcube.html
   articles/lighting: lighting.html
   articles/surfaces: surfaces.html
-last_built: 2026-06-01T18:59Z
+last_built: 2026-07-14T19:12Z
 urls:
   reference: https://matthewkling.github.io/ggcube/reference
   article: https://matthewkling.github.io/ggcube/articles

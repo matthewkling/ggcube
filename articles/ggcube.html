@@ -39,7 +39,8 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/coord_3d.html">Controlling the 3D view</a></li>
+<li><a class="dropdown-item" href="../articles/animation.html">Animated and interactive rotation</a></li>
+    <li><a class="dropdown-item" href="../articles/coord_3d.html">Controlling the 3D view</a></li>
     <li><a class="dropdown-item" href="../articles/lighting.html">Lighting and shading</a></li>
     <li><a class="dropdown-item" href="../articles/surfaces.html">Surfaces</a></li>
   </ul>
@@ -372,11 +373,15 @@ onto a face, or place a natively 2D layer (like
 <p><img src="ggcube_files/figure-html/face_projection-1.png" class="r-plt" alt="" width="1050"></p>
 </div>
 <div class="section level2">
-<h2 id="animation">Animation<a class="anchor" aria-label="anchor" href="#animation"></a>
+<h2 id="interactivity-animation">Interactivity &amp; animation<a class="anchor" aria-label="anchor" href="#interactivity-animation"></a>
 </h2>
-<p><code><a href="../reference/animate_3d.html">animate_3d()</a></code> creates animated rotations of any ggcube
-plot. Rotation angles are specified as keyframe vectors that get
-interpolated across frames:</p>
+<p>A major limitation of 3D figures is that you can’t get a full view of
+the data from any single angle. One way to mitigate this is by rotating
+the figure to view the data from different directions. ggcube offers
+interactive drag-to-rotate plots via <code><a href="../reference/flipbook_3d.html">flipbook_3d()</a></code> and
+animated rotations via <code><a href="../reference/animate_3d.html">animate_3d()</a></code>.</p>
+<p>For animation, rotation angles are specified as keyframe vectors that
+get interpolated across frames:</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mountain</span>, <span class="fu"><a href="../reference/aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>      <span class="fu"><a href="../reference/geom_contour_3d.html">geom_contour_3d</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="st">"black"</span>, color <span class="op">=</span> <span class="st">"white"</span>, linewidth <span class="op">=</span> <span class="fl">.5</span><span class="op">)</span> <span class="op">+</span></span>
@@ -401,7 +406,7 @@ to a file.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>

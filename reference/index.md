@@ -80,8 +80,10 @@
 - [`sorting_methods`](https://matthewkling.github.io/ggcube/reference/sorting_methods.md)
   : Depth sorting method
 
-## Animation
+## Interactivity & animation
 
+- [`flipbook_3d()`](https://matthewkling.github.io/ggcube/reference/flipbook_3d.md)
+  : Create an interactive drag-to-rotate ggcube
 - [`anim_save_3d()`](https://matthewkling.github.io/ggcube/reference/anim_save_3d.md)
   : Save a 3D animation to a file
 - [`animate_3d()`](https://matthewkling.github.io/ggcube/reference/animate_3d.md)
