@@ -83,6 +83,7 @@
 #'
 #' @seealso [anim_save_3d()] for saving animations to file.
 #'   [gifski_renderer_3d()] and [file_renderer_3d()] for renderer options.
+#'   [flipbook_3d()] for interactive drag-to-rotate ggcubes.
 #' @export
 animate_3d <- function(plot,
                        pitch = NULL,
@@ -137,10 +138,71 @@ animate_3d <- function(plot,
       # --- Apply start_pause, end_pause, rewind ---
       param_seqs <- apply_pause_and_rewind(param_seqs, start_pause, end_pause,
                                            rewind)
+
+      # --- Render frames to PNG files ---
+      frames <- render_3d_frames(
+            plot = plot,
+            coord = coord,
+            param_seqs = param_seqs,
+            width = width,
+            height = height,
+            res = res,
+            device = device,
+            cores = cores,
+            progress = progress,
+            prefix = "ggcube_anim_"
+      )
+
+      message("Assembling animation...")
+
+      # --- Combine frames via renderer ---
+      result <- renderer(frames$files, fps, width, height)
+
+      # Clean up temp files (unless using file_renderer)
+      if (!inherits(result, "frame_files_3d")) {
+            unlink(frames$tmpdir, recursive = TRUE)
+      }
+
+      # Stash as last animation for anim_save_3d()
+      .ggcube_last_anim$value <- result
+
+      result
+}
+
+
+# Frame rendering ---------------------------------------------------------
+
+#' Render a sequence of camera states to PNG frame files
+#'
+#' Shared rendering core for [animate_3d()] and [flipbook_3d()]. Takes a
+#' fully-resolved sequence of per-frame rotation parameters (one row per
+#' frame) and renders each to a PNG on disk, computing a single fixed
+#' viewport across all frames so the plot does not rescale between rotations.
+#'
+#' This is the \code{[resolved camera states -> image files]} seam: callers
+#' are responsible for producing \code{param_seqs} (including any
+#' pause/rewind/keyframe expansion), and receive back the list of rendered
+#' files plus the temp directory holding them.
+#'
+#' @param plot A ggplot object using [coord_3d()].
+#' @param coord The plot's Coord3D object (\code{plot$coordinates}).
+#' @param param_seqs A data.frame with columns \code{pitch}, \code{roll},
+#'   \code{yaw}; one row per frame.
+#' @param width,height,res,device,cores,progress As in [animate_3d()].
+#' @param prefix Prefix for the temporary frame directory.
+#'
+#' @return A list with elements \code{files} (character vector of PNG paths),
+#'   \code{tmpdir} (the directory containing them), and \code{width},
+#'   \code{height}.
+#' @keywords internal
+#' @noRd
+render_3d_frames <- function(plot, coord, param_seqs, width, height, res,
+                             device, cores, progress,
+                             prefix = "ggcube_frames_") {
       total_frames <- nrow(param_seqs)
 
       # --- Set up output directory ---
-      tmpdir <- tempfile("ggcube_anim_")
+      tmpdir <- tempfile(prefix)
       dir.create(tmpdir)
       frame_files <- file.path(tmpdir,
                                sprintf("frame_%04d.png", seq_len(total_frames)))
@@ -166,7 +228,8 @@ animate_3d <- function(plot,
 
       # --- Compute global bounds across all frames ---
       # This prevents the plot from rescaling at each rotation angle.
-      global_bounds <- compute_global_bounds(param_seqs, static_params, effective_ratios)
+      global_bounds <- compute_global_bounds(param_seqs, static_params,
+                                             effective_ratios)
 
       # Apply zoom to global bounds
       zoom <- static_params$zoom %||% 1
@@ -187,27 +250,13 @@ animate_3d <- function(plot,
                                    frame_files, width, height, res, device, cores)
       } else {
             render_frames_sequential(plot, param_seqs, static_params, global_bounds,
-                                     frame_files, width, height, res, device, progress)
+                                     frame_files, width, height, res, device,
+                                     progress)
       }
 
-      message("Assembling animation...")
-
-      # --- Combine frames via renderer ---
-      result <- renderer(frame_files, fps, width, height)
-
-      # Clean up temp files (unless using file_renderer)
-      if (!inherits(result, "frame_files_3d")) {
-            unlink(tmpdir, recursive = TRUE)
-      }
-
-      # Stash as last animation for anim_save_3d()
-      .ggcube_last_anim$value <- result
-
-      result
+      list(files = frame_files, tmpdir = tmpdir, width = width, height = height)
 }
 
-
-# Frame rendering ---------------------------------------------------------
 
 #' Render frames sequentially with progress bar
 #' @keywords internal

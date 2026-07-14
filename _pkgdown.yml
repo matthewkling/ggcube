@@ -22,8 +22,9 @@ reference:
   - element_rect
   - grid_generation
   - sorting_methods
-- title: Animation
+- title: Interactivity & animation
 - contents:
+  - contains("flipbook")
   - contains("anim")
   - contains("renderer")
 - title: Z axis scales
@@ -36,3 +37,12 @@ reference:
   - mountain
   - sphere_points
   - text_outlines
+
+articles:
+  - title: Articles
+    navbar: ~
+    contents:
+      - coord_3d
+      - surfaces
+      - lighting
+      - animation
