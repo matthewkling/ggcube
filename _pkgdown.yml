@@ -22,8 +22,9 @@ reference:
   - element_rect
   - grid_generation
   - sorting_methods
-- title: Animation
+- title: Interactivity & animation
 - contents:
+  - contains("flipbook")
   - contains("anim")
   - contains("renderer")
 - title: Z axis scales

@@ -103,7 +103,7 @@ ggplot(mpg, aes(displ, hwy, drv, color = class)) +
 
 See the
 [surfaces](https://matthewkling.github.io/ggcube/articles/surfaces.html)
-article for a full guide to the surface system.
+article for a full guide to surface options.
 
 Example: a terrain surface using `geom_surface_3d()`:
 
@@ -119,18 +119,16 @@ ggplot(mountain, aes(x, y, z)) +
 
 <img src="man/figures/README-surfaces-1.png" alt="" width="100%" />
 
-Example: a terrain surface using `geom_contour_3d()`, also showing
-functionality for animation as a rotating GIF:
+Example: a terrain surface using `geom_contour_3d()`:
 
 ``` r
-p <- ggplot(mountain, aes(x, y, z)) +
+ggplot(mountain, aes(x, y, z)) +
       geom_contour_3d(fill = "black", color = "white", linewidth = .5) +
-      coord_3d(ratio = c(1.5, 2, 1), light = "none") +
+      coord_3d(yaw = 60, ratio = c(1.5, 2, 1), light = "none") +
       theme_void()
-animate_3d(p, yaw = c(0, 360))
 ```
 
-<img src="man/figures/README-contour_anim-1.gif" alt="" width="100%" />
+<img src="man/figures/README-contour-1.png" alt="" width="100%" />
 
 Example: a mathematical surface using `geom_function_3d()`:
 
@@ -149,6 +147,7 @@ ggplot() +
 ```
 
 <img src="man/figures/README-functions-1.png" alt="" width="100%" />
+
 Example: a fitted model surface using `geom_smooth_3d()`:
 
 ``` r
@@ -274,6 +273,28 @@ ggplot(sphere_points, aes(x, y, z)) +
 ```
 
 <img src="man/figures/README-lighting-1.png" alt="" width="100%" />
+
+## Animation and interaction
+
+A major limitation of 3D figures is that you can’t get a full view of
+the data from any single angle. One way to mitigate this is by rotating
+the figure to view the data from different directions. ggcube offers
+animated rotation via `animate_3d()`, and interactive drag-to-rotate
+plots via `flipbook_3d()`. See the [animation and
+interaction](https://matthewkling.github.io/ggcube/articles/animation.html)
+article for details.
+
+Here’s an animation example:
+
+``` r
+p <- ggplot(mountain, aes(x, y, z)) +
+      geom_contour_3d(fill = "black", color = "white", linewidth = .5) +
+      coord_3d(ratio = c(1.5, 2, 1), light = "none") +
+      theme_void()
+animate_3d(p, yaw = c(0, 360))
+```
+
+<img src="man/figures/README-anim-1.gif" alt="" width="100%" />
 
 ## Face projection
 
