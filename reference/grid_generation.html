@@ -58,7 +58,7 @@ of surface tiles, as used by various ggcube layer functions including
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
 
 
-<dl><dt id="arg-grid">grid<a class="anchor" aria-label="anchor" href="#arg-grid"></a></dt>
+<dl><dt><code>grid</code></dt>
 <dd><p>Character specifying tile geometry. Options:</p><dl><dt><code>"rectangle"</code></dt>
 <dd><p>Rectangular grid (the default).</p></dd>
 
@@ -78,22 +78,20 @@ parallel with the sight line.</p></dd>
 
 </dl></dd>
 
-
-<dt id="arg-n">n<a class="anchor" aria-label="anchor" href="#arg-n"></a></dt>
+<dt><code>n</code></dt>
 <dd><p>Either a single integer specifying grid resolution in both dimensions,
 or a vector of length 2 specifying <code>c(nx, ny)</code> for separate x and y resolutions.
 Default is <code>40</code>. Higher values create smoother surfaces but slower rendering.</p></dd>
 
-
-<dt id="arg-direction">direction<a class="anchor" aria-label="anchor" href="#arg-direction"></a></dt>
+<dt><code>direction</code></dt>
 <dd><p>Either <code>"x"</code> (the default) or <code>"y"</code>, specifying the orientation
 of tile rows. Ignored for rectangular grids.</p></dd>
 
-
-<dt id="arg-trim">trim<a class="anchor" aria-label="anchor" href="#arg-trim"></a></dt>
+<dt><code>trim</code></dt>
 <dd><p>Logical. Only relevant for <code>grid = "equilateral"</code>. If <code>TRUE</code>
 (default), trims edge vertices so that grid boundaries are straight lines. If
 <code>FALSE</code>, preserves the full lattice, resulting in a grid with irregular edges.</p></dd>
+
 
 </dl></div>
 

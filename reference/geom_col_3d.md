@@ -146,7 +146,7 @@ stat_col_3d(
 
 - na.rm:
 
-  If `FALSE`, missing values are removed.
+  If `TRUE`, missing values are removed.
 
 - show.legend:
 

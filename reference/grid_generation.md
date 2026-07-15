@@ -11,7 +11,7 @@ and
 
 ## Arguments
 
-- grid:
+- `grid`:
 
   Character specifying tile geometry. Options:
 
@@ -35,19 +35,19 @@ and
       triangulation). Can prevent lighting artifacts where a surface
       curves past parallel with the sight line.
 
-- n:
+- `n`:
 
   Either a single integer specifying grid resolution in both dimensions,
   or a vector of length 2 specifying `c(nx, ny)` for separate x and y
   resolutions. Default is `40`. Higher values create smoother surfaces
   but slower rendering.
 
-- direction:
+- `direction`:
 
   Either `"x"` (the default) or `"y"`, specifying the orientation of
   tile rows. Ignored for rectangular grids.
 
-- trim:
+- `trim`:
 
   Logical. Only relevant for `grid = "equilateral"`. If `TRUE`
   (default), trims edge vertices so that grid boundaries are straight
