@@ -105,20 +105,20 @@
 #'   [orbit_3d-shiny] for including orbits in  Shiny apps.
 #' @export
 orbit_3d <- function(plot,
-                        pitch = NULL,
-                        roll = NULL,
-                        yaw = NULL,
-                        n = 36,
-                        loop = NULL,
-                        start = NULL,
-                        max_frames = 500,
-                        width = 480,
-                        height = 480,
-                        res = 96,
-                        cores = 1,
-                        device = "png",
-                        progress = interactive(),
-                        file = NULL) {
+                     pitch = NULL,
+                     roll = NULL,
+                     yaw = NULL,
+                     n = 36,
+                     loop = NULL,
+                     start = NULL,
+                     max_frames = 500,
+                     width = 480,
+                     height = 480,
+                     res = 96,
+                     cores = 1,
+                     device = "png",
+                     progress = interactive(),
+                     file = NULL) {
 
       # Clear z scale cache to ensure clean state between renders
       .z_scale_cache$scale <- NULL
@@ -246,8 +246,24 @@ orbit_3d <- function(plot,
 
       # If a file path is requested, write a self-contained HTML file. This
       # preserves the single-portable-file output of earlier versions.
+      #
+      # saveWidget(selfcontained = TRUE) has a long-standing quirk: it inlines
+      # dependencies into the HTML but then fails to remove the temporary
+      # "<name>_files" directory when the output path is not the current working
+      # directory (htmlwidgets issue #296), leaving a stray sidecar folder next
+      # to an otherwise self-contained file. Running saveWidget from within the
+      # output directory, with a bare filename, makes its cleanup path resolve
+      # correctly and yields a true single file.
       if (!is.null(file)) {
-            htmlwidgets::saveWidget(widget, file, selfcontained = TRUE)
+            file <- normalizePath(file, mustWork = FALSE)
+            out_dir <- dirname(file)
+            out_base <- basename(file)
+            if (!dir.exists(out_dir)) {
+                  dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+            }
+            old_wd <- setwd(out_dir)
+            on.exit(setwd(old_wd), add = TRUE)
+            htmlwidgets::saveWidget(widget, out_base, selfcontained = TRUE)
       }
 
       widget
