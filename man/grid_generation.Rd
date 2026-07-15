@@ -3,8 +3,16 @@
 \name{grid_generation}
 \alias{grid_generation}
 \title{Grid generation}
-\arguments{
-\item{grid}{Character specifying tile geometry. Options:
+\description{
+Parameters defining the geometry, resolution, and orientation of a regular grid
+of surface tiles, as used by various ggcube layer functions including
+\code{\link[=geom_smooth_3d]{geom_smooth_3d()}}, \code{\link[=geom_function_3d]{geom_function_3d()}}, \code{\link[=geom_density_3d]{geom_density_3d()}}, and
+\code{\link[=geom_surface_3d]{geom_surface_3d()}}.
+}
+\section{Arguments}{
+
+\describe{
+\item{\code{grid}}{Character specifying tile geometry. Options:
 \describe{
 \item{\code{"rectangle"}}{Rectangular grid (the default).}
 \item{\code{"right1"}}{Rectangular grid with each quad split into two right triangles
@@ -14,22 +22,16 @@ diagonal.}
 \item{\code{"equilateral"}}{Equilateral triangular lattice (tessellated via Delaunay
 triangulation). Can prevent lighting artifacts where a surface curves past
 parallel with the sight line.}
-}}
-
-\item{n}{Either a single integer specifying grid resolution in both dimensions,
+}
+}
+\item{\code{n}}{Either a single integer specifying grid resolution in both dimensions,
 or a vector of length 2 specifying \code{c(nx, ny)} for separate x and y resolutions.
 Default is \code{40}. Higher values create smoother surfaces but slower rendering.}
-
-\item{direction}{Either \code{"x"} (the default) or \code{"y"}, specifying the orientation
+\item{\code{direction}}{Either \code{"x"} (the default) or \code{"y"}, specifying the orientation
 of tile rows. Ignored for rectangular grids.}
-
-\item{trim}{Logical. Only relevant for \code{grid = "equilateral"}. If \code{TRUE}
+\item{\code{trim}}{Logical. Only relevant for \code{grid = "equilateral"}. If \code{TRUE}
 (default), trims edge vertices so that grid boundaries are straight lines. If
 \code{FALSE}, preserves the full lattice, resulting in a grid with irregular edges.}
 }
-\description{
-Parameters defining the geometry, resolution, and orientation of a regular grid
-of surface tiles, as used by various ggcube layer functions including
-\code{\link[=geom_smooth_3d]{geom_smooth_3d()}}, \code{\link[=geom_function_3d]{geom_function_3d()}}, \code{\link[=geom_density_3d]{geom_density_3d()}}, and
-\code{\link[=geom_surface_3d]{geom_surface_3d()}}.
 }
+

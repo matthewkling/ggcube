@@ -22,7 +22,7 @@ convex hull. Default value varies by geom. Specifying TRUE can help reduce artif
 that have polygon tiles that wrap over a visible horizon. For prism-type geoms like columns and
 voxels, FALSE is safe because polygons fill always be convex.}
 
-\item{na.rm}{If \code{FALSE}, missing values are removed.}
+\item{na.rm}{If \code{TRUE}, missing values are removed.}
 
 \item{show.legend}{Logical indicating whether this layer should be included in legends.}
 

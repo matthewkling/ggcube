@@ -5,24 +5,25 @@
 
 #' Depth sorting method
 #'
-#' @param sort_method Character indicating algorithm used to determine the order in which
-#'   elements are rendered. This controls depth sorting for all geometry types within
-#'   a layer, including polygons, points, segments, and text. Default varies by geometry
-#'   type.
-#'   \itemize{
-#'     \item \code{"painter"}: Elements are sorted by the mean depth (distance from
+#' The `sort_method` argument determines the order in which elements are rendered.
+#' This controls depth sorting for all geometry types within a layer, including
+#' polygons, points, segments, and text. Default varies by geometry type.
+#'
+#' @section Options:
+#' \describe{
+#'   \item{\code{"painter"}}{Elements are sorted by the mean depth (distance from
 #'     viewer after rotation) of their vertices. This is fast, but can give incorrect
-#'     results when primitives overlap in screen space at different depths.
-#'     \item \code{"pairwise"}: A more intensive sorting algorithm that compares every
+#'     results when primitives overlap in screen space at different depths.}
+#'   \item{\code{"pairwise"}}{A more intensive sorting algorithm that compares every
 #'     pair of elements to determine occlusion order. Uses type-specific geometric
 #'     tests: polygon overlap detection for polygon-polygon pairs, point-in-polygon
 #'     tests for polygon-point pairs, line clipping for polygon-segment pairs, and
 #'     line intersection for segment-segment pairs. When elements are coplanar,
 #'     smaller primitives (points, segments) render on top of larger ones (polygons).
-#'     Slower but more accurate.
-#'     \item \code{"auto"}: Uses pairwise if the data has fewer than 500 rows, and
-#'     painter otherwise.
-#'   }
+#'     Slower but more accurate.}
+#'   \item{\code{"auto"}}{Uses pairwise if the data has fewer than 500 rows, and
+#'     painter otherwise.}
+#' }
 #'
 #' @name sorting_methods
 NULL
@@ -49,7 +50,7 @@ NULL
 #'   convex hull. Default value varies by geom. Specifying TRUE can help reduce artifacts in surfaces
 #'   that have polygon tiles that wrap over a visible horizon. For prism-type geoms like columns and
 #'   voxels, FALSE is safe because polygons fill always be convex.
-#' @param na.rm If `FALSE`, missing values are removed.
+#' @param na.rm If `TRUE`, missing values are removed.
 #' @param show.legend Logical indicating whether this layer should be included in legends.
 #' @param inherit.aes If `FALSE`, overrides the default aesthetics.
 #' @param ... Other arguments passed on to the layer function (typically GeomPolygon3D), such as
@@ -100,25 +101,29 @@ NULL
 #' [geom_smooth_3d()], [geom_function_3d()], [geom_density_3d()], and
 #' [geom_surface_3d()].
 #'
-#' @param grid Character specifying tile geometry. Options:
-#'   \describe{
-#'     \item{`"rectangle"`}{Rectangular grid (the default).}
-#'     \item{`"right1"`}{Rectangular grid with each quad split into two right triangles
-#'       along the bottom-left to top-right diagonal.}
-#'     \item{`"right2"`}{Like `"right1"` but split along the bottom-right to top-left
-#'       diagonal.}
-#'     \item{`"equilateral"`}{Equilateral triangular lattice (tessellated via Delaunay
-#'       triangulation). Can prevent lighting artifacts where a surface curves past
-#'       parallel with the sight line.}
+#' @section Arguments:
+#' \describe{
+#'   \item{`grid`}{Character specifying tile geometry. Options:
+#'     \describe{
+#'       \item{`"rectangle"`}{Rectangular grid (the default).}
+#'       \item{`"right1"`}{Rectangular grid with each quad split into two right triangles
+#'         along the bottom-left to top-right diagonal.}
+#'       \item{`"right2"`}{Like `"right1"` but split along the bottom-right to top-left
+#'         diagonal.}
+#'       \item{`"equilateral"`}{Equilateral triangular lattice (tessellated via Delaunay
+#'         triangulation). Can prevent lighting artifacts where a surface curves past
+#'         parallel with the sight line.}
+#'     }
 #'   }
-#' @param n Either a single integer specifying grid resolution in both dimensions,
-#'   or a vector of length 2 specifying `c(nx, ny)` for separate x and y resolutions.
-#'   Default is `40`. Higher values create smoother surfaces but slower rendering.
-#' @param direction Either `"x"` (the default) or `"y"`, specifying the orientation
-#'   of tile rows. Ignored for rectangular grids.
-#' @param trim Logical. Only relevant for `grid = "equilateral"`. If `TRUE`
-#'   (default), trims edge vertices so that grid boundaries are straight lines. If
-#'   `FALSE`, preserves the full lattice, resulting in a grid with irregular edges.
+#'   \item{`n`}{Either a single integer specifying grid resolution in both dimensions,
+#'     or a vector of length 2 specifying `c(nx, ny)` for separate x and y resolutions.
+#'     Default is `40`. Higher values create smoother surfaces but slower rendering.}
+#'   \item{`direction`}{Either `"x"` (the default) or `"y"`, specifying the orientation
+#'     of tile rows. Ignored for rectangular grids.}
+#'   \item{`trim`}{Logical. Only relevant for `grid = "equilateral"`. If `TRUE`
+#'     (default), trims edge vertices so that grid boundaries are straight lines. If
+#'     `FALSE`, preserves the full lattice, resulting in a grid with irregular edges.}
+#' }
 #'
 #' @name grid_generation
 NULL

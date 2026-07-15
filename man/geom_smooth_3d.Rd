@@ -215,7 +215,7 @@ voxels, FALSE is safe because polygons fill always be convex.}
 \item{scale_depth}{Logical indicating whether polygon linewidths should be scaled to make closer lines
 wider and farther lines narrower. Default is TRUE. Scaling is based on the mean depth of a polygon.}
 
-\item{na.rm}{If \code{FALSE}, missing values are removed.}
+\item{na.rm}{If \code{TRUE}, missing values are removed.}
 
 \item{show.legend}{Logical indicating whether this layer should be included in legends.}
 
