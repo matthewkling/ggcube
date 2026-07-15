@@ -28,6 +28,13 @@
 #' @name sorting_methods
 NULL
 
+#' Sorting parameters
+#'
+#' @param sort_method Depth sorting algorithm. See [sorting_methods] for details.
+#' @name sort_params
+#' @keywords internal
+NULL
+
 
 # polygons ----------------------------------------------------
 
@@ -50,7 +57,7 @@ NULL
 #'   convex hull. Default value varies by geom. Specifying TRUE can help reduce artifacts in surfaces
 #'   that have polygon tiles that wrap over a visible horizon. For prism-type geoms like columns and
 #'   voxels, FALSE is safe because polygons fill always be convex.
-#' @param na.rm If `TRUE`, missing values are removed.
+#' @param na.rm If `FALSE`, missing values are removed.
 #' @param show.legend Logical indicating whether this layer should be included in legends.
 #' @param inherit.aes If `FALSE`, overrides the default aesthetics.
 #' @param ... Other arguments passed on to the layer function (typically GeomPolygon3D), such as

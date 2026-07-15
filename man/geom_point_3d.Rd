@@ -81,6 +81,8 @@ the standard point aesthetics, \code{geom_point_3d()} requires x, y, and z coord
 
 \item{na.rm}{If \code{FALSE}, missing values are removed with a warning.}
 
+\item{sort_method}{Depth sorting algorithm. See \link{sorting_methods} for details.}
+
 \item{scale_depth}{Logical indicating whether to apply depth-based scaling
 to point sizes, point stroke widths, and reference line widths.
 When \code{TRUE} (default), points/lines closer to the viewer appear larger/wider, and

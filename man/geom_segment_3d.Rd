@@ -47,6 +47,8 @@ for start coordinates and xend, yend, zend for end coordinates.}
 
 \item{...}{Other arguments passed on to \code{\link[ggplot2:layer]{ggplot2::layer()}}.}
 
+\item{sort_method}{Depth sorting algorithm. See \link{sorting_methods} for details.}
+
 \item{scale_depth}{Logical indicating whether to apply depth-based scaling
 to linewidth. When \code{TRUE} (default), segments closer to the viewer appear
 thicker, and segments farther away appear thinner.}

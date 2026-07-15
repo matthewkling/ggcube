@@ -397,7 +397,7 @@ generate_point_elements <- function(data, raw_points,
 #'   to point sizes, point stroke widths, and reference line widths.
 #'   When `TRUE` (default), points/lines closer to the viewer appear larger/wider, and
 #'   points farther away appear smaller. When `FALSE`, all points/lines have uniform size/width.
-#' @inheritParams sorting_methods
+#' @inheritParams sort_params
 #' @param raw_points Logical indicating whether to show the original 3D points.
 #'   Default is `TRUE`.
 #' @param ref_lines Logical indicating whether to show reference lines projecting

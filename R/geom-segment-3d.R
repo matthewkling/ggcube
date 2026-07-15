@@ -18,7 +18,7 @@
 #' @param scale_depth Logical indicating whether to apply depth-based scaling
 #'   to linewidth. When `TRUE` (default), segments closer to the viewer appear
 #'   thicker, and segments farther away appear thinner.
-#' @inheritParams sorting_methods
+#' @inheritParams sort_params
 #' @param arrow Specification for arrow heads, created by [arrow()].
 #' @param lineend Line end style, one of "round", "butt", "square".
 #'
