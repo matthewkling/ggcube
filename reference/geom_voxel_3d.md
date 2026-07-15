@@ -137,7 +137,7 @@ stat_voxel_3d(
 
 - na.rm:
 
-  If `TRUE`, missing values are removed.
+  If `FALSE`, missing values are removed.
 
 - show.legend:
 

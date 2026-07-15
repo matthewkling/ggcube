@@ -38,7 +38,7 @@ and convexity enforcement for polygon-based 3D layers.
 
 - na.rm:
 
-  If `TRUE`, missing values are removed.
+  If `FALSE`, missing values are removed.
 
 - show.legend:
 

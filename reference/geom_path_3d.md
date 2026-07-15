@@ -66,6 +66,12 @@ stat_path_3d(
   Other arguments passed on to
   [`ggplot2::layer()`](https://ggplot2.tidyverse.org/reference/layer.html).
 
+- sort_method:
+
+  Depth sorting algorithm. See
+  [sorting_methods](https://matthewkling.github.io/ggcube/reference/sorting_methods.md)
+  for details.
+
 - scale_depth:
 
   Logical indicating whether to apply depth-based scaling to linewidth.

@@ -103,6 +103,12 @@ stat_point_3d(
 
   If `FALSE`, missing values are removed with a warning.
 
+- sort_method:
+
+  Depth sorting algorithm. See
+  [sorting_methods](https://matthewkling.github.io/ggcube/reference/sorting_methods.md)
+  for details.
+
 - scale_depth:
 
   Logical indicating whether to apply depth-based scaling to point
