@@ -83,7 +83,7 @@
 #'
 #' @seealso [anim_save_3d()] for saving animations to file.
 #'   [gifski_renderer_3d()] and [file_renderer_3d()] for renderer options.
-#'   [flipbook_3d()] for interactive drag-to-rotate ggcubes.
+#'   [orbit_3d()] for interactive drag-to-rotate ggcubes.
 #' @export
 animate_3d <- function(plot,
                        pitch = NULL,
@@ -174,7 +174,7 @@ animate_3d <- function(plot,
 
 #' Render a sequence of camera states to PNG frame files
 #'
-#' Shared rendering core for [animate_3d()] and [flipbook_3d()]. Takes a
+#' Shared rendering core for [animate_3d()] and [orbit_3d()]. Takes a
 #' fully-resolved sequence of per-frame rotation parameters (one row per
 #' frame) and renders each to a PNG on disk, computing a single fixed
 #' viewport across all frames so the plot does not rescale between rotations.

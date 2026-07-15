@@ -123,5 +123,5 @@ anim_save_3d(anim, file.path(tempdir(), "rotating_surface.gif"))
 \seealso{
 \code{\link[=anim_save_3d]{anim_save_3d()}} for saving animations to file.
 \code{\link[=gifski_renderer_3d]{gifski_renderer_3d()}} and \code{\link[=file_renderer_3d]{file_renderer_3d()}} for renderer options.
-\code{\link[=flipbook_3d]{flipbook_3d()}} for interactive drag-to-rotate ggcubes.
+\code{\link[=orbit_3d]{orbit_3d()}} for interactive drag-to-rotate ggcubes.
 }

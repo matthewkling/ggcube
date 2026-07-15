@@ -24,7 +24,9 @@ reference:
   - sorting_methods
 - title: Interactivity & animation
 - contents:
-  - contains("flipbook")
+  - orbit_3d
+  - contains("orbit")
+  - animate_3d
   - contains("anim")
   - contains("renderer")
 - title: Z axis scales
@@ -37,3 +39,12 @@ reference:
   - mountain
   - sphere_points
   - text_outlines
+
+articles:
+  - title: Articles
+    navbar: ~
+    contents:
+      - articles/coord_3d
+      - articles/surfaces
+      - articles/lighting
+      - articles/animation

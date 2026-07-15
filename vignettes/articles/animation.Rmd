@@ -21,11 +21,13 @@ library(ggcube)
 Because ggcube renders a 3D scene from a fixed camera angle, a single plot only
 ever shows one viewpoint. Two functions let you show more than one:
 `animate_3d()` moves the camera through a sequence of angles and plays them
-back as a GIF or movie, while `flipbook_3d()` renders the same kind of sequence
-(or a 2D grid of rotation angles) into a self-contained HTML widget you can drag 
-to rotate. Animations and flipbooks can be displayed in RStudio's viewer, viewed in a 
+back as a GIF or movie, while `orbit_3d()` renders the same kind of sequence
+(or a 2D grid of rotation angles) into a HTML "orbit" widget you can drag 
+to rotate. 
+
+Animations and orbits can be displayed in RStudio's viewer, exported and viewed in a 
 web browser, or knit into RMarkdown documents like Reveal.js presentations or
-pkgdown articles.
+pkgdown articles. They can also be added to Shiny apps using 
 
 Both functions simply render the plot many times at different rotations, so they 
 preserve ggcube's exact look --- every frame is a real ggcube render, with the 
@@ -41,14 +43,15 @@ We'll use a common base plot throughout this article:
 p <- ggplot(mountain, aes(x, y, z, fill = z, color = z)) +
   geom_surface_3d(linewidth = .25) +
   coord_3d(light = light(anchor = "camera", direction = c(1, 1, 0)),
-           ratio = c(1.5, 2, 1)) +
+           ratio = c(1.5, 2, 1), zoom = 1.25) +
   scale_fill_viridis_c() +
   scale_color_viridis_c() +
+  guides(fill = guide_colorbar_3d()) +
   theme_void()
 ```
 
 
-## Animation
+## Animations
 
 `animate_3d()` takes a plot and a set of keyframe angles, interpolates between
 them, and renders the frames into an animation. Each of `pitch`, `roll`, and
@@ -81,38 +84,44 @@ See `?animate_3d` for the full set of playback options, including frame timing,
 pauses, rewind, alternative renderers, and parallel rendering.
 
 
-## Interaction
+## Interactive orbits
 
-`flipbook_3d()` renders the same kind of rotation sequence, but it packages the 
-frames into an interactive HTML widget you can drag to rotate. Clicking and 
-dragging with your cursor, or using your keyboard arrow keys (after clicking or 
-tab-selecting the plot), changes the viewing angle. Smoothness is governed by the 
-frame count `n`.
+`orbit_3d()` also renders a set of plots at different rotation angles, but it instead 
+packages the frames into an interactive HTML widget that you can drag to rotate. Clicking 
+and dragging with your cursor, or using your keyboard arrow keys (after clicking or 
+tab-selecting the plot), changes the viewing angle. 
 
 Rotation is specified the same way as in animation, except that here each angle 
-is given as a range rather than a keyframe path. A single range gives a 1D 
-flipbook --- drag left and right to turn it:
+is given as a range rather than a keyframe path. Specifying the range in ascending vs.
+descending order switches the control direction; note that for `yaw` specifically, 
+specifying the larger angle first (e.g. `c(360, 0)`) is generally preferred so that 
+rotation direction matches drag direction.
 
-```{r flipbook-1d}
-flipbook_3d(p, yaw = c(360, 0), n = 36, width = 700)
+Full-turn ranges (e.g. `yaw = c(0, 360)`) wrap around seamlessly, so you can keep 
+dragging in one direction forever, while partial ranges stop at their endpoints. 
+Use `start =` to choose the initial angle. Smoothness is governed by the frame count `n`, 
+with the trade-off that more frames take longer to render and produce larger files.
+
+Specifying a single range gives a 1D orbit or turntable effect --- drag left and right 
+to spin it:
+
+```{r orbit-1d}
+orbit_3d(p, yaw = c(360, 0), start = 300,
+            n = 36, width = 700)
 ```
 
-Give two ranges for a 2D flipbook: horizontal drag turns one axis and vertical
-drag the other, letting you spin the surface horizontally while tilting it up
-and down. The two numbers in `n` set the resolution of each axis, so keep them
-modest --- the number of rendered frames is their product:
+For a 2D orbit, you specify two ranges; horizontal drag turns the plot on one axis 
+and vertical drag on the other, letting you both spin and tilt the plot. 
+The two numbers in `n` set the resolution of each axis, and their product determines the
+number of rendered frames, so keep them modest:
 
-```{r flipbook-2d}
-flipbook_3d(p, yaw = c(360, 0), roll = c(-90, 0), n = c(24, 12), width = 700)
+```{r orbit-2d}
+orbit_3d(p, yaw = c(360, 0), roll = c(-90, 0), start = c(yaw = 300),
+            n = c(24, 12), width = 700)
 ```
 
-A full-turn axis (like `yaw = c(360, 0)`) wraps around seamlessly, so you can
-keep dragging in one direction forever; a partial range (like the `roll` above)
-stops at its end. Note that for `yaw` specifically, specifying the larger angle
-first (e.g. `c(360, 0)`) is generally preferred so that rotation direction matches
-drag direction. Use `start =` to choose the opening angle.
-
-See `?flipbook_3d` for additional details.
+You can include orbit widgets in Shiny apps via `orbit3dOutput()` and `renderorbit3d()`; 
+see the documentation for those functions to learn more.
 
 
 ## Computational considerations

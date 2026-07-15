@@ -29,7 +29,8 @@ Imports:
     magrittr,
     polyclip,
     isoband,
-    systemfonts
+    systemfonts,
+    htmlwidgets
 Roxygen: list(markdown = TRUE)
 Suggests: 
     alphashape3d,
@@ -46,6 +47,7 @@ Suggests:
     ragg,
     rmarkdown,
     rstudioapi,
+    shiny,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 VignetteBuilder: knitr

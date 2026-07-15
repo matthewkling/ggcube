@@ -280,18 +280,20 @@ A major limitation of 3D figures is that you can’t get a full view of
 the data from any single angle. One way to mitigate this is by rotating
 the figure to view the data from different directions. ggcube offers
 animated rotation via `animate_3d()`, and interactive drag-to-rotate
-plots via `flipbook_3d()`. See the [animation and
+plots via `orbit_3d()`. See the [animation and
 interaction](https://matthewkling.github.io/ggcube/articles/animation.html)
-article for details.
-
-Here’s an animation example:
+article for details. Here’s an example of a rotating gif:
 
 ``` r
-p <- ggplot(mountain, aes(x, y, z)) +
-      geom_contour_3d(fill = "black", color = "white", linewidth = .5) +
-      coord_3d(ratio = c(1.5, 2, 1), light = "none") +
+d <- expand.grid(x = 1:10, y = 1:10, z = 1:10)
+d <- d[rbinom(nrow(d), 1, prob = d$y/10) > .5,]
+p <- ggplot(d, aes(x, y, z)) +
+      geom_voxel_3d(width = 1.05) +
+      coord_3d(light = light(method = "rgb", direction = c(-1, .25, 0)),
+               zoom = 1.15) +
       theme_void()
-animate_3d(p, yaw = c(0, 360))
+
+animate_3d(p, yaw = c(0, 360), nframes = 72, fps = 12, cores = 8)
 ```
 
 <img src="man/figures/README-anim-1.gif" alt="" width="100%" />
