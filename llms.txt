@@ -302,20 +302,22 @@ the figure to view the data from different directions. ggcube offers
 animated rotation via
 [`animate_3d()`](https://matthewkling.github.io/ggcube/reference/animate_3d.md),
 and interactive drag-to-rotate plots via
-[`flipbook_3d()`](https://matthewkling.github.io/ggcube/reference/flipbook_3d.md).
+[`orbit_3d()`](https://matthewkling.github.io/ggcube/reference/orbit_3d.md).
 See the [animation and
 interaction](https://matthewkling.github.io/ggcube/articles/animation.html)
-article for details.
-
-Here’s an animation example:
+article for details. Here’s an example of a rotating gif:
 
 ``` r
 
-p <- ggplot(mountain, aes(x, y, z)) +
-      geom_contour_3d(fill = "black", color = "white", linewidth = .5) +
-      coord_3d(ratio = c(1.5, 2, 1), light = "none") +
+d <- expand.grid(x = 1:10, y = 1:10, z = 1:10)
+d <- d[rbinom(nrow(d), 1, prob = d$y/10) > .5,]
+p <- ggplot(d, aes(x, y, z)) +
+      geom_voxel_3d(width = 1.05) +
+      coord_3d(light = light(method = "rgb", direction = c(-1, .25, 0)),
+               zoom = 1.15) +
       theme_void()
-animate_3d(p, yaw = c(0, 360))
+
+animate_3d(p, yaw = c(0, 360), nframes = 72, fps = 12, cores = 8)
 ```
 
 ![](reference/figures/README-anim-1.gif)
@@ -453,12 +455,15 @@ ggplot(iris, aes(Sepal.Length, Sepal.Width, Petal.Length,
 
 ## Interactivity & animation
 
-- [`flipbook_3d()`](https://matthewkling.github.io/ggcube/reference/flipbook_3d.md)
+- [`orbit_3d()`](https://matthewkling.github.io/ggcube/reference/orbit_3d.md)
   : Create an interactive drag-to-rotate ggcube
-- [`anim_save_3d()`](https://matthewkling.github.io/ggcube/reference/anim_save_3d.md)
-  : Save a 3D animation to a file
+- [`orbit3dOutput()`](https://matthewkling.github.io/ggcube/reference/orbit_3d-shiny.md)
+  [`renderOrbit3d()`](https://matthewkling.github.io/ggcube/reference/orbit_3d-shiny.md)
+  : Shiny bindings for orbit_3d
 - [`animate_3d()`](https://matthewkling.github.io/ggcube/reference/animate_3d.md)
   : Animate a 3D plot
+- [`anim_save_3d()`](https://matthewkling.github.io/ggcube/reference/anim_save_3d.md)
+  : Save a 3D animation to a file
 - [`gifski_renderer_3d()`](https://matthewkling.github.io/ggcube/reference/renderers_3d.md)
   [`av_renderer_3d()`](https://matthewkling.github.io/ggcube/reference/renderers_3d.md)
   [`file_renderer_3d()`](https://matthewkling.github.io/ggcube/reference/renderers_3d.md)
@@ -484,14 +489,12 @@ ggplot(iris, aes(Sepal.Length, Sepal.Width, Petal.Length,
 
 # Articles
 
-### All vignettes
+### Articles
 
-- [Animated and interactive
-  rotation](https://matthewkling.github.io/ggcube/articles/animation.md):
 - [Controlling the 3D
   view](https://matthewkling.github.io/ggcube/articles/coord_3d.md):
-- [Introduction to
-  ggcube](https://matthewkling.github.io/ggcube/articles/ggcube.md):
+- [Surfaces](https://matthewkling.github.io/ggcube/articles/surfaces.md):
 - [Lighting and
   shading](https://matthewkling.github.io/ggcube/articles/lighting.md):
-- [Surfaces](https://matthewkling.github.io/ggcube/articles/surfaces.md):
+- [Animated and interactive
+  rotation](https://matthewkling.github.io/ggcube/articles/animation.md):

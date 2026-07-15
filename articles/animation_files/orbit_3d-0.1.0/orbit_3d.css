@@ -1,0 +1,35 @@
+.ggcube-orbit {
+  display: inline-block;
+  position: relative;
+  max-width: 100%;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  cursor: grab;
+  outline: none;
+}
+
+.ggcube-orbit.dragging { cursor: grabbing; }
+
+.ggcube-orbit:focus:not(.focus-from-pointer),
+.ggcube-orbit:focus-visible:not(.focus-from-pointer) {
+  outline: 2px solid #4c8bf5;
+  outline-offset: 2px;
+}
+
+.ggcube-orbit .ggcube-orbit-frame {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  pointer-events: none;
+}
+
+.ggcube-orbit .ggcube-orbit-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: sans-serif;
+  font-size: 13px;
+  color: #666;
+}

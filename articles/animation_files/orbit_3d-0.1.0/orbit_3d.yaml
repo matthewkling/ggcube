@@ -1,0 +1,6 @@
+dependencies:
+  - name: orbit_3d
+    version: 0.1.0
+    src: htmlwidgets
+    script: orbit_3d.js
+    stylesheet: orbit_3d.css

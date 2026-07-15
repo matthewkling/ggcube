@@ -5,6 +5,11 @@ stats, and a 3D coordinate system that let you build 3D visualizations
 using the familiar ggplot2 grammar: map your data to aesthetics, add
 layers, and customize the result with scales, guides, and themes.
 
+3D plots can be excellent for exploration, communication, and art. But
+it’s important to note that they can also give a distorted or obscured
+view of the data — 2D alternative are generally recommended when precise
+quantitative data representation is important.
+
 ``` r
 
 library(ggcube)
@@ -324,7 +329,9 @@ ggplot(sphere_points, aes(x, y, z)) +
             axis.title.x = element_text(color = "magenta"))
 ```
 
-![](ggcube_files/figure-html/theme-1.png) Standard ggplot2 themes and
+![](ggcube_files/figure-html/theme-1.png)
+
+Standard ggplot2 themes and
 [`theme()`](https://ggplot2.tidyverse.org/reference/theme.html)
 customization work as expected. ggcube adds foreground-specific elements
 (`panel.foreground`, `panel.grid.foreground`, `panel.border.foreground`)
@@ -382,31 +389,26 @@ ggplot(iris, aes(Sepal.Length, Sepal.Width, Petal.Length,
 
 A major limitation of 3D figures is that you can’t get a full view of
 the data from any single angle. One way to mitigate this is by rotating
-the figure to view the data from different directions. ggcube offers
-interactive drag-to-rotate plots via
-[`flipbook_3d()`](https://matthewkling.github.io/ggcube/reference/flipbook_3d.md)
-and animated rotations via
-[`animate_3d()`](https://matthewkling.github.io/ggcube/reference/animate_3d.md).
-
-For animation, rotation angles are specified as keyframe vectors that
-get interpolated across frames:
+the figure to view the data from different directions. ggcube offers two
+options for rotating 3D plots.
+[`animate_3d()`](https://matthewkling.github.io/ggcube/reference/animate_3d.md)
+makes a gif or movie of a spinning plot across a specified sequence of
+rotation angles, while
+[`orbit_3d()`](https://matthewkling.github.io/ggcube/reference/orbit_3d.md)
+produces an interactive HTML widget that you can drag to rotate. Both
+functions take a pre-made plot and a range of rotation angles:
 
 ``` r
 
 p <- ggplot(mountain, aes(x, y, z)) +
       geom_contour_3d(fill = "black", color = "white", linewidth = .5) +
-      coord_3d(ratio = c(1.5, 2, 1), light = "none", zoom = 1.5) +
+      coord_3d(ratio = c(1.5, 2, 1), light = "none", zoom = 1.25) +
       theme_void()
 
-animate_3d(p, yaw = c(0, 360))
+orbit_3d(p, yaw = c(360, 0), roll = c(-90, 0), n = c(24, 8),
+         start = c(yaw = 300, roll = -60))
 ```
 
-Output format is controlled via renderers:
-[`gifski_renderer_3d()`](https://matthewkling.github.io/ggcube/reference/renderers_3d.md)
-(GIF, the default),
-[`av_renderer_3d()`](https://matthewkling.github.io/ggcube/reference/renderers_3d.md)
-(MP4), or
-[`file_renderer_3d()`](https://matthewkling.github.io/ggcube/reference/renderers_3d.md)
-(individual frames). Use
-[`anim_save_3d()`](https://matthewkling.github.io/ggcube/reference/anim_save_3d.md)
-to save the result to a file.
+See the [animation and
+interaction](https://matthewkling.github.io/ggcube/articles/animation.html)
+article for more examples.

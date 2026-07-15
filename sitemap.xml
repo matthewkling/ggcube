@@ -20,7 +20,6 @@
 <url><loc>https://matthewkling.github.io/ggcube/reference/coord_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/cube_theming.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/element_rect.html</loc></url>
-<url><loc>https://matthewkling.github.io/ggcube/reference/flipbook_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/geom_bar_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/geom_col_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/geom_contour_3d.html</loc></url>
@@ -41,6 +40,8 @@
 <url><loc>https://matthewkling.github.io/ggcube/reference/light.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/light_param.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/mountain.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/orbit_3d-shiny.html</loc></url>
+<url><loc>https://matthewkling.github.io/ggcube/reference/orbit_3d.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/polygon_params.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/position_on_face.html</loc></url>
 <url><loc>https://matthewkling.github.io/ggcube/reference/position_param.html</loc></url>

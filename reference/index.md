@@ -82,12 +82,15 @@
 
 ## Interactivity & animation
 
-- [`flipbook_3d()`](https://matthewkling.github.io/ggcube/reference/flipbook_3d.md)
+- [`orbit_3d()`](https://matthewkling.github.io/ggcube/reference/orbit_3d.md)
   : Create an interactive drag-to-rotate ggcube
-- [`anim_save_3d()`](https://matthewkling.github.io/ggcube/reference/anim_save_3d.md)
-  : Save a 3D animation to a file
+- [`orbit3dOutput()`](https://matthewkling.github.io/ggcube/reference/orbit_3d-shiny.md)
+  [`renderOrbit3d()`](https://matthewkling.github.io/ggcube/reference/orbit_3d-shiny.md)
+  : Shiny bindings for orbit_3d
 - [`animate_3d()`](https://matthewkling.github.io/ggcube/reference/animate_3d.md)
   : Animate a 3D plot
+- [`anim_save_3d()`](https://matthewkling.github.io/ggcube/reference/anim_save_3d.md)
+  : Save a 3D animation to a file
 - [`gifski_renderer_3d()`](https://matthewkling.github.io/ggcube/reference/renderers_3d.md)
   [`av_renderer_3d()`](https://matthewkling.github.io/ggcube/reference/renderers_3d.md)
   [`file_renderer_3d()`](https://matthewkling.github.io/ggcube/reference/renderers_3d.md)

@@ -302,20 +302,22 @@ the figure to view the data from different directions. ggcube offers
 animated rotation via
 [`animate_3d()`](https://matthewkling.github.io/ggcube/reference/animate_3d.md),
 and interactive drag-to-rotate plots via
-[`flipbook_3d()`](https://matthewkling.github.io/ggcube/reference/flipbook_3d.md).
+[`orbit_3d()`](https://matthewkling.github.io/ggcube/reference/orbit_3d.md).
 See the [animation and
 interaction](https://matthewkling.github.io/ggcube/articles/animation.html)
-article for details.
-
-Here’s an animation example:
+article for details. Here’s an example of a rotating gif:
 
 ``` r
 
-p <- ggplot(mountain, aes(x, y, z)) +
-      geom_contour_3d(fill = "black", color = "white", linewidth = .5) +
-      coord_3d(ratio = c(1.5, 2, 1), light = "none") +
+d <- expand.grid(x = 1:10, y = 1:10, z = 1:10)
+d <- d[rbinom(nrow(d), 1, prob = d$y/10) > .5,]
+p <- ggplot(d, aes(x, y, z)) +
+      geom_voxel_3d(width = 1.05) +
+      coord_3d(light = light(method = "rgb", direction = c(-1, .25, 0)),
+               zoom = 1.15) +
       theme_void()
-animate_3d(p, yaw = c(0, 360))
+
+animate_3d(p, yaw = c(0, 360), nframes = 72, fps = 12, cores = 8)
 ```
 
 ![](reference/figures/README-anim-1.gif)

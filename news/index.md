@@ -3,9 +3,9 @@
 ## ggcube (development version)
 
 - The new
-  [`flipbook_3d()`](https://matthewkling.github.io/ggcube/reference/flipbook_3d.md)
+  [`orbit_3d()`](https://matthewkling.github.io/ggcube/reference/orbit_3d.md)
   function builds HTML widgets that let you interactively rotate ggcube
-  figures.
+  plots.
 - Plotmath is now supported in axis text and titles; e.g.,
   `xlab(expression(italic(alpha[1])))` now behaves as expected.
 - Bugfix:
