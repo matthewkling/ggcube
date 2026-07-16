@@ -530,18 +530,11 @@ compute_light_in_coord <- function(data, standardized_coords, scale_ranges, scal
       # Transform light position from data space to visual space, if applicable
       light$position <- transform_light_position(light$position, scale_ranges, scales, ratio)
 
-      # For camera-frame lighting, rotate the coordinates into camera space
-      if (light$anchor == "camera" && !is.null(proj)) {
-            standardized_coords <- standardized_coords %>%
-                  mutate(z = -z) %>%  # z-flip first, like transform_3d_standard
-                  as.matrix() %>%
-                  rotate_3d(proj$pitch, proj$roll, proj$yaw) %>%
-                  as.data.frame() %>%
-                  setNames(names(standardized_coords))
-
-            # Flip light direction
-            # light$direction[1:2] <- -light$direction[1:2]
-      }
+      # Camera-frame directional lighting keeps lighting geometry in scene space and
+      # rotates the finished face normals into camera space (see rotate_normals_to_camera,
+      # applied per branch below). Positional lighting stays entirely in scene space so
+      # that face centers and the light position share one coordinate frame.
+      camera_directional <- light$anchor == "camera" && !is.null(proj) && is.null(light$position)
 
       # Filter to polygon groups only — points and segments don't have
       # meaningful surface normals and should not receive lighting
@@ -585,13 +578,18 @@ compute_light_in_coord <- function(data, standardized_coords, scale_ranges, scal
       } else if (grepl("sh3d__hull", faces$group[1])) {
             # Hull/triangle data: compute normals from vertex coordinates
             normals <- compute_triangle_normals(poly_data, faces)
+            if (camera_directional) normals <- rotate_normals_to_camera(normals, proj)
       } else if ("face_type" %in% names(faces)) {
-            # Voxel/column data: axis-aligned normals
+            # Voxel/column data: axis-aligned normals (scene space)
             normals <- compute_axis_aligned_normals(faces)
+            if (camera_directional) normals <- rotate_normals_to_camera(normals, proj)
       } else {
-            # Surface-like data: normals from fitted plane gradients
+            # Surface-like data: normals from fitted plane gradients. The gradient fit
+            # and (-dzdx, -dzdy, 1) normal are computed in scene space, where the surface
+            # is single-valued and the +z orientation is a consistent "top" normal.
             gradients <- compute_surface_gradients_from_vertices(poly_data)
             normals <- compute_surface_normals(gradients)
+            if (camera_directional) normals <- rotate_normals_to_camera(normals, proj)
       }
 
       # Compute face centers from standardized coordinates
@@ -718,6 +716,25 @@ compute_surface_gradients_from_vertices <- function(data) {
       return(gradients)
 }
 
+
+#' Rotate scene-space face normals into camera space
+#'
+#' For camera-anchored directional lighting, face normals are computed in scene
+#' space (where surface orientation is well-defined) and then transformed into
+#' camera space with the same operations applied to coordinates during projection:
+#' a z-flip followed by the projection rotation. This mirrors the camera handling
+#' in [transform_normals_to_standard()] so that all lit geoms share one convention
+#' for entering camera space.
+#'
+#' @param normals Matrix with 3 columns (x, y, z normal components) in scene space
+#' @param proj List with pitch, roll, yaw (projection parameters)
+#' @return Matrix with 3 columns of camera-space normals
+#' @keywords internal
+#' @noRd
+rotate_normals_to_camera <- function(normals, proj) {
+      normals[, 3] <- -normals[, 3]  # z-flip, matching transform_3d_standard
+      rotate_3d(normals, proj$pitch, proj$roll, proj$yaw)
+}
 
 #' Compute surface normals from gradients
 #'
