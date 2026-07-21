@@ -1,6 +1,6 @@
 # Changelog
 
-## ggcube (development version)
+## ggcube 0.2.0
 
 - The new
   [`orbit_3d()`](https://matthewkling.github.io/ggcube/reference/orbit_3d.md)
@@ -8,12 +8,10 @@
   plots.
 - Plotmath is now supported in axis text and titles; e.g.,
   `xlab(expression(italic(alpha[1])))` now behaves as expected.
-- Bugfix:
-  [`element_rect()`](https://matthewkling.github.io/ggcube/reference/element_rect.md)
-  is now a proper ggplot2 theme element with expected behavior.
-- Bugfix:
-  [`guide_legend_3d()`](https://matthewkling.github.io/ggcube/reference/guide_3d.md)
-  now works with a wider range of ggplot2 versions.
+- Fixed several bugs, including issues with
+  [`element_rect()`](https://matthewkling.github.io/ggcube/reference/element_rect.md),
+  [`guide_legend_3d()`](https://matthewkling.github.io/ggcube/reference/guide_3d.md),
+  and camera-anchored lighting.
 
 ## ggcube 0.1.0
 
