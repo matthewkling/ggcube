@@ -29,6 +29,9 @@ light source are fully dark; base color occurs on surfaces angled 45 degrees tow
 darkening or brightening base colors as in the other models, this model generates a wholly new set of
 colors. If this option is selected, parameters like \code{mode} and \code{contrast} are ignored, but
 \code{fill}, \code{color}, and \code{direction} still apply.
+\item \code{"none"}: Disable lighting entirely. All other parameters are ignored.
+Equivalent to \code{light(fill = FALSE, color = FALSE)}, and to passing the
+bare string \code{"none"} to a \code{light} argument.
 }}
 
 \item{direction}{Numeric vector of length 3 specifying direction in 3D space (x, y, z) that
@@ -86,15 +89,17 @@ backfaces highly contrasting lighting to frontfaces. To light backfaces the same
 set scale to 1. To uniformly darken (brighten) all backfaces, use a negative (positive) offset.}
 }
 \value{
-A \code{lighting} object that can be passed to polygon-based 3D layers or to \code{coord_3d()}.
+A \code{lighting} object that can be added to a plot or passed to polygon-based 3D layers
+or to \code{coord_3d()}.
 }
 \description{
 Creates a lighting specification object for use with 3D polygon layers.
 Lighting modifies the brightness of fill and/or base color aesthetics based on surface
 orientation (i.e., it implements form shadows but not cast shadows).
 Various options are available to control light qualities and light source location.
-The result can be passed \code{coord_3d()} to for application to the whole plot, or to individual
-\verb{geom_*_3d()} layer functions (which take precedence over plot-level lighting).
+The result can be added directly to a plot with \code{+ light()} to set lighting for
+the whole plot. It can also be passed to individual \verb{geom_*_3d()} layer functions,
+which takes precedence over plot-level lighting.
 }
 \details{
 Note that light-like effects can also be achieved in some stats by mapping color
@@ -104,47 +109,46 @@ for examples.
 \examples{
 # base plot used in examples
 p <- ggplot(sphere_points, aes(x, y, z)) +
-  geom_hull_3d(fill = "#9e2602", color = "#5e1600")
+  geom_hull_3d(fill = "#9e2602", color = "#5e1600") +
+  coord_3d(scales = "fixed")
 
 # Light qualities ----------------------------------------------------------
 
 # default `"diffuse"` lighting
-p + coord_3d()
+p
 
 \donttest{
 
 # use `"direct"` lighting to apply full shade to unlit surfaces
-p + coord_3d(light = light(method = "direct"))
+p + light(method = "direct")
 
 # use `"hsl"` mode to fade highlights to white
-p + coord_3d(light = light(mode = "hsl"))
+p + light(mode = "hsl")
 
 # adjust lighting intensity with `contrast`
-p + coord_3d(light = light(mode = "hsl", contrast = 1.5))
+p + light(mode = "hsl", contrast = 1.5)
 
 # use `"rgb"` lighting to map face orientation to 3D color space
-p + coord_3d(light = light(method = "rgb"))
+p + light(method = "rgb")
 
 
 # Lighting targets ---------------------------------------------------------
 
 # use `fill` and `color` to select which aesthetics get modified by light
-p + coord_3d(light = light(fill = TRUE, color = FALSE))
+p + light(fill = TRUE, color = FALSE)
 
 # apply lighting to aesthetically mapped colors, with shaded guide to match
 p + geom_hull_3d(aes(fill = x, color = x)) +
       scale_fill_viridis_c() +
       scale_color_viridis_c() +
       guides(fill = guide_colorbar_3d()) +
-      coord_3d(light = light(mode = "hsl", contrast = .9))
+      light(mode = "hsl", contrast = .9)
 
 # disable lighting entirely
-# (equivalent to specifying `light(fill = FALSE, color = FALSE`))
-p + coord_3d(light = "none")
+p + light("none")
 
-# if provided, layer-level lighting overrides plot-level (coord_3d) lighting
-p + coord_3d(light = light("direct"), # plot-level: affects original layer
-      scales = "fixed") +
+# if provided, layer-level lighting overrides plot-level lighting
+p + light("direct") + # plot-level: affects original layer
   geom_hull_3d(aes(x = x + 2.5), fill = "#9e2602", color = "#5e1600",
       light = light("direct", mode = "hsl", direction = c(0, -1, 0)))
 
@@ -153,19 +157,18 @@ p + coord_3d(light = light("direct"), # plot-level: affects original layer
 
 # directional light from the xmin-ymin-zmin direction
 # (`direction` is relative to rotated axes with default `anchor = "scene"`)
-p + coord_3d(light = light(direction = c(-1, -1, -1)))
+p + light(direction = c(-1, -1, -1))
 
 # directional light from top-right corner of figure
 # (`anchor = "camera"` makes `direction` fixed relative to the plot)
-p + coord_3d(light = light(direction = c(1, 1, 0), anchor = "camera"))
+p + light(direction = c(1, 1, 0), anchor = "camera")
 
 # positional light source within plot
 ggplot(mountain, aes(x, y, z)) +
   stat_surface_3d(fill = "red", color = "red") +
-  coord_3d(
-    light = light(position = c(.5, .7, 95), distance_falloff = TRUE,
-                  mode = "hsl", contrast = .9),
-    ratio = c(1.5, 2, 1))
+  light(position = c(.5, .7, 95), distance_falloff = TRUE,
+        mode = "hsl", contrast = .9) +
+  coord_3d(ratio = c(1.5, 2, 1))
 
 
 # Backface lighting --------------------------------------------------------
@@ -174,18 +177,15 @@ ggplot(mountain, aes(x, y, z)) +
 p <- ggplot() +
   geom_function_3d(fun = function(x, y) x^2 + y^2,
     xlim = c(-3, 3), ylim = c(-3, 3),
-    fill = "steelblue", color = "steelblue")
-p + coord_3d(pitch = 0, roll = -70, yaw = 0,
-             light = light(mode = "hsl"))
+    fill = "steelblue", color = "steelblue") +
+    coord_3d(pitch = 0, roll = -70, yaw = 0)
+p + light(mode = "hsl")
 
 # use `backface_scale = 1` to light backfaces as if they're frontfaces
-p + coord_3d(pitch = 0, roll = -70, yaw = 0,
-             light = light(backface_scale = 1, mode = "hsl"))
+p + light(backface_scale = 1, mode = "hsl")
 
 # use `backface_offset` to uniformly darken (or lighten) backfaces
-p + coord_3d(pitch = 0, roll = -70, yaw = 0,
-             light = light(backface_scale = 1, mode = "hsl",
-                           backface_offset = -.5))
+p + light(backface_scale = 1, mode = "hsl", backface_offset = -.5)
 
 }
 

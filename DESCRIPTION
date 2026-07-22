@@ -45,6 +45,7 @@ Suggests:
     patchwork,
     progress,
     ragg,
+    rjson,
     rmarkdown,
     rstudioapi,
     shiny,

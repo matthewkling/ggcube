@@ -21,7 +21,7 @@ coord_3d(
   scales = "free",
   ratio = c(1, 1, 1),
   zoom = 1,
-  light = ggcube::light(),
+  light = waiver(),
   ...
 )
 }
@@ -106,10 +106,11 @@ as scaled by \code{ratio}. Similar to \code{coord_fixed()} but for 3D
 than 1 zoom in (tighter framing, may crop edges), values less than 1
 zoom out (more whitespace around the plot). Default is 1.}
 
-\item{light}{A lighting specification object created by \code{\link[=light]{light()}},\code{"none"} to disable
-lighting, or \code{NULL} to inherit plot-level lighting specs from the coord. Specify
-plot-level lighting in \code{coord_3d()} and layer-specific lighting in \verb{geom_*3d()}
-functions.}
+\item{light}{Lighting specification for the plot. Usually left unset: add
+\code{\link[=light]{light()}} to the plot instead, which is the recommended way to set plot-level
+lighting and can appear anywhere in the plot expression. Supplying \code{light}
+here as well as adding \code{\link[=light]{light()}} to the plot is an error. Use \code{NULL} to
+disable lighting, or \code{light("none")} for an equivalent lighting object.}
 
 \item{...}{Additional arguments reserved for internal use.}
 }
@@ -128,8 +129,8 @@ p <- ggplot() +
   geom_function_3d(
     aes(fill = after_stat(z), color = after_stat(z)),
     fun = function(x, y) sin(x) * cos(y),
-    xlim = c(-pi, pi), ylim = c(-pi, pi),
-    n = 50, light = light("direct", contrast = .7)) +
+    xlim = c(-pi, pi), ylim = c(-pi, pi), n = 50) +
+  light("direct", contrast = .7) +
   scale_fill_viridis_c() +
   scale_color_viridis_c() +
   theme(legend.position = "none")

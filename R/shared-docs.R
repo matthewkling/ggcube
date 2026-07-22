@@ -177,10 +177,11 @@ NULL
 
 #' Light param
 #'
-#' @param light A lighting specification object created by [light()],`"none"` to disable
-#'   lighting, or `NULL` to inherit plot-level lighting specs from the coord. Specify
-#'   plot-level lighting in `coord_3d()` and layer-specific lighting in `geom_*3d()`
-#'   functions.
+#' @param light A lighting specification object created by [light()], `light("none")`
+#'   or the string `"none"` to disable lighting, or `NULL` to inherit plot-level
+#'   lighting. Set plot-level lighting by adding [light()] to the plot, and
+#'   layer-specific lighting via the `light` argument of `geom_*_3d()` functions,
+#'   which takes precedence.
 #' @name light_param
 #' @keywords internal
 NULL

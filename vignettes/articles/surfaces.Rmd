@@ -72,9 +72,8 @@ p <- ggplot(mountain, aes(x, y, z, fill = z, color = z)) +
   scale_color_viridis_c() +
   theme_light()
 
-p + geom_surface_3d(light = light(direction = c(1, 0, .5),
-                                mode = "hsv", contrast = 1.5),
-                  linewidth = .2) +
+p + geom_surface_3d(linewidth = .2) +
+  light(direction = c(1, 0, .5), mode = "hsv", contrast = 1.5) +
   guides(fill = guide_colorbar_3d())
 ```
 
@@ -184,7 +183,8 @@ d <- dplyr::mutate(tidyr::expand_grid(x = -10:10, y = -10:10),
                    z = sqrt(x^2 + y^2) / 1.5,
                    z = cos(z) - z)
 p <- ggplot(d, aes(x, y, z)) +
-  coord_3d(light = light(mode = "hsl", direction = c(1, 0, 0)))
+  coord_3d() +
+  light(mode = "hsl", direction = c(1, 0, 0))
 
 (p + geom_surface_3d(fill = "white", color = "darkblue",
                       linewidth = .2) +
@@ -229,7 +229,7 @@ p <- ggplot(mountain, aes(x, y, z)) +
 (p + geom_surface_3d(aes(fill = z, color = z), light = "none") +
     ggtitle('light = "none"')) +
   (p + geom_surface_3d(aes(fill = z, color = z),
-                        light = light(direction = c(1, 0, 0))) +
+                       light = light(direction = c(1, 0, 0))) +
       ggtitle("diffuse (default)")) +
   plot_layout(ncol = 2)
 ```

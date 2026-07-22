@@ -243,9 +243,9 @@ ggplot(df, aes(x, y, z, label = label, fill = x)) +
 
 ## Lighting effects
 
-Lighting of 3D polygon layers is controlled by providing a `light()`
-specification to the layer function or to `coord_3d()`. See the
-[lighting and
+Lighting of 3D polygon layers is controlled by adding a `light()`
+specification to the plot, or providing to the `light` parameter of a
+layer function or `coord_3d()`. See the [lighting and
 shading](https://matthewkling.github.io/ggcube/articles/lighting.html)
 article for a comprehensive guide.
 
@@ -285,15 +285,22 @@ interaction](https://matthewkling.github.io/ggcube/articles/animation.html)
 article for details. Here’s an example of a rotating gif:
 
 ``` r
-d <- expand.grid(x = 1:10, y = 1:10, z = 1:10)
-d <- d[rbinom(nrow(d), 1, prob = d$y/10) > .5,]
-p <- ggplot(d, aes(x, y, z)) +
-      geom_voxel_3d(width = 1.05) +
-      coord_3d(light = light(method = "rgb", direction = c(-1, .25, 0)),
-               zoom = 1.15) +
-      theme_void()
+mammoth <- data.frame(do.call(rbind, rjson::fromJSON(
+  file = paste0("https://raw.githubusercontent.com/PAIR-code/",
+                "understanding-umap/master/raw_data/mammoth_3d_50k.json")
+)))
+colnames(mammoth) <- c("Y", "X", "Z")
 
-animate_3d(p, yaw = c(0, 360), nframes = 72, fps = 12, cores = 8)
+p <- ggplot(mammoth, aes(X, Y, Z)) +
+      geom_hull_3d(method = "alpha", radius = 8, 
+                   fill = "darkred", color = "darkred") +
+      light(mode = "hsl", direction = c(-1, 1, 0), anchor = "camera") +
+      coord_3d(roll = -90, scales = "fixed", 
+               panels = "zmin", expand = FALSE) +
+      theme(axis.text = element_blank(),
+            axis.title = element_blank())
+
+animate_3d(p, yaw = c(0, 360), nframes = 72, fps = 8, width = 700, cores = 8)
 ```
 
 <img src="man/figures/README-anim-1.gif" alt="" width="100%" />

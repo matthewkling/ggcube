@@ -13,6 +13,7 @@ geom_hull_3d(
   ...,
   method = "convex",
   radius = NULL,
+  singular = FALSE,
   light = NULL,
   cull_backfaces = TRUE,
   sort_method = NULL,
@@ -29,6 +30,7 @@ stat_hull_3d(
   ...,
   method = "convex",
   radius = NULL,
+  singular = FALSE,
   light = NULL,
   cull_backfaces = TRUE,
   sort_method = NULL,
@@ -58,15 +60,23 @@ aesthetics like \code{colour}, \code{fill}, \code{linewidth}, \code{annotate = a
 \item \code{"alpha"}: Alpha shape triangulation (can capture non-convex topologies)
 }}
 
-\item{radius}{Square root of "alpha" parameter when alpha method is used.
+\item{radius}{The "alpha" parameter when alpha method is used.
 A face is included in the resulting alpha shape if it can be "exposed" by a sphere of this radius.
 If NULL (the default), a simple heuristic based on the data scale is used to calculate a radius value.
 Note that alpha shapes are quite sensitive to the coordinate scales of your data. See Details section.}
 
-\item{light}{A lighting specification object created by \code{\link[=light]{light()}},\code{"none"} to disable
-lighting, or \code{NULL} to inherit plot-level lighting specs from the coord. Specify
-plot-level lighting in \code{coord_3d()} and layer-specific lighting in \verb{geom_*3d()}
-functions.}
+\item{singular}{Whether to include "singular" faces when \code{method = "alpha"}.
+These are faces that do not bound any enclosed volume, appearing as isolated
+sheets dangling from the surface, and are usually a sign that \code{radius} is
+slightly too small. Because they enclose nothing, they have no well-defined
+outward direction: their lighting is arbitrary and they are never culled.
+Defaults to \code{FALSE}.}
+
+\item{light}{A lighting specification object created by \code{\link[=light]{light()}}, \code{light("none")}
+or the string \code{"none"} to disable lighting, or \code{NULL} to inherit plot-level
+lighting. Set plot-level lighting by adding \code{\link[=light]{light()}} to the plot, and
+layer-specific lighting via the \code{light} argument of \verb{geom_*_3d()} functions,
+which takes precedence.}
 
 \item{cull_backfaces}{Logical indicating whether to remove back-facing polygons
 from rendering. This is primarily for performance optimization but may be useful
@@ -103,16 +113,17 @@ Each group will get its own independent hull.
 
 \section{Alpha scale sensitivity}{
 
-Alpha shape method is highly sensitive to coordinate scales. The \code{alpha} parameter
-that works for data scaled 0-1 will likely fail for data scaled 0-1000.
+Alpha shape method is highly sensitive to coordinate scales. \code{radius} is expressed
+in data units, so a value that works for data scaled 0-1 will likely fail for data
+scaled 0-1000.
 Guidelines for choosing radius:
 \itemize{
-\item Start with \code{alpha = 1.0} and adjust based on results
+\item Start at a small fraction of your data's overall extent and adjust based on results
 \item For data with mixed scales (e.g., x: 0-1, y: 0-1000), consider rescaling your data first
-\item Larger alpha values → smoother, more connected surfaces
-\item Smaller alpha values → more detailed surfaces, but may fragment
-\item If you get no triangles, try increasing alpha by 10x
-\item If surface fills unwanted holes, try decreasing alpha by 10x
+\item Larger radius values → smoother, more connected surfaces
+\item Smaller radius values → more detailed surfaces, but may fragment
+\item If you get no triangles, try increasing radius by 10x
+\item If surface fills unwanted holes, try decreasing radius by 10x
 }
 }
 
@@ -135,28 +146,42 @@ Guidelines for choosing radius:
 
 \examples{
 \dontshow{if (requireNamespace("geometry", quietly = TRUE)) withAutoprint(\{ # examplesIf}
-# Convex hull
-ggplot(sphere_points, aes(x, y, z)) +
-  geom_hull_3d(method = "convex", fill = "gray40") +
-  coord_3d()
+# A solid torus: a shape whose hole a convex hull cannot represent
+set.seed(1)
+n <- 2000
+theta <- runif(n, 0, 2 * pi)  # position around the ring
+phi <- runif(n, 0, 2 * pi)    # position around the tube
+rho <- sqrt(runif(n))         # distance from the tube center
+torus <- data.frame(
+  x = (3 + rho * cos(phi)) * cos(theta),
+  y = (3 + rho * cos(phi)) * sin(theta),
+  z = rho * sin(phi)
+)
 
-# Alpha shape (for sphere data, gives similar result to convex)
+# Convex hull: the hole is bridged over
+ggplot(torus, aes(x, y, z)) +
+  geom_hull_3d(method = "convex", fill = "gray40") +
+  coord_3d(scales = "fixed")
+
+# Alpha shape: the hole is preserved
 \donttest{
-ggplot(sphere_points, aes(x, y, z)) +
-  geom_hull_3d(method = "alpha", radius = 2, fill = "gray40") +
-  coord_3d()
+ggplot(torus, aes(x, y, z)) +
+  geom_hull_3d(method = "alpha", radius = 0.6, fill = "gray40") +
+  coord_3d(scales = "fixed")
 }
 
 # Use `cull_backfaces = FALSE` to render far side of hull
-ggplot(sphere_points, aes(x, y, z)) +
+\donttest{
+ggplot(torus, aes(x, y, z)) +
   geom_hull_3d( # default culling for comparison
-    method = "convex", light = NULL,
+    method = "alpha", radius = 0.6, light = NULL,
     fill = "steelblue", color = "darkred", linewidth = .5, alpha = .5) +
   geom_hull_3d( # culling disabled
-    aes(x = x + 2.5), cull_backfaces = FALSE,
-    method = "convex", light = NULL,
+    aes(x = x + 9), cull_backfaces = FALSE,
+    method = "alpha", radius = 0.6, light = NULL,
     fill = "steelblue", color = "darkred", linewidth = .5, alpha = .5) +
   coord_3d(scales = "fixed")
+}
 
 # Use grouping to build separate hulls for data subsets
 ggplot(iris, aes(Petal.Length, Sepal.Length, Sepal.Width,

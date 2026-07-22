@@ -47,7 +47,7 @@ guide_colorbar_3d <- function(reverse_shade = FALSE, shade_range = c(-.5, .5), .
 
             # Get lighting info
             lighting_info <- extract_light_from_plot()
-            if (is.null(lighting_info) || lighting_info$shade == "neither") {
+            if (!inherits(lighting_info, "light") || lighting_info$shade == "neither") {
                   return(original_grob)
             }
 
@@ -87,7 +87,7 @@ guide_legend_3d <- function(reverse_shade = FALSE, shade_range = c(-.5, .5), ...
 
             # Get lighting info
             lighting_info <- extract_light_from_plot()
-            if (is.null(lighting_info) || lighting_info$shade == "neither") {
+            if (!inherits(lighting_info, "light") || lighting_info$shade == "neither") {
                   return(original_grob)
             }
 
@@ -147,9 +147,22 @@ extract_light_from_plot <- function() {
                                     }
                               }
 
-                              # No layer lighting found - check coord for lighting
+                              # No layer lighting found - check the coord. Its
+                              # `light` may be a `waiver()` when lighting was
+                              # never specified, or was supplied by `+ light()`
+                              # before `coord_3d()` and so is still stashed on
+                              # the plot. Resolve both cases to a real spec.
                               if (!is.null(plot_obj$coordinates) && "light" %in% names(plot_obj$coordinates)) {
                                     coord_light <- plot_obj$coordinates$light
+                                    if (inherits(coord_light, "waiver")) {
+                                          pending <- attr(plot_obj, "ggcube_pending_light")
+                                          # A waiver means lighting was never set
+                                          # on the coord: either it came from
+                                          # `+ light()` added before `coord_3d()`
+                                          # and is still stashed, or nothing was
+                                          # specified and the default applies.
+                                          coord_light <- if (!is.null(pending)) pending else light()
+                                    }
                                     if (!is.null(coord_light)) {
                                           return(coord_light)
                                     }

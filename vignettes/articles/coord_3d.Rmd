@@ -30,8 +30,8 @@ p <- ggplot() +
   geom_function_3d(
     aes(fill = after_stat(z), color = after_stat(z)),
     fun = function(x, y) sin(x) * cos(y),
-    xlim = c(-pi, pi), ylim = c(-pi, pi),
-    n = 50, light = light("direct", contrast = .7)) +
+    xlim = c(-pi, pi), ylim = c(-pi, pi), n = 50) +
+  light("direct", contrast = .7) +
   scale_fill_viridis_c() +
   scale_color_viridis_c() +
   guides(fill = guide_colorbar_3d()) +

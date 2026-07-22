@@ -31,10 +31,11 @@ stat_identity_3d(
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics.}
 
-\item{light}{A lighting specification object created by \code{\link[=light]{light()}},\code{"none"} to disable
-lighting, or \code{NULL} to inherit plot-level lighting specs from the coord. Specify
-plot-level lighting in \code{coord_3d()} and layer-specific lighting in \verb{geom_*3d()}
-functions.}
+\item{light}{A lighting specification object created by \code{\link[=light]{light()}}, \code{light("none")}
+or the string \code{"none"} to disable lighting, or \code{NULL} to inherit plot-level
+lighting. Set plot-level lighting by adding \code{\link[=light]{light()}} to the plot, and
+layer-specific lighting via the \code{light} argument of \verb{geom_*_3d()} functions,
+which takes precedence.}
 
 \item{...}{Other arguments passed on to geom layer.}
 }

@@ -4,8 +4,9 @@
 #' Lighting modifies the brightness of fill and/or base color aesthetics based on surface
 #' orientation (i.e., it implements form shadows but not cast shadows).
 #' Various options are available to control light qualities and light source location.
-#' The result can be passed `coord_3d()` to for application to the whole plot, or to individual
-#' `geom_*_3d()` layer functions (which take precedence over plot-level lighting).
+#' The result can be added directly to a plot with `+ light()` to set lighting for
+#' the whole plot. It can also be passed to individual `geom_*_3d()` layer functions,
+#' which takes precedence over plot-level lighting.
 #'
 #' Note that light-like effects can also be achieved in some stats by mapping color
 #' aesthestics to computed variables such as `after_stat(dzdx)`; see [geom_surface_3d()]
@@ -21,6 +22,9 @@
 #'          darkening or brightening base colors as in the other models, this model generates a wholly new set of
 #'           colors. If this option is selected, parameters like `mode` and `contrast` are ignored, but
 #'           `fill`, `color`, and `direction` still apply.
+#'     \item \code{"none"}: Disable lighting entirely. All other parameters are ignored.
+#'          Equivalent to \code{light(fill = FALSE, color = FALSE)}, and to passing the
+#'          bare string \code{"none"} to a \code{light} argument.
 #'   }
 #' @param mode Character string specifying color lighting mode:
 #'   \itemize{
@@ -68,51 +72,51 @@
 #'   backfaces highly contrasting lighting to frontfaces. To light backfaces the same as frontfaces,
 #'   set scale to 1. To uniformly darken (brighten) all backfaces, use a negative (positive) offset.
 #'
-#' @return A \code{lighting} object that can be passed to polygon-based 3D layers or to `coord_3d()`.
+#' @return A \code{lighting} object that can be added to a plot or passed to polygon-based 3D layers
+#'   or to `coord_3d()`.
 #' @examples
 #' # base plot used in examples
 #' p <- ggplot(sphere_points, aes(x, y, z)) +
-#'   geom_hull_3d(fill = "#9e2602", color = "#5e1600")
+#'   geom_hull_3d(fill = "#9e2602", color = "#5e1600") +
+#'   coord_3d(scales = "fixed")
 #'
 #' # Light qualities ----------------------------------------------------------
 #'
 #' # default `"diffuse"` lighting
-#' p + coord_3d()
+#' p
 #'
 #' \donttest{
 #'
 #' # use `"direct"` lighting to apply full shade to unlit surfaces
-#' p + coord_3d(light = light(method = "direct"))
+#' p + light(method = "direct")
 #'
 #' # use `"hsl"` mode to fade highlights to white
-#' p + coord_3d(light = light(mode = "hsl"))
+#' p + light(mode = "hsl")
 #'
 #' # adjust lighting intensity with `contrast`
-#' p + coord_3d(light = light(mode = "hsl", contrast = 1.5))
+#' p + light(mode = "hsl", contrast = 1.5)
 #'
 #' # use `"rgb"` lighting to map face orientation to 3D color space
-#' p + coord_3d(light = light(method = "rgb"))
+#' p + light(method = "rgb")
 #'
 #'
 #' # Lighting targets ---------------------------------------------------------
 #'
 #' # use `fill` and `color` to select which aesthetics get modified by light
-#' p + coord_3d(light = light(fill = TRUE, color = FALSE))
+#' p + light(fill = TRUE, color = FALSE)
 #'
 #' # apply lighting to aesthetically mapped colors, with shaded guide to match
 #' p + geom_hull_3d(aes(fill = x, color = x)) +
 #'       scale_fill_viridis_c() +
 #'       scale_color_viridis_c() +
 #'       guides(fill = guide_colorbar_3d()) +
-#'       coord_3d(light = light(mode = "hsl", contrast = .9))
+#'       light(mode = "hsl", contrast = .9)
 #'
 #' # disable lighting entirely
-#' # (equivalent to specifying `light(fill = FALSE, color = FALSE`))
-#' p + coord_3d(light = "none")
+#' p + light("none")
 #'
-#' # if provided, layer-level lighting overrides plot-level (coord_3d) lighting
-#' p + coord_3d(light = light("direct"), # plot-level: affects original layer
-#'       scales = "fixed") +
+#' # if provided, layer-level lighting overrides plot-level lighting
+#' p + light("direct") + # plot-level: affects original layer
 #'   geom_hull_3d(aes(x = x + 2.5), fill = "#9e2602", color = "#5e1600",
 #'       light = light("direct", mode = "hsl", direction = c(0, -1, 0)))
 #'
@@ -121,19 +125,18 @@
 #'
 #' # directional light from the xmin-ymin-zmin direction
 #' # (`direction` is relative to rotated axes with default `anchor = "scene"`)
-#' p + coord_3d(light = light(direction = c(-1, -1, -1)))
+#' p + light(direction = c(-1, -1, -1))
 #'
 #' # directional light from top-right corner of figure
 #' # (`anchor = "camera"` makes `direction` fixed relative to the plot)
-#' p + coord_3d(light = light(direction = c(1, 1, 0), anchor = "camera"))
+#' p + light(direction = c(1, 1, 0), anchor = "camera")
 #'
 #' # positional light source within plot
 #' ggplot(mountain, aes(x, y, z)) +
 #'   stat_surface_3d(fill = "red", color = "red") +
-#'   coord_3d(
-#'     light = light(position = c(.5, .7, 95), distance_falloff = TRUE,
-#'                   mode = "hsl", contrast = .9),
-#'     ratio = c(1.5, 2, 1))
+#'   light(position = c(.5, .7, 95), distance_falloff = TRUE,
+#'         mode = "hsl", contrast = .9) +
+#'   coord_3d(ratio = c(1.5, 2, 1))
 #'
 #'
 #' # Backface lighting --------------------------------------------------------
@@ -142,18 +145,15 @@
 #' p <- ggplot() +
 #'   geom_function_3d(fun = function(x, y) x^2 + y^2,
 #'     xlim = c(-3, 3), ylim = c(-3, 3),
-#'     fill = "steelblue", color = "steelblue")
-#' p + coord_3d(pitch = 0, roll = -70, yaw = 0,
-#'              light = light(mode = "hsl"))
+#'     fill = "steelblue", color = "steelblue") +
+#'     coord_3d(pitch = 0, roll = -70, yaw = 0)
+#' p + light(mode = "hsl")
 #'
 #' # use `backface_scale = 1` to light backfaces as if they're frontfaces
-#' p + coord_3d(pitch = 0, roll = -70, yaw = 0,
-#'              light = light(backface_scale = 1, mode = "hsl"))
+#' p + light(backface_scale = 1, mode = "hsl")
 #'
 #' # use `backface_offset` to uniformly darken (or lighten) backfaces
-#' p + coord_3d(pitch = 0, roll = -70, yaw = 0,
-#'              light = light(backface_scale = 1, mode = "hsl",
-#'                            backface_offset = -.5))
+#' p + light(backface_scale = 1, mode = "hsl", backface_offset = -.5)
 #'
 #' }
 #'
@@ -170,10 +170,20 @@ light <- function(method = "diffuse",
                   backface_scale = -1,
                   backface_offset = 0) {
 
+      # `method = "none"` disables lighting. Every other parameter describes how to
+      # light a surface, so all of them are irrelevant here: return the disabled
+      # spec directly without validating them. This makes `light("none")`
+      # equivalent to the bare string `"none"` accepted by the `light` argument of
+      # layer, coord, and plot-level functions.
+      if (identical(method, "none")) {
+            return(light(fill = FALSE, color = FALSE))
+      }
+
       # Validate method
       valid_methods <- c("direct", "diffuse", "rgb")
       if (!method %in% valid_methods) {
-            stop("method must be one of: ", paste(valid_methods, collapse = ", "))
+            stop("method must be one of: ",
+                 paste(c(valid_methods, "none"), collapse = ", "))
       }
 
       # Validate direction
@@ -723,7 +733,7 @@ compute_surface_gradients_from_vertices <- function(data) {
 #' space (where surface orientation is well-defined) and then transformed into
 #' camera space with the same operations applied to coordinates during projection:
 #' a z-flip followed by the projection rotation. This mirrors the camera handling
-#' in [transform_normals_to_standard()] so that all lit geoms share one convention
+#' in transform_normals_to_standard() so that all lit geoms share one convention
 #' for entering camera space.
 #'
 #' @param normals Matrix with 3 columns (x, y, z normal components) in scene space
@@ -1146,18 +1156,140 @@ transform_light_position <- function(position, scale_ranges, scales, ratio) {
       return(c(standardized$x, standardized$y, standardized$z))
 }
 
+#' Resolve a lighting specification to its final value
+#'
+#' `waiver()` signals that no lighting was specified anywhere, in which case the
+#' package default applies. `NULL` is a deliberate request for no lighting and is
+#' preserved as-is.
+#'
+#' @param light A `light` object, `"none"`, `NULL`, or `waiver()`.
+#' @return A `light` object, `"none"`, or `NULL`.
+#' @keywords internal
+#' @noRd
+resolve_light <- function(light) {
+      if (inherits(light, "waiver")) light() else light
+}
+
 #' Store lighting specification to data frame for downstream use
 #'
 #' @param data Data frame to attach lighting spec to
-#' @param light Lighting specification object, "none", or NULL
+#' @param light Lighting specification object, "none", NULL, or waiver()
 #' @return Data frame with lighting_spec column added (if light is not NULL)
 #' @keywords internal
 #' @noRd
 attach_light <- function(data, light){
+      light <- resolve_light(light)
       if(!is.null(light)){
-            if(!inherits(light, "light") && light == "none") light <- light(fill = FALSE, color = FALSE)
+            if(!inherits(light, "light") && identical(light, "none")) light <- light("none")
             if(! "lighting_spec" %in% names(data)) data$lighting_spec <- I(list(light))
       }
 
       data
+}
+
+
+# Plot-level lighting via `+ light()` -------------------------------------------
+
+#' Take ownership of a plot's coord before mutating it
+#'
+#' `Coord` ggproto objects have reference semantics and are *not* deep-copied by
+#' ggplot2's `plot_clone()`, so one coord object can be shared by several plots.
+#' Mutating it in place would leak into every plot that shares it. This clones
+#' once, marks the clone, and mutates in place on subsequent calls.
+#'
+#' The clone must be bound to a *new* name. `ggproto(NULL, parent)` captures
+#' `parent` lazily, so `co <- ggproto(NULL, co)` makes the clone its own parent
+#' and any inherited field lookup then recurses until the C stack overflows.
+#'
+#' @param plot A ggplot object whose `coordinates` is a `Coord3D`.
+#' @return The plot, with a coord that is safe to mutate.
+#' @keywords internal
+#' @noRd
+own_coord_3d <- function(plot) {
+      co <- plot$coordinates
+      if (!isTRUE(co$.ggcube_owned)) {
+            new_co <- ggproto(NULL, co)
+            new_co$.ggcube_owned <- TRUE
+            plot$coordinates <- new_co
+      }
+      plot
+}
+
+#' Signal that lighting was specified in two places
+#'
+#' @return Throws an error.
+#' @keywords internal
+#' @noRd
+abort_double_light <- function() {
+      rlang::abort(c(
+            "Lighting was specified twice.",
+            "x" = "Found lighting in both `coord_3d(light = )` and `+ light()`.",
+            "i" = "Supply it in one place only; `+ light()` is the recommended form."
+      ), call = NULL)
+}
+
+#' Find a plot-level light stashed by `+ light()`
+#'
+#' `+ light()` added before `coord_3d()` has no coord to write to, so it stashes
+#' the spec on the plot instead. `Coord3D$setup_panel_params()` receives only
+#' scales and params, so this walks parent frames to reach the plot -- the same
+#' technique already used to locate the theme in that method.
+#'
+#' @return A `light` object, or `NULL` if none was stashed.
+#' @keywords internal
+#' @noRd
+find_pending_light <- function() {
+      pending <- NULL
+      tryCatch({
+            for (i in 1:40) {
+                  env <- parent.frame(i)
+                  if (exists("plot", envir = env, inherits = FALSE)) {
+                        p <- get("plot", envir = env)
+                        stash <- attr(p, "ggcube_pending_light")
+                        if (!is.null(stash)) {
+                              pending <- stash
+                              break
+                        }
+                  }
+            }
+      }, error = function(e) {
+            # If frame walking fails, no plot-level light is applied
+      })
+      pending
+}
+
+#' Report that plot-level lighting is being replaced
+#'
+#' Mirrors ggplot2's behaviour when a coord or scale replaces an existing one:
+#' a component that is discarded wholesale is worth reporting, since
+#' `+ light(direction = ) + light(mode = )` looks like it accumulates settings
+#' but in fact keeps only the second.
+#'
+#' @return Called for its side effect.
+#' @keywords internal
+#' @noRd
+inform_light_replaced <- function() {
+      rlang::inform(c(
+            "Lighting is already present.",
+            i = "Adding new lighting, which will replace the existing specification."
+      ))
+}
+
+#' @export
+ggplot_add.light <- function(object, plot, ...) {
+      if (inherits(plot$coordinates, "Coord3D")) {
+            if (isTRUE(plot$coordinates$light_explicit)) abort_double_light()
+            # A light already written to the coord by an earlier `+ light()` is
+            # about to be discarded. An unresolved `waiver()` is not a
+            # replacement: it means no lighting has been specified yet.
+            if (!inherits(plot$coordinates$light, "waiver")) inform_light_replaced()
+            plot <- own_coord_3d(plot)
+            plot$coordinates$light <- object
+      } else {
+            # No coord yet. Stash on the plot; Coord3D$setup_panel_params()
+            # picks it up at build time, so `+ light()` is order-independent.
+            if (!is.null(attr(plot, "ggcube_pending_light"))) inform_light_replaced()
+            attr(plot, "ggcube_pending_light") <- object
+      }
+      plot
 }

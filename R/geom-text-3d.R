@@ -1081,8 +1081,8 @@ GeomText3DBillboard <- ggproto("GeomText3DBillboard", Geom,
 #'   taller, values < 1 make text wider. When `coord` is provided, this is
 #'   multiplied by the computed aspect correction. Ignored for billboard method.
 #' @param light (Polygon method only) Either a lighting specification created by
-#'   [light()], `"none"` (the default) for no lighting, or `NULL` to inherit
-#'   plot-level lighting from `coord_3d()`. When provided, text polygons are
+#'   [light()], `"none"` (the default) or `light("none")` for no lighting, or
+#'   `NULL` to inherit plot-level lighting. When provided, text polygons are
 #'   shaded based on their facing direction. Ignored for billboard method.
 #' @param angle Rotation angle in degrees. For polygon method, rotates around
 #'   the facing axis. For billboard method, rotates in the view plane.

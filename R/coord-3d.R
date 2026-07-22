@@ -73,7 +73,11 @@
 #'     \item With \code{scales = "free"}: Ratios apply to scaled cube coordinates
 #'     \item With \code{scales = "fixed"}: Ratios apply to original data coordinates
 #'   }
-#' @inheritParams light_param
+#' @param light Lighting specification for the plot. Usually left unset: add
+#'   [light()] to the plot instead, which is the recommended way to set plot-level
+#'   lighting and can appear anywhere in the plot expression. Supplying `light`
+#'   here as well as adding [light()] to the plot is an error. Use `NULL` to
+#'   disable lighting, or `light("none")` for an equivalent lighting object.
 #' @param ... Additional arguments reserved for internal use.
 #'
 #' @examples
@@ -82,8 +86,8 @@
 #'   geom_function_3d(
 #'     aes(fill = after_stat(z), color = after_stat(z)),
 #'     fun = function(x, y) sin(x) * cos(y),
-#'     xlim = c(-pi, pi), ylim = c(-pi, pi),
-#'     n = 50, light = light("direct", contrast = .7)) +
+#'     xlim = c(-pi, pi), ylim = c(-pi, pi), n = 50) +
+#'   light("direct", contrast = .7) +
 #'   scale_fill_viridis_c() +
 #'   scale_color_viridis_c() +
 #'   theme(legend.position = "none")
@@ -167,7 +171,7 @@ coord_3d <- function(pitch = 0, roll = -60, yaw = -30,
                      scales = "free",
                      ratio = c(1, 1, 1),
                      zoom = 1,
-                     light = ggcube::light(),
+                     light = waiver(),
                      ...) {
 
       # Capture internal-only params from ...
@@ -205,6 +209,7 @@ coord_3d <- function(pitch = 0, roll = -60, yaw = -30,
                     zoom = zoom,
                     xlabels = xlabels, ylabels = ylabels, zlabels = zlabels,
                     light = light,
+                    light_explicit = !inherits(light, "waiver"),
                     title_position = title_position,
                     fixed_bounds = fixed_bounds
             ),
@@ -307,7 +312,8 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                    scales = "free",
                    ratio = c(1, 1, 1),
                    zoom = 1,
-                   light = NULL,
+                   light = waiver(),
+                   light_explicit = FALSE,
 
                    plot_bounds = c(0, 1, 0, 1),  # [xmin, xmax, ymin, ymax]
 
@@ -479,8 +485,16 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                                panel_params$grid_transformed <- NULL
                          }
 
-                         # add light specs
-                         panel_params$light <- self$light
+                         # Resolve lighting. `coord_3d(light = )` is explicit and
+                         # takes precedence; otherwise a plot-level `+ light()`
+                         # applies; otherwise the package default. `NULL` is
+                         # preserved as an explicit request for no lighting.
+                         pending <- find_pending_light()
+                         if (!is.null(pending)) {
+                               if (isTRUE(self$light_explicit)) abort_double_light()
+                               self$light <- pending
+                         }
+                         panel_params$light <- resolve_light(self$light)
 
                          return(panel_params)
                    },

@@ -95,8 +95,8 @@ taller, values < 1 make text wider. When \code{coord} is provided, this is
 multiplied by the computed aspect correction. Ignored for billboard method.}
 
 \item{light}{(Polygon method only) Either a lighting specification created by
-\code{\link[=light]{light()}}, \code{"none"} (the default) for no lighting, or \code{NULL} to inherit
-plot-level lighting from \code{coord_3d()}. When provided, text polygons are
+\code{\link[=light]{light()}}, \code{"none"} (the default) or \code{light("none")} for no lighting, or
+\code{NULL} to inherit plot-level lighting. When provided, text polygons are
 shaded based on their facing direction. Ignored for billboard method.}
 
 \item{angle}{Rotation angle in degrees. For polygon method, rotates around
