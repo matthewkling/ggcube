@@ -2,7 +2,12 @@
 
 ## ggcube (development version)
 
+- `geom_hull_3d(method = "alpha")` has bug fixes related to face
+  orientation and the `radius` parameter
+
 ## ggcube 0.2.0
+
+CRAN release: 2026-07-21
 
 - The new
   [`orbit_3d()`](https://matthewkling.github.io/ggcube/reference/orbit_3d.md)

@@ -28,18 +28,26 @@ The two functions share a rotation vocabulary. They operate on a
 pre-existing ggcube plot object, and take `pitch`, `roll`, and `yaw`
 arguments that define rotation ranges to move through.
 
-We’ll use a common base plot throughout this article:
+We’ll use a common base plot throughout this article – an alpha hull of
+points from a [mammoth skeleton digitized by the
+Smithsonian](https://3d.si.edu/object/3d/mammuthus-primigenius-blumbach:341c96cd-f967-4540-8ed1-d3fc56d31f12):
 
 ``` r
 
-p <- ggplot(mountain, aes(x, y, z, fill = z, color = z)) +
-  geom_surface_3d(linewidth = .25) +
-  coord_3d(light = light(anchor = "camera", direction = c(1, 1, 0)),
-           ratio = c(1.5, 2, 1), zoom = 1.25) +
-  scale_fill_viridis_c() +
-  scale_color_viridis_c() +
-  guides(fill = guide_colorbar_3d()) +
-  theme_void()
+mammoth <- data.frame(do.call(rbind, rjson::fromJSON(
+  file = paste0("https://raw.githubusercontent.com/PAIR-code/",
+                "understanding-umap/master/raw_data/mammoth_3d_50k.json")
+)))
+colnames(mammoth) <- c("Y", "X", "Z")
+
+p <- ggplot(mammoth, aes(X, Y, Z)) +
+      geom_hull_3d(method = "alpha", radius = 8, 
+                   fill = "darkred", color = "darkred",
+                   light = light(mode = "hsl", direction = c(-1, 1, 0), anchor = "camera")) +
+      coord_3d(roll = -90, scales = "fixed", zoom = 1.1,
+               panels = "zmin", expand = FALSE) +
+      theme(axis.text = element_blank(),
+            axis.title = element_blank())
 ```
 
 ## Animations
@@ -112,7 +120,7 @@ left and right to spin it:
 ``` r
 
 orbit_3d(p, yaw = c(360, 0), start = 300,
-            n = 36, width = 700)
+         n = 36, width = 700)
 ```
 
 For a 2D orbit, you specify two ranges; horizontal drag turns the plot
@@ -124,7 +132,7 @@ modest:
 ``` r
 
 orbit_3d(p, yaw = c(360, 0), roll = c(-90, 0), start = c(yaw = 300),
-            n = c(24, 12), width = 700)
+         n = c(24, 12), width = 700)
 ```
 
 You can include orbit widgets in Shiny apps via

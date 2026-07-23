@@ -57,6 +57,7 @@ using either convex hull or alpha shape algorithms.</p>
 <span>  <span class="va">...</span>,</span>
 <span>  method <span class="op">=</span> <span class="st">"convex"</span>,</span>
 <span>  radius <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  singular <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  light <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  cull_backfaces <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  sort_method <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -73,6 +74,7 @@ using either convex hull or alpha shape algorithms.</p>
 <span>  <span class="va">...</span>,</span>
 <span>  method <span class="op">=</span> <span class="st">"convex"</span>,</span>
 <span>  radius <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  singular <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  light <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  cull_backfaces <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  sort_method <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -117,10 +119,19 @@ aesthetics like <code>colour</code>, <code>fill</code>, <code>linewidth</code>, 
 
 
 <dt id="arg-radius">radius<a class="anchor" aria-label="anchor" href="#arg-radius"></a></dt>
-<dd><p>Square root of "alpha" parameter when alpha method is used.
+<dd><p>The "alpha" parameter when alpha method is used.
 A face is included in the resulting alpha shape if it can be "exposed" by a sphere of this radius.
 If NULL (the default), a simple heuristic based on the data scale is used to calculate a radius value.
 Note that alpha shapes are quite sensitive to the coordinate scales of your data. See Details section.</p></dd>
+
+
+<dt id="arg-singular">singular<a class="anchor" aria-label="anchor" href="#arg-singular"></a></dt>
+<dd><p>Whether to include "singular" faces when <code>method = "alpha"</code>.
+These are faces that do not bound any enclosed volume, appearing as isolated
+sheets dangling from the surface, and are usually a sign that <code>radius</code> is
+slightly too small. Because they enclose nothing, they have no well-defined
+outward direction: their lighting is arbitrary and they are never culled.
+Defaults to <code>FALSE</code>.</p></dd>
 
 
 <dt id="arg-light">light<a class="anchor" aria-label="anchor" href="#arg-light"></a></dt>
@@ -177,14 +188,15 @@ Each group will get its own independent hull.</p>
     <h2 id="alpha-scale-sensitivity">Alpha scale sensitivity<a class="anchor" aria-label="anchor" href="#alpha-scale-sensitivity"></a></h2>
 
 
-<p>Alpha shape method is highly sensitive to coordinate scales. The <code>alpha</code> parameter
-that works for data scaled 0-1 will likely fail for data scaled 0-1000.
-Guidelines for choosing radius:</p><ul><li><p>Start with <code>alpha = 1.0</code> and adjust based on results</p></li>
+<p>Alpha shape method is highly sensitive to coordinate scales. <code>radius</code> is expressed
+in data units, so a value that works for data scaled 0-1 will likely fail for data
+scaled 0-1000.
+Guidelines for choosing radius:</p><ul><li><p>Start at a small fraction of your data's overall extent and adjust based on results</p></li>
 <li><p>For data with mixed scales (e.g., x: 0-1, y: 0-1000), consider rescaling your data first</p></li>
-<li><p>Larger alpha values → smoother, more connected surfaces</p></li>
-<li><p>Smaller alpha values → more detailed surfaces, but may fragment</p></li>
-<li><p>If you get no triangles, try increasing alpha by 10x</p></li>
-<li><p>If surface fills unwanted holes, try decreasing alpha by 10x</p></li>
+<li><p>Larger radius values → smoother, more connected surfaces</p></li>
+<li><p>Smaller radius values → more detailed surfaces, but may fragment</p></li>
+<li><p>If you get no triangles, try increasing radius by 10x</p></li>
+<li><p>If surface fills unwanted holes, try decreasing radius by 10x</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="aesthetics">Aesthetics<a class="anchor" aria-label="anchor" href="#aesthetics"></a></h2>
@@ -208,17 +220,29 @@ default geometry with depth sorting, <code><a href="light.html">light()</a></cod
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Convex hull</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">sphere_points</span>, <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># A solid torus: a shape whose hole a convex hull cannot represent</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">2000</span></span></span>
+<span class="r-in"><span><span class="va">theta</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="va">n</span>, <span class="fl">0</span>, <span class="fl">2</span> <span class="op">*</span> <span class="va">pi</span><span class="op">)</span>  <span class="co"># position around the ring</span></span></span>
+<span class="r-in"><span><span class="va">phi</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="va">n</span>, <span class="fl">0</span>, <span class="fl">2</span> <span class="op">*</span> <span class="va">pi</span><span class="op">)</span>    <span class="co"># position around the tube</span></span></span>
+<span class="r-in"><span><span class="va">rho</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span><span class="op">)</span>         <span class="co"># distance from the tube center</span></span></span>
+<span class="r-in"><span><span class="va">torus</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  x <span class="op">=</span> <span class="op">(</span><span class="fl">3</span> <span class="op">+</span> <span class="va">rho</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cos</a></span><span class="op">(</span><span class="va">phi</span><span class="op">)</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cos</a></span><span class="op">(</span><span class="va">theta</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  y <span class="op">=</span> <span class="op">(</span><span class="fl">3</span> <span class="op">+</span> <span class="va">rho</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cos</a></span><span class="op">(</span><span class="va">phi</span><span class="op">)</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">theta</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  z <span class="op">=</span> <span class="va">rho</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">phi</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Convex hull: the hole is bridged over</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">torus</span>, <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu">geom_hull_3d</span><span class="op">(</span>method <span class="op">=</span> <span class="st">"convex"</span>, fill <span class="op">=</span> <span class="st">"gray40"</span><span class="op">)</span> <span class="op">+</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span>scales <span class="op">=</span> <span class="st">"fixed"</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="geom_hull_3d-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Alpha shape (for sphere data, gives similar result to convex)</span></span></span>
+<span class="r-in"><span><span class="co"># Alpha shape: the hole is preserved</span></span></span>
 <span class="r-in"><span><span class="co"># \donttest{</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">sphere_points</span>, <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
-<span class="r-in"><span>  <span class="fu">geom_hull_3d</span><span class="op">(</span>method <span class="op">=</span> <span class="st">"alpha"</span>, radius <span class="op">=</span> <span class="fl">2</span>, fill <span class="op">=</span> <span class="st">"gray40"</span><span class="op">)</span> <span class="op">+</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">torus</span>, <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span>  <span class="fu">geom_hull_3d</span><span class="op">(</span>method <span class="op">=</span> <span class="st">"alpha"</span>, radius <span class="op">=</span> <span class="fl">0.6</span>, fill <span class="op">=</span> <span class="st">"gray40"</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span>scales <span class="op">=</span> <span class="st">"fixed"</span><span class="op">)</span></span></span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>RGL: unable to open X11 display</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'rgl.init' failed, will use the null device.</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> See '?rgl.useNULL' for ways to avoid this warning.</span>
@@ -226,16 +250,18 @@ default geometry with depth sorting, <code><a href="light.html">light()</a></cod
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Use `cull_backfaces = FALSE` to render far side of hull</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">sphere_points</span>, <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">torus</span>, <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu">geom_hull_3d</span><span class="op">(</span> <span class="co"># default culling for comparison</span></span></span>
-<span class="r-in"><span>    method <span class="op">=</span> <span class="st">"convex"</span>, light <span class="op">=</span> <span class="cn">NULL</span>,</span></span>
+<span class="r-in"><span>    method <span class="op">=</span> <span class="st">"alpha"</span>, radius <span class="op">=</span> <span class="fl">0.6</span>, light <span class="op">=</span> <span class="cn">NULL</span>,</span></span>
 <span class="r-in"><span>    fill <span class="op">=</span> <span class="st">"steelblue"</span>, color <span class="op">=</span> <span class="st">"darkred"</span>, linewidth <span class="op">=</span> <span class="fl">.5</span>, alpha <span class="op">=</span> <span class="fl">.5</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu">geom_hull_3d</span><span class="op">(</span> <span class="co"># culling disabled</span></span></span>
-<span class="r-in"><span>    <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">x</span> <span class="op">+</span> <span class="fl">2.5</span><span class="op">)</span>, cull_backfaces <span class="op">=</span> <span class="cn">FALSE</span>,</span></span>
-<span class="r-in"><span>    method <span class="op">=</span> <span class="st">"convex"</span>, light <span class="op">=</span> <span class="cn">NULL</span>,</span></span>
+<span class="r-in"><span>    <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">x</span> <span class="op">+</span> <span class="fl">9</span><span class="op">)</span>, cull_backfaces <span class="op">=</span> <span class="cn">FALSE</span>,</span></span>
+<span class="r-in"><span>    method <span class="op">=</span> <span class="st">"alpha"</span>, radius <span class="op">=</span> <span class="fl">0.6</span>, light <span class="op">=</span> <span class="cn">NULL</span>,</span></span>
 <span class="r-in"><span>    fill <span class="op">=</span> <span class="st">"steelblue"</span>, color <span class="op">=</span> <span class="st">"darkred"</span>, linewidth <span class="op">=</span> <span class="fl">.5</span>, alpha <span class="op">=</span> <span class="fl">.5</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span>scales <span class="op">=</span> <span class="st">"fixed"</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="geom_hull_3d-3.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Use grouping to build separate hulls for data subsets</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">iris</span>, <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span><span class="va">Petal.Length</span>, <span class="va">Sepal.Length</span>, <span class="va">Sepal.Width</span>,</span></span>

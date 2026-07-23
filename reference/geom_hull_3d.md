@@ -14,6 +14,7 @@ geom_hull_3d(
   ...,
   method = "convex",
   radius = NULL,
+  singular = FALSE,
   light = NULL,
   cull_backfaces = TRUE,
   sort_method = NULL,
@@ -30,6 +31,7 @@ stat_hull_3d(
   ...,
   method = "convex",
   radius = NULL,
+  singular = FALSE,
   light = NULL,
   cull_backfaces = TRUE,
   sort_method = NULL,
@@ -82,12 +84,21 @@ stat_hull_3d(
 
 - radius:
 
-  Square root of "alpha" parameter when alpha method is used. A face is
-  included in the resulting alpha shape if it can be "exposed" by a
-  sphere of this radius. If NULL (the default), a simple heuristic based
-  on the data scale is used to calculate a radius value. Note that alpha
-  shapes are quite sensitive to the coordinate scales of your data. See
-  Details section.
+  The "alpha" parameter when alpha method is used. A face is included in
+  the resulting alpha shape if it can be "exposed" by a sphere of this
+  radius. If NULL (the default), a simple heuristic based on the data
+  scale is used to calculate a radius value. Note that alpha shapes are
+  quite sensitive to the coordinate scales of your data. See Details
+  section.
+
+- singular:
+
+  Whether to include "singular" faces when `method = "alpha"`. These are
+  faces that do not bound any enclosed volume, appearing as isolated
+  sheets dangling from the surface, and are usually a sign that `radius`
+  is slightly too small. Because they enclose nothing, they have no
+  well-defined outward direction: their lighting is arbitrary and they
+  are never culled. Defaults to `FALSE`.
 
 - light:
 
@@ -147,22 +158,23 @@ hull.
 
 ## Alpha scale sensitivity
 
-Alpha shape method is highly sensitive to coordinate scales. The `alpha`
-parameter that works for data scaled 0-1 will likely fail for data
-scaled 0-1000. Guidelines for choosing radius:
+Alpha shape method is highly sensitive to coordinate scales. `radius` is
+expressed in data units, so a value that works for data scaled 0-1 will
+likely fail for data scaled 0-1000. Guidelines for choosing radius:
 
-- Start with `alpha = 1.0` and adjust based on results
+- Start at a small fraction of your data's overall extent and adjust
+  based on results
 
 - For data with mixed scales (e.g., x: 0-1, y: 0-1000), consider
   rescaling your data first
 
-- Larger alpha values → smoother, more connected surfaces
+- Larger radius values → smoother, more connected surfaces
 
-- Smaller alpha values → more detailed surfaces, but may fragment
+- Smaller radius values → more detailed surfaces, but may fragment
 
-- If you get no triangles, try increasing alpha by 10x
+- If you get no triangles, try increasing radius by 10x
 
-- If surface fills unwanted holes, try decreasing alpha by 10x
+- If surface fills unwanted holes, try decreasing radius by 10x
 
 ## Aesthetics
 
@@ -190,17 +202,29 @@ for lighting specifications.
 ## Examples
 
 ``` r
-# Convex hull
-ggplot(sphere_points, aes(x, y, z)) +
+# A solid torus: a shape whose hole a convex hull cannot represent
+set.seed(1)
+n <- 2000
+theta <- runif(n, 0, 2 * pi)  # position around the ring
+phi <- runif(n, 0, 2 * pi)    # position around the tube
+rho <- sqrt(runif(n))         # distance from the tube center
+torus <- data.frame(
+  x = (3 + rho * cos(phi)) * cos(theta),
+  y = (3 + rho * cos(phi)) * sin(theta),
+  z = rho * sin(phi)
+)
+
+# Convex hull: the hole is bridged over
+ggplot(torus, aes(x, y, z)) +
   geom_hull_3d(method = "convex", fill = "gray40") +
-  coord_3d()
+  coord_3d(scales = "fixed")
 
 
-# Alpha shape (for sphere data, gives similar result to convex)
+# Alpha shape: the hole is preserved
 # \donttest{
-ggplot(sphere_points, aes(x, y, z)) +
-  geom_hull_3d(method = "alpha", radius = 2, fill = "gray40") +
-  coord_3d()
+ggplot(torus, aes(x, y, z)) +
+  geom_hull_3d(method = "alpha", radius = 0.6, fill = "gray40") +
+  coord_3d(scales = "fixed")
 #> Warning: RGL: unable to open X11 display
 #> Warning: 'rgl.init' failed, will use the null device.
 #> See '?rgl.useNULL' for ways to avoid this warning.
@@ -208,16 +232,18 @@ ggplot(sphere_points, aes(x, y, z)) +
 # }
 
 # Use `cull_backfaces = FALSE` to render far side of hull
-ggplot(sphere_points, aes(x, y, z)) +
+# \donttest{
+ggplot(torus, aes(x, y, z)) +
   geom_hull_3d( # default culling for comparison
-    method = "convex", light = NULL,
+    method = "alpha", radius = 0.6, light = NULL,
     fill = "steelblue", color = "darkred", linewidth = .5, alpha = .5) +
   geom_hull_3d( # culling disabled
-    aes(x = x + 2.5), cull_backfaces = FALSE,
-    method = "convex", light = NULL,
+    aes(x = x + 9), cull_backfaces = FALSE,
+    method = "alpha", radius = 0.6, light = NULL,
     fill = "steelblue", color = "darkred", linewidth = .5, alpha = .5) +
   coord_3d(scales = "fixed")
 
+# }
 
 # Use grouping to build separate hulls for data subsets
 ggplot(iris, aes(Petal.Length, Sepal.Length, Sepal.Width,
