@@ -16,9 +16,8 @@ renders the same kind of sequence (or a 2D grid of rotation angles) into
 a HTML “orbit” widget you can drag to rotate.
 
 Animations and orbits can be displayed in RStudio’s viewer, exported and
-viewed in a web browser, or knit into RMarkdown documents like Reveal.js
-presentations or pkgdown articles. They can also be added to Shiny apps
-using
+viewed in a web browser, added to Shiny apps, or knit into RMarkdown
+documents like Reveal.js presentations or pkgdown articles.
 
 Both functions simply render the plot many times at different rotations,
 so they preserve ggcube’s exact look — every frame is a real ggcube
@@ -42,8 +41,8 @@ colnames(mammoth) <- c("Y", "X", "Z")
 
 p <- ggplot(mammoth, aes(X, Y, Z)) +
       geom_hull_3d(method = "alpha", radius = 8, 
-                   fill = "darkred", color = "darkred",
-                   light = light(mode = "hsl", direction = c(-1, 1, 0), anchor = "camera")) +
+                   fill = "darkred", color = "darkred") +
+      light(mode = "hsl", direction = c(-1, 1, 0), anchor = "camera") +
       coord_3d(roll = -90, scales = "fixed", zoom = 1.1,
                panels = "zmin", expand = FALSE) +
       theme(axis.text = element_blank(),

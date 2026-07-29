@@ -260,9 +260,10 @@ ggplot(df, aes(x, y, z, label = label, fill = x)) +
 
 ## Lighting effects
 
-Lighting of 3D polygon layers is controlled by providing a
+Lighting of 3D polygon layers is controlled by adding a
 [`light()`](https://matthewkling.github.io/ggcube/reference/light.md)
-specification to the layer function or to
+specification to the plot, or providing to the `light` parameter of a
+layer function or
 [`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md).
 See the [lighting and
 shading](https://matthewkling.github.io/ggcube/articles/lighting.html)
@@ -317,8 +318,8 @@ colnames(mammoth) <- c("Y", "X", "Z")
 
 p <- ggplot(mammoth, aes(X, Y, Z)) +
       geom_hull_3d(method = "alpha", radius = 8, 
-                   fill = "darkred", color = "darkred",
-                   light = light(mode = "hsl", direction = c(-1, 1, 0), anchor = "camera")) +
+                   fill = "darkred", color = "darkred") +
+      light(mode = "hsl", direction = c(-1, 1, 0), anchor = "camera") +
       coord_3d(roll = -90, scales = "fixed", 
                panels = "zmin", expand = FALSE) +
       theme(axis.text = element_blank(),

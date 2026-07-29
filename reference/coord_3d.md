@@ -25,7 +25,7 @@ coord_3d(
   scales = "free",
   ratio = c(1, 1, 1),
   zoom = 1,
-  light = ggcube::light(),
+  light = waiver(),
   ...
 )
 ```
@@ -156,11 +156,14 @@ coord_3d(
 
 - light:
 
-  A lighting specification object created by
-  [`light()`](https://matthewkling.github.io/ggcube/reference/light.md),`"none"`
-  to disable lighting, or `NULL` to inherit plot-level lighting specs
-  from the coord. Specify plot-level lighting in `coord_3d()` and
-  layer-specific lighting in `geom_*3d()` functions.
+  Lighting specification for the plot. Usually left unset: add
+  [`light()`](https://matthewkling.github.io/ggcube/reference/light.md)
+  to the plot instead, which is the recommended way to set plot-level
+  lighting and can appear anywhere in the plot expression. Supplying
+  `light` here as well as adding
+  [`light()`](https://matthewkling.github.io/ggcube/reference/light.md)
+  to the plot is an error. Use `NULL` to disable lighting, or
+  `light("none")` for an equivalent lighting object.
 
 - ...:
 
@@ -187,8 +190,8 @@ p <- ggplot() +
   geom_function_3d(
     aes(fill = after_stat(z), color = after_stat(z)),
     fun = function(x, y) sin(x) * cos(y),
-    xlim = c(-pi, pi), ylim = c(-pi, pi),
-    n = 50, light = light("direct", contrast = .7)) +
+    xlim = c(-pi, pi), ylim = c(-pi, pi), n = 50) +
+  light("direct", contrast = .7) +
   scale_fill_viridis_c() +
   scale_color_viridis_c() +
   theme(legend.position = "none")

@@ -2,8 +2,20 @@
 
 ## ggcube (development version)
 
-- `geom_hull_3d(method = "alpha")` has bug fixes related to face
-  orientation and the `radius` parameter
+- Lighting can now be set for a whole plot by adding
+  [`light()`](https://matthewkling.github.io/ggcube/reference/light.md)
+  to it,
+  e.g. `ggplot(...) + coord_3d() + light(direction = c(1, 0, 0))`. This
+  is the recommended way to specify plot-level lighting, and works
+  regardless of where it appears in the plot expression. The `light`
+  argument of
+  [`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md)
+  continues to work; supplying both is an error.
+- `light("none")` is a new way to disable lighting, equivalent to the
+  string `"none"` accepted by `light` arguments.
+- [`geom_hull_3d()`](https://matthewkling.github.io/ggcube/reference/geom_hull_3d.md)’s
+  `"alpha"` method got some bug fixes related to face orientation and
+  the `radius` parameter.
 
 ## ggcube 0.2.0
 

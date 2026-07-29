@@ -40,13 +40,17 @@ p
 
 Lighting can be set at two levels:
 
-- **Coord-level**: `coord_3d(light = light(...))` applies to all layers
-  in the plot.
+- **Plot-level**: adding `light(...)` to a plot applies it to all
+  layers. It can appear anywhere in the plot expression, before or after
+  [`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md).
+  (Lighting can also be passed to `coord_3d(light = ...)`, which is
+  useful when you want a reusable coord object that carries its own
+  lighting; supplying it in both places is an error.)
 - **Layer-level**: `geom_*_3d(light = light(...))` overrides the
-  coord-level setting for that layer.
+  plot-level setting for that layer.
 
-Use `light = "none"` to disable lighting entirely, or `light = NULL` in
-a layer to inherit the coord-level setting (the default layer behavior).
+Use `light("none")` to disable lighting entirely, or `light = NULL` in a
+layer to inherit the plot-level setting (the default layer behavior).
 Here we add a second layer to our plot, and override the inherited light
 settings to disable lighting for this layer:
 
@@ -64,8 +68,7 @@ by lighting. By default both are `TRUE`:
 ``` r
 
 (p + ggtitle("fill + color (default)")) +
-  (p + coord_3d(light = light(fill = TRUE, color = FALSE)) +
-      ggtitle("fill only"))
+  (p + light(fill = TRUE, color = FALSE) + ggtitle("fill only"))
 ```
 
 ![](lighting_files/figure-html/targets-1.png)
@@ -79,7 +82,8 @@ ggplot(sphere_points, aes(x, y, z)) +
   scale_fill_viridis_c() +
   scale_color_viridis_c() +
   guides(fill = guide_colorbar_3d()) +
-  coord_3d(light = light("direct"))
+  coord_3d() +
+  light("direct")
 ```
 
 ![](lighting_files/figure-html/mapped_colors-1.png)
@@ -96,12 +100,14 @@ The `method` parameter controls the lighting model:
   from the light are fully dark.
 - **`"rgb"`**: Maps surface orientation to RGB color space, replacing
   the base colors entirely.
+- **`"none"`**: Disables lighting across the plot, except for layers
+  that declare it themselves.
 
 ``` r
 
-(p + coord_3d(light = light(method = "diffuse")) + ggtitle('"diffuse" (default)')) +
-  (p + coord_3d(light = light(method = "direct")) + ggtitle('"direct"')) +
-  (p + coord_3d(light = light(method = "rgb")) + ggtitle('"rgb"')) +
+(p + light(method = "diffuse") + ggtitle('"diffuse" (default)')) +
+  (p + light(method = "direct") + ggtitle('"direct"')) +
+  (p + light(method = "rgb") + ggtitle('"rgb"')) +
   plot_layout(ncol = 3)
 ```
 
@@ -122,10 +128,8 @@ The two modes give identical results for grayscale base colors.
 
 ``` r
 
-(p + coord_3d(light = light(mode = "hsv")) +
-    ggtitle('"hsv" (default)')) +
-  (p + coord_3d(light = light(mode = "hsl")) +
-      ggtitle('"hsl"'))
+(p + light(mode = "hsv") + ggtitle('"hsv" (default)')) +
+  (p + light(mode = "hsl") + ggtitle('"hsl"'))
 ```
 
 ![](lighting_files/figure-html/modes-1.png)
@@ -138,12 +142,9 @@ dramatic ones:
 
 ``` r
 
-(p + coord_3d(light = light(mode = "hsl", contrast = 0.5)) +
-    ggtitle("contrast = 0.5")) +
-  (p + coord_3d(light = light(mode = "hsl", contrast = 1)) +
-      ggtitle("contrast = 1 (default)")) +
-  (p + coord_3d(light = light(mode = "hsl", contrast = 1.5)) +
-      ggtitle("contrast = 1.5")) +
+(p + light(mode = "hsl", contrast = 0.5) + ggtitle("contrast = 0.5")) +
+  (p + light(mode = "hsl", contrast = 1) + ggtitle("contrast = 1 (default)")) +
+  (p + light(mode = "hsl", contrast = 1.5) + ggtitle("contrast = 1.5")) +
   plot_layout(ncol = 3)
 ```
 
@@ -167,9 +168,8 @@ direction is relative to the data axes or the camera:
 
 ``` r
 
-(p + coord_3d(light = light("direct", direction = c(0, -1, 0))) +
-    ggtitle('anchor = "scene"')) +
-  (p + coord_3d(light = light("direct", direction = c(0, -1, 0), anchor = "camera")) +
+(p + light("direct", direction = c(0, -1, 0)) + ggtitle('anchor = "scene"')) +
+  (p + light("direct", direction = c(0, -1, 0), anchor = "camera") +
       ggtitle('anchor = "camera"'))
 ```
 
@@ -209,17 +209,14 @@ uniformly darkens or brightens all backfaces.
 pb <- ggplot() +
   geom_function_3d(fun = function(x, y) x^2 + y^2,
                    xlim = c(-3, 3), ylim = c(-3, 3),
-                   fill = "steelblue", color = "steelblue")
+                   fill = "steelblue", color = "steelblue") +
+      coord_3d(pitch = 0, roll = -70, yaw = 0)
 
-(pb + coord_3d(pitch = 0, roll = -70, yaw = 0,
-               light = light(mode = "hsl")) +
+(pb + light(mode = "hsl") +
     ggtitle("default:\nbackface_scale = -1\nbackface_offset = 0")) +
-  (pb + coord_3d(pitch = 0, roll = -70, yaw = 0,
-                 light = light(backface_scale = 1, mode = "hsl")) +
+  (pb + light(backface_scale = 1, mode = "hsl") +
       ggtitle("\nbackface_scale = 1\nbackface_offset = 0")) +
-  (pb + coord_3d(pitch = 0, roll = -70, yaw = 0,
-              light = light(backface_scale = 1, mode = "hsl",
-                            backface_offset = -.5)) +
+  (pb + light(backface_scale = 1, mode = "hsl", backface_offset = -.5) +
       ggtitle("\nbackface_scale = 1\nbackface_offset = -0.5")) +
   plot_layout(nrow = 1)
 ```
@@ -238,7 +235,8 @@ to create guides that show the full shading gradient:
 ``` r
 
 ggplot(mountain, aes(x, y, z, fill = z)) +
-  stat_surface_3d(light = light(mode = "hsl", direction = c(1, 0, 0))) +
+  stat_surface_3d() +
+  light(mode = "hsl", direction = c(1, 0, 0)) +
   guides(fill = guide_colorbar_3d()) +
   scale_fill_gradientn(colors = c("tomato", "dodgerblue")) +
   coord_3d(ratio = c(2, 3, 1.5))
@@ -249,7 +247,8 @@ ggplot(mountain, aes(x, y, z, fill = z)) +
 ``` r
 
 ggplot(mountain, aes(x, y, z, fill = x > .5, group = 1)) +
-  stat_surface_3d(light = light(mode = "hsl", direction = c(1, 0, 0))) +
+  stat_surface_3d() +
+  light(mode = "hsl", direction = c(1, 0, 0)) +
   guides(fill = guide_legend_3d()) +
   coord_3d(ratio = c(2, 3, 1.5))
 ```

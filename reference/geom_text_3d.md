@@ -125,11 +125,9 @@ stat_text_3d(
 
   (Polygon method only) Either a lighting specification created by
   [`light()`](https://matthewkling.github.io/ggcube/reference/light.md),
-  `"none"` (the default) for no lighting, or `NULL` to inherit
-  plot-level lighting from
-  [`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md).
-  When provided, text polygons are shaded based on their facing
-  direction. Ignored for billboard method.
+  `"none"` (the default) or `light("none")` for no lighting, or `NULL`
+  to inherit plot-level lighting. When provided, text polygons are
+  shaded based on their facing direction. Ignored for billboard method.
 
 - angle:
 

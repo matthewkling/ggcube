@@ -110,8 +110,8 @@ shows cross-sectional slices:
 ggplot(mountain, aes(x, y, z)) +
       geom_surface_3d(aes(fill = z, color = z)) +
       scale_fill_viridis_c() + scale_color_viridis_c() +
-      coord_3d(ratio = c(1.5, 2, 1), expand = FALSE, panels = "zmin",
-               light = light(direction = c(1, 0, 0))) +
+      coord_3d(ratio = c(1.5, 2, 1), expand = FALSE, panels = "zmin") +
+      light(direction = c(1, 0, 0)) +
       guides(fill = guide_colorbar_3d()) +
       theme_light()
 ```
@@ -244,24 +244,24 @@ Lighting modifies the fill and/or color of polygon faces based on their
 orientation relative to a light source, giving surfaces a sense of depth
 and shape. It’s controlled via the
 [`light()`](https://matthewkling.github.io/ggcube/reference/light.md)
-function, which can be passed to
+function, which can be added to a plot or passed to
 [`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md)
-(applying to all layers) or to individual layer functions (overriding
-the coord-level setting):
+(applying to all layers) or passed to individual layer functions
+(overriding the plot-level setting):
 
 ``` r
 
 p <- ggplot(sphere_points, aes(x, y, z)) +
-      geom_hull_3d(fill = "#9e2602", color = "#5e1600")
+      geom_hull_3d(fill = "#9e2602", color = "#5e1600") +
+      coord_3d()
 
-p + coord_3d(light = light(method = "direct", mode = "hsl",
-                           direction = c(0, 0, 1)))
+p + light(method = "direct", mode = "hsl", direction = c(0, 0, 1))
 ```
 
 ![](ggcube_files/figure-html/lighting-1.png)
 
-Use `light = "none"` to disable lighting entirely, or `light = NULL` in
-a layer to inherit the coord-level setting. For a comprehensive guide to
+Use `light("none")` to disable lighting entirely, or `light = NULL` in a
+layer to inherit the coord-level setting. For a comprehensive guide to
 lighting methods, color modes, light direction, and backface handling,
 see the
 [lighting](https://matthewkling.github.io/ggcube/articles/lighting.html)
@@ -401,8 +401,8 @@ functions take a pre-made plot and a range of rotation angles:
 ``` r
 
 p <- ggplot(mountain, aes(x, y, z)) +
-      geom_contour_3d(fill = "black", color = "white", linewidth = .5) +
-      coord_3d(ratio = c(1.5, 2, 1), light = "none", zoom = 1.25) +
+      geom_contour_3d(fill = "black", color = "white", linewidth = .5, light = "none") +
+      coord_3d(ratio = c(1.5, 2, 1), zoom = 1.25) +
       theme_void()
 
 orbit_3d(p, yaw = c(360, 0), roll = c(-90, 0), n = c(24, 8),

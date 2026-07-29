@@ -72,7 +72,7 @@ aspect ratios, panel selection, axis label placement, and lighting.</p>
 <span>  scales <span class="op">=</span> <span class="st">"free"</span>,</span>
 <span>  ratio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>,</span>
 <span>  zoom <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  light <span class="op">=</span> <span class="fu">ggcube</span><span class="fu">::</span><span class="fu"><a href="light.html">light</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  light <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/waiver.html" class="external-link">waiver</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -174,10 +174,11 @@ zoom out (more whitespace around the plot). Default is 1.</p></dd>
 
 
 <dt id="arg-light">light<a class="anchor" aria-label="anchor" href="#arg-light"></a></dt>
-<dd><p>A lighting specification object created by <code><a href="light.html">light()</a></code>,<code>"none"</code> to disable
-lighting, or <code>NULL</code> to inherit plot-level lighting specs from the coord. Specify
-plot-level lighting in <code>coord_3d()</code> and layer-specific lighting in <code>geom_*3d()</code>
-functions.</p></dd>
+<dd><p>Lighting specification for the plot. Usually left unset: add
+<code><a href="light.html">light()</a></code> to the plot instead, which is the recommended way to set plot-level
+lighting and can appear anywhere in the plot expression. Supplying <code>light</code>
+here as well as adding <code><a href="light.html">light()</a></code> to the plot is an error. Use <code>NULL</code> to
+disable lighting, or <code>light("none")</code> for an equivalent lighting object.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -201,8 +202,8 @@ text styling, <a href="polygon_params.html">polygon_params</a> for 3D-related pa
 <span class="r-in"><span>  <span class="fu"><a href="stat_function_3d.html">geom_function_3d</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>    <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat</a></span><span class="op">(</span><span class="va">z</span><span class="op">)</span>, color <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat</a></span><span class="op">(</span><span class="va">z</span><span class="op">)</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>    fun <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cos</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>    xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="va">pi</span>, <span class="va">pi</span><span class="op">)</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="va">pi</span>, <span class="va">pi</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>    n <span class="op">=</span> <span class="fl">50</span>, light <span class="op">=</span> <span class="fu"><a href="light.html">light</a></span><span class="op">(</span><span class="st">"direct"</span>, contrast <span class="op">=</span> <span class="fl">.7</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span>    xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="va">pi</span>, <span class="va">pi</span><span class="op">)</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="va">pi</span>, <span class="va">pi</span><span class="op">)</span>, n <span class="op">=</span> <span class="fl">50</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="light.html">light</a></span><span class="op">(</span><span class="st">"direct"</span>, contrast <span class="op">=</span> <span class="fl">.7</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_c</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_color_viridis_c</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span></span>
