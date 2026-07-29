@@ -26,8 +26,7 @@ back as a GIF or movie, while `orbit_3d()` renders the same kind of sequence
 to rotate. 
 
 Animations and orbits can be displayed in RStudio's viewer, exported and viewed in a 
-web browser, or knit into RMarkdown documents like Reveal.js presentations or
-pkgdown articles. They can also be added to Shiny apps using 
+web browser, added to Shiny apps, or knit into RMarkdown documents like Reveal.js presentations or pkgdown articles.
 
 Both functions simply render the plot many times at different rotations, so they 
 preserve ggcube's exact look --- every frame is a real ggcube render, with the 

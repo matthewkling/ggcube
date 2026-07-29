@@ -388,3 +388,132 @@ test_that("layer-level light overrides plot-level light", {
 
       expect_equal(spec$direction, c(0, 0, 1))
 })
+
+
+# Coord light provenance ---------------------------------------------------
+
+# `+ light()` added before `coord_3d()` is stashed on the plot rather than
+# written to the coord, and is resolved at build time. The coord's `light`
+# must survive that resolution as an unmodified `waiver()`, because
+# `light_explicit` is derived from the sentinel at construction and anything
+# that reads the coord afterwards (notably `animate_3d()` and `orbit_3d()`,
+# which rebuild a coord from its fields) would otherwise see an inherited
+# light as an explicitly supplied one.
+
+light_test_plot <- function(...) {
+      d <- expand.grid(x = 1:4, y = 1:4)
+      d$z <- d$x + d$y
+      ggplot(d, aes(x, y, z)) +
+            geom_surface_3d() +
+            light(mode = "hsl", direction = c(-1, 1, 0), anchor = "camera") +
+            coord_3d(...)
+}
+
+light_test_data <- function() {
+      d <- expand.grid(x = 1:4, y = 1:4)
+      d$z <- d$x + d$y
+      d
+}
+
+test_that("building a plot leaves an inherited `+ light()` off the coord", {
+      p <- light_test_plot()
+      expect_true(inherits(p$coordinates$light, "waiver"))
+      expect_false(isTRUE(p$coordinates$light_explicit))
+
+      invisible(ggplot_build(p))
+
+      expect_true(inherits(p$coordinates$light, "waiver"))
+      expect_false(isTRUE(p$coordinates$light_explicit))
+})
+
+test_that("a plot carrying `+ light()` can be built more than once", {
+      p <- light_test_plot()
+      invisible(ggplot_build(p))
+      expect_no_error(invisible(ggplot_build(p)))
+})
+
+test_that("a plot carrying `+ light()` can be rendered more than once", {
+      # Exercises Coord3D$transform(), which runs at draw time rather than
+      # build time and is the consumer of the resolved light.
+      p <- light_test_plot()
+      invisible(ggplotGrob(p))
+      expect_no_error(invisible(ggplotGrob(p)))
+      expect_true(inherits(p$coordinates$light, "waiver"))
+})
+
+test_that("building a plot does not leak lighting into plots sharing its coord", {
+      p <- light_test_plot()
+      p2 <- p + theme_bw()
+
+      invisible(ggplot_build(p))
+
+      expect_true(inherits(p2$coordinates$light, "waiver"))
+})
+
+test_that("plot-level lighting reaches panel_params", {
+      pp <- ggplot_build(light_test_plot())$layout$panel_params[[1]]
+
+      expect_s3_class(pp$light, "light")
+      expect_equal(pp$light$shade_mode, "hsl")
+      expect_equal(pp$light$anchor, "camera")
+      expect_equal(pp$light$direction, c(-1, 1, 0))
+})
+
+test_that("explicit `coord_3d(light = )` reaches panel_params", {
+      p <- ggplot(light_test_data(), aes(x, y, z)) +
+            geom_surface_3d() +
+            coord_3d(light = light(mode = "hsl", contrast = 0.5))
+      pp <- ggplot_build(p)$layout$panel_params[[1]]
+
+      expect_s3_class(pp$light, "light")
+      expect_equal(pp$light$shade_mode, "hsl")
+      expect_equal(pp$light$shade_strength, 0.5)
+})
+
+test_that("`coord_3d(light = NULL)` disables lighting", {
+      p <- ggplot(light_test_data(), aes(x, y, z)) +
+            geom_surface_3d() +
+            coord_3d(light = NULL)
+      pp <- ggplot_build(p)$layout$panel_params[[1]]
+
+      expect_null(pp$light)
+      expect_no_error(invisible(ggplotGrob(p)))
+})
+
+test_that("unspecified lighting resolves to the package default", {
+      p <- ggplot(light_test_data(), aes(x, y, z)) +
+            geom_surface_3d() +
+            coord_3d()
+      pp <- ggplot_build(p)$layout$panel_params[[1]]
+
+      expect_s3_class(pp$light, "light")
+      expect_equal(pp$light$shade_mode, light()$shade_mode)
+})
+
+test_that("lighting specified in two places is an error", {
+      # `+ light()` first: no coord to write to, so the clash surfaces at
+      # build time when the stash meets an explicit coord light.
+      p <- ggplot(light_test_data(), aes(x, y, z)) +
+            geom_surface_3d() +
+            light(mode = "hsl") +
+            coord_3d(light = light(mode = "hsl"))
+      expect_error(ggplot_build(p), "specified twice")
+
+      # `coord_3d(light = )` first: the clash surfaces immediately, when
+      # `+ light()` finds a coord that already holds an explicit spec.
+      expect_error(
+            ggplot(light_test_data(), aes(x, y, z)) +
+                  geom_surface_3d() +
+                  coord_3d(light = light(mode = "hsl")) +
+                  light(mode = "hsl"),
+            "specified twice"
+      )
+})
+
+test_that("shaded guides find plot-level lighting from an untouched coord", {
+      # guide_colorbar_3d() reads lighting off the plot rather than off the
+      # resolved panel_params, so it must handle a coord whose light is still
+      # a waiver and a spec still stashed on the plot.
+      p <- light_test_plot() + guides(fill = guide_colorbar_3d())
+      expect_no_error(invisible(ggplotGrob(p)))
+})

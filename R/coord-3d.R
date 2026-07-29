@@ -489,12 +489,18 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                          # takes precedence; otherwise a plot-level `+ light()`
                          # applies; otherwise the package default. `NULL` is
                          # preserved as an explicit request for no lighting.
+                         # The resolved spec goes to `panel_params`, never back
+                         # to `self`: the coord is shared by reference with every
+                         # plot derived from this one, and overwriting the
+                         # `waiver()` sentinel would make an inherited
+                         # `+ light()` indistinguishable from an explicit
+                         # `coord_3d(light = )` on any subsequent build.
                          pending <- find_pending_light()
-                         if (!is.null(pending)) {
-                               if (isTRUE(self$light_explicit)) abort_double_light()
-                               self$light <- pending
+                         if (!is.null(pending) && isTRUE(self$light_explicit)) {
+                               abort_double_light()
                          }
-                         panel_params$light <- resolve_light(self$light)
+                         effective_light <- if (is.null(pending)) self$light else pending
+                         panel_params$light <- resolve_light(effective_light)
 
                          return(panel_params)
                    },
@@ -531,7 +537,7 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                    transform = function(self, data, panel_params) {
 
                          # Add light specs if applicable
-                         data <- attach_light(data, self$light)
+                         data <- attach_light(data, panel_params$light)
 
                          # Restore z=0 for baseline vertices, if applicable (stat_bar_3d)
                          if ("z0" %in% names(data)) {
