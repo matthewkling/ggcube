@@ -1232,30 +1232,15 @@ abort_double_light <- function() {
 #'
 #' `+ light()` added before `coord_3d()` has no coord to write to, so it stashes
 #' the spec on the plot instead. `Coord3D$setup_panel_params()` receives only
-#' scales and params, so this walks parent frames to reach the plot -- the same
-#' technique already used to locate the theme in that method.
+#' scales and params, so the stash is recovered by reaching the plot itself.
 #'
 #' @return A `light` object, or `NULL` if none was stashed.
 #' @keywords internal
 #' @noRd
 find_pending_light <- function() {
-      pending <- NULL
-      tryCatch({
-            for (i in 1:40) {
-                  env <- parent.frame(i)
-                  if (exists("plot", envir = env, inherits = FALSE)) {
-                        p <- get("plot", envir = env)
-                        stash <- attr(p, "ggcube_pending_light")
-                        if (!is.null(stash)) {
-                              pending <- stash
-                              break
-                        }
-                  }
-            }
-      }, error = function(e) {
-            # If frame walking fails, no plot-level light is applied
-      })
-      pending
+      p <- find_build_plot()
+      if (is.null(p)) return(NULL)
+      attr(p, "ggcube_pending_light")
 }
 
 #' Report that plot-level lighting is being replaced

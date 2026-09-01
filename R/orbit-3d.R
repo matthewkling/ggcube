@@ -120,9 +120,6 @@ orbit_3d <- function(plot,
                      progress = interactive(),
                      file = NULL) {
 
-      # Clear z scale cache to ensure clean state between renders
-      .z_scale_cache$scale <- NULL
-
       # --- Validate input plot ---
       if (!inherits(plot, "gg")) {
             stop("`plot` must be a ggplot object.", call. = FALSE)
