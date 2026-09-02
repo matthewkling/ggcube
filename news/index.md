@@ -16,6 +16,14 @@
 - [`geom_hull_3d()`](https://matthewkling.github.io/ggcube/reference/geom_hull_3d.md)’s
   `"alpha"` method got some bug fixes related to face orientation and
   the `radius` parameter.
+- Fixed a bug where
+  [`scale_z_continuous()`](https://matthewkling.github.io/ggcube/reference/scale_z_continuous.md)
+  and
+  [`scale_z_discrete()`](https://matthewkling.github.io/ggcube/reference/scale_z_discrete.md)
+  stored the scale they built in a package-level cache, so that building
+  several 3D plots before rendering them could make a plot pick up
+  another plot’s z-axis range. The z scale is now read from the plot
+  being built, like every other scale.
 
 ## ggcube 0.2.0
 
