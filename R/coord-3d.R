@@ -347,14 +347,16 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                          # Get standard panel params from parent
                          panel_params <- ggproto_parent(CoordCartesian, self)$setup_panel_params(scale_x, scale_y, params)
 
-                         # Train and recover z scale
-                         train_z_scale()
-                         scale_z <- .z_scale_cache$scale
-                         if (is.null(scale_z)) { # Create default z scale if none exists (e.g., when using stat_function_3d)
+                         # Recover and train the plot's own z scale
+                         scale_z <- find_plot_z_scale()
+                         if (is.null(scale_z)) {
+                               # The plot has no z scale, which happens when z is
+                               # stat-computed rather than mapped (e.g. with
+                               # stat_function_3d()) and so ggplot2 never added a
+                               # default. Build one for this panel.
                                scale_z <- scale_z_continuous()
-                               # scale_z$train(c(-10, 10))
-                               .z_scale_cache$scale <- scale_z
                          }
+                         train_z_scale(scale_z)
 
                          # Translate face names to account for scale direction flips
                          self$panels <- translate_face_names(self$panels, scale_x, scale_y, scale_z)
@@ -731,26 +733,18 @@ get_scale_names <- function(scale_obj, axis_name) {
       scale_name <- if (!is.null(scale_obj)) scale_obj$name %||% waiver() else waiver()
 
       # TRY TO FIND PLOT OBJECT AND EXTRACT BOTH LABELS AND AESTHETIC VARS
-      plot_obj <- NULL
+      plot_obj <- find_build_plot()
       plot_labels <- NULL
       aesthetic_vars <- NULL
 
-      tryCatch({
-            for (i in 1:25) {
-                  env <- parent.frame(i)
-                  if (exists("plot", envir = env)) {
-                        potential_plot <- get("plot", envir = env)
-                        if (inherits(potential_plot, "ggplot")) {
-                              plot_obj <- potential_plot
-                              plot_labels <- potential_plot$labels
-                              aesthetic_vars <- extract_aesthetic_vars(potential_plot)
-                              break
-                        }
-                  }
-            }
-      }, error = function(e) {
-            # Ignore errors - will use defaults
-      })
+      if (!is.null(plot_obj)) {
+            plot_labels <- plot_obj$labels
+            tryCatch({
+                  aesthetic_vars <- extract_aesthetic_vars(plot_obj)
+            }, error = function(e) {
+                  # Ignore errors - will use defaults
+            })
+      }
 
       # RESOLVE FINAL NAME WITH FALLBACK HIERARCHY:
       # 1. Explicit scale name (from scale constructors like scale_x_continuous(name = "..."))
@@ -774,7 +768,44 @@ get_scale_names <- function(scale_obj, axis_name) {
       return(final_name)
 }
 
-train_z_scale <- function(){
+#' Find the z scale belonging to the plot being built
+#'
+#' The z scale rides on the plot like any other scale: `+ scale_z_continuous()`
+#' lands in `plot$scales`, and ggplot2 constructs a default one itself when `z`
+#' is mapped but no scale was supplied. `setup_panel_params()` is handed only
+#' the x and y scales, so this reaches the plot to recover the z scale that
+#' belongs to it. Because `ggplot_build()` clones the scales list before
+#' building, the returned scale is a per-build object that is safe to train.
+#'
+#' @return A z scale object, or `NULL` if the plot has none.
+#' @keywords internal
+#' @noRd
+find_plot_z_scale <- function() {
+      p <- find_build_plot()
+      if (is.null(p)) return(NULL)
+      scales <- p$scales
+      if (is.null(scales)) return(NULL)
+      scales$get_scales("z")
+}
+
+#' Train a z scale on the layer data of the plot being built
+#'
+#' `Layout$setup_panel_params()` runs before ggplot2 trains non-position
+#' scales, so the z scale still has an empty range when `coord_3d()` needs its
+#' limits. The layer data has no channel into the coord either, so it too is
+#' reached by walking parent frames.
+#'
+#' Trains on `zend`, `zmin` and a zero baseline where present, since those
+#' aren't among the scale's aesthetics and so would never be trained by
+#' ggplot2 itself.
+#'
+#' @param scale_z A z scale object.
+#' @return Called for its side effect on `scale_z`.
+#' @keywords internal
+#' @noRd
+train_z_scale <- function(scale_z){
+
+      if (is.null(scale_z)) return(invisible(NULL))
 
       # Walk parent frames to find layer data
       data <- NULL
@@ -792,23 +823,23 @@ train_z_scale <- function(){
             }
       }, error = function(e) {})
 
-      if (!is.null(data) && !is.null(.z_scale_cache$scale)) {
+      if (!is.null(data)) {
             for (layer_data in data) {
 
                   # Train on z column
                   if ("z" %in% names(layer_data) && nrow(layer_data) > 0) {
 
-                        if(inherits(.z_scale_cache$scale, "ScaleContinuousPosition")) {
-                              .z_scale_cache$scale$train(layer_data$z)
+                        if(inherits(scale_z, "ScaleContinuousPosition")) {
+                              scale_z$train(layer_data$z)
                         }
 
-                        if(inherits(.z_scale_cache$scale, "ScaleDiscretePosition")) {
+                        if(inherits(scale_z, "ScaleDiscretePosition")) {
                               if("z_raw" %in% names(layer_data)) {
-                                    .z_scale_cache$scale$range_c$train(layer_data$z)
-                                    .z_scale_cache$scale$train(layer_data$z_raw)
+                                    scale_z$range_c$train(layer_data$z)
+                                    scale_z$train(layer_data$z_raw)
                               } else {
-                                    .z_scale_cache$scale$range_c$train(as.integer(factor(layer_data$z)))
-                                    .z_scale_cache$scale$train(layer_data$z)
+                                    scale_z$range_c$train(as.integer(factor(layer_data$z)))
+                                    scale_z$train(layer_data$z)
                               }
                         }
                   }
@@ -816,36 +847,38 @@ train_z_scale <- function(){
                   # Train on zend column if present (for segment geoms)
                   if ("zend" %in% names(layer_data) && nrow(layer_data) > 0) {
 
-                        if(inherits(.z_scale_cache$scale, "ScaleContinuousPosition")) {
-                              .z_scale_cache$scale$train(layer_data$zend)
+                        if(inherits(scale_z, "ScaleContinuousPosition")) {
+                              scale_z$train(layer_data$zend)
                         }
 
-                        if(inherits(.z_scale_cache$scale, "ScaleDiscretePosition")) {
+                        if(inherits(scale_z, "ScaleDiscretePosition")) {
                               if("zend_raw" %in% names(layer_data)) {
-                                    .z_scale_cache$scale$range_c$train(layer_data$zend)
-                                    .z_scale_cache$scale$train(layer_data$zend_raw)
+                                    scale_z$range_c$train(layer_data$zend)
+                                    scale_z$train(layer_data$zend_raw)
                               } else {
-                                    .z_scale_cache$scale$range_c$train(as.integer(factor(layer_data$zend)))
-                                    .z_scale_cache$scale$train(layer_data$zend)
+                                    scale_z$range_c$train(as.integer(factor(layer_data$zend)))
+                                    scale_z$train(layer_data$zend)
                               }
                         }
                   }
 
                   # Train on zmin column if present (for col geoms with variable baseline)
                   if ("zmin" %in% names(layer_data) && nrow(layer_data) > 0) {
-                        if(inherits(.z_scale_cache$scale, "ScaleContinuousPosition")) {
-                              .z_scale_cache$scale$train(layer_data$zmin)
+                        if(inherits(scale_z, "ScaleContinuousPosition")) {
+                              scale_z$train(layer_data$zmin)
                         }
                   }
 
                   # Train on 0 if z0 column exists (for bar geoms with fixed baseline)
                   if ("z0" %in% names(layer_data) && nrow(layer_data) > 0) {
-                        if(inherits(.z_scale_cache$scale, "ScaleContinuousPosition")) {
-                              .z_scale_cache$scale$train(0)
+                        if(inherits(scale_z, "ScaleContinuousPosition")) {
+                              scale_z$train(0)
                         }
                   }
             }
       }
+
+      invisible(NULL)
 }
 
 #' Check if theme is void-like (has multiple key elements set to element_blank)

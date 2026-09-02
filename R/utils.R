@@ -130,3 +130,39 @@ get_proto <- function(x, type = c("geom", "stat")){
       cap <- function(s) paste0(toupper(substr(s, 1, 1)), substr(s, 2, nchar(s)))
       get(paste0(cap(type), cap(gsub("_3d", "3D", x))))
 }
+
+
+#' Find the plot object currently being built
+#'
+#' Several pieces of plot-level state -- the labels, a `+ light()` stash, the
+#' z scale -- live on the plot, but `Coord3D` methods and their helpers are
+#' handed only scales and params. This walks the calling frames to reach the
+#' plot that `ggplot_build()` is working on.
+#'
+#' The walk stops at the global environment, so a user object that happens to
+#' be named `plot` can't be picked up when the call chain runs out before
+#' `max_frames` does.
+#'
+#' @param max_frames Maximum number of calling frames to inspect.
+#' @return The `ggplot` object being built, or `NULL` if it can't be reached.
+#' @keywords internal
+#' @noRd
+find_build_plot <- function(max_frames = 40) {
+      found <- NULL
+      tryCatch({
+            for (i in seq_len(max_frames)) {
+                  env <- parent.frame(i)
+                  if (identical(env, globalenv())) break
+                  if (exists("plot", envir = env, inherits = FALSE)) {
+                        candidate <- get("plot", envir = env, inherits = FALSE)
+                        if (inherits(candidate, "ggplot")) {
+                              found <- candidate
+                              break
+                        }
+                  }
+            }
+      }, error = function(e) {
+            # If frame walking fails, callers fall back to their defaults
+      })
+      found
+}

@@ -91,7 +91,6 @@ scale_z_continuous <- function(name = waiver(), breaks = waiver(), minor_breaks 
             super = ScaleContinuousPosition,
             ...
       )
-      .z_scale_cache$scale <- scale_obj
       return(scale_obj)
 }
 
@@ -179,7 +178,6 @@ scale_z_discrete <- function(name = waiver(), breaks = waiver(), labels = waiver
       continuous.limits <- NULL
       sc$continuous_limits <- continuous.limits
 
-      .z_scale_cache$scale <- sc
       return(sc)
 }
 

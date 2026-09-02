@@ -23,6 +23,4 @@
                   panel.border.foreground = el_def("element_rect", "panel.border")
             )
       )
-      # Initialize cache environment
-      assign(".z_scale_cache", new.env(), envir = parent.env(environment()))
 }
