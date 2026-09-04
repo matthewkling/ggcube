@@ -111,11 +111,13 @@ stat_point_3d(
 
 - scale_depth:
 
-  Logical indicating whether to apply depth-based scaling to point
-  sizes, point stroke widths, and reference line widths. When `TRUE`
-  (default), points/lines closer to the viewer appear larger/wider, and
-  points farther away appear smaller. When `FALSE`, all points/lines
-  have uniform size/width.
+  Controls depth-based scaling, drawing closer elements larger or
+  thicker and farther ones smaller or thinner. `TRUE` (the default)
+  applies full scaling and `FALSE` disables it; a number sets the
+  strength directly, where `1` matches `TRUE`, `0` matches `FALSE`,
+  values below 1 subdue the effect and values above 1 exaggerate it.
+  This affects the layer only; use `coord_3d(scale_depth = )` for panel
+  and axis components.
 
 - raw_points:
 

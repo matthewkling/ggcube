@@ -41,16 +41,18 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="ggcube-development-version">ggcube (development version)<a class="anchor" aria-label="anchor" href="#ggcube-development-version"></a></h2>
-<ul><li>Lighting can now be set for a whole plot by adding <code><a href="../reference/light.html">light()</a></code> to it, e.g. <code>ggplot(...) + coord_3d() + light(direction = c(1, 0, 0))</code>. This is the recommended way to specify plot-level lighting, and works regardless of where it appears in the plot expression. The <code>light</code> argument of <code><a href="../reference/coord_3d.html">coord_3d()</a></code> continues to work; supplying both is an error.</li>
-<li>
-<code>light("none")</code> is a new way to disable lighting, equivalent to the string <code>"none"</code> accepted by <code>light</code> arguments.</li>
-<li>
-<code><a href="../reference/geom_hull_3d.html">geom_hull_3d()</a></code>’s <code>"alpha"</code> method got some bug fixes related to face orientation and the <code>radius</code> parameter.</li>
-<li>Fixed a bug where <code><a href="../reference/scale_z_continuous.html">scale_z_continuous()</a></code> and <code><a href="../reference/scale_z_discrete.html">scale_z_discrete()</a></code> stored the scale they built in a package-level cache, so that building several 3D plots before rendering them could make a plot pick up another plot’s z-axis range. The z scale is now read from the plot being built, like every other scale.</li>
+<ul><li>
+<code><a href="../reference/coord_3d.html">coord_3d()</a></code> now draws axis ticks, styled with the standard <code>axis.ticks</code> and <code>axis.ticks.length</code> theme elements plus a new <code>axis.ticks.z</code>.</li>
 <li>Axis label and title placement is now computed at draw time from measured text dimensions rather than estimated at build time. Spacing no longer varies with the size of the rendered device, and labels no longer crowd the cube on small devices. Label positions will shift slightly compared with previous versions.</li>
 <li>
 <code><a href="../reference/coord_3d.html">coord_3d()</a></code> gains a <code>scale_depth</code> argument controlling how strongly gridlines and axis text respond to viewing distance under perspective projection.</li>
 <li>Axis tick labels are now depth-scaled under perspective projection by default. (Axis titles remain unscaled.) Use <code>coord_3d(scale_depth = c(text = 0))</code> to opt out.</li>
+<li>Lighting can now be set for a whole plot by adding <code><a href="../reference/light.html">light()</a></code> to it, e.g. <code>ggplot(...) + coord_3d() + light(direction = c(1, 0, 0))</code>. This is the recommended way to specify plot-level lighting, and works regardless of where it appears in the plot expression. The <code>light</code> argument of <code><a href="../reference/coord_3d.html">coord_3d()</a></code> continues to work; supplying both is an error.</li>
+<li>
+<code>light("none")</code> is a new way to disable lighting, equivalent to the string <code>"none"</code> accepted by <code>light</code> arguments.</li>
+<li>
+<code><a href="../reference/geom_hull_3d.html">geom_hull_3d()</a></code>’s <code>"alpha"</code> method got some bug fixes related to face orientation and the <code>radius</code> parameter.</li>
+<li>Fixed a bug where <code><a href="../reference/scale_z_continuous.html">scale_z_continuous()</a></code> and <code><a href="../reference/scale_z_discrete.html">scale_z_discrete()</a></code> stored z scales in a package-level cache, causing plots to sometimes contaminate each other’s z-axis ranges. Now, the z scale is stored directly in the plot being built, preventing cross-contamination.</li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.2.0" id="ggcube-020">ggcube 0.2.0<a class="anchor" aria-label="anchor" href="#ggcube-020"></a></h2><p class="text-muted">CRAN release: 2026-07-21</p>

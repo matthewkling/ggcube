@@ -74,9 +74,13 @@ stat_path_3d(
 
 - scale_depth:
 
-  Logical indicating whether to apply depth-based scaling to linewidth.
-  When `TRUE` (default), path segments closer to the viewer appear
-  thicker, and segments farther away appear thinner.
+  Controls depth-based scaling, drawing closer elements larger or
+  thicker and farther ones smaller or thinner. `TRUE` (the default)
+  applies full scaling and `FALSE` disables it; a number sets the
+  strength directly, where `1` matches `TRUE`, `0` matches `FALSE`,
+  values below 1 subdue the effect and values above 1 exaggerate it.
+  This affects the layer only; use `coord_3d(scale_depth = )` for panel
+  and axis components.
 
 - arrow:
 

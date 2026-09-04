@@ -123,9 +123,14 @@ geom_surface_3d(
 
 - scale_depth:
 
-  Logical indicating whether polygon linewidths should be scaled to make
-  closer lines wider and farther lines narrower. Default is TRUE.
-  Scaling is based on the mean depth of a polygon.
+  Controls whether polygon linewidths are scaled to make closer lines
+  wider and farther lines narrower, based on the mean depth of a
+  polygon. `TRUE` (the default) applies full scaling and `FALSE`
+  disables it; a number sets the strength directly, where `1` matches
+  `TRUE`, `0` matches `FALSE`, values below 1 subdue the effect and
+  values above 1 exaggerate it. This affects the layer only; use
+  `coord_3d(scale_depth = )` for gridlines, cube borders, axis ticks,
+  and axis text.
 
 - force_convex:
 

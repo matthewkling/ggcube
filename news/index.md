@@ -2,6 +2,20 @@
 
 ## ggcube (development version)
 
+- [`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md)
+  now draws axis ticks, styled with the standard `axis.ticks` and
+  `axis.ticks.length` theme elements plus a new `axis.ticks.z`.
+- Axis label and title placement is now computed at draw time from
+  measured text dimensions rather than estimated at build time. Spacing
+  no longer varies with the size of the rendered device, and labels no
+  longer crowd the cube on small devices. Label positions will shift
+  slightly compared with previous versions.
+- [`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md)
+  gains a `scale_depth` argument controlling how strongly gridlines and
+  axis text respond to viewing distance under perspective projection.
+- Axis tick labels are now depth-scaled under perspective projection by
+  default. (Axis titles remain unscaled.) Use
+  `coord_3d(scale_depth = c(text = 0))` to opt out.
 - Lighting can now be set for a whole plot by adding
   [`light()`](https://matthewkling.github.io/ggcube/reference/light.md)
   to it,
@@ -20,21 +34,9 @@
   [`scale_z_continuous()`](https://matthewkling.github.io/ggcube/reference/scale_z_continuous.md)
   and
   [`scale_z_discrete()`](https://matthewkling.github.io/ggcube/reference/scale_z_discrete.md)
-  stored the scale they built in a package-level cache, so that building
-  several 3D plots before rendering them could make a plot pick up
-  another plot’s z-axis range. The z scale is now read from the plot
-  being built, like every other scale.
-- Axis label and title placement is now computed at draw time from
-  measured text dimensions rather than estimated at build time. Spacing
-  no longer varies with the size of the rendered device, and labels no
-  longer crowd the cube on small devices. Label positions will shift
-  slightly compared with previous versions.
-- [`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md)
-  gains a `scale_depth` argument controlling how strongly gridlines and
-  axis text respond to viewing distance under perspective projection.
-- Axis tick labels are now depth-scaled under perspective projection by
-  default. (Axis titles remain unscaled.) Use
-  `coord_3d(scale_depth = c(text = 0))` to opt out.
+  stored z scales in a package-level cache, causing plots to sometimes
+  contaminate each other’s z-axis ranges. Now, the z scale is stored
+  directly in the plot being built, preventing cross-contamination.
 
 ## ggcube 0.2.0
 

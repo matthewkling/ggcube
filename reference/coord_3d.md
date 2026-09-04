@@ -142,9 +142,9 @@ coord_3d(
 
 - scale_depth:
 
-  Controls how strongly axis furniture responds to viewing distance
-  under perspective projection. Elements nearer the viewer are drawn
-  larger, farther ones smaller. Accepts:
+  Controls how axis-related elements scale with viewing distance under
+  perspective projection, in which objects nearer the viewer are drawn
+  larger. Accepts:
 
   - `TRUE` (default) or `FALSE`: full depth scaling, or none.
 
@@ -159,10 +159,10 @@ coord_3d(
 
   Strength `s` maps a depth factor `d` to `d^s`, so the effect scales
   geometrically and never produces a non-positive size. This affects
-  axis furniture only; layers have their own `scale_depth` parameters.
-  Axis titles are never depth-scaled, since a single title has no series
-  of sizes to read as perspective. Has no effect when `persp = FALSE`,
-  where all depth factors are 1.
+  axis-related elements only; layers have their own `scale_depth`
+  parameters. Axis titles are never depth-scaled, since a single title
+  has no series of sizes to read as perspective. Has no effect when
+  `persp = FALSE`, where all depth factors are 1.
 
 - ratio:
 

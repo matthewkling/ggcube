@@ -162,9 +162,9 @@ as scaled by <code>ratio</code>. Similar to <code><a href="https://ggplot2.tidyv
 
 
 <dt id="arg-scale-depth">scale_depth<a class="anchor" aria-label="anchor" href="#arg-scale-depth"></a></dt>
-<dd><p>Controls how strongly axis furniture responds to viewing
-distance under perspective projection. Elements nearer the viewer are drawn
-larger, farther ones smaller. Accepts:</p><ul><li><p><code>TRUE</code> (default) or <code>FALSE</code>: full depth scaling, or none.</p></li>
+<dd><p>Controls how axis-related elements scale with viewing
+distance under perspective projection, in which objects nearer the viewer are drawn
+larger. Accepts:</p><ul><li><p><code>TRUE</code> (default) or <code>FALSE</code>: full depth scaling, or none.</p></li>
 <li><p>A single number: applied to every element. <code>1</code> is the default
 strength, <code>0</code> disables scaling, values below 1 subdue the effect and
 values above 1 exaggerate it. Negative values are an error.</p></li>
@@ -173,8 +173,8 @@ values above 1 exaggerate it. Negative values are an error.</p></li>
 <code>"text"</code> (axis tick labels), after the theme elements they govern.
 Unnamed elements keep their default.</p></li>
 </ul><p>Strength <code>s</code> maps a depth factor <code>d</code> to <code>d^s</code>, so the effect
-scales geometrically and never produces a non-positive size. This affects axis
-furniture only; layers have their own <code>scale_depth</code> parameters. Axis
+scales geometrically and never produces a non-positive size. This affects axis-related
+elements only; layers have their own <code>scale_depth</code> parameters. Axis
 titles are never depth-scaled, since a single title has no series of sizes to
 read as perspective. Has no effect when <code>persp = FALSE</code>, where all depth
 factors are 1.</p></dd>

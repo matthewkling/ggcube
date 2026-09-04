@@ -71,6 +71,28 @@ no distinction is made between left and right margins, or between top and
 bottom margins – you can set either, and the maximum of the two will be used.</p>
     </div>
     <div class="section level2">
+    <h2 id="axis-ticks">Axis ticks<a class="anchor" aria-label="anchor" href="#axis-ticks"></a></h2>
+
+
+<ul><li><p><code>axis.ticks.z</code>: Styling for z-axis ticks (inherits from <code>axis.ticks</code>)</p></li>
+<li><p><code>axis.ticks</code>, <code>axis.ticks.x</code>, <code>axis.ticks.y</code>: Standard styling with <code><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_line()</a></code>.</p></li>
+<li><p><code>axis.ticks.length</code>, <code>axis.ticks.length.x/y/z</code>: Tick length.</p></li>
+</ul><p>Ticks are 3D geometry rather than screen-space annotation: each one continues
+its gridline past the cube edge, and is projected like everything else. They
+therefore foreshorten with the view, and a tick pointing away from the viewer
+is drawn shorter than one lying across it.</p>
+<p>Because of this, <code>axis.ticks.length</code> is an upper bound rather than an exact
+length. It is calibrated so that a tick along the least foreshortened axis
+renders at the requested size, with ticks along the other axes coming in
+shorter. Tick length does not vary with axis <code>ratio</code>; a stretched axis gets
+the same ticks as a compressed one.</p>
+<p>As in 2D ggplot2, <code>axis.ticks.length</code> also contributes to the spacing between
+the cube and the axis text, whether or not ticks are drawn. Setting
+<code>axis.ticks = element_blank()</code> removes the ticks but leaves that spacing
+intact; set <code>axis.ticks.length = unit(0, "pt")</code> to close the gap as well.
+Negative lengths point ticks inward, and do not displace the axis text.</p>
+    </div>
+    <div class="section level2">
     <h2 id="panel-elements">Panel elements<a class="anchor" aria-label="anchor" href="#panel-elements"></a></h2>
 
 
@@ -86,6 +108,17 @@ and grid elements, you can use <code>panel.background</code>, etc. to style both
 This also extends to <code>alpha</code> set via the enhanced <code><a href="element_rect.html">element_rect()</a></code> below: setting <code>alpha</code> on <code>panel.background</code>
 will tint both background and foreground panels (overriding the foreground's 20% default), unless an explicit
 <code>alpha</code> is also set on <code>panel.foreground</code>.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="depth-scaling">Depth scaling<a class="anchor" aria-label="anchor" href="#depth-scaling"></a></h2>
+
+
+<p>Under perspective projection, gridlines, borders, ticks, and axis text are (by default)
+sized by their distance from the viewer. An element at the center of the cube
+renders at exactly the size the theme specifies, with nearer elements drawn
+larger and farther ones smaller. Axis titles are never scaled this way, and
+orthographic plots are unaffected. You can use <code>coord_3d(scale_depth = )</code> to reduce or
+disable the depth-scaling effect, per element or globally.</p>
     </div>
     <div class="section level2">
     <h2 id="enhanced-elements">Enhanced elements<a class="anchor" aria-label="anchor" href="#enhanced-elements"></a></h2>

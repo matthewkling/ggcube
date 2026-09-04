@@ -79,6 +79,18 @@ technical or schematic plots.
 
 ![](coord_3d_files/figure-html/perspective-1.png)
 
+Perspective projection enlarges nearby objects and shrinks more distant
+objects. For graphical objects whose size is defined by spatial
+coordinates (like the polygon tiles in the figure above), this resizing
+always happens because it is inherent to the data projection. For
+properties like line widths and point and text sizes, a separate “depth
+scaling” process changes their sizing to apply perspective. You can
+adjust or switch off this latter behavior by specifying the
+`scale_depth` parameter in an individual geom/stat function (to control
+scaling for the data layer) or in
+[`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md)
+(to control scaling of the gridlines, ticks, and axis text).
+
 ## Aspect ratios and scale matching
 
 The `scales` parameter controls how data ranges map to visual cube
@@ -254,11 +266,14 @@ p +
 For axis labels, ggcube adds `axis.text.z` and `axis.title.z` elements
 that inherit from `axis.text` and `axis.title` respectively.
 
+By default, axis text, ticks, and grid lines get their sizes/widths
+scaled to apply depth perspective. This can be controlled with
+`coord_3d(scale_depth = )`; see the documentation for details. Axis
+titles are not scaled by depth.
+
 The `margin` argument to
 [`element_text()`](https://ggplot2.tidyverse.org/reference/element.html)
-controls padding between titles, labels, and cube edges. Because
-ggcube’s current system for text spacing is fairly crude, margins need
-to be manually adjusted more often than in base ggplot2 figures.
+controls padding between titles, labels, and cube edges.
 
 ``` r
 
@@ -286,5 +301,6 @@ The full set of 3D-specific theme elements:
   from `panel.grid`)
 - **`panel.grid.major.foreground`**: Major grid lines on foreground
   faces (inherits from `panel.grid.foreground`)
+- **`axis.ticks.z`**: Z-axis tick (inherits from `axis.ticks`)
 - **`axis.text.z`**: Z-axis tick labels (inherits from `axis.text`)
 - **`axis.title.z`**: Z-axis title (inherits from `axis.title`)

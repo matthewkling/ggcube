@@ -194,10 +194,12 @@ is 3.88, which corresponds to approximately 11pt text.</p></dd>
 
 
 <dt id="arg-scale-depth">scale_depth<a class="anchor" aria-label="anchor" href="#arg-scale-depth"></a></dt>
-<dd><p>Logical; if TRUE (default), scale by depth for perspective
-effect. For billboard method, this scales the font size. For polygon method,
-this scales the outline linewidth (the polygon fill is always depth-scaled
-by the 3D projection).</p></dd>
+<dd><p>Controls depth-based scaling, drawing closer elements
+larger or thicker and farther ones smaller or thinner. <code>TRUE</code> (the default)
+applies full scaling and <code>FALSE</code> disables it; a number sets the strength
+directly, where <code>1</code> matches <code>TRUE</code>, <code>0</code> matches <code>FALSE</code>, values below 1
+subdue the effect and values above 1 exaggerate it. This affects the layer
+only; use <code>coord_3d(scale_depth = )</code> for panel and axis components.</p></dd>
 
 
 <dt id="arg-family">family<a class="anchor" aria-label="anchor" href="#arg-family"></a></dt>
@@ -310,7 +312,7 @@ approximately 11pt text.</p>
 <p>Both methods use the same size units, so switching between <code>"billboard"</code>
 and <code>"polygon"</code> methods with the same <code>size</code> value will produce similarly
 sized text (assuming a typical 6 inch plot).</p>
-<p>When <code>scale_depth = TRUE</code> (the default), text farther from the viewer
+<p>When depth scaling is enabled (the default), text farther from the viewer
 appears smaller, creating a natural perspective effect. For billboard
 method, this scales the font size. For polygon method, this scales the
 outline linewidth (the polygon fill is always depth-scaled by the 3D

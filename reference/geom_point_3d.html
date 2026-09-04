@@ -155,10 +155,12 @@ the standard point aesthetics, <code>geom_point_3d()</code> requires x, y, and z
 
 
 <dt id="arg-scale-depth">scale_depth<a class="anchor" aria-label="anchor" href="#arg-scale-depth"></a></dt>
-<dd><p>Logical indicating whether to apply depth-based scaling
-to point sizes, point stroke widths, and reference line widths.
-When <code>TRUE</code> (default), points/lines closer to the viewer appear larger/wider, and
-points farther away appear smaller. When <code>FALSE</code>, all points/lines have uniform size/width.</p></dd>
+<dd><p>Controls depth-based scaling, drawing closer elements
+larger or thicker and farther ones smaller or thinner. <code>TRUE</code> (the default)
+applies full scaling and <code>FALSE</code> disables it; a number sets the strength
+directly, where <code>1</code> matches <code>TRUE</code>, <code>0</code> matches <code>FALSE</code>, values below 1
+subdue the effect and values above 1 exaggerate it. This affects the layer
+only; use <code>coord_3d(scale_depth = )</code> for panel and axis components.</p></dd>
 
 
 <dt id="arg-raw-points">raw_points<a class="anchor" aria-label="anchor" href="#arg-raw-points"></a></dt>

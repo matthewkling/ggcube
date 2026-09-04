@@ -25,6 +25,33 @@ dynamically, no distinction is made between left and right margins, or
 between top and bottom margins – you can set either, and the maximum of
 the two will be used.
 
+## Axis ticks
+
+- `axis.ticks.z`: Styling for z-axis ticks (inherits from `axis.ticks`)
+
+- `axis.ticks`, `axis.ticks.x`, `axis.ticks.y`: Standard styling with
+  [`element_line()`](https://ggplot2.tidyverse.org/reference/element.html).
+
+- `axis.ticks.length`, `axis.ticks.length.x/y/z`: Tick length.
+
+Ticks are 3D geometry rather than screen-space annotation: each one
+continues its gridline past the cube edge, and is projected like
+everything else. They therefore foreshorten with the view, and a tick
+pointing away from the viewer is drawn shorter than one lying across it.
+
+Because of this, `axis.ticks.length` is an upper bound rather than an
+exact length. It is calibrated so that a tick along the least
+foreshortened axis renders at the requested size, with ticks along the
+other axes coming in shorter. Tick length does not vary with axis
+`ratio`; a stretched axis gets the same ticks as a compressed one.
+
+As in 2D ggplot2, `axis.ticks.length` also contributes to the spacing
+between the cube and the axis text, whether or not ticks are drawn.
+Setting `axis.ticks = element_blank()` removes the ticks but leaves that
+spacing intact; set `axis.ticks.length = unit(0, "pt")` to close the gap
+as well. Negative lengths point ticks inward, and do not displace the
+axis text.
+
 ## Panel elements
 
 - `panel.foreground`: Styling for cube faces rendered in front of data
@@ -51,6 +78,16 @@ also extends to `alpha` set via the enhanced
 below: setting `alpha` on `panel.background` will tint both background
 and foreground panels (overriding the foreground's 20% default), unless
 an explicit `alpha` is also set on `panel.foreground`.
+
+## Depth scaling
+
+Under perspective projection, gridlines, borders, ticks, and axis text
+are (by default) sized by their distance from the viewer. An element at
+the center of the cube renders at exactly the size the theme specifies,
+with nearer elements drawn larger and farther ones smaller. Axis titles
+are never scaled this way, and orthographic plots are unaffected. You
+can use `coord_3d(scale_depth = )` to reduce or disable the
+depth-scaling effect, per element or globally.
 
 ## Enhanced elements
 

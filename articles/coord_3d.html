@@ -135,6 +135,16 @@ useful for technical or schematic plots.</p>
 <span>  <span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/coord_3d.html">coord_3d</a></span><span class="op">(</span>yaw <span class="op">=</span> <span class="fl">45</span>, persp <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"persp = FALSE"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://patchwork.data-imaginist.com/reference/plot_layout.html" class="external-link">plot_layout</a></span><span class="op">(</span>ncol <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
 <p><img src="coord_3d_files/figure-html/perspective-1.png" class="r-plt" alt="" width="1050"></p>
+<p>Perspective projection enlarges nearby objects and shrinks more
+distant objects. For graphical objects whose size is defined by spatial
+coordinates (like the polygon tiles in the figure above), this resizing
+always happens because it is inherent to the data projection. For
+properties like line widths and point and text sizes, a separate “depth
+scaling” process changes their sizing to apply perspective. You can
+adjust or switch off this latter behavior by specifying the
+<code>scale_depth</code> parameter in an individual geom/stat function
+(to control scaling for the data layer) or in <code><a href="../reference/coord_3d.html">coord_3d()</a></code>
+(to control scaling of the gridlines, ticks, and axis text).</p>
 </div>
 <div class="section level2">
 <h2 id="aspect-ratios-and-scale-matching">Aspect ratios and scale matching<a class="anchor" aria-label="anchor" href="#aspect-ratios-and-scale-matching"></a>
@@ -276,10 +286,12 @@ front faces don’t obscure the data:</p>
 <p>For axis labels, ggcube adds <code>axis.text.z</code> and
 <code>axis.title.z</code> elements that inherit from
 <code>axis.text</code> and <code>axis.title</code> respectively.</p>
+<p>By default, axis text, ticks, and grid lines get their sizes/widths
+scaled to apply depth perspective. This can be controlled with
+<code>coord_3d(scale_depth = )</code>; see the documentation for
+details. Axis titles are not scaled by depth.</p>
 <p>The <code>margin</code> argument to <code><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text()</a></code>
-controls padding between titles, labels, and cube edges. Because
-ggcube’s current system for text spacing is fairly crude, margins need
-to be manually adjusted more often than in base ggplot2 figures.</p>
+controls padding between titles, labels, and cube edges.</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="../reference/coord_3d.html">coord_3d</a></span><span class="op">(</span>panels <span class="op">=</span> <span class="st">"all"</span><span class="op">)</span> <span class="op">+</span></span>
@@ -307,6 +319,9 @@ foreground faces (inherits from <code>panel.grid</code>)</li>
 <strong><code>panel.grid.major.foreground</code></strong>: Major
 grid lines on foreground faces (inherits from
 <code>panel.grid.foreground</code>)</li>
+<li>
+<strong><code>axis.ticks.z</code></strong>: Z-axis tick (inherits
+from <code>axis.ticks</code>)</li>
 <li>
 <strong><code>axis.text.z</code></strong>: Z-axis tick labels
 (inherits from <code>axis.text</code>)</li>
