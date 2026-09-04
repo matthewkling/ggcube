@@ -96,9 +96,9 @@ as scaled by \code{ratio}. Similar to \code{coord_fixed()} but for 3D
 (visual ratios match the labeled axis ranges).
 }}
 
-\item{scale_depth}{Controls how strongly axis furniture responds to viewing
-distance under perspective projection. Elements nearer the viewer are drawn
-larger, farther ones smaller. Accepts:
+\item{scale_depth}{Controls how axis-related elements scale with viewing
+distance under perspective projection, in which objects nearer the viewer are drawn
+larger. Accepts:
 \itemize{
 \item \code{TRUE} (default) or \code{FALSE}: full depth scaling, or none.
 \item A single number: applied to every element. \code{1} is the default
@@ -110,8 +110,8 @@ values above 1 exaggerate it. Negative values are an error.
 Unnamed elements keep their default.
 }
 Strength \code{s} maps a depth factor \code{d} to \code{d^s}, so the effect
-scales geometrically and never produces a non-positive size. This affects axis
-furniture only; layers have their own \code{scale_depth} parameters. Axis
+scales geometrically and never produces a non-positive size. This affects axis-related
+elements only; layers have their own \code{scale_depth} parameters. Axis
 titles are never depth-scaled, since a single title has no series of sizes to
 read as perspective. Has no effect when \code{persp = FALSE}, where all depth
 factors are 1.}

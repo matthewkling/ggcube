@@ -58,9 +58,9 @@
 #' @param rotate_labels Logical indicating whether axis labels (text and titles) should automatically
 #'   rotate to align with the projected axis directions. When \code{FALSE}, uses theme
 #'   text and title angle settings.
-#' @param scale_depth Controls how strongly axis furniture responds to viewing
-#'   distance under perspective projection. Elements nearer the viewer are drawn
-#'   larger, farther ones smaller. Accepts:
+#' @param scale_depth Controls how axis-related elements scale with viewing
+#'   distance under perspective projection, in which objects nearer the viewer are drawn
+#'   larger. Accepts:
 #'   \itemize{
 #'     \item \code{TRUE} (default) or \code{FALSE}: full depth scaling, or none.
 #'     \item A single number: applied to every element. \code{1} is the default
@@ -72,8 +72,8 @@
 #'       Unnamed elements keep their default.
 #'   }
 #'   Strength \code{s} maps a depth factor \code{d} to \code{d^s}, so the effect
-#'   scales geometrically and never produces a non-positive size. This affects axis
-#'   furniture only; layers have their own \code{scale_depth} parameters. Axis
+#'   scales geometrically and never produces a non-positive size. This affects axis-related
+#'   elements only; layers have their own \code{scale_depth} parameters. Axis
 #'   titles are never depth-scaled, since a single title has no series of sizes to
 #'   read as perspective. Has no effect when \code{persp = FALSE}, where all depth
 #'   factors are 1.
@@ -244,7 +244,7 @@ coord_3d <- function(pitch = 0, roll = -60, yaw = -30,
 
 # Axis furniture whose size responds to viewing distance, named after the
 # theme elements they govern. Axis titles are deliberately absent.
-ggcube_depth_elements <- c("grid", "border", "text")
+ggcube_depth_elements <- c("grid", "border", "ticks", "text")
 
 # Apply a strength exponent to a depth factor.
 #
@@ -584,6 +584,12 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
 
                                      if (!is.null(selected_grid)) {
                                            selected_grid_transformed <- transform_3d_standard(selected_grid, panel_params$proj)
+
+                                           # transform_3d_standard() overwrites x/y/z in place, so keep
+                                           # the pre-projection copy: axis ticks are built in cube space
+                                           # and need the unprojected break coordinates.
+                                           panel_params$grid_standard <- selected_grid
+
                                            panel_params$grid_transformed <- selected_grid_transformed
                                            panel_params$grid_transformed$face <- selected_grid$face
                                            panel_params$grid_transformed$group <- selected_grid$group
@@ -596,10 +602,12 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                                            panel_params$grid_transformed$end_boundaries <- selected_grid$end_boundaries
                                      } else {
                                            panel_params$grid_transformed <- NULL
+                                           panel_params$grid_standard <- NULL
                                      }
                                } else {
                                      # No visible faces - no grid to render
                                      panel_params$grid_transformed <- NULL
+                                     panel_params$grid_standard <- NULL
                                }
                          } else {
                                # No visible faces - use minimal bounds (just cube corners)
@@ -614,6 +622,7 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                                panel_params$plot_bounds <- bounds_info$bounds
                                self$bounds_aspect <- bounds_info$aspect
                                panel_params$grid_transformed <- NULL
+                               panel_params$grid_standard <- NULL
                          }
 
                          # Resolve lighting. `coord_3d(light = )` is explicit and

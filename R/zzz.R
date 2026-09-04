@@ -3,6 +3,7 @@
       register_theme_elements(
             axis.text.z = element_text(),
             axis.title.z = element_text(),
+            axis.ticks.z = element_line(),
 
             # No alpha set here intentionally: leaving the foreground default
             # without an explicit alpha lets it inherit from panel.background
@@ -17,6 +18,12 @@
             element_tree = list(
                   axis.text.z = el_def("element_text", "axis.text"),
                   axis.title.z = el_def("element_text", "axis.title"),
+                  axis.ticks.z = el_def("element_line", "axis.ticks"),
+
+                  # Registered in the element tree only. A unit-valued element
+                  # has no sensible standalone default, so the value comes from
+                  # axis.ticks.length by inheritance.
+                  axis.ticks.length.z = el_def("unit", "axis.ticks.length"),
                   panel.foreground = el_def("element_rect", "panel.background"),
                   panel.grid.foreground = el_def("element_line", "panel.grid"),
                   panel.grid.major.foreground = el_def("element_line", "panel.grid.foreground"),

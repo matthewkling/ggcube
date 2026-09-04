@@ -25,6 +25,32 @@ no distinction is made between left and right margins, or between top and
 bottom margins -- you can set either, and the maximum of the two will be used.
 }
 
+\section{Axis ticks}{
+
+\itemize{
+\item \code{axis.ticks.z}: Styling for z-axis ticks (inherits from \code{axis.ticks})
+\item \code{axis.ticks}, \code{axis.ticks.x}, \code{axis.ticks.y}: Standard styling with \code{element_line()}.
+\item \code{axis.ticks.length}, \code{axis.ticks.length.x/y/z}: Tick length.
+}
+
+Ticks are 3D geometry rather than screen-space annotation: each one continues
+its gridline past the cube edge, and is projected like everything else. They
+therefore foreshorten with the view, and a tick pointing away from the viewer
+is drawn shorter than one lying across it.
+
+Because of this, \code{axis.ticks.length} is an upper bound rather than an exact
+length. It is calibrated so that a tick along the least foreshortened axis
+renders at the requested size, with ticks along the other axes coming in
+shorter. Tick length does not vary with axis \code{ratio}; a stretched axis gets
+the same ticks as a compressed one.
+
+As in 2D ggplot2, \code{axis.ticks.length} also contributes to the spacing between
+the cube and the axis text, whether or not ticks are drawn. Setting
+\code{axis.ticks = element_blank()} removes the ticks but leaves that spacing
+intact; set \code{axis.ticks.length = unit(0, "pt")} to close the gap as well.
+Negative lengths point ticks inward, and do not displace the axis text.
+}
+
 \section{Panel elements}{
 
 \itemize{
@@ -42,6 +68,16 @@ and grid elements, you can use \code{panel.background}, etc. to style both backg
 This also extends to \code{alpha} set via the enhanced \code{element_rect()} below: setting \code{alpha} on \code{panel.background}
 will tint both background and foreground panels (overriding the foreground's 20\% default), unless an explicit
 \code{alpha} is also set on \code{panel.foreground}.
+}
+
+\section{Depth scaling}{
+
+Under perspective projection, gridlines, borders, ticks, and axis text are (by default)
+sized by their distance from the viewer. An element at the center of the cube
+renders at exactly the size the theme specifies, with nearer elements drawn
+larger and farther ones smaller. Axis titles are never scaled this way, and
+orthographic plots are unaffected. You can use \code{coord_3d(scale_depth = )} to reduce or
+disable the depth-scaling effect, per element or globally.
 }
 
 \section{Enhanced elements}{

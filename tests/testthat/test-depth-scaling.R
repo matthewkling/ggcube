@@ -51,7 +51,15 @@ test_that("resolve_scale_depth rejects non-finite values", {
 
 test_that("resolve_scale_depth rejects unknown element names", {
       expect_error(resolve_scale_depth(c(title = 1)), "title")
-      expect_error(resolve_scale_depth(c(grid = 1, ticks = 1)), "ticks")
+      expect_error(resolve_scale_depth(c(grid = 1, panel = 1)), "panel")
+})
+
+test_that("resolve_scale_depth covers every documented element", {
+      resolved <- resolve_scale_depth(c(grid = 0.2, border = 0.4,
+                                        ticks = 0.6, text = 0.8))
+
+      expect_equal(unname(resolved["ticks"]), 0.6)
+      expect_setequal(names(resolved), c("grid", "border", "ticks", "text"))
 })
 
 test_that("resolve_scale_depth rejects malformed input", {
