@@ -538,23 +538,21 @@ create_manual_axis_selection <- function(axis, face1, face2, proj, visible_faces
             edge_id = "manual"
       )
 
-      # Transform to 2D for consistency with automatic selection
-      edge_p1_3d <- data.frame(x = edge$p1[1], y = edge$p1[2], z = edge$p1[3])
-      edge_p2_3d <- data.frame(x = edge$p2[1], y = edge$p2[2], z = edge$p2[3])
+      # Transform to 2D for consistency with automatic selection. Endpoints are
+      # scaled by the effective ratios first, matching the scoring path, so the
+      # projected points correspond to the drawn geometry rather than to a
+      # unit cube.
+      p1_scaled <- c(edge$p1[1] * effective_ratios[1],
+                     edge$p1[2] * effective_ratios[2],
+                     edge$p1[3] * effective_ratios[3])
+      p2_scaled <- c(edge$p2[1] * effective_ratios[1],
+                     edge$p2[2] * effective_ratios[2],
+                     edge$p2[3] * effective_ratios[3])
+
+      edge_p1_3d <- data.frame(x = p1_scaled[1], y = p1_scaled[2], z = p1_scaled[3])
+      edge_p2_3d <- data.frame(x = p2_scaled[1], y = p2_scaled[2], z = p2_scaled[3])
       edge_p1_2d <- transform_3d_standard(edge_p1_3d, proj)
       edge_p2_2d <- transform_3d_standard(edge_p2_3d, proj)
-
-      # Classify externality using ratio-scaled endpoints, matching the
-      # scoring path. Note the edge endpoints themselves are left unscaled
-      # here, as in the original implementation.
-      scaled_p1 <- data.frame(x = edge$p1[1] * effective_ratios[1],
-                              y = edge$p1[2] * effective_ratios[2],
-                              z = edge$p1[3] * effective_ratios[3])
-      scaled_p2 <- data.frame(x = edge$p2[1] * effective_ratios[1],
-                              y = edge$p2[2] * effective_ratios[2],
-                              z = edge$p2[3] * effective_ratios[3])
-      scaled_p1_2d <- transform_3d_standard(scaled_p1, proj)
-      scaled_p2_2d <- transform_3d_standard(scaled_p2, proj)
 
       all_corners <- expand.grid(
             x = c(-0.5, 0.5) * effective_ratios[1],
@@ -562,7 +560,7 @@ create_manual_axis_selection <- function(axis, face1, face2, proj, visible_faces
             z = c(-0.5, 0.5) * effective_ratios[3]
       )
       externality <- classify_edge_externality(
-            scaled_p1_2d, scaled_p2_2d,
+            edge_p1_2d, edge_p2_2d,
             projected_hull(all_corners, proj),
             panel_silhouette_hull(visible_faces, proj, effective_ratios)
       )
