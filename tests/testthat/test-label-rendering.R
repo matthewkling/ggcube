@@ -295,28 +295,51 @@ test_that("resolve_fontsize falls back for missing or invalid sizes", {
 
 # Margin resolution ---------------------------------------------------------
 
-test_that("calculate_axis_offsets adds tick length to the text margin", {
+test_that("calculate_axis_offsets floors the text margin against the text size", {
+      # Tick clearance is added at render time from the drawn geometry, so a
+      # small theme margin is raised to a fraction of the text size instead
       elements <- list(
-            axis_text = list(margin = margin(2, 2, 2, 2)),
+            axis_text = list(margin = margin(2, 2, 2, 2), size = 10),
             axis_title = list(margin = margin(4, 4, 4, 4)),
-            parent_text = list(margin = margin(0, 0, 0, 0)),
-            tick_length = 3
+            parent_text = list(margin = margin(0, 0, 0, 0))
       )
 
       offsets <- calculate_axis_offsets(elements, rotate_labels = TRUE)
-      expect_equal(offsets$text_offset, 5)
-      expect_equal(offsets$tick_extent, 3)
+      expect_equal(offsets$text_offset, 6)
 })
 
-test_that("calculate_axis_offsets ignores negative tick lengths for clearance", {
+test_that("calculate_axis_offsets honours a margin larger than the floor", {
       elements <- list(
-            axis_text = list(margin = margin(2, 2, 2, 2)),
+            axis_text = list(margin = margin(20, 20, 20, 20), size = 10),
             axis_title = list(margin = margin(4, 4, 4, 4)),
-            parent_text = list(margin = margin(0, 0, 0, 0)),
-            tick_length = -3
+            parent_text = list(margin = margin(0, 0, 0, 0))
       )
 
       offsets <- calculate_axis_offsets(elements, rotate_labels = TRUE)
-      expect_equal(offsets$text_offset, 2)
-      expect_equal(offsets$tick_extent, 0)
+      expect_equal(offsets$text_offset, 20)
+})
+
+test_that("calculate_axis_offsets falls back to a default text size", {
+      elements <- list(
+            axis_text = list(margin = margin(2, 2, 2, 2)),
+            axis_title = list(margin = margin(4, 4, 4, 4)),
+            parent_text = list(margin = margin(0, 0, 0, 0))
+      )
+
+      offsets <- calculate_axis_offsets(elements, rotate_labels = TRUE)
+      expect_equal(offsets$text_offset, 0.6 * 8.5)
+})
+
+test_that("calculate_axis_offsets no longer consumes the nominal tick length", {
+      base <- list(
+            axis_text = list(margin = margin(2, 2, 2, 2), size = 10),
+            axis_title = list(margin = margin(4, 4, 4, 4)),
+            parent_text = list(margin = margin(0, 0, 0, 0))
+      )
+
+      with_tick <- base
+      with_tick$tick_length <- 3
+
+      expect_equal(calculate_axis_offsets(base, rotate_labels = TRUE)$text_offset,
+                   calculate_axis_offsets(with_tick, rotate_labels = TRUE)$text_offset)
 })

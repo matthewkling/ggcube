@@ -39,10 +39,18 @@ extract_axis_theme_elements <- function(axis, theme) {
             }
       }
 
+      axis_ticks_theme <- tryCatch(calc_element(paste0("axis.ticks.", axis), theme),
+                                   error = function(e) NULL)
+      if (is.null(axis_ticks_theme)) {
+            axis_ticks_theme <- tryCatch(calc_element("axis.ticks", theme),
+                                         error = function(e) NULL)
+      }
+
       return(list(
             axis_text = axis_text_theme,
             axis_title = axis_title_theme,
             parent_text = parent_text_theme,
+            axis_ticks = axis_ticks_theme,
             tick_length = resolve_tick_length_points(axis, theme)
       ))
 }
@@ -86,9 +94,16 @@ calculate_axis_offsets <- function(theme_elements, rotate_labels) {
             text_margin_points <- max(margin_t, margin_r, margin_b, margin_l)
       }
 
-      # Negative tick lengths point inward in ggplot2 and do not displace text.
-      tick_extent_points <- max(0, theme_elements$tick_length %||% 0)
-      text_offset_points <- tick_extent_points + text_margin_points
+      # Tick clearance is not added here. A tick is 3D geometry, so how far it
+      # actually reaches from the edge is only known once projected; the drawn
+      # extent is supplied by create_axis_ticks() at render time.
+      #
+      # ggplot2's 2.75pt margin assumes a vertical tick beside horizontal text.
+      # Here labels hug the tick tip along the same line, so the same value
+      # reads much tighter and needs a floor. Scaling with the text size keeps
+      # spacing proportionate as base_size changes.
+      text_size <- resolve_fontsize(theme_elements$axis_text$size, 8.5)
+      text_offset_points <- max(text_margin_points, 0.6 * text_size)
 
       title_margin <- theme_elements$axis_title$margin %||% margin()
       title_margin_numeric <- as.numeric(title_margin)
@@ -102,8 +117,7 @@ calculate_axis_offsets <- function(theme_elements, rotate_labels) {
 
       return(list(
             text_offset = text_offset_points,
-            title_margin = title_margin_points,
-            tick_extent = tick_extent_points
+            title_margin = title_margin_points
       ))
 }
 
@@ -442,6 +456,174 @@ create_text_grob <- function(text, x_npc, y_npc, rotation_info, theme_elements,
       })
 }
 
+# Axis ticks ---------------------------------------------------------------
+
+# Projected length, in points, of a one-unit vector along each cube axis,
+# measured at the cube centre. Used to convert a tick length in points into
+# cube space so that ticks are built as ordinary 3D geometry.
+projected_axis_lengths_pt <- function(proj, ctx) {
+      vapply(1:3, function(i) {
+            coords <- matrix(0, nrow = 2, ncol = 3)
+            coords[1, i] <- -0.5
+            coords[2, i] <- 0.5
+
+            projected <- transform_3d_standard(
+                  data.frame(x = coords[, 1], y = coords[, 2], z = coords[, 3]), proj)
+
+            start <- plot_to_pt(projected$x[1], projected$y[1], ctx)
+            end <- plot_to_pt(projected$x[2], projected$y[2], ctx)
+
+            sqrt((end$x - start$x)^2 + (end$y - start$y)^2)
+      }, numeric(1))
+}
+
+# Tick length in cube units.
+#
+# A tick is 3D geometry, so its length lives in cube space and foreshortens
+# with the view like everything else. Calibrating against the longest
+# projected axis means a tick pointing along the least foreshortened axis
+# renders at the requested point size and every other tick comes in shorter,
+# so `axis.ticks.length` reads as an upper bound.
+tick_length_cube_units <- function(tick_length_pt, proj, ctx) {
+      axis_lengths <- projected_axis_lengths_pt(proj, ctx)
+      reference <- max(axis_lengths)
+
+      if (!is.finite(reference) || reference <= 0) return(NA_real_)
+
+      tick_length_pt / reference
+}
+
+# Build the tick marks for one axis.
+#
+# Ticks continue their gridlines past the cube edge: the direction is the
+# face's free axis, signed outward by the edge's fixed coordinate. Geometry is
+# assembled in cube space and then projected, so ticks share the perspective
+# and depth behaviour of the gridlines they extend.
+create_axis_ticks <- function(axis, standard_gridlines, theme_elements,
+                              panel_params, ctx, chosen_edge, chosen_face,
+                              effective_ratios, axis_angle, on_hull = TRUE,
+                              ticks_depth_strength = 1) {
+
+      empty <- list(ticks = list(), tick_reach = 0)
+
+      # Geometry is computed even when ticks are not drawn, so that blanking
+      # axis.ticks leaves label spacing unchanged, as it does in 2D ggplot2.
+      element <- theme_elements$axis_ticks
+      draw <- !is.null(element) && !inherits(element, "element_blank")
+
+      length_cube <- tick_length_cube_units(theme_elements$tick_length %||% 0,
+                                            panel_params$proj, ctx)
+      if (!is.finite(length_cube) || length_cube == 0) return(empty)
+
+      normal_axis <- substr(chosen_face, 1, 1)
+      free_axis <- setdiff(c("x", "y", "z"), c(axis, normal_axis))
+      if (length(free_axis) != 1) return(empty)
+
+      fixed <- chosen_edge$fixed_coords[[free_axis]]
+      if (is.null(fixed) || !is.finite(fixed)) return(empty)
+
+      # Outward from the face, flipping with the labels when the edge is
+      # interior to the rendered silhouette so the two stay on the same side.
+      direction <- sign(fixed)
+      if (direction == 0) return(empty)
+      if (!on_hull) direction <- -direction
+
+      free_edge_coord <- fixed * effective_ratios[match(free_axis, c("x", "y", "z"))]
+      free_tip_coord <- free_edge_coord + direction * length_cube
+
+      groups <- unique(standard_gridlines$group)
+      if (length(groups) == 0) return(empty)
+
+      starts <- data.frame(x = numeric(0), y = numeric(0), z = numeric(0))
+      ends <- starts
+
+      for (group_id in groups) {
+            rows <- standard_gridlines[standard_gridlines$group == group_id, ]
+            if (nrow(rows) == 0) next
+
+            base <- rows[1, c("x", "y", "z"), drop = FALSE]
+
+            start <- base
+            start[[free_axis]] <- free_edge_coord
+            end <- base
+            end[[free_axis]] <- free_tip_coord
+
+            starts <- rbind(starts, start)
+            ends <- rbind(ends, end)
+      }
+
+      if (nrow(starts) == 0) return(empty)
+
+      starts_2d <- transform_3d_standard(starts, panel_params$proj)
+      ends_2d <- transform_3d_standard(ends, panel_params$proj)
+
+      # How far the drawn ticks reach from the edge, perpendicular to it, in
+      # points. This is the quantity label clearance must be measured against:
+      # the tick runs along its gridline, which is generally oblique to the
+      # edge, so its perpendicular reach is shorter than its drawn length.
+      start_pt_x <- (starts_2d$x - ctx$plot_bounds[1]) * ctx$sx
+      start_pt_y <- (starts_2d$y - ctx$plot_bounds[3]) * ctx$sy
+      end_pt_x <- (ends_2d$x - ctx$plot_bounds[1]) * ctx$sx
+      end_pt_y <- (ends_2d$y - ctx$plot_bounds[3]) * ctx$sy
+
+      tick_dx <- end_pt_x - start_pt_x
+      tick_dy <- end_pt_y - start_pt_y
+
+      tick_reach <- 0
+      lengths <- sqrt(tick_dx^2 + tick_dy^2)
+      longest <- which.max(replace(lengths, !is.finite(lengths), 0))
+
+      if (length(longest) == 1 && is.finite(lengths[longest]) && lengths[longest] > 0) {
+            unit_dir <- c(tick_dx[longest], tick_dy[longest]) / lengths[longest]
+            normal <- edge_normal(axis_angle, unit_dir)
+            reaches <- tick_dx * normal[1] + tick_dy * normal[2]
+            reaches <- reaches[is.finite(reaches)]
+            if (length(reaches) > 0) tick_reach <- max(0, max(reaches))
+      }
+
+      if (!draw) return(list(ticks = list(), tick_reach = tick_reach))
+
+      # scale_to_npc_coordinates() guards with scalar `||`, so npc is computed
+      # directly here rather than element by element.
+      pb <- ctx$plot_bounds
+      x0 <- (starts_2d$x - pb[1]) / (pb[2] - pb[1])
+      y0 <- (starts_2d$y - pb[3]) / (pb[4] - pb[3])
+      x1 <- (ends_2d$x - pb[1]) / (pb[2] - pb[1])
+      y1 <- (ends_2d$y - pb[3]) / (pb[4] - pb[3])
+
+      keep <- is.finite(x0) & is.finite(y0) & is.finite(x1) & is.finite(y1)
+      if (!any(keep)) return(list(ticks = list(), tick_reach = tick_reach))
+
+      # Depth taken from the tick itself rather than its parent gridline,
+      # since a tick sits at one end rather than spanning the face.
+      depth <- (starts_2d$depth_scale + ends_2d$depth_scale) / 2
+      depth[!is.finite(depth) | depth <= 0] <- 1
+
+      base_lwd <- (element$linewidth %||% 0.5) * .pt
+
+      tick_grob <- tryCatch({
+            grid::segmentsGrob(
+                  x0 = x0[keep], y0 = y0[keep],
+                  x1 = x1[keep], y1 = y1[keep],
+                  default.units = "npc",
+                  gp = grid::gpar(
+                        col = element$colour %||% "grey20",
+                        lwd = safe_lwd(base_lwd * apply_depth_strength(depth[keep],
+                                                                       ticks_depth_strength),
+                                       base_lwd),
+                        lty = element$linetype %||% 1,
+                        lineend = element$lineend %||% "butt"
+                  ),
+                  name = paste0("axis.ticks.", axis, ".3d")
+            )
+      }, error = function(e) NULL)
+
+      if (is.null(tick_grob)) return(list(ticks = list(), tick_reach = tick_reach))
+
+      list(ticks = list(tick_grob), tick_reach = tick_reach)
+}
+
+
 # Label and title construction ---------------------------------------------
 
 # Build the tick labels for one axis. `edge_gridlines` must already be in
@@ -449,10 +631,10 @@ create_text_grob <- function(text, x_npc, y_npc, rotation_info, theme_elements,
 # reaches from the axis edge, which titles use for spacing.
 create_axis_labels <- function(axis, edge_gridlines, theme_elements, offsets,
                                panel_params, rotate_labels, ctx, chosen_edge,
-                               on_hull = TRUE, text_depth_strength = 1) {
+                               axis_uses_start, axis_angle, on_hull = TRUE,
+                               tick_reach = 0, text_depth_strength = 1) {
 
-      axis_uses_start <- determine_endpoint_preference_by_boundary(chosen_edge, edge_gridlines)
-      axis_angle <- calculate_axis_angle(edge_gridlines, axis_uses_start)
+      margin <- max(tick_reach, 0) + offsets$text_offset
 
       axis_labels <- panel_params$scale_info[[axis]]$labels %||% NULL
       axis_breaks <- panel_params$scale_info[[axis]]$breaks %||% NULL
@@ -498,7 +680,7 @@ create_axis_labels <- function(axis, edge_gridlines, theme_elements, offsets,
                                                rotation_info$hjust,
                                                rotation_info$vjust)
 
-            offset <- place_axis_text(direction, normal, offsets$text_offset, corners)
+            offset <- place_axis_text(direction, normal, margin, corners)
             label_reach <- max(label_reach,
                                text_box_reach(offset, direction, normal, corners))
 
@@ -517,7 +699,6 @@ create_axis_labels <- function(axis, edge_gridlines, theme_elements, offsets,
       }
 
       return(list(labels = all_labels,
-                  axis_uses_start = axis_uses_start,
                   label_reach = label_reach))
 }
 
@@ -637,10 +818,10 @@ create_axis_title <- function(axis, edge_gridlines, theme_elements, offsets,
                                          rotation_info$hjust,
                                          rotation_info$vjust)
 
-      # Labels already sit beyond the reserved tick space, so their reach
-      # dominates when they are drawn; the tick extent carries the spacing
-      # when they are not.
-      margin <- max(label_reach, offsets$tick_extent %||% 0, 0) + offsets$title_margin
+      # label_reach already accounts for the ticks, since label clearance is
+      # measured from the tick tip. When labels are not drawn, the caller
+      # passes the tick reach through in its place.
+      margin <- max(label_reach, 0) + offsets$title_margin
       offset <- place_axis_text(direction, normal, margin, corners)
 
       position_npc <- pt_to_npc(base_pos$x + direction[1] * offset,
@@ -670,13 +851,15 @@ render_axis_text <- function(self, panel_params, theme, panel_width_pt, panel_he
       tryCatch({
             all_labels <- list()
             all_titles <- list()
+            all_ticks <- list()
 
             theme_elements <- panel_params$theme_elements %||% list()
             should_render_axis_text <- theme_elements$show_axis_text %||% !inherits(calc_element("axis.text", theme), "element_blank")
             should_render_axis_title <- theme_elements$show_axis_title %||% !inherits(calc_element("axis.title", theme), "element_blank")
+            should_render_axis_ticks <- theme_elements$show_axis_ticks %||% !inherits(calc_element("axis.ticks", theme), "element_blank")
 
-            if (!should_render_axis_text && !should_render_axis_title) {
-                  return(list(labels = list(), titles = list()))
+            if (!should_render_axis_text && !should_render_axis_title && !should_render_axis_ticks) {
+                  return(list(labels = list(), titles = list(), ticks = list()))
             }
 
             ctx <- make_device_context(panel_params$plot_bounds,
@@ -717,17 +900,42 @@ render_axis_text <- function(self, panel_params, theme, panel_width_pt, panel_he
                   # rendered panels, not the full cube silhouette.
                   on_hull <- axis_selection$on_panel_hull %||% TRUE
                   label_reach <- 0
+                  tick_reach <- 0
+
+                  axis_uses_start <- determine_endpoint_preference_by_boundary(chosen_edge, edge_gridlines)
+                  axis_angle <- calculate_axis_angle(edge_gridlines, axis_uses_start)
+
+                  # Ticks first: label clearance is measured from the tick tip,
+                  # and the drawn extent is only known once projected.
+                  if (!is.null(panel_params$grid_standard)) {
+                        standard_gridlines <- panel_params$grid_standard[
+                              panel_params$grid_standard$face == chosen_face &
+                                    panel_params$grid_standard$break_axis == axis, ]
+
+                        if (nrow(standard_gridlines) > 0) {
+                              tick_result <- create_axis_ticks(
+                                    axis, standard_gridlines, theme_elements_axis,
+                                    panel_params, ctx, chosen_edge, chosen_face,
+                                    effective_ratios, axis_angle, on_hull,
+                                    depth_strength(self, "ticks"))
+
+                              tick_reach <- tick_result$tick_reach
+                              if (should_render_axis_ticks) {
+                                    all_ticks <- c(all_ticks, tick_result$ticks)
+                              }
+                        }
+                  }
 
                   if (should_render_axis_text) {
                         label_result <- create_axis_labels(axis, edge_gridlines, theme_elements_axis,
                                                            offsets, panel_params, self$rotate_labels,
-                                                           ctx, chosen_edge, on_hull,
+                                                           ctx, chosen_edge, axis_uses_start,
+                                                           axis_angle, on_hull, tick_reach,
                                                            depth_strength(self, "text"))
                         all_labels <- c(all_labels, label_result$labels)
-                        axis_uses_start <- label_result$axis_uses_start
                         label_reach <- label_result$label_reach
                   } else {
-                        axis_uses_start <- determine_endpoint_preference_by_boundary(chosen_edge, edge_gridlines)
+                        label_reach <- max(tick_reach, 0)
                   }
 
                   if (should_render_axis_title) {
@@ -741,10 +949,10 @@ render_axis_text <- function(self, panel_params, theme, panel_width_pt, panel_he
                   }
             }
 
-            return(list(labels = all_labels, titles = all_titles))
+            return(list(labels = all_labels, titles = all_titles, ticks = all_ticks))
       }, error = function(e) {
             warning("Axis label/title rendering failed: ", e$message)
-            return(list(labels = list(), titles = list()))
+            return(list(labels = list(), titles = list(), ticks = list()))
       })
 }
 
@@ -752,13 +960,14 @@ render_axis_text <- function(self, panel_params, theme, panel_width_pt, panel_he
 # happens in makeContent(), inside the panel viewport, where the panel's real
 # dimensions and text metrics are available.
 axis_furniture_grob <- function(self, panel_params, theme, show_text, show_title,
-                                name = "axis.furniture.3d") {
+                                show_ticks = TRUE, name = "axis.furniture.3d") {
       grid::gTree(
             coord = self,
             panel_params = panel_params,
             plot_theme = theme,
             show_text = show_text,
             show_title = show_title,
+            show_ticks = show_ticks,
             name = name,
             cl = "ggcube_axis_furniture"
       )
@@ -780,6 +989,14 @@ makeContent.ggcube_axis_furniture <- function(x) {
                                          panel_width_pt, panel_height_pt)
 
             kids <- list()
+
+            if (isTRUE(x$show_ticks)) {
+                  ticks <- elements$ticks[!vapply(elements$ticks, is.null, logical(1))]
+                  if (length(ticks) > 0) {
+                        kids[[length(kids) + 1]] <- do.call(
+                              grid::grobTree, c(list(name = "axis.ticks.3d"), ticks))
+                  }
+            }
 
             if (x$show_text) {
                   labels <- elements$labels[!vapply(elements$labels, is.null, logical(1))]
