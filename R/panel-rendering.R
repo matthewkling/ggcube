@@ -370,7 +370,9 @@ render_cube <- function(self, panel_params, theme, layer = "background"){
                               default.units = "npc",
                               gp = grid::gpar(
                                     col = grid_element$colour %||% "grey90",
-                                    lwd = base_lwd * segments$depth_scale,
+                                    lwd = safe_lwd(base_lwd * apply_depth_strength(
+                                          segments$depth_scale,
+                                          depth_strength(self, "grid")), base_lwd),
                                     lty = grid_element$linetype %||% 1
                               ),
                               name = paste0("grid.", layer, ".3d")
@@ -445,7 +447,9 @@ render_cube <- function(self, panel_params, theme, layer = "background"){
                                     default.units = "npc",
                                     gp = grid::gpar(
                                           col = panel_border_element$colour %||% "black",
-                                          lwd = base_lwd * seg_depth_scale,
+                                          lwd = safe_lwd(base_lwd * apply_depth_strength(
+                                                seg_depth_scale,
+                                                depth_strength(self, "border")), base_lwd),
                                           lty = panel_border_element$linetype %||% 1
                                     ),
                                     name = paste0("panel.border.", layer, ".3d")
@@ -466,41 +470,14 @@ render_cube <- function(self, panel_params, theme, layer = "background"){
             should_render_axis_title <- theme_elements$show_axis_title %||% !inherits(calc_element("axis.title", theme), "element_blank")
 
             if (should_render_axis_text || should_render_axis_title) {
-                  axis_elements <- render_axis_text(self, panel_params, theme)
-
-                  # Add labels if requested by theme
-                  if (should_render_axis_text && length(axis_elements$labels) > 0) {
-                        axis_elements$labels <- axis_elements$labels[!sapply(axis_elements$labels, is.null)]
-                        if (length(axis_elements$labels) > 0) {
-                              labels_grob <- tryCatch({
-                                    do.call(grid::grobTree, c(list(name = "axis.labels.3d"), axis_elements$labels))
-                              }, error = function(e) {
-                                    warning("Failed to create labels grob: ", e$message)
-                                    NULL
-                              })
-
-                              if (!is.null(labels_grob)) {
-                                    bg <- grid::grobTree(bg, labels_grob, name = paste0("panel.", layer, ".with.labels"))
-                              }
-                        }
-                  }
-
-                  # Add titles if requested by theme
-                  if (should_render_axis_title && length(axis_elements$titles) > 0) {
-                        axis_elements$titles <- axis_elements$titles[!sapply(axis_elements$titles, is.null)]
-                        if (length(axis_elements$titles) > 0) {
-                              titles_grob <- tryCatch({
-                                    do.call(grid::grobTree, c(list(name = "axis.titles.3d"), axis_elements$titles))
-                              }, error = function(e) {
-                                    warning("Failed to create titles grob: ", e$message)
-                                    NULL
-                              })
-
-                              if (!is.null(titles_grob)) {
-                                    bg <- grid::grobTree(bg, titles_grob, name = paste0("panel.", layer, ".with.titles"))
-                              }
-                        }
-                  }
+                  furniture <- axis_furniture_grob(
+                        self, panel_params, theme,
+                        show_text = should_render_axis_text,
+                        show_title = should_render_axis_title,
+                        name = paste0("axis.furniture.", layer, ".3d")
+                  )
+                  bg <- grid::grobTree(bg, furniture,
+                                       name = paste0("panel.", layer, ".with.axis.text"))
             }
       }
 

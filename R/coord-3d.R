@@ -58,6 +58,25 @@
 #' @param rotate_labels Logical indicating whether axis labels (text and titles) should automatically
 #'   rotate to align with the projected axis directions. When \code{FALSE}, uses theme
 #'   text and title angle settings.
+#' @param scale_depth Controls how strongly axis furniture responds to viewing
+#'   distance under perspective projection. Elements nearer the viewer are drawn
+#'   larger, farther ones smaller. Accepts:
+#'   \itemize{
+#'     \item \code{TRUE} (default) or \code{FALSE}: full depth scaling, or none.
+#'     \item A single number: applied to every element. \code{1} is the default
+#'       strength, \code{0} disables scaling, values below 1 subdue the effect and
+#'       values above 1 exaggerate it. Negative values are an error.
+#'     \item A named numeric vector, to set elements individually. Names are
+#'       \code{"grid"} (panel gridlines), \code{"border"} (cube edges), and
+#'       \code{"text"} (axis tick labels), after the theme elements they govern.
+#'       Unnamed elements keep their default.
+#'   }
+#'   Strength \code{s} maps a depth factor \code{d} to \code{d^s}, so the effect
+#'   scales geometrically and never produces a non-positive size. This affects axis
+#'   furniture only; layers have their own \code{scale_depth} parameters. Axis
+#'   titles are never depth-scaled, since a single title has no series of sizes to
+#'   read as perspective. Has no effect when \code{persp = FALSE}, where all depth
+#'   factors are 1.
 #' @param scales Character string specifying aspect ratio behavior:
 #'   \itemize{
 #'     \item \code{"free"} (default): Each axis scales independently to fill cube space,
@@ -169,6 +188,7 @@ coord_3d <- function(pitch = 0, roll = -60, yaw = -30,
                      title_position = c("auto", "center"),
                      rotate_labels = TRUE,
                      scales = "free",
+                     scale_depth = TRUE,
                      ratio = c(1, 1, 1),
                      zoom = 1,
                      light = waiver(),
@@ -197,6 +217,8 @@ coord_3d <- function(pitch = 0, roll = -60, yaw = -30,
 
       title_position <- match.arg(title_position)
 
+      scale_depth <- resolve_scale_depth(scale_depth)
+
       list(
             ggproto(NULL, Coord3D,
                     pitch = pitch, roll = roll, yaw = yaw,
@@ -205,6 +227,7 @@ coord_3d <- function(pitch = 0, roll = -60, yaw = -30,
                     panels = panels,
                     rotate_labels = rotate_labels,
                     scales = scales,
+                    scale_depth = scale_depth,
                     ratio = ratio,
                     zoom = zoom,
                     xlabels = xlabels, ylabels = ylabels, zlabels = zlabels,
@@ -216,6 +239,112 @@ coord_3d <- function(pitch = 0, roll = -60, yaw = -30,
             theme(plot.margin = margin(20, 20, 20, 20, "pt"))
       )
 }
+
+# Depth scaling -----------------------------------------------------------
+
+# Axis furniture whose size responds to viewing distance, named after the
+# theme elements they govern. Axis titles are deliberately absent.
+ggcube_depth_elements <- c("grid", "border", "text")
+
+# Apply a strength exponent to a depth factor.
+#
+# depth_scale is a ratio (reference distance over actual distance), so
+# interpolating it geometrically rather than linearly keeps the result
+# positive for every strength and makes near and far effects symmetric.
+# Strength 1 is the identity; 0 disables scaling.
+apply_depth_strength <- function(depth_scale, strength = 1) {
+      if (is.null(strength) || length(strength) != 1 || !is.finite(strength)) {
+            strength <- 1
+      }
+      if (strength == 1) return(depth_scale)
+
+      result <- pmax(depth_scale, 0) ^ strength
+      result[!is.finite(result)] <- 1
+      result
+}
+
+# Look up one element's strength on a coord, tolerating coords built before
+# this parameter existed.
+depth_strength <- function(coord, element) {
+      strengths <- coord$scale_depth
+      if (is.null(strengths)) return(1)
+
+      value <- unname(strengths[element])
+      if (length(value) != 1 || is.na(value)) return(1)
+      value
+}
+
+# Guard a computed linewidth against non-finite or negative values.
+safe_lwd <- function(lwd, fallback) {
+      invalid <- !is.finite(lwd) | lwd < 0
+      if (any(invalid)) lwd[invalid] <- fallback
+      lwd
+}
+
+# Normalise the user-facing `scale_depth` argument into a named numeric
+# vector covering every element.
+resolve_scale_depth <- function(scale_depth) {
+      defaults <- stats::setNames(rep(1, length(ggcube_depth_elements)),
+                                  ggcube_depth_elements)
+
+      if (is.null(scale_depth)) return(defaults)
+
+      if (is.logical(scale_depth)) {
+            if (length(scale_depth) != 1 || is.na(scale_depth)) {
+                  rlang::abort("`scale_depth` must be TRUE, FALSE, a single number, or a named numeric vector.")
+            }
+            return(stats::setNames(rep(as.numeric(scale_depth), length(defaults)),
+                                   names(defaults)))
+      }
+
+      if (!is.numeric(scale_depth) || length(scale_depth) == 0) {
+            rlang::abort("`scale_depth` must be TRUE, FALSE, a single number, or a named numeric vector.")
+      }
+
+      if (any(!is.finite(scale_depth))) {
+            rlang::abort("`scale_depth` values must be finite.")
+      }
+
+      if (any(scale_depth < 0)) {
+            rlang::abort(c(
+                  "`scale_depth` values must be non-negative.",
+                  i = "Negative values would invert the depth cue, drawing distant elements larger than near ones."
+            ))
+      }
+
+      if (is.null(names(scale_depth))) {
+            if (length(scale_depth) != 1) {
+                  rlang::abort(c(
+                        "`scale_depth` must be a single number, or a named numeric vector.",
+                        i = paste0("Valid names are ",
+                                   paste0("`", ggcube_depth_elements, "`", collapse = ", "), ".")
+                  ))
+            }
+            return(stats::setNames(rep(scale_depth, length(defaults)), names(defaults)))
+      }
+
+      if (any(names(scale_depth) == "")) {
+            rlang::abort("`scale_depth` must be either fully named or a single unnamed number.")
+      }
+
+      if (anyDuplicated(names(scale_depth)) > 0) {
+            rlang::abort("`scale_depth` has duplicate names.")
+      }
+
+      unknown <- setdiff(names(scale_depth), ggcube_depth_elements)
+      if (length(unknown) > 0) {
+            rlang::abort(c(
+                  paste0("Unknown `scale_depth` element", if (length(unknown) > 1) "s" else "",
+                         ": ", paste0("`", unknown, "`", collapse = ", "), "."),
+                  i = paste0("Valid names are ",
+                             paste0("`", ggcube_depth_elements, "`", collapse = ", "), ".")
+            ))
+      }
+
+      defaults[names(scale_depth)] <- scale_depth
+      defaults
+}
+
 
 #' Detect if a scale transformation flips direction
 #'

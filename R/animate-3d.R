@@ -537,7 +537,9 @@ extract_static_coord_params <- function(coord) {
             ylabels = coord$ylabels,
             zlabels = coord$zlabels,
             rotate_labels = coord$rotate_labels,
+            title_position = coord$title_position,
             scales = coord$scales,
+            scale_depth = coord$scale_depth,
             ratio = coord$ratio,
             zoom = coord$zoom,
             light = coord$light

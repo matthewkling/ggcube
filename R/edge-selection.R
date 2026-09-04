@@ -153,19 +153,111 @@ calculate_face_perpendicularity_score <- function(edge, face, axis, proj, effect
       return(mean(perp_scores))
 }
 
+# Externality helpers ---------------------------------------------------------
+
+# Projected convex hull of a set of 3D points, returned as ordered 2D
+# vertices. NULL when fewer than three distinct points survive projection,
+# which happens for a single face viewed exactly edge-on.
+projected_hull <- function(corners_3d, proj) {
+      if (is.null(corners_3d) || nrow(corners_3d) == 0) return(NULL)
+
+      corners_2d <- transform_3d_standard(corners_3d, proj)
+      distinct <- unique(data.frame(x = corners_2d$x, y = corners_2d$y))
+
+      if (nrow(distinct) < 3) return(NULL)
+
+      hull_idx <- chull(distinct$x, distinct$y)
+      if (length(hull_idx) < 2) return(NULL)
+
+      distinct[hull_idx, , drop = FALSE]
+}
+
+# Convex hull of the rendered panels. This is the reference for deciding
+# which side of an edge faces away from the drawn figure, which is not the
+# same as the cube silhouette whenever `panels` is a subset of the faces.
+panel_silhouette_hull <- function(visible_faces, proj, effective_ratios) {
+      if (is.null(visible_faces) || length(visible_faces) == 0) return(NULL)
+
+      corners <- do.call(rbind, lapply(visible_faces, function(face) {
+            corners_3d <- get_face_corners(face)
+            corners_3d$x <- corners_3d$x * effective_ratios[1]
+            corners_3d$y <- corners_3d$y * effective_ratios[2]
+            corners_3d$z <- corners_3d$z * effective_ratios[3]
+            corners_3d
+      }))
+
+      projected_hull(corners, proj)
+}
+
+# Shortest distance from a point to a line segment.
+point_segment_distance <- function(px, py, x1, y1, x2, y2) {
+      dx <- x2 - x1
+      dy <- y2 - y1
+      seg_sq <- dx * dx + dy * dy
+
+      if (seg_sq == 0) return(sqrt((px - x1)^2 + (py - y1)^2))
+
+      t <- ((px - x1) * dx + (py - y1) * dy) / seg_sq
+      t <- max(0, min(1, t))
+
+      sqrt((px - (x1 + t * dx))^2 + (py - (y1 + t * dy))^2)
+}
+
+# Is an edge on the boundary of the given hull?
+#
+# Tested via the edge's 2D midpoint rather than by matching endpoints against
+# hull vertices. A boundary edge has its midpoint on a hull segment, while a
+# diagonal between non-consecutive hull vertices, or an edge with an interior
+# endpoint, has its midpoint strictly inside. The midpoint test is also
+# robust to coincident projected corners, which occur under orthographic
+# projection and otherwise make the result depend on chull() tie-breaking.
+#
+# A NULL hull means there is nothing to be inside of, so every edge counts.
+edge_on_hull <- function(p1_2d, p2_2d, hull) {
+      if (is.null(hull)) return(TRUE)
+
+      mid_x <- (p1_2d$x + p2_2d$x) / 2
+      mid_y <- (p1_2d$y + p2_2d$y) / 2
+
+      hull_scale <- max(diff(range(hull$x)), diff(range(hull$y)))
+      if (!is.finite(hull_scale) || hull_scale <= 0) return(TRUE)
+      tol <- 1e-6 * hull_scale
+
+      n <- nrow(hull)
+      for (i in seq_len(n)) {
+            j <- if (i == n) 1 else i + 1
+            if (point_segment_distance(mid_x, mid_y,
+                                       hull$x[i], hull$y[i],
+                                       hull$x[j], hull$y[j]) <= tol) {
+                  return(TRUE)
+            }
+      }
+
+      FALSE
+}
+
+# Classify an edge against both silhouettes.
+classify_edge_externality <- function(p1_2d, p2_2d, cube_hull, panels_hull) {
+      list(
+            on_cube_hull = edge_on_hull(p1_2d, p2_2d, cube_hull),
+            on_panel_hull = edge_on_hull(p1_2d, p2_2d, panels_hull)
+      )
+}
+
 # Score edge-face combinations
-score_edge_face_combinations <- function(combinations, axis, proj, effective_ratios) {
+score_edge_face_combinations <- function(combinations, axis, proj, effective_ratios,
+                                         visible_faces = NULL) {
       if (length(combinations) == 0) return(list())
 
-      # Get convex hull of all 8 cube corners for reference
+      # Silhouette of the whole cube, and of the rendered panels only
       all_corners <- expand.grid(
             x = c(-0.5, 0.5) * effective_ratios[1],
             y = c(-0.5, 0.5) * effective_ratios[2],
             z = c(-0.5, 0.5) * effective_ratios[3]
       )
       all_corners_2d <- transform_3d_standard(all_corners, proj)
-      hull_indices <- chull(all_corners_2d$x, all_corners_2d$y)
-      hull_vertices <- all_corners_2d[hull_indices, ]
+      cube_hull <- projected_hull(all_corners, proj)
+      panels_hull <- panel_silhouette_hull(visible_faces, proj, effective_ratios)
 
       # Compute max x+y across all projected cube corners for corner score normalization
       max_corner_xy <- max(all_corners_2d$x + all_corners_2d$y)
@@ -193,24 +285,10 @@ score_edge_face_combinations <- function(combinations, axis, proj, effective_rat
             combinations[[i]]$edge$p1_2d <- p1_2d
             combinations[[i]]$edge$p2_2d <- p2_2d
 
-            # 1. Convex hull membership
-            p1_is_hull_vertex <- any(abs(hull_vertices$x - p1_2d$x) < 1e-10 & abs(hull_vertices$y - p1_2d$y) < 1e-10)
-            p2_is_hull_vertex <- any(abs(hull_vertices$x - p2_2d$x) < 1e-10 & abs(hull_vertices$y - p2_2d$y) < 1e-10)
-
-            if (p1_is_hull_vertex && p2_is_hull_vertex) {
-                  # Find which hull vertices these are
-                  p1_hull_index <- which(abs(hull_vertices$x - p1_2d$x) < 1e-10 & abs(hull_vertices$y - p1_2d$y) < 1e-10)[1]
-                  p2_hull_index <- which(abs(hull_vertices$x - p2_2d$x) < 1e-10 & abs(hull_vertices$y - p2_2d$y) < 1e-10)[1]
-
-                  # Check if they are consecutive in the hull (considering wraparound)
-                  n_hull <- nrow(hull_vertices)
-                  consecutive <- (abs(p1_hull_index - p2_hull_index) == 1) ||
-                        (abs(p1_hull_index - p2_hull_index) == n_hull - 1)
-
-                  on_hull <- consecutive
-            } else {
-                  on_hull <- FALSE
-            }
+            # 1. Externality against both silhouettes. Placement depends on
+            # panel externality; cube externality is preferred because such
+            # edges cannot be occluded by the data.
+            externality <- classify_edge_externality(p1_2d, p2_2d, cube_hull, panels_hull)
 
             # 2. Face-specific perpendicularity score
             perpendicularity_score <- calculate_face_perpendicularity_score(combinations[[i]]$edge, face, axis, proj, effective_ratios)
@@ -228,7 +306,8 @@ score_edge_face_combinations <- function(combinations, axis, proj, effective_rat
             edge_length <- sqrt((p2_2d$x - p1_2d$x)^2 + (p2_2d$y - p1_2d$y)^2)
 
             # Store scores in the combination
-            combinations[[i]]$on_hull <- on_hull
+            combinations[[i]]$on_cube_hull <- externality$on_cube_hull
+            combinations[[i]]$on_panel_hull <- externality$on_panel_hull
             combinations[[i]]$perpendicularity_score <- perpendicularity_score
             combinations[[i]]$face_area <- face_area
             combinations[[i]]$depth_score <- avg_depth
@@ -263,9 +342,25 @@ select_best_edge_face_combination <- function(scored_combinations,
       area_weight <- weights[3]
       position_weight <- weights[4]
 
-      # STEP 1: Do any combinations have hull edges?
-      hull_combinations <- scored_combinations[sapply(scored_combinations, function(c) c$on_hull)]
-      combinations <- if(length(hull_combinations) > 0) hull_combinations else scored_combinations
+      # STEP 1: Prefer edges that place correctly and cannot be occluded by
+      # data, then edges that at least place correctly, then anything.
+      # vapply rather than sapply: sapply returns list() on an empty input,
+      # which is not a valid subscript.
+      flagged <- function(combos, field) {
+            if (length(combos) == 0) return(logical(0))
+            vapply(combos, function(c) isTRUE(c[[field]]), logical(1))
+      }
+
+      panel_external <- scored_combinations[flagged(scored_combinations, "on_panel_hull")]
+      both_external <- panel_external[flagged(panel_external, "on_cube_hull")]
+
+      combinations <- if (length(both_external) > 0) {
+            both_external
+      } else if (length(panel_external) > 0) {
+            panel_external
+      } else {
+            scored_combinations
+      }
 
       # STEP 2: Calculate weighted scores with four factors
       # Find max values for normalization
@@ -332,7 +427,8 @@ select_axis_edge_and_face <- function(axis, visible_faces, proj, effective_ratio
       }
 
       # Step 3: Score each edge-face combination
-      scored_combinations <- score_edge_face_combinations(edge_face_combinations, axis, proj, effective_ratios)
+      scored_combinations <- score_edge_face_combinations(edge_face_combinations, axis, proj,
+                                                          effective_ratios, visible_faces)
 
       # Step 4: Select best combination
       best_combination <- select_best_edge_face_combination(scored_combinations)
@@ -345,7 +441,8 @@ select_axis_edge_and_face <- function(axis, visible_faces, proj, effective_ratio
             axis = axis,
             edge = best_combination$edge,
             face = best_combination$face,
-            on_hull = best_combination$on_hull,
+            on_cube_hull = best_combination$on_cube_hull,
+            on_panel_hull = best_combination$on_panel_hull,
             edge_p1_2d = best_combination$edge$p1_2d,
             edge_p2_2d = best_combination$edge$p2_2d
       ))
@@ -364,14 +461,16 @@ get_axis_selection <- function(axis, self, panel_params, effective_ratios) {
       } else if (length(axis_override) == 2) {
             # Manual override (doesn't need effective_ratios)
             return(create_manual_axis_selection(axis, axis_override[1], axis_override[2],
-                                                panel_params$proj, panel_params$visible_faces))
+                                                panel_params$proj, panel_params$visible_faces,
+                                                effective_ratios))
       } else {
             warning("Invalid ", axis, "text specification, using auto")
             return(select_axis_edge_and_face(axis, panel_params$visible_faces, panel_params$proj, effective_ratios))
       }
 }
 
-create_manual_axis_selection <- function(axis, face1, face2, proj, visible_faces) {
+create_manual_axis_selection <- function(axis, face1, face2, proj, visible_faces,
+                                         effective_ratios = c(1, 1, 1)) {
 
       # Parse face names to get coordinate constraints
       parse_face <- function(face_name) {
@@ -414,7 +513,7 @@ create_manual_axis_selection <- function(axis, face1, face2, proj, visible_faces
       } else {
             # Neither visible - warn and fall back to auto
             warning("Neither ", face1, " nor ", face2, " is visible, falling back to auto selection")
-            return(select_axis_edge_and_face(axis, visible_faces, proj, c(1, 1, 1)))  # Use default ratios for fallback
+            return(select_axis_edge_and_face(axis, visible_faces, proj, effective_ratios))
       }
 
       # Create edge endpoints
@@ -439,17 +538,40 @@ create_manual_axis_selection <- function(axis, face1, face2, proj, visible_faces
             edge_id = "manual"
       )
 
-      # Transform to 2D for consistency with automatic selection
-      edge_p1_3d <- data.frame(x = edge$p1[1], y = edge$p1[2], z = edge$p1[3])
-      edge_p2_3d <- data.frame(x = edge$p2[1], y = edge$p2[2], z = edge$p2[3])
+      # Transform to 2D for consistency with automatic selection. Endpoints are
+      # scaled by the effective ratios first, matching the scoring path, so the
+      # projected points correspond to the drawn geometry rather than to a
+      # unit cube.
+      p1_scaled <- c(edge$p1[1] * effective_ratios[1],
+                     edge$p1[2] * effective_ratios[2],
+                     edge$p1[3] * effective_ratios[3])
+      p2_scaled <- c(edge$p2[1] * effective_ratios[1],
+                     edge$p2[2] * effective_ratios[2],
+                     edge$p2[3] * effective_ratios[3])
+
+      edge_p1_3d <- data.frame(x = p1_scaled[1], y = p1_scaled[2], z = p1_scaled[3])
+      edge_p2_3d <- data.frame(x = p2_scaled[1], y = p2_scaled[2], z = p2_scaled[3])
       edge_p1_2d <- transform_3d_standard(edge_p1_3d, proj)
       edge_p2_2d <- transform_3d_standard(edge_p2_3d, proj)
+
+      all_corners <- expand.grid(
+            x = c(-0.5, 0.5) * effective_ratios[1],
+            y = c(-0.5, 0.5) * effective_ratios[2],
+            z = c(-0.5, 0.5) * effective_ratios[3]
+      )
+      externality <- classify_edge_externality(
+            edge_p1_2d, edge_p2_2d,
+            projected_hull(all_corners, proj),
+            panel_silhouette_hull(visible_faces, proj, effective_ratios)
+      )
 
       # Return same structure as select_axis_edge_and_face
       return(list(
             axis = axis,
             edge = edge,
             face = chosen_face,
+            on_cube_hull = externality$on_cube_hull,
+            on_panel_hull = externality$on_panel_hull,
             edge_p1_2d = edge_p1_2d,
             edge_p2_2d = edge_p2_2d
       ))
