@@ -1,3 +1,29 @@
+# Tick length for one axis, in points. ggplot2 separates the panel edge from
+# axis text by the tick length plus the text margin, so the tick length is
+# part of label clearance whether or not ticks are drawn.
+#
+# `axis.ticks.length.z` is not a registered element, so the axis-specific
+# lookup is allowed to fail and fall back to the shared element. The final
+# 2.75pt fallback is theme_grey()'s documented value (half_line / 2).
+resolve_tick_length_points <- function(axis, theme) {
+      element <- tryCatch(calc_element(paste0("axis.ticks.length.", axis), theme),
+                          error = function(e) NULL)
+
+      if (is.null(element)) {
+            element <- tryCatch(calc_element("axis.ticks.length", theme),
+                                error = function(e) NULL)
+      }
+
+      if (is.null(element) || !grid::is.unit(element)) return(2.75)
+
+      value <- tryCatch(grid::convertUnit(element, "pt", valueOnly = TRUE),
+                        error = function(e) NA_real_)
+
+      if (length(value) != 1 || !is.finite(value)) return(2.75)
+
+      value
+}
+
 extract_axis_theme_elements <- function(axis, theme) {
       axis_text_theme <- calc_element(paste0("axis.text.", axis), theme)
       axis_title_theme <- calc_element(paste0("axis.title.", axis), theme)
@@ -16,11 +42,14 @@ extract_axis_theme_elements <- function(axis, theme) {
       return(list(
             axis_text = axis_text_theme,
             axis_title = axis_title_theme,
-            parent_text = parent_text_theme
+            parent_text = parent_text_theme,
+            tick_length = resolve_tick_length_points(axis, theme)
       ))
 }
 
-calculate_axis_offsets <- function(theme_elements, rotate_labels, pt_to_plot_factor) {
+# Resolve axis text and title margins, in points. Placement converts these to
+# device space at draw time, so no plot-unit conversion happens here.
+calculate_axis_offsets <- function(theme_elements, rotate_labels) {
       parent_margin <- theme_elements$parent_text$margin %||% margin()
       axis_margin <- theme_elements$axis_text$margin %||% margin()
 
@@ -51,132 +80,166 @@ calculate_axis_offsets <- function(theme_elements, rotate_labels, pt_to_plot_fac
             margin_l <- axis_margin_numeric[4]
       }
 
-      # Calculate offsets
       if (rotate_labels) {
-            base_offset <- max(margin_l, margin_r)
+            text_margin_points <- max(margin_l, margin_r)
       } else {
-            base_offset <- max(margin_t, margin_r, margin_b, margin_l)
+            text_margin_points <- max(margin_t, margin_r, margin_b, margin_l)
       }
-      MIN_TEXT_OFFSET_POINTS <- 5.5
-      text_offset_distance <- max(base_offset, MIN_TEXT_OFFSET_POINTS) * pt_to_plot_factor
+
+      # Negative tick lengths point inward in ggplot2 and do not displace text.
+      tick_extent_points <- max(0, theme_elements$tick_length %||% 0)
+      text_offset_points <- tick_extent_points + text_margin_points
 
       title_margin <- theme_elements$axis_title$margin %||% margin()
       title_margin_numeric <- as.numeric(title_margin)
 
-      # Define better defaults for 3D plots (in points)
-      MIN_3D_TITLE_MARGIN_POINTS <- 10  # Larger than typical theme defaults (2-6 points)
+      # Larger than typical theme defaults (2-6 points), which sit too close to
+      # the cube once labels are cleared.
+      MIN_3D_TITLE_MARGIN_POINTS <- 10
 
-      # Use the larger of: theme margin or our 3D minimum
       theme_margin_distance <- max(title_margin_numeric[1], title_margin_numeric[3])
-      title_margin_distance <- max(theme_margin_distance, MIN_3D_TITLE_MARGIN_POINTS) * pt_to_plot_factor
+      title_margin_points <- max(theme_margin_distance, MIN_3D_TITLE_MARGIN_POINTS)
 
       return(list(
-            text_offset = text_offset_distance,
-            title_margin = title_margin_distance
+            text_offset = text_offset_points,
+            title_margin = title_margin_points,
+            tick_extent = tick_extent_points
       ))
 }
 
-measure_axis_text_dimensions <- function(edge_gridlines, theme_elements, axis_labels = NULL, axis_breaks = NULL) {
-      # Validate inputs
-      if (is.null(edge_gridlines) || nrow(edge_gridlines) == 0) {
-            return(list(fontsize = 8.5, max_width = 0.05, max_height = 0.02))
-      }
+# Device-space conversion --------------------------------------------------
 
-      if (!"break_value" %in% names(edge_gridlines)) {
-            return(list(fontsize = 8.5, max_width = 0.05, max_height = 0.02))
-      }
+# Placement geometry runs in points measured from the panel's lower-left
+# corner. That space is isotropic, unlike npc, whose x and y units differ
+# whenever the panel is not square.
+make_device_context <- function(plot_bounds, panel_width_pt, panel_height_pt) {
+      plot_width <- plot_bounds[2] - plot_bounds[1]
+      plot_height <- plot_bounds[4] - plot_bounds[3]
+
+      if (!is.finite(plot_width) || plot_width <= 0) plot_width <- 1
+      if (!is.finite(plot_height) || plot_height <= 0) plot_height <- 1
+
+      list(
+            plot_bounds = plot_bounds,
+            sx = panel_width_pt / plot_width,
+            sy = panel_height_pt / plot_height,
+            panel_width_pt = panel_width_pt,
+            panel_height_pt = panel_height_pt
+      )
+}
+
+plot_to_pt <- function(x, y, ctx) {
+      list(x = (x - ctx$plot_bounds[1]) * ctx$sx,
+           y = (y - ctx$plot_bounds[3]) * ctx$sy)
+}
+
+pt_to_npc <- function(x_pt, y_pt, ctx) {
+      if (!is.finite(x_pt) || !is.finite(y_pt)) return(NULL)
+      list(x = x_pt / ctx$panel_width_pt,
+           y = y_pt / ctx$panel_height_pt)
+}
+
+# Convert a gridline data frame's projected coordinates into device points,
+# leaving every other column untouched so downstream helpers work unchanged.
+gridlines_to_pt <- function(gridlines, ctx) {
+      converted <- plot_to_pt(gridlines$x, gridlines$y, ctx)
+      gridlines$x <- converted$x
+      gridlines$y <- converted$y
+      gridlines
+}
+
+# Text measurement and placement -------------------------------------------
+
+# Measure an unrotated label. Returns width and height in points. Must be
+# called with an active device, i.e. from makeContent().
+measure_text_box <- function(label, fontsize, family = "", face = "plain") {
+      fallback <- list(
+            width = 0.6 * fontsize * max(nchar(paste(deparse(label), collapse = "")), 1),
+            height = fontsize
+      )
+
+      grob <- tryCatch({
+            grid::textGrob(
+                  label = as_grob_label(label),
+                  gp = grid::gpar(fontsize = fontsize, fontfamily = family, fontface = face)
+            )
+      }, error = function(e) NULL)
+
+      if (is.null(grob)) return(fallback)
 
       tryCatch({
-            # Calculate text fontsize
-            text_fontsize <- as.numeric(theme_elements$axis_text$size %||% 8.5)
-            if (!is.finite(text_fontsize) || text_fontsize <= 0) {
-                  text_fontsize <- 8.5
-            }
-
-            # Find the longest actual label text for this axis
-            longest_label <- ""
-            max_chars <- 0
-            unique_groups <- unique(edge_gridlines$group)
-
-            if (length(unique_groups) == 0) {
-                  return(list(fontsize = text_fontsize, max_width = 0.05, max_height = 0.02))
-            }
-
-            for (group_id in unique_groups) {
-                  gridline_data <- edge_gridlines[edge_gridlines$group == group_id, ]
-                  if (nrow(gridline_data) >= 1) {
-
-                        # Use custom labels if available, preserving language
-                        # objects (plotmath) rather than coercing to character.
-                        if (!is.null(axis_labels) && !is.null(axis_breaks)) {
-                              break_value <- gridline_data$break_value[1]
-                              break_index <- match(break_value, axis_breaks)
-
-                              if (length(break_index) > 0 && !is.na(break_index) &&
-                                  break_index <= length(axis_labels)) {
-                                    label_value <- as_grob_label(axis_labels[[break_index]])
-                              } else {
-                                    label_value <- as.character(break_value)
-                              }
-                        } else {
-                              label_value <- as.character(gridline_data$break_value[1])
-                        }
-
-                        label_chars <- label_width_proxy(label_value)
-                        if (label_chars > max_chars) {
-                              max_chars <- label_chars
-                              longest_label <- label_value
-                        }
-                  }
-            }
-
-            # Measure the actual text size using grid functions
-            max_text_width <- 0.05  # Default fallback
-            max_text_height <- 0.02  # Default fallback
-
-            if (max_chars > 0) {
-                  sample_grob <- tryCatch({
-                        grid::textGrob(
-                              label = longest_label,
-                              gp = grid::gpar(
-                                    fontsize = text_fontsize,
-                                    fontfamily = theme_elements$axis_text$family %||% "",
-                                    fontface = theme_elements$axis_text$face %||% "plain"
-                              )
-                        )
-                  }, error = function(e) {
-                        return(NULL)
-                  })
-
-                  if (!is.null(sample_grob)) {
-                        tryCatch({
-                              # Measure actual dimensions in normalized coordinates (0-1)
-                              max_text_width <- grid::convertWidth(grid::grobWidth(sample_grob), "npc", valueOnly = TRUE)
-                              max_text_height <- grid::convertHeight(grid::grobHeight(sample_grob), "npc", valueOnly = TRUE)
-
-                              # Validate measurements
-                              if (!is.finite(max_text_width) || max_text_width <= 0) max_text_width <- 0.05
-                              if (!is.finite(max_text_height) || max_text_height <= 0) max_text_height <- 0.02
-
-                        }, error = function(e) {
-                              # Keep defaults if measurement fails
-                              max_text_width <- 0.05
-                              max_text_height <- 0.02
-                        })
-                  }
-            }
-
-            return(list(
-                  fontsize = text_fontsize,
-                  max_width = max_text_width,
-                  max_height = max_text_height
-            ))
-
-      }, error = function(e) {
-            warning("Error measuring text dimensions: ", e$message)
-            return(list(fontsize = 8.5, max_width = 0.05, max_height = 0.02))
-      })
+            width <- grid::convertWidth(grid::grobWidth(grob), "pt", valueOnly = TRUE)
+            height <- grid::convertHeight(grid::grobHeight(grob), "pt", valueOnly = TRUE)
+            if (!is.finite(width) || width <= 0) width <- fallback$width
+            if (!is.finite(height) || height <= 0) height <- fallback$height
+            list(width = width, height = height)
+      }, error = function(e) fallback)
 }
+
+# Corner offsets of a rotated text box relative to its justification point.
+# grid rotates the box about that point, so corners are taken in the text's
+# own frame and then rotated. Returns a 4x2 matrix of point offsets.
+text_box_corner_offsets <- function(width, height, angle_degrees, hjust, vjust) {
+      hjust <- if (is.null(hjust) || !is.finite(hjust)) 0.5 else hjust
+      vjust <- if (is.null(vjust) || !is.finite(vjust)) 0.5 else vjust
+      angle_degrees <- if (is.null(angle_degrees) || !is.finite(angle_degrees)) 0 else angle_degrees
+
+      dx <- c(-hjust * width, (1 - hjust) * width)
+      dy <- c(-vjust * height, (1 - vjust) * height)
+      local <- as.matrix(expand.grid(dx = dx, dy = dy))
+
+      angle <- angle_degrees * pi / 180
+      cbind(
+            local[, "dx"] * cos(angle) - local[, "dy"] * sin(angle),
+            local[, "dx"] * sin(angle) + local[, "dy"] * cos(angle)
+      )
+}
+
+# Unit normal to the axis edge, oriented to agree with the offset direction.
+edge_normal <- function(axis_angle, direction) {
+      u <- c(cos(axis_angle), sin(axis_angle))
+      n <- c(-u[2], u[1])
+      if (sum(n * direction) < 0) n <- -n
+      n
+}
+
+# Distance to travel along `direction` so that every corner of the text box
+# clears the axis edge by `margin`.
+#
+# The anchor lies on the edge, so a point P clears by (P - anchor) . normal.
+# Solving min over corners of t * (direction . normal) + corner . normal >= margin
+# gives the offset below. `min_cosine` caps the offset when the gridline runs
+# nearly parallel to the edge and pushing outward gains almost no clearance.
+#
+# Pure function: no device or grid state, so it is testable with synthetic
+# corner offsets.
+place_axis_text <- function(direction, normal, margin, corner_offsets,
+                            min_cosine = 0.15) {
+      projections <- corner_offsets[, 1] * normal[1] + corner_offsets[, 2] * normal[2]
+      inward_extent <- max(0, max(-projections))
+
+      cosine <- sum(direction * normal)
+      cosine <- max(cosine, min_cosine)
+
+      (margin + inward_extent) / cosine
+}
+
+# How far a placed text box reaches from the edge, measured along the normal.
+# Used to space titles beyond the labels they must clear.
+text_box_reach <- function(offset, direction, normal, corner_offsets) {
+      projections <- corner_offsets[, 1] * normal[1] + corner_offsets[, 2] * normal[2]
+      offset * sum(direction * normal) + max(projections)
+}
+
+resolve_fontsize <- function(size, default) {
+      if (is.null(size)) return(default)
+      if (inherits(size, "unit")) size <- as.numeric(size)
+      size <- suppressWarnings(as.numeric(size))
+      if (length(size) != 1 || !is.finite(size) || size <= 0) return(default)
+      size
+}
+
+# Geometry helpers ---------------------------------------------------------
 
 # Helper function to calculate axis angle from gridlines
 calculate_axis_angle <- function(axis_gridlines, axis_uses_start) {
@@ -203,61 +266,22 @@ calculate_axis_angle <- function(axis_gridlines, axis_uses_start) {
       return(axis_angle)
 }
 
-# Helper function to calculate theta from axis angle and gridline data
-calculate_theta <- function(axis_angle, gridline_data) {
-      gridline_dx <- gridline_data$x[nrow(gridline_data)] - gridline_data$x[1]
-      gridline_dy <- gridline_data$y[nrow(gridline_data)] - gridline_data$y[1]
-      gridline_angle <- atan2(gridline_dy, gridline_dx)
-
-      # Calculate corrected angle between axis edge and gridline in 2D projected space
-      angle_diff <- axis_angle - gridline_angle
-      while (angle_diff > pi) angle_diff <- angle_diff - 2*pi
-      while (angle_diff < -pi) angle_diff <- angle_diff + 2*pi
-      theta <- abs(angle_diff)
-      if (theta > pi/2) theta <- pi - theta
-
-      return(theta)
-}
-
-# Helper function to calculate trigonometric offset components
-calculate_trigonometric_components <- function(theta, offsets, text_dimensions, theme_elements, plot_bounds) {
-      # Calculate text and title dimensions
-      plot_range <- max(plot_bounds[2] - plot_bounds[1], plot_bounds[4] - plot_bounds[3])
-
-      text_height_plot <- text_dimensions$max_height * plot_range
-      label_width_plot <- text_dimensions$max_width * plot_range
-
-      safe_title_fontsize <- tryCatch({
-            size_val <- theme_elements$axis_title$size %||% 11
-            if (inherits(size_val, "unit")) as.numeric(size_val) else as.numeric(size_val)
-      }, error = function(e) 11)
-
-      title_height_plot <- safe_title_fontsize * plot_range / 400
-
-      # Define systematic trigonometric components with safeguards
-      min_sin_theta <- 0.1
-      min_tan_theta <- 0.1
-
-      a <- offsets$text_offset / max(sin(theta), min_sin_theta)  # theta-adjusted label clearance
-      b <- text_height_plot / (2 * max(tan(theta), min_tan_theta))  # theta-adjusted text height component
-      c <- label_width_plot  # label width
-      d <- offsets$title_margin / max(sin(theta), min_sin_theta)  # theta-adjusted title margin
-      e <- title_height_plot / (2 * max(sin(theta), min_sin_theta))  # theta-adjusted title height
-
-      return(list(
-            a = a, b = b, c = c, d = d, e = e,
-            text_offset_total = a + b,
-            title_offset_total = a + b + c + b + d + e
-      ))
-}
-
-# Helper function to calculate gridline position
+# Helper function to calculate gridline position. Carries the endpoint's
+# depth scaling factor so text can be sized by viewing distance.
 calculate_gridline_position <- function(gridline_data, axis_uses_start) {
-      if (axis_uses_start) {
-            return(list(x = gridline_data$x[1], y = gridline_data$y[1]))
-      } else {
-            return(list(x = gridline_data$x[nrow(gridline_data)], y = gridline_data$y[nrow(gridline_data)]))
+      index <- if (axis_uses_start) 1 else nrow(gridline_data)
+
+      depth_scale <- 1
+      if ("depth_scale" %in% names(gridline_data)) {
+            candidate <- gridline_data$depth_scale[index]
+            if (length(candidate) == 1 && is.finite(candidate) && candidate > 0) {
+                  depth_scale <- candidate
+            }
       }
+
+      return(list(x = gridline_data$x[index],
+                  y = gridline_data$y[index],
+                  depth_scale = depth_scale))
 }
 
 # Helper function to calculate offset direction
@@ -327,6 +351,16 @@ calculate_text_rotation_and_justification <- function(gridline_data, rotate_labe
       }
 }
 
+# Anchor rotated text at its near end so it extends away from the cube.
+resolve_end_anchor_hjust <- function(rotation_info, position_x, position_y) {
+      offset_dx <- position_x - rotation_info$gridline_center_x
+      offset_dy <- position_y - rotation_info$gridline_center_y
+      angle_rad <- rotation_info$angle * pi / 180
+      text_dir <- c(cos(angle_rad), sin(angle_rad))
+      dot <- offset_dx * text_dir[1] + offset_dy * text_dir[2]
+      if (dot > 0) 0 else 1
+}
+
 # Helper to normalise a single label into a value grid::textGrob accepts.
 # Character and numeric labels pass through as strings; language objects
 # (calls, names) and expression elements are preserved so plotmath renders.
@@ -340,20 +374,6 @@ as_grob_label <- function(x) {
             return(x)
       }
       as.character(x)
-}
-
-# Helper to estimate the rendered width of a label for "longest label"
-# ranking. Language objects have no nchar(), so deparse them first.
-label_width_proxy <- function(x) {
-      if (is.expression(x)) {
-            if (length(x) == 0) return(0L)
-            return(nchar(paste(deparse(x[[1]]), collapse = "")))
-      }
-      if (is.language(x)) {
-            return(nchar(paste(deparse(x), collapse = "")))
-      }
-      if (is.na(x)) return(0L)
-      nchar(as.character(x))
 }
 
 # Helper function to resolve label text. May return a character string or a
@@ -387,18 +407,18 @@ scale_to_npc_coordinates <- function(x, y = NULL, plot_bounds) {
 }
 
 # Helper function to create text grob
-create_text_grob <- function(text, x_npc, y_npc, rotation_info, theme_elements, is_title = FALSE) {
+create_text_grob <- function(text, x_npc, y_npc, rotation_info, theme_elements,
+                             is_title = FALSE, fontsize = NULL) {
       element_type <- if (is_title) "axis_title" else "axis_text"
 
       # Get appropriate theme elements
       colour <- theme_elements[[element_type]]$colour %||% "black"
-      fontsize <- theme_elements[[element_type]]$size %||% (if (is_title) 11 else 8.5)
       fontfamily <- theme_elements[[element_type]]$family %||% ""
       fontface <- theme_elements[[element_type]]$face %||% "plain"
 
-      # Handle unit-based fontsize
-      if (inherits(fontsize, "unit")) {
-            fontsize <- as.numeric(fontsize)
+      if (is.null(fontsize)) {
+            fontsize <- resolve_fontsize(theme_elements[[element_type]]$size,
+                                         if (is_title) 11 else 8.5)
       }
 
       tryCatch({
@@ -422,116 +442,111 @@ create_text_grob <- function(text, x_npc, y_npc, rotation_info, theme_elements, 
       })
 }
 
-# Higher-level helper combining multiple steps
-calculate_text_position_with_offset <- function(gridline_data, axis_uses_start, offset_distance, plot_bounds) {
-      # Get base position
-      base_pos <- calculate_gridline_position(gridline_data, axis_uses_start)
+# Label and title construction ---------------------------------------------
 
-      # Calculate offset direction
-      offset_dir <- calculate_offset_direction(gridline_data, base_pos$x, base_pos$y)
-      if (is.null(offset_dir)) return(NULL)
+# Build the tick labels for one axis. `edge_gridlines` must already be in
+# device points. Returns the grobs plus the furthest distance any label
+# reaches from the axis edge, which titles use for spacing.
+create_axis_labels <- function(axis, edge_gridlines, theme_elements, offsets,
+                               panel_params, rotate_labels, ctx, chosen_edge,
+                               on_hull = TRUE, text_depth_strength = 1) {
 
-      # Apply offset
-      final_x <- base_pos$x + offset_dir$dx * offset_distance
-      final_y <- base_pos$y + offset_dir$dy * offset_distance
-
-      # Scale to NPC
-      return(scale_to_npc_coordinates(final_x, final_y, plot_bounds))
-}
-
-# REFACTORED MAIN FUNCTIONS
-
-# Refactored create_axis_labels function
-create_axis_labels <- function(axis, edge_gridlines, theme_elements, offsets, text_dimensions,
-                               panel_params, rotate_labels, plot_bounds, chosen_edge, on_hull = TRUE) {
-
-      # Create text labels using the selected edge/face
-      cube_center_3d <- data.frame(x = 0, y = 0, z = 0)
-      cube_center_2d <- transform_3d_standard(cube_center_3d, panel_params$proj)
-
-      # Use boundary information to determine which endpoints to use
       axis_uses_start <- determine_endpoint_preference_by_boundary(chosen_edge, edge_gridlines)
-
-      # Calculate axis angle using helper function
       axis_angle <- calculate_axis_angle(edge_gridlines, axis_uses_start)
 
-      # Create labels for each gridline group
+      axis_labels <- panel_params$scale_info[[axis]]$labels %||% NULL
+      axis_breaks <- panel_params$scale_info[[axis]]$breaks %||% NULL
+
+      base_fontsize <- resolve_fontsize(theme_elements$axis_text$size, 8.5)
+      fontfamily <- theme_elements$axis_text$family %||% ""
+      fontface <- theme_elements$axis_text$face %||% "plain"
+
       all_labels <- list()
+      label_reach <- 0
 
       for (group_id in unique(edge_gridlines$group)) {
             gridline_data <- edge_gridlines[edge_gridlines$group == group_id, ]
+            if (nrow(gridline_data) < 2) next
 
-            if (nrow(gridline_data) >= 2) {
+            base_pos <- calculate_gridline_position(gridline_data, axis_uses_start)
+            offset_dir <- calculate_offset_direction(gridline_data, base_pos$x, base_pos$y)
+            if (is.null(offset_dir)) next
 
-                  # Calculate theta using helper function
-                  theta <- calculate_theta(axis_angle, gridline_data)
+            direction <- c(offset_dir$dx, offset_dir$dy)
+            if (!on_hull) direction <- -direction
+            normal <- edge_normal(axis_angle, direction)
 
-                  # Calculate text offset using helper function
-                  text_offset_total <- calculate_trigonometric_components(theta, offsets, text_dimensions, theme_elements, plot_bounds)$text_offset_total
+            rotation_info <- calculate_text_rotation_and_justification(
+                  gridline_data, rotate_labels, theme_elements,
+                  is_title = FALSE, axis_angle = NULL)
 
-                  # Use helper to calculate position with offset
-                  offset <- if (on_hull) text_offset_total else -text_offset_total
-                  position_npc <- calculate_text_position_with_offset(gridline_data, axis_uses_start, offset, plot_bounds)
+            if (rotate_labels && is.null(rotation_info$hjust)) {
+                  rotation_info$hjust <- resolve_end_anchor_hjust(rotation_info,
+                                                                  base_pos$x, base_pos$y)
+            }
 
-                  if (is.null(position_npc)) next
+            label_text <- resolve_label_text(gridline_data$break_value[1],
+                                             axis_labels, axis_breaks)
 
-                  # Calculate rotation and justification using helper
-                  rotation_info <- calculate_text_rotation_and_justification(gridline_data, rotate_labels, theme_elements, is_title = FALSE, axis_angle = NULL)
+            fontsize <- base_fontsize * apply_depth_strength(base_pos$depth_scale,
+                                                             text_depth_strength)
+            if (!is.finite(fontsize) || fontsize <= 0) fontsize <- base_fontsize
 
-                  # Calculate hjust for labels when using auto orientation
-                  if (rotate_labels && is.null(rotation_info$hjust)) {
-                        label_pos <- calculate_gridline_position(gridline_data, axis_uses_start)
-                        offset_dx <- label_pos$x - rotation_info$gridline_center_x
-                        offset_dy <- label_pos$y - rotation_info$gridline_center_y
-                        angle_rad <- rotation_info$angle * pi / 180
-                        text_dir <- c(cos(angle_rad), sin(angle_rad))
-                        dot <- offset_dx * text_dir[1] + offset_dy * text_dir[2]
-                        rotation_info$hjust <- if (dot > 0) 0 else 1
-                        if (!on_hull) rotation_info$vjust <- -0.5
-                  }
+            box <- measure_text_box(label_text, fontsize, fontfamily, fontface)
+            corners <- text_box_corner_offsets(box$width, box$height,
+                                               rotation_info$angle,
+                                               rotation_info$hjust,
+                                               rotation_info$vjust)
 
-                  # Get label text using helper
-                  axis_labels <- panel_params$scale_info[[axis]]$labels %||% NULL
-                  axis_breaks <- panel_params$scale_info[[axis]]$breaks %||% NULL
-                  label_text <- resolve_label_text(gridline_data$break_value[1], axis_labels, axis_breaks)
+            offset <- place_axis_text(direction, normal, offsets$text_offset, corners)
+            label_reach <- max(label_reach,
+                               text_box_reach(offset, direction, normal, corners))
 
-                  # Create grob using helper
-                  label_grob <- create_text_grob(label_text, position_npc$x, position_npc$y, rotation_info, theme_elements, is_title = FALSE)
+            position_npc <- pt_to_npc(base_pos$x + direction[1] * offset,
+                                      base_pos$y + direction[2] * offset,
+                                      ctx)
+            if (is.null(position_npc)) next
 
-                  if (!is.null(label_grob)) {
-                        all_labels[[length(all_labels) + 1]] <- label_grob
-                  }
+            label_grob <- create_text_grob(label_text, position_npc$x, position_npc$y,
+                                           rotation_info, theme_elements,
+                                           is_title = FALSE, fontsize = fontsize)
+
+            if (!is.null(label_grob)) {
+                  all_labels[[length(all_labels) + 1]] <- label_grob
             }
       }
 
       return(list(labels = all_labels,
                   axis_uses_start = axis_uses_start,
-                  cube_center_2d = cube_center_2d))
+                  label_reach = label_reach))
 }
 
-# Refactored create_axis_title function
-create_axis_title <- function(axis, edge_gridlines, theme_elements, offsets, text_dimensions,
-                              panel_params, rotate_labels, plot_bounds, chosen_edge, axis_uses_start,
-                              on_hull = TRUE, axis_selection = NULL, title_position = "auto") {
+# Build the title for one axis. `edge_gridlines` must already be in device
+# points. `label_reach` is how far the axis labels extend from the edge.
+create_axis_title <- function(axis, edge_gridlines, theme_elements, offsets,
+                              panel_params, rotate_labels, ctx, chosen_edge,
+                              axis_uses_start, on_hull = TRUE, axis_selection = NULL,
+                              title_position = "auto", label_reach = 0) {
 
-      # Get axis name (title)
       axis_name <- panel_params$scale_info[[axis]]$name
 
-      # Handle waiver and missing names
       if (is.null(axis_name) || inherits(axis_name, "waiver")) {
             axis_name <- axis
       }
 
       if (is.null(axis_name) || (is.character(axis_name) && axis_name == "")) {
-            return(list())  # Return empty list if no title
+            return(list())
       }
 
-      # Find gridlines for this axis on the chosen face
       axis_gridlines <- edge_gridlines[edge_gridlines$break_axis == axis, ]
 
       if (nrow(axis_gridlines) == 0) {
-            return(list())  # Return empty list if no gridlines
+            return(list())
       }
+
+      title_fontsize <- resolve_fontsize(theme_elements$axis_title$size, 11)
+      title_family <- theme_elements$axis_title$family %||% ""
+      title_face <- theme_elements$axis_title$face %||% "plain"
 
       if (!on_hull && title_position != "center" && !is.null(axis_selection)) {
             # Place title at the near (peripheral) end of the axis edge
@@ -543,30 +558,33 @@ create_axis_title <- function(axis, edge_gridlines, theme_elements, offsets, tex
                   title_pos <- axis_selection$edge_p2_2d
             }
 
-            # Offset direction: away from cube center
-            cube_center_2d <- transform_3d_standard(data.frame(x = 0, y = 0, z = 0), panel_params$proj)
-            offset_dx <- title_pos$x - cube_center_2d$x
-            offset_dy <- title_pos$y - cube_center_2d$y
+            title_pos_pt <- plot_to_pt(title_pos$x, title_pos$y, ctx)
+
+            cube_center_2d <- transform_3d_standard(data.frame(x = 0, y = 0, z = 0),
+                                                    panel_params$proj)
+            cube_center_pt <- plot_to_pt(cube_center_2d$x, cube_center_2d$y, ctx)
+
+            offset_dx <- title_pos_pt$x - cube_center_pt$x
+            offset_dy <- title_pos_pt$y - cube_center_pt$y
             offset_len <- sqrt(offset_dx^2 + offset_dy^2)
             if (offset_len > 0) {
                   offset_dx <- offset_dx / offset_len
                   offset_dy <- offset_dy / offset_len
             }
 
-            # Apply a small offset to push outside the plot
             title_offset <- offsets$title_margin
-            final_x <- title_pos$x + offset_dx * title_offset
-            final_y <- title_pos$y + offset_dy * title_offset
+            final_x <- title_pos_pt$x + offset_dx * title_offset
+            final_y <- title_pos_pt$y + offset_dy * title_offset
 
-            # Scale to NPC
-            position_npc <- scale_to_npc_coordinates(final_x, final_y, plot_bounds)
+            position_npc <- pt_to_npc(final_x, final_y, ctx)
             if (is.null(position_npc)) return(list())
 
-            # Axis angle for rotation
-            axis_angle <- atan2(
-                  axis_selection$edge_p2_2d$y - axis_selection$edge_p1_2d$y,
-                  axis_selection$edge_p2_2d$x - axis_selection$edge_p1_2d$x
-            )
+            edge_p1_pt <- plot_to_pt(axis_selection$edge_p1_2d$x,
+                                     axis_selection$edge_p1_2d$y, ctx)
+            edge_p2_pt <- plot_to_pt(axis_selection$edge_p2_2d$x,
+                                     axis_selection$edge_p2_2d$y, ctx)
+            axis_angle <- atan2(edge_p2_pt$y - edge_p1_pt$y,
+                                edge_p2_pt$x - edge_p1_pt$x)
 
             rotation_info <- calculate_text_rotation_and_justification(
                   edge_gridlines[edge_gridlines$group == edge_gridlines$group[1], ],
@@ -580,7 +598,8 @@ create_axis_title <- function(axis, edge_gridlines, theme_elements, offsets, tex
             rotation_info$hjust <- if (dot > 0) 0 else 1
 
             title_grob <- create_text_grob(axis_name, position_npc$x, position_npc$y,
-                                           rotation_info, theme_elements, is_title = TRUE)
+                                           rotation_info, theme_elements,
+                                           is_title = TRUE, fontsize = title_fontsize)
             if (!is.null(title_grob)) return(list(title_grob))
             return(list())
       }
@@ -590,39 +609,50 @@ create_axis_title <- function(axis, edge_gridlines, theme_elements, offsets, tex
       if(!is.numeric(axis_breaks)) axis_breaks <- attr(axis_breaks, "pos")
       axis_center_value <- mean(range(axis_breaks))
 
-      # Find which gridline is closest to the center value
       center_distances <- abs(axis_gridlines$break_pos - axis_center_value)
       center_group <- axis_gridlines$group[which.min(center_distances)]
       center_gridline <- axis_gridlines[axis_gridlines$group == center_group, ]
 
       if (nrow(center_gridline) < 2) {
-            return(list())  # Return empty list if insufficient gridline data
+            return(list())
       }
 
-      # Calculate axis angle using helper function (same as create_axis_labels)
       axis_angle <- calculate_axis_angle(axis_gridlines, axis_uses_start)
 
-      # Calculate theta using helper function (same as create_axis_labels)
-      theta <- calculate_theta(axis_angle, center_gridline)
+      base_pos <- calculate_gridline_position(center_gridline, axis_uses_start)
+      offset_dir <- calculate_offset_direction(center_gridline, base_pos$x, base_pos$y)
+      if (is.null(offset_dir)) return(list())
 
-      # Use the shared helper function to get components
-      components <- calculate_trigonometric_components(theta, offsets, text_dimensions, theme_elements, plot_bounds)
+      direction <- c(offset_dir$dx, offset_dir$dy)
+      if (!on_hull) direction <- -direction
+      normal <- edge_normal(axis_angle, direction)
 
-      # Use the full title offset formula for proper spacing beyond labels
-      title_offset_total <- components$title_offset_total
-      if (!on_hull) title_offset_total <- -title_offset_total
+      rotation_info <- calculate_text_rotation_and_justification(
+            center_gridline, rotate_labels, theme_elements,
+            is_title = TRUE, axis_angle = axis_angle)
 
-      # Use the same position calculation as labels for consistency
-      position_npc <- calculate_text_position_with_offset(center_gridline, axis_uses_start, title_offset_total, plot_bounds)
+      box <- measure_text_box(axis_name, title_fontsize, title_family, title_face)
+      corners <- text_box_corner_offsets(box$width, box$height,
+                                         rotation_info$angle,
+                                         rotation_info$hjust,
+                                         rotation_info$vjust)
+
+      # Labels already sit beyond the reserved tick space, so their reach
+      # dominates when they are drawn; the tick extent carries the spacing
+      # when they are not.
+      margin <- max(label_reach, offsets$tick_extent %||% 0, 0) + offsets$title_margin
+      offset <- place_axis_text(direction, normal, margin, corners)
+
+      position_npc <- pt_to_npc(base_pos$x + direction[1] * offset,
+                                base_pos$y + direction[2] * offset,
+                                ctx)
       if (is.null(position_npc)) {
-            return(list())  # Invalid coordinates
+            return(list())
       }
 
-      # Calculate rotation and justification using helper
-      rotation_info <- calculate_text_rotation_and_justification(center_gridline, rotate_labels, theme_elements, is_title = TRUE, axis_angle = axis_angle)
-
-      # Create title grob using helper
-      title_grob <- create_text_grob(axis_name, position_npc$x, position_npc$y, rotation_info, theme_elements, is_title = TRUE)
+      title_grob <- create_text_grob(axis_name, position_npc$x, position_npc$y,
+                                     rotation_info, theme_elements,
+                                     is_title = TRUE, fontsize = title_fontsize)
 
       if (!is.null(title_grob)) {
             return(list(title_grob))
@@ -631,28 +661,27 @@ create_axis_title <- function(axis, edge_gridlines, theme_elements, offsets, tex
       }
 }
 
-# Simplified render_axis_text function (now with theme checks)
-render_axis_text <- function(self, panel_params, theme) {
+# Draw-time assembly -------------------------------------------------------
+
+# Build every axis label and title for the panel. Runs at draw time, so
+# `panel_width_pt` and `panel_height_pt` are the panel's true dimensions and
+# all text can be measured directly.
+render_axis_text <- function(self, panel_params, theme, panel_width_pt, panel_height_pt) {
       tryCatch({
             all_labels <- list()
             all_titles <- list()
 
-            # Check theme element states
             theme_elements <- panel_params$theme_elements %||% list()
             should_render_axis_text <- theme_elements$show_axis_text %||% !inherits(calc_element("axis.text", theme), "element_blank")
             should_render_axis_title <- theme_elements$show_axis_title %||% !inherits(calc_element("axis.title", theme), "element_blank")
 
-            # If neither text nor titles should be rendered, return empty lists
             if (!should_render_axis_text && !should_render_axis_title) {
                   return(list(labels = list(), titles = list()))
             }
 
-            # Calculate base conversion factors for points to plot units
-            plot_width <- panel_params$plot_bounds[2] - panel_params$plot_bounds[1]
-            plot_height <- panel_params$plot_bounds[4] - panel_params$plot_bounds[3]
-            pt_to_plot_factor <- max(plot_width, plot_height) / 400
+            ctx <- make_device_context(panel_params$plot_bounds,
+                                       panel_width_pt, panel_height_pt)
 
-            # Calculate effective ratios for edge selection
             effective_ratios <- compute_effective_ratios(
                   list(x = panel_params$scale_info$x$limits,
                        y = panel_params$scale_info$y$limits,
@@ -663,10 +692,8 @@ render_axis_text <- function(self, panel_params, theme) {
 
             for (axis in c("x", "y", "z")) {
 
-                  # Get edge + face (now passing effective_ratios and weights)
                   axis_selection <- get_axis_selection(axis, self, panel_params, effective_ratios)
 
-                  # Skip this axis if no valid edge/face combination
                   if (is.null(axis_selection)) {
                         next
                   }
@@ -676,40 +703,40 @@ render_axis_text <- function(self, panel_params, theme) {
 
                   theme_elements_axis <- extract_axis_theme_elements(axis, theme)
 
-                  offsets <- calculate_axis_offsets(theme_elements_axis, self$rotate_labels, pt_to_plot_factor)
+                  offsets <- calculate_axis_offsets(theme_elements_axis, self$rotate_labels)
 
-                  # Get gridlines for the chosen face
                   edge_gridlines <- panel_params$grid_transformed[
                         panel_params$grid_transformed$face == chosen_face &
                               panel_params$grid_transformed$break_axis == axis, ]
 
-                  # Skip if no gridlines found for this axis
                   if (nrow(edge_gridlines) == 0) next
 
-                  # Get labels and breaks for the current axis
-                  axis_labels <- panel_params$scale_info[[axis]]$labels %||% NULL
-                  axis_breaks <- panel_params$scale_info[[axis]]$breaks %||% NULL
+                  edge_gridlines <- gridlines_to_pt(edge_gridlines, ctx)
 
-                  text_dimensions <- measure_axis_text_dimensions(edge_gridlines, theme_elements_axis, axis_labels, axis_breaks)
+                  # Placement direction depends on externality relative to the
+                  # rendered panels, not the full cube silhouette.
+                  on_hull <- axis_selection$on_panel_hull %||% TRUE
+                  label_reach <- 0
 
-                  # Create axis labels if theme allows
                   if (should_render_axis_text) {
-                        on_hull <- axis_selection$on_hull %||% TRUE
-                        label_result <- create_axis_labels(axis, edge_gridlines, theme_elements_axis, offsets, text_dimensions,
-                                                           panel_params, self$rotate_labels, panel_params$plot_bounds, chosen_edge, on_hull)
+                        label_result <- create_axis_labels(axis, edge_gridlines, theme_elements_axis,
+                                                           offsets, panel_params, self$rotate_labels,
+                                                           ctx, chosen_edge, on_hull,
+                                                           depth_strength(self, "text"))
                         all_labels <- c(all_labels, label_result$labels)
                         axis_uses_start <- label_result$axis_uses_start
+                        label_reach <- label_result$label_reach
                   } else {
-                        # Still need to calculate axis_uses_start for title positioning
-                        on_hull <- axis_selection$on_hull %||% TRUE
                         axis_uses_start <- determine_endpoint_preference_by_boundary(chosen_edge, edge_gridlines)
                   }
 
-                  # Create axis titles if theme allows
                   if (should_render_axis_title) {
-                        title_result <- create_axis_title(axis, edge_gridlines, theme_elements_axis, offsets, text_dimensions,
-                                                          panel_params, self$rotate_labels, panel_params$plot_bounds, chosen_edge, axis_uses_start,
-                                                          on_hull, axis_selection, self$title_position %||% "auto")
+                        title_result <- create_axis_title(axis, edge_gridlines, theme_elements_axis,
+                                                          offsets, panel_params, self$rotate_labels,
+                                                          ctx, chosen_edge, axis_uses_start,
+                                                          on_hull, axis_selection,
+                                                          self$title_position %||% "auto",
+                                                          label_reach)
                         all_titles <- c(all_titles, title_result)
                   }
             }
@@ -719,4 +746,66 @@ render_axis_text <- function(self, panel_params, theme) {
             warning("Axis label/title rendering failed: ", e$message)
             return(list(labels = list(), titles = list()))
       })
+}
+
+# Deferred grob holding everything needed to build axis furniture. Resolution
+# happens in makeContent(), inside the panel viewport, where the panel's real
+# dimensions and text metrics are available.
+axis_furniture_grob <- function(self, panel_params, theme, show_text, show_title,
+                                name = "axis.furniture.3d") {
+      grid::gTree(
+            coord = self,
+            panel_params = panel_params,
+            plot_theme = theme,
+            show_text = show_text,
+            show_title = show_title,
+            name = name,
+            cl = "ggcube_axis_furniture"
+      )
+}
+
+#' Resolve 3D axis labels and titles at draw time
+#'
+#' @param x A `ggcube_axis_furniture` gTree.
+#' @return The gTree with its children populated.
+#' @importFrom grid makeContent
+#' @export
+#' @keywords internal
+makeContent.ggcube_axis_furniture <- function(x) {
+      children <- tryCatch({
+            panel_width_pt <- grid::convertWidth(grid::unit(1, "npc"), "pt", valueOnly = TRUE)
+            panel_height_pt <- grid::convertHeight(grid::unit(1, "npc"), "pt", valueOnly = TRUE)
+
+            elements <- render_axis_text(x$coord, x$panel_params, x$plot_theme,
+                                         panel_width_pt, panel_height_pt)
+
+            kids <- list()
+
+            if (x$show_text) {
+                  labels <- elements$labels[!vapply(elements$labels, is.null, logical(1))]
+                  if (length(labels) > 0) {
+                        kids[[length(kids) + 1]] <- do.call(
+                              grid::grobTree, c(list(name = "axis.labels.3d"), labels))
+                  }
+            }
+
+            if (x$show_title) {
+                  titles <- elements$titles[!vapply(elements$titles, is.null, logical(1))]
+                  if (length(titles) > 0) {
+                        kids[[length(kids) + 1]] <- do.call(
+                              grid::grobTree, c(list(name = "axis.titles.3d"), titles))
+                  }
+            }
+
+            kids
+      }, error = function(e) {
+            warning("Axis furniture rendering failed: ", e$message)
+            list()
+      })
+
+      if (length(children) == 0) {
+            return(grid::setChildren(x, grid::gList()))
+      }
+
+      grid::setChildren(x, do.call(grid::gList, children))
 }

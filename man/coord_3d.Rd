@@ -19,6 +19,7 @@ coord_3d(
   title_position = c("auto", "center"),
   rotate_labels = TRUE,
   scales = "free",
+  scale_depth = TRUE,
   ratio = c(1, 1, 1),
   zoom = 1,
   light = waiver(),
@@ -94,6 +95,26 @@ visual range for each dimension.
 as scaled by \code{ratio}. Similar to \code{coord_fixed()} but for 3D
 (visual ratios match the labeled axis ranges).
 }}
+
+\item{scale_depth}{Controls how strongly axis furniture responds to viewing
+distance under perspective projection. Elements nearer the viewer are drawn
+larger, farther ones smaller. Accepts:
+\itemize{
+\item \code{TRUE} (default) or \code{FALSE}: full depth scaling, or none.
+\item A single number: applied to every element. \code{1} is the default
+strength, \code{0} disables scaling, values below 1 subdue the effect and
+values above 1 exaggerate it. Negative values are an error.
+\item A named numeric vector, to set elements individually. Names are
+\code{"grid"} (panel gridlines), \code{"border"} (cube edges), and
+\code{"text"} (axis tick labels), after the theme elements they govern.
+Unnamed elements keep their default.
+}
+Strength \code{s} maps a depth factor \code{d} to \code{d^s}, so the effect
+scales geometrically and never produces a non-positive size. This affects axis
+furniture only; layers have their own \code{scale_depth} parameters. Axis
+titles are never depth-scaled, since a single title has no series of sizes to
+read as perspective. Has no effect when \code{persp = FALSE}, where all depth
+factors are 1.}
 
 \item{ratio}{Numeric vector of length 3 specifying relative axis lengths as
 \code{c(x, y, z)}. Defaults to \code{c(1, 1, 1)} for equal proportions.
