@@ -70,6 +70,7 @@ aspect ratios, panel selection, axis label placement, and lighting.</p>
 <span>  title_position <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"auto"</span>, <span class="st">"center"</span><span class="op">)</span>,</span>
 <span>  rotate_labels <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  scales <span class="op">=</span> <span class="st">"free"</span>,</span>
+<span>  scale_depth <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  ratio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>,</span>
 <span>  zoom <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  light <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/waiver.html" class="external-link">waiver</a></span><span class="op">(</span><span class="op">)</span>,</span>
@@ -158,6 +159,25 @@ visual range for each dimension.</p></li>
 as scaled by <code>ratio</code>. Similar to <code><a href="https://ggplot2.tidyverse.org/reference/coord_fixed.html" class="external-link">coord_fixed()</a></code> but for 3D
 (visual ratios match the labeled axis ranges).</p></li>
 </ul></dd>
+
+
+<dt id="arg-scale-depth">scale_depth<a class="anchor" aria-label="anchor" href="#arg-scale-depth"></a></dt>
+<dd><p>Controls how strongly axis furniture responds to viewing
+distance under perspective projection. Elements nearer the viewer are drawn
+larger, farther ones smaller. Accepts:</p><ul><li><p><code>TRUE</code> (default) or <code>FALSE</code>: full depth scaling, or none.</p></li>
+<li><p>A single number: applied to every element. <code>1</code> is the default
+strength, <code>0</code> disables scaling, values below 1 subdue the effect and
+values above 1 exaggerate it. Negative values are an error.</p></li>
+<li><p>A named numeric vector, to set elements individually. Names are
+<code>"grid"</code> (panel gridlines), <code>"border"</code> (cube edges), and
+<code>"text"</code> (axis tick labels), after the theme elements they govern.
+Unnamed elements keep their default.</p></li>
+</ul><p>Strength <code>s</code> maps a depth factor <code>d</code> to <code>d^s</code>, so the effect
+scales geometrically and never produces a non-positive size. This affects axis
+furniture only; layers have their own <code>scale_depth</code> parameters. Axis
+titles are never depth-scaled, since a single title has no series of sizes to
+read as perspective. Has no effect when <code>persp = FALSE</code>, where all depth
+factors are 1.</p></dd>
 
 
 <dt id="arg-ratio">ratio<a class="anchor" aria-label="anchor" href="#arg-ratio"></a></dt>

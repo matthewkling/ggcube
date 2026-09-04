@@ -23,6 +23,7 @@ coord_3d(
   title_position = c("auto", "center"),
   rotate_labels = TRUE,
   scales = "free",
+  scale_depth = TRUE,
   ratio = c(1, 1, 1),
   zoom = 1,
   light = waiver(),
@@ -138,6 +139,30 @@ coord_3d(
     as scaled by `ratio`. Similar to
     [`coord_fixed()`](https://ggplot2.tidyverse.org/reference/coord_fixed.html)
     but for 3D (visual ratios match the labeled axis ranges).
+
+- scale_depth:
+
+  Controls how strongly axis furniture responds to viewing distance
+  under perspective projection. Elements nearer the viewer are drawn
+  larger, farther ones smaller. Accepts:
+
+  - `TRUE` (default) or `FALSE`: full depth scaling, or none.
+
+  - A single number: applied to every element. `1` is the default
+    strength, `0` disables scaling, values below 1 subdue the effect and
+    values above 1 exaggerate it. Negative values are an error.
+
+  - A named numeric vector, to set elements individually. Names are
+    `"grid"` (panel gridlines), `"border"` (cube edges), and `"text"`
+    (axis tick labels), after the theme elements they govern. Unnamed
+    elements keep their default.
+
+  Strength `s` maps a depth factor `d` to `d^s`, so the effect scales
+  geometrically and never produces a non-positive size. This affects
+  axis furniture only; layers have their own `scale_depth` parameters.
+  Axis titles are never depth-scaled, since a single title has no series
+  of sizes to read as perspective. Has no effect when `persp = FALSE`,
+  where all depth factors are 1.
 
 - ratio:
 
