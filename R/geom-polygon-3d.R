@@ -81,7 +81,7 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                                coords <- apply_annotation_styles(coords)
 
                                # Scale linewidths/sizes by depth
-                               coords <- scale_depth(coords, scale_depth)
+                               coords <- apply_depth_scaling(coords, scale_depth)
 
                                # Apply light blending to colors
                                coords <- blend_light(coords)

@@ -36,6 +36,24 @@ NULL
 NULL
 
 
+#' Depth scaling parameter
+#'
+#' Generic wording for layers whose depth-scaled property is something other
+#' than polygon linewidth. Polygon layers document `scale_depth` through
+#' [polygon_params] instead, which describes the mean-depth behaviour specific
+#' to them. Keep the two in step when the semantics change.
+#'
+#' @param scale_depth Controls depth-based scaling, drawing closer elements
+#'   larger or thicker and farther ones smaller or thinner. `TRUE` (the default)
+#'   applies full scaling and `FALSE` disables it; a number sets the strength
+#'   directly, where `1` matches `TRUE`, `0` matches `FALSE`, values below 1
+#'   subdue the effect and values above 1 exaggerate it. This affects the layer
+#'   only; use `coord_3d(scale_depth = )` for panel and axis components.
+#' @name depth_params
+#' @keywords internal
+NULL
+
+
 # polygons ----------------------------------------------------
 
 #' Polygon rendering parameters
@@ -51,8 +69,13 @@ NULL
 #'   type: FALSE for open surface-type geometries, TRUE for solid objects (hulls,
 #'   voxels, etc. where backfaces are generally hidden unless frontfaces are transparent
 #'   or explicitly disabled).
-#' @param scale_depth Logical indicating whether polygon linewidths should be scaled to make closer lines
-#'   wider and farther lines narrower. Default is TRUE. Scaling is based on the mean depth of a polygon.
+#' @param scale_depth Controls whether polygon linewidths are scaled to make closer lines
+#'   wider and farther lines narrower, based on the mean depth of a polygon. `TRUE`
+#'   (the default) applies full scaling and `FALSE` disables it; a number sets the
+#'   strength directly, where `1` matches `TRUE`, `0` matches `FALSE`, values below
+#'   1 subdue the effect and values above 1 exaggerate it. This affects the layer
+#'   only; use `coord_3d(scale_depth = )` for gridlines, cube borders, axis ticks,
+#'   and axis text.
 #' @param force_convex Logical indicating whether to remove polygon vertices that are not part of the
 #'   convex hull. Default value varies by geom. Specifying TRUE can help reduce artifacts in surfaces
 #'   that have polygon tiles that wrap over a visible horizon. For prism-type geoms like columns and

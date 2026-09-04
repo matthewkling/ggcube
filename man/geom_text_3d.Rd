@@ -111,10 +111,12 @@ is 3.88, which corresponds to approximately 11pt text.}
 
 \item{lineheight}{Line height multiplier for multi-line text.}
 
-\item{scale_depth}{Logical; if TRUE (default), scale by depth for perspective
-effect. For billboard method, this scales the font size. For polygon method,
-this scales the outline linewidth (the polygon fill is always depth-scaled
-by the 3D projection).}
+\item{scale_depth}{Controls depth-based scaling, drawing closer elements
+larger or thicker and farther ones smaller or thinner. \code{TRUE} (the default)
+applies full scaling and \code{FALSE} disables it; a number sets the strength
+directly, where \code{1} matches \code{TRUE}, \code{0} matches \code{FALSE}, values below 1
+subdue the effect and values above 1 exaggerate it. This affects the layer
+only; use \code{coord_3d(scale_depth = )} for panel and axis components.}
 
 \item{family}{Font family.}
 
@@ -228,7 +230,7 @@ Both methods use the same size units, so switching between \code{"billboard"}
 and \code{"polygon"} methods with the same \code{size} value will produce similarly
 sized text (assuming a typical 6 inch plot).
 
-When \code{scale_depth = TRUE} (the default), text farther from the viewer
+When depth scaling is enabled (the default), text farther from the viewer
 appears smaller, creating a natural perspective effect. For billboard
 method, this scales the font size. For polygon method, this scales the
 outline linewidth (the polygon fill is always depth-scaled by the 3D

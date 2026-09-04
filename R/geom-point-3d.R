@@ -40,7 +40,7 @@ GeomPoint3D <- ggproto("GeomPoint3D", GeomPoint,
 
                              # Scale points, strokes, linewidths by depth
                              if(!"linewidth" %in% names(coords)) coords$linewidth <- 0.5
-                             coords <- scale_depth(coords, scale_depth)
+                             coords <- apply_depth_scaling(coords, scale_depth)
 
                              if (nrow(coords) == 0) {
                                    return(grid::nullGrob())
@@ -393,11 +393,8 @@ generate_point_elements <- function(data, raw_points,
 #' @param na.rm If `FALSE`, missing values are removed with a warning.
 #' @param show.legend Logical indicating whether this layer should be included in legends.
 #' @param inherit.aes If `FALSE`, overrides the default aesthetics.
-#' @param scale_depth Logical indicating whether to apply depth-based scaling
-#'   to point sizes, point stroke widths, and reference line widths.
-#'   When `TRUE` (default), points/lines closer to the viewer appear larger/wider, and
-#'   points farther away appear smaller. When `FALSE`, all points/lines have uniform size/width.
 #' @inheritParams sort_params
+#' @inheritParams depth_params
 #' @param raw_points Logical indicating whether to show the original 3D points.
 #'   Default is `TRUE`.
 #' @param ref_lines Logical indicating whether to show reference lines projecting

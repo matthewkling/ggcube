@@ -939,8 +939,10 @@ GeomText3DBillboard <- ggproto("GeomText3DBillboard", Geom,
                                      coords <- coord$transform(data, panel_params)
 
                                      # Scale sizes by depth if enabled
-                                     if (scale_depth && "depth_scale" %in% names(coords)) {
-                                           coords$size <- coords$size * coords$depth_scale
+                                     text_strength <- resolve_layer_scale_depth(scale_depth)
+                                     if (text_strength > 0 && "depth_scale" %in% names(coords)) {
+                                           coords$size <- coords$size *
+                                                 apply_depth_strength(coords$depth_scale, text_strength)
                                      }
 
                                      # Convert size from mm to grid fontsize
@@ -1055,7 +1057,7 @@ GeomText3DBillboard <- ggproto("GeomText3DBillboard", Geom,
 #' and `"polygon"` methods with the same `size` value will produce similarly
 #' sized text (assuming a typical 6 inch plot).
 #'
-#' When `scale_depth = TRUE` (the default), text farther from the viewer
+#' When depth scaling is enabled (the default), text farther from the viewer
 #' appears smaller, creating a natural perspective effect. For billboard
 #' method, this scales the font size. For polygon method, this scales the
 #' outline linewidth (the polygon fill is always depth-scaled by the 3D
@@ -1100,10 +1102,7 @@ GeomText3DBillboard <- ggproto("GeomText3DBillboard", Geom,
 #' @param spacing (Polygon method only) Additional letter spacing in em units.
 #' @param tolerance (Polygon method only) Bezier curve tolerance for text
 #'   outlines. Lower values give smoother curves but more vertices.
-#' @param scale_depth Logical; if TRUE (default), scale by depth for perspective
-#'   effect. For billboard method, this scales the font size. For polygon method,
-#'   this scales the outline linewidth (the polygon fill is always depth-scaled
-#'   by the 3D projection).
+#' @inheritParams depth_params
 #' @param na.rm If TRUE, silently remove missing values.
 #' @param show.legend Logical. Should this layer be included in the legends?
 #' @param inherit.aes If TRUE, inherit aesthetics from the plot's default.

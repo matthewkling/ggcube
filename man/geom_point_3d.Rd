@@ -83,10 +83,12 @@ the standard point aesthetics, \code{geom_point_3d()} requires x, y, and z coord
 
 \item{sort_method}{Depth sorting algorithm. See \link{sorting_methods} for details.}
 
-\item{scale_depth}{Logical indicating whether to apply depth-based scaling
-to point sizes, point stroke widths, and reference line widths.
-When \code{TRUE} (default), points/lines closer to the viewer appear larger/wider, and
-points farther away appear smaller. When \code{FALSE}, all points/lines have uniform size/width.}
+\item{scale_depth}{Controls depth-based scaling, drawing closer elements
+larger or thicker and farther ones smaller or thinner. \code{TRUE} (the default)
+applies full scaling and \code{FALSE} disables it; a number sets the strength
+directly, where \code{1} matches \code{TRUE}, \code{0} matches \code{FALSE}, values below 1
+subdue the effect and values above 1 exaggerate it. This affects the layer
+only; use \code{coord_3d(scale_depth = )} for panel and axis components.}
 
 \item{raw_points}{Logical indicating whether to show the original 3D points.
 Default is \code{TRUE}.}

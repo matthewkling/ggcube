@@ -9,26 +9,70 @@
 
 # Depth scaling ----------------------------------------------------------------
 
+#' Validate a layer's `scale_depth` argument
+#'
+#' Layers take a single strength rather than the coord's per-element vector.
+#' `TRUE` and `FALSE` are accepted as 1 and 0 so that existing code keeps
+#' working unchanged.
+#'
+#' @param scale_depth User-supplied value.
+#' @return A single non-negative number.
+#' @keywords internal
+#' @noRd
+resolve_layer_scale_depth <- function(scale_depth) {
+      if (is.null(scale_depth)) return(1)
+
+      if (is.logical(scale_depth)) {
+            if (length(scale_depth) != 1 || is.na(scale_depth)) {
+                  rlang::abort("`scale_depth` must be TRUE, FALSE, or a single number.")
+            }
+            return(as.numeric(scale_depth))
+      }
+
+      if (!is.numeric(scale_depth) || length(scale_depth) != 1) {
+            rlang::abort("`scale_depth` must be TRUE, FALSE, or a single number.")
+      }
+
+      if (!is.finite(scale_depth)) {
+            rlang::abort("`scale_depth` must be finite.")
+      }
+
+      if (scale_depth < 0) {
+            rlang::abort(c(
+                  "`scale_depth` must be non-negative.",
+                  i = "Negative values would invert the depth cue, drawing distant elements larger than near ones."
+            ))
+      }
+
+      scale_depth
+}
+
 #' Apply depth scaling to point sizes, strokes, and linewidths
 #'
 #' Scales visual properties by the depth_scale factor so that closer objects
-#' appear larger/thicker and farther objects appear smaller/thinner.
+#' appear larger/thicker and farther objects appear smaller/thinner. The
+#' strength exponent is shared with `coord_3d(scale_depth = )`, so `1` is full
+#' strength, `0` disables scaling, and intermediate values subdue it.
 #'
 #' @param coords Data frame with aesthetic columns and optionally `depth_scale`.
-#' @param scale_depth Logical; if FALSE, no scaling is applied.
+#' @param strength Depth scaling strength. `TRUE`/`FALSE` are accepted as 1/0.
 #' @return Data frame with scaled aesthetics.
 #' @keywords internal
 #' @noRd
-scale_depth <- function(coords, scale_depth){
-      if (scale_depth && "depth_scale" %in% names(coords)) {
+apply_depth_scaling <- function(coords, strength){
+      strength <- resolve_layer_scale_depth(strength)
+
+      if (strength > 0 && "depth_scale" %in% names(coords)) {
+            factor <- apply_depth_strength(coords$depth_scale, strength)
+
             if("size" %in% names(coords)) {
-                  coords$size <- coords$size * coords$depth_scale
+                  coords$size <- coords$size * factor
             }
             if("stroke" %in% names(coords)) {
-                  coords$stroke <- coords$stroke * coords$depth_scale
+                  coords$stroke <- coords$stroke * factor
             }
             if("linewidth" %in% names(coords)) {
-                  coords$linewidth <- coords$linewidth * coords$depth_scale
+                  coords$linewidth <- coords$linewidth * factor
             }
       }
       return(coords)

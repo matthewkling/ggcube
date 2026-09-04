@@ -15,10 +15,8 @@
 #' @param na.rm If `FALSE`, missing values are removed with a warning.
 #' @param show.legend Logical indicating whether this layer should be included in legends.
 #' @param inherit.aes If `FALSE`, overrides the default aesthetics.
-#' @param scale_depth Logical indicating whether to apply depth-based scaling
-#'   to linewidth. When `TRUE` (default), path segments closer to the viewer
-#'   appear thicker, and segments farther away appear thinner.
 #' @inheritParams sort_params
+#' @inheritParams depth_params
 #' @param arrow Specification for arrow heads, created by [arrow()].
 #' @param lineend Line end style, one of "round", "butt", "square".
 #'

@@ -213,8 +213,13 @@ convex hull. Default value varies by geom. Specifying TRUE can help reduce artif
 that have polygon tiles that wrap over a visible horizon. For prism-type geoms like columns and
 voxels, FALSE is safe because polygons fill always be convex.}
 
-\item{scale_depth}{Logical indicating whether polygon linewidths should be scaled to make closer lines
-wider and farther lines narrower. Default is TRUE. Scaling is based on the mean depth of a polygon.}
+\item{scale_depth}{Controls whether polygon linewidths are scaled to make closer lines
+wider and farther lines narrower, based on the mean depth of a polygon. \code{TRUE}
+(the default) applies full scaling and \code{FALSE} disables it; a number sets the
+strength directly, where \code{1} matches \code{TRUE}, \code{0} matches \code{FALSE}, values below
+1 subdue the effect and values above 1 exaggerate it. This affects the layer
+only; use \code{coord_3d(scale_depth = )} for gridlines, cube borders, axis ticks,
+and axis text.}
 
 \item{na.rm}{If \code{FALSE}, missing values are removed.}
 

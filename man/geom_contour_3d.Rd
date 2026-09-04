@@ -72,8 +72,13 @@ or explicitly disabled).}
 
 \item{sort_method}{Depth sorting algorithm. See \link{sorting_methods} for details.}
 
-\item{scale_depth}{Logical indicating whether polygon linewidths should be scaled to make closer lines
-wider and farther lines narrower. Default is TRUE. Scaling is based on the mean depth of a polygon.}
+\item{scale_depth}{Controls whether polygon linewidths are scaled to make closer lines
+wider and farther lines narrower, based on the mean depth of a polygon. \code{TRUE}
+(the default) applies full scaling and \code{FALSE} disables it; a number sets the
+strength directly, where \code{1} matches \code{TRUE}, \code{0} matches \code{FALSE}, values below
+1 subdue the effect and values above 1 exaggerate it. This affects the layer
+only; use \code{coord_3d(scale_depth = )} for gridlines, cube borders, axis ticks,
+and axis text.}
 
 \item{force_convex}{Logical indicating whether to remove polygon vertices that are not part of the
 convex hull. Default value varies by geom. Specifying TRUE can help reduce artifacts in surfaces
