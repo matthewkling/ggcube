@@ -108,12 +108,14 @@ calculate_axis_offsets <- function(theme_elements, rotate_labels) {
       title_margin <- theme_elements$axis_title$margin %||% margin()
       title_margin_numeric <- as.numeric(title_margin)
 
-      # Larger than typical theme defaults (2-6 points), which sit too close to
-      # the cube once labels are cleared.
-      MIN_3D_TITLE_MARGIN_POINTS <- 10
+      # ggplot2's 2.75pt title margin assumes a title in its own gtable band
+      # below the axis text. Here the title sits diagonally beyond the labels
+      # with no reserved strip, so it needs a floor, scaled with the title size
+      # to stay proportionate as base_size changes.
+      title_size <- resolve_fontsize(theme_elements$axis_title$size, 11)
 
       theme_margin_distance <- max(title_margin_numeric[1], title_margin_numeric[3])
-      title_margin_points <- max(theme_margin_distance, MIN_3D_TITLE_MARGIN_POINTS)
+      title_margin_points <- max(theme_margin_distance, 0.6 * title_size)
 
       return(list(
             text_offset = text_offset_points,

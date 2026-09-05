@@ -250,6 +250,7 @@ p <- ggplot(mammoth, aes(X, Y, Z)) +
       coord_3d(roll = -90, scales = "fixed", 
                panels = "zmin", expand = FALSE) +
       theme(axis.text = element_blank(),
+            axis.ticks = element_blank(),
             axis.title = element_blank())
 
 animate_3d(p, yaw = c(0, 360), nframes = 72, fps = 8, width = 700, cores = 8)
