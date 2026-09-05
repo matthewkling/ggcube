@@ -1,21 +1,25 @@
 # Changelog
 
-## ggcube (development version)
+## ggcube 0.3.0
+
+Changes to default behaviors, which slightly alter styling relative to
+prior version:
 
 - [`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md)
-  now draws axis ticks, styled with the standard `axis.ticks` and
-  `axis.ticks.length` theme elements plus a new `axis.ticks.z`.
-- Axis label and title placement is now computed at draw time from
-  measured text dimensions rather than estimated at build time. Spacing
-  no longer varies with the size of the rendered device, and labels no
-  longer crowd the cube on small devices. Label positions will shift
-  slightly compared with previous versions.
-- [`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md)
-  gains a `scale_depth` argument controlling how strongly gridlines and
-  axis text respond to viewing distance under perspective projection.
-- Axis tick labels are now depth-scaled under perspective projection by
-  default. (Axis titles remain unscaled.) Use
-  `coord_3d(scale_depth = c(text = 0))` to opt out.
+  now draws axis ticks by default, whereas previously axis ticks were
+  not implemented. They can be removed or styled with the standard
+  `axis.ticks` and `axis.ticks.length` theme elements plus a new
+  `axis.ticks.z`.
+- Axis text now gets depth scaling, i.e. perspective-based sizing, by
+  default. (Axis titles remain unscaled.) You can use
+  `coord_3d(scale_depth = c(text = FALSE))` to opt out.
+- Axis text and title placement is now computed at draw time from
+  measured text dimensions. This fixes inexact size estimates that
+  previously sometimes led to text overlapping titles and/or axes on
+  small devices.
+
+New options:
+
 - Lighting can now be set for a whole plot by adding
   [`light()`](https://matthewkling.github.io/ggcube/reference/light.md)
   to it,
@@ -27,9 +31,15 @@
   continues to work; supplying both is an error.
 - `light("none")` is a new way to disable lighting, equivalent to the
   string `"none"` accepted by `light` arguments.
-- [`geom_hull_3d()`](https://matthewkling.github.io/ggcube/reference/geom_hull_3d.md)’s
-  `"alpha"` method got some bug fixes related to face orientation and
-  the `radius` parameter.
+- `scale_depth` arguments are now more customizable: in 3D layer
+  functions you can now pass continuous values to reduce or exaggerate
+  the effect (rather than just a logical flag), and in
+  [`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md)
+  you have more granular control over scaling for gridlines, ticks, and
+  axis text.
+
+Bug fixes:
+
 - Fixed a bug where
   [`scale_z_continuous()`](https://matthewkling.github.io/ggcube/reference/scale_z_continuous.md)
   and
@@ -37,6 +47,9 @@
   stored z scales in a package-level cache, causing plots to sometimes
   contaminate each other’s z-axis ranges. Now, the z scale is stored
   directly in the plot being built, preventing cross-contamination.
+- [`geom_hull_3d()`](https://matthewkling.github.io/ggcube/reference/geom_hull_3d.md)’s
+  `"alpha"` method got some bug fixes related to face orientation and
+  the `radius` parameter.
 
 ## ggcube 0.2.0
 

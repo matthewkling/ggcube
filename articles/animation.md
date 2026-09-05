@@ -46,6 +46,7 @@ p <- ggplot(mammoth, aes(X, Y, Z)) +
       coord_3d(roll = -90, scales = "fixed", zoom = 1.1,
                panels = "zmin", expand = FALSE) +
       theme(axis.text = element_blank(),
+            axis.ticks = element_blank(),
             axis.title = element_blank())
 ```
 
