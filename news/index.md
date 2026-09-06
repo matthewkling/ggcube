@@ -1,5 +1,7 @@
 # Changelog
 
+## ggcube (development version)
+
 ## ggcube 0.3.0
 
 Changes to default behaviors, which slightly alter styling relative to
