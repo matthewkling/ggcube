@@ -148,7 +148,16 @@ end of the axis, outside the plot area.</p></li>
 <dt id="arg-rotate-labels">rotate_labels<a class="anchor" aria-label="anchor" href="#arg-rotate-labels"></a></dt>
 <dd><p>Logical indicating whether axis labels (text and titles) should automatically
 rotate to align with the projected axis directions. When <code>FALSE</code>, uses theme
-text and title angle settings.</p></dd>
+text and title angle settings.</p>
+<p>Automatic rotation also sets its own justification, since <code>vjust</code> would
+push text perpendicular to the axis it belongs to and <code>hjust</code> decides
+which end of the edge the text hangs off. A <code>vjust</code> or <code>hjust</code> set
+in the theme still takes precedence. "Set" means differing from the value the
+element inherits from <code><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_grey</a></code>, so assigning a value
+that happens to equal the inherited one has no effect. Note also that
+<code>theme(axis.text = ...)</code> does not reach the x axis, whose
+<code>vjust</code> and <code>hjust</code> are given explicitly by <code><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_grey()</a></code>;
+use <code>axis.text.x</code> for that axis.</p></dd>
 
 
 <dt id="arg-scales">scales<a class="anchor" aria-label="anchor" href="#arg-scales"></a></dt>
@@ -208,6 +217,20 @@ disable lighting, or <code>light("none")</code> for an equivalent lighting objec
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A <code>Coord</code> object that can be added to a ggplot.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="collapsed-axes">Collapsed axes<a class="anchor" aria-label="anchor" href="#collapsed-axes"></a></h2>
+
+
+
+<p>An axis parallel to the viewing direction projects to a single point rather
+than a line. This happens under <code>persp = FALSE</code> if the view is
+square to a cube face, and is approached as <code>dist</code> grows. Every break
+then falls in the same place, so tick labels would stack into an illegible
+pile. In this situation, an axis is drawn as a single diagonal tick at the
+corner it collapses to, and the pile of tick labels is replaced with a bracketed
+summary of the axis range. You can remove the summary with
+<code>theme(axis.text.y = element_blank())</code>, for example.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

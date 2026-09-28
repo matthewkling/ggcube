@@ -4,6 +4,8 @@
 
 ## ggcube 0.3.0
 
+CRAN release: 2026-09-05
+
 Changes to default behaviors, which slightly alter styling relative to
 prior version:
 

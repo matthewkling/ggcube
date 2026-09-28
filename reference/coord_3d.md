@@ -127,6 +127,18 @@ coord_3d(
   automatically rotate to align with the projected axis directions. When
   `FALSE`, uses theme text and title angle settings.
 
+  Automatic rotation also sets its own justification, since `vjust`
+  would push text perpendicular to the axis it belongs to and `hjust`
+  decides which end of the edge the text hangs off. A `vjust` or `hjust`
+  set in the theme still takes precedence. "Set" means differing from
+  the value the element inherits from
+  [`theme_grey`](https://ggplot2.tidyverse.org/reference/ggtheme.html),
+  so assigning a value that happens to equal the inherited one has no
+  effect. Note also that `theme(axis.text = ...)` does not reach the x
+  axis, whose `vjust` and `hjust` are given explicitly by
+  [`theme_grey()`](https://ggplot2.tidyverse.org/reference/ggtheme.html);
+  use `axis.text.x` for that axis.
+
 - scales:
 
   Character string specifying aspect ratio behavior:
@@ -197,6 +209,17 @@ coord_3d(
 ## Value
 
 A `Coord` object that can be added to a ggplot.
+
+## Collapsed axes
+
+An axis parallel to the viewing direction projects to a single point
+rather than a line. This happens under `persp = FALSE` if the view is
+square to a cube face, and is approached as `dist` grows. Every break
+then falls in the same place, so tick labels would stack into an
+illegible pile. In this situation, an axis is drawn as a single diagonal
+tick at the corner it collapses to, and the pile of tick labels is
+replaced with a bracketed summary of the axis range. You can remove the
+summary with `theme(axis.text.y = element_blank())`, for example.
 
 ## See also
 
