@@ -212,6 +212,15 @@ point_segment_distance <- function(px, py, x1, y1, x2, y2) {
 # robust to coincident projected corners, which occur under orthographic
 # projection and otherwise make the result depend on chull() tie-breaking.
 #
+# The tolerance is relative to the silhouette's own size, and is loose enough
+# to absorb a distant-camera inset rather than just floating-point error.
+# Under perspective a back edge lies inside the hull by roughly half the cube
+# depth over `dist`, so a far-away camera leaves it inside by an amount that is
+# invisible on screen but not zero. Counting such an edge as interior pushes
+# axis furniture onto a face that is nearly edge-on, where gridlines collapse
+# along the sightline. 1e-3 covers `dist` above roughly 500; an ordinary view
+# keeps back edges tens of percent inside, far beyond it.
+#
 # A NULL hull means there is nothing to be inside of, so every edge counts.
 edge_on_hull <- function(p1_2d, p2_2d, hull) {
       if (is.null(hull)) return(TRUE)
@@ -221,7 +230,7 @@ edge_on_hull <- function(p1_2d, p2_2d, hull) {
 
       hull_scale <- max(diff(range(hull$x)), diff(range(hull$y)))
       if (!is.finite(hull_scale) || hull_scale <= 0) return(TRUE)
-      tol <- 1e-6 * hull_scale
+      tol <- 1e-3 * hull_scale
 
       n <- nrow(hull)
       for (i in seq_len(n)) {

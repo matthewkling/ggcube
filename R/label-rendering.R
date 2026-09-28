@@ -24,13 +24,59 @@ resolve_tick_length_points <- function(axis, theme) {
       value
 }
 
+# Is a resolved theme element switched off?
+#
+# `element_blank` carries no properties, so reading `$size` or `$margin` from
+# one yields nothing and every downstream lookup silently falls back to a
+# default. Blankness therefore has to be tested before any property access,
+# not inferred from a missing property afterwards.
+element_is_blank <- function(element) {
+      is.null(element) || inherits(element, "element_blank")
+}
+
+# Was a justification value chosen, or merely inherited?
+#
+# calc_element() always resolves to a concrete number, so a set value can't be
+# recognised by its presence. It is recognised instead by differing from the
+# same element in theme_grey(), which is where an untouched theme's value
+# comes from. Setting a value to exactly the inherited one is therefore
+# indistinguishable from not setting it, the same limitation the margin
+# inheritance above already carries.
+chosen_justification <- function(value, default) {
+      if (is.null(value) || !is.numeric(value) || length(value) != 1) return(NULL)
+      if (!is.finite(value)) return(NULL)
+      if (!is.null(default) && isTRUE(all.equal(value, default))) return(NULL)
+      value
+}
+
+element_justification <- function(element, default_element) {
+      list(
+            vjust = chosen_justification(element$vjust, default_element$vjust),
+            hjust = chosen_justification(element$hjust, default_element$hjust)
+      )
+}
+
 extract_axis_theme_elements <- function(axis, theme) {
+      default_theme <- theme_gray()
+      default_axis_text <- calc_element(paste0("axis.text.", axis), default_theme)
+      default_axis_title <- calc_element(paste0("axis.title.", axis), default_theme)
+
       axis_text_theme <- calc_element(paste0("axis.text.", axis), theme)
       axis_title_theme <- calc_element(paste0("axis.title.", axis), theme)
       parent_text_theme <- calc_element("axis.text", theme)
       parent_title_theme <- calc_element("axis.title", theme)
-      default_theme <- theme_gray()
-      default_axis_title <- calc_element(paste0("axis.title.", axis), default_theme)
+
+      # Blank elements are recorded and then replaced by their theme_grey()
+      # counterparts. The substitutes are only ever measured, never drawn: the
+      # caller skips blanked furniture entirely, and spacing that would have
+      # depended on it collapses to the tick reach, as it does in 2D ggplot2.
+      axis_text_blank <- element_is_blank(axis_text_theme)
+      axis_title_blank <- element_is_blank(axis_title_theme)
+
+      if (axis_text_blank) axis_text_theme <- default_axis_text
+      if (axis_title_blank) axis_title_theme <- default_axis_title
+      if (element_is_blank(parent_text_theme)) parent_text_theme <- calc_element("axis.text", default_theme)
+      if (element_is_blank(parent_title_theme)) parent_title_theme <- calc_element("axis.title", default_theme)
 
       # Handle inheritance logic
       if (identical(axis_title_theme$margin, default_axis_title$margin)) {
@@ -51,6 +97,10 @@ extract_axis_theme_elements <- function(axis, theme) {
             axis_title = axis_title_theme,
             parent_text = parent_text_theme,
             axis_ticks = axis_ticks_theme,
+            text_blank = axis_text_blank,
+            title_blank = axis_title_blank,
+            text_justification = element_justification(axis_text_theme, default_axis_text),
+            title_justification = element_justification(axis_title_theme, default_axis_title),
             tick_length = resolve_tick_length_points(axis, theme)
       ))
 }
@@ -192,6 +242,16 @@ measure_text_box <- function(label, fontsize, family = "", face = "plain") {
       }, error = function(e) fallback)
 }
 
+# Flip an angle by 180 degrees when it would render text upside down.
+readable_angle_degrees <- function(angle_degrees) {
+      if (!is.finite(angle_degrees)) return(0)
+      if (abs(angle_degrees) > 90) {
+            angle_degrees <- angle_degrees + 180
+            if (angle_degrees > 180) angle_degrees <- angle_degrees - 360
+      }
+      angle_degrees
+}
+
 # Corner offsets of a rotated text box relative to its justification point.
 # grid rotates the box about that point, so corners are taken in the text's
 # own frame and then rotated. Returns a 4x2 matrix of point offsets.
@@ -212,7 +272,19 @@ text_box_corner_offsets <- function(width, height, angle_degrees, hjust, vjust) 
 }
 
 # Unit normal to the axis edge, oriented to agree with the offset direction.
+#
+# An axis that projects to a point has no edge to be normal to, and
+# `axis_angle` is NA there. Falling back to the offset direction makes the
+# clearance calculation in place_axis_text() reduce to the margin itself,
+# rather than dividing by a cosine taken against an arbitrary angle.
 edge_normal <- function(axis_angle, direction) {
+      length <- sqrt(sum(direction^2))
+
+      if (is.null(axis_angle) || !is.finite(axis_angle)) {
+            if (!is.finite(length) || length == 0) return(c(0, 1))
+            return(direction / length)
+      }
+
       u <- c(cos(axis_angle), sin(axis_angle))
       n <- c(-u[2], u[1])
       if (sum(n * direction) < 0) n <- -n
@@ -277,9 +349,44 @@ calculate_axis_angle <- function(axis_gridlines, axis_uses_start) {
 
       axis_edge_dx <- axis_end_x - axis_start_x
       axis_edge_dy <- axis_end_y - axis_start_y
+
+      # atan2(0, 0) is 0, an angle indistinguishable from a genuinely
+      # horizontal axis. NA says instead that there is no direction to report,
+      # and edge_normal() and the rotation helpers test for it.
+      if (!is.finite(axis_edge_dx) || !is.finite(axis_edge_dy)) return(NA_real_)
+      if (axis_edge_dx == 0 && axis_edge_dy == 0) return(NA_real_)
+
       axis_angle <- atan2(axis_edge_dy, axis_edge_dx)
 
       return(axis_angle)
+}
+
+# Projected length of the selected axis edge, in points.
+#
+# Measured from the edge endpoints rather than from gridlines, so it reports
+# the axis itself rather than whatever happens to be drawn on the chosen face.
+projected_axis_length_pt <- function(axis_selection, ctx) {
+      if (is.null(axis_selection$edge_p1_2d) || is.null(axis_selection$edge_p2_2d)) {
+            return(NA_real_)
+      }
+
+      p1 <- plot_to_pt(axis_selection$edge_p1_2d$x, axis_selection$edge_p1_2d$y, ctx)
+      p2 <- plot_to_pt(axis_selection$edge_p2_2d$x, axis_selection$edge_p2_2d$y, ctx)
+
+      sqrt((p2$x - p1$x)^2 + (p2$y - p1$y)^2)
+}
+
+# Has an axis collapsed to a point?
+#
+# True when the viewing direction is parallel to the axis, which happens under
+# orthographic projection and is approached asymptotically as `dist` grows.
+# Every break then projects to the same place, so tick labels would stack into
+# an illegible pile and their measured extent would push the axis title far
+# off the panel. The threshold is one point: below that the axis is shorter
+# than the text it would carry.
+axis_is_collapsed <- function(axis_selection, ctx, tolerance_pt = 1) {
+      length_pt <- projected_axis_length_pt(axis_selection, ctx)
+      !is.finite(length_pt) || length_pt < tolerance_pt
 }
 
 # Helper function to calculate gridline position. Carries the endpoint's
@@ -324,7 +431,7 @@ calculate_offset_direction <- function(gridline_data, target_x, target_y) {
 
 # Helper function to calculate text rotation and justification
 calculate_text_rotation_and_justification <- function(gridline_data, rotate_labels, theme_elements, is_title = FALSE, axis_angle = NULL) {
-      if (is_title && !is.null(axis_angle)) {
+      if (is_title && !is.null(axis_angle) && is.finite(axis_angle)) {
             # For titles, use axis angle (parallel to axis edge)
             angle_radians <- axis_angle
       } else {
@@ -335,26 +442,28 @@ calculate_text_rotation_and_justification <- function(gridline_data, rotate_labe
       }
 
       angle_degrees <- angle_radians * 180 / pi
-
-      # Ensure readable orientation
-      if (abs(angle_degrees) > 90) {
-            angle_degrees <- angle_degrees + 180
-            if (angle_degrees > 180) angle_degrees <- angle_degrees - 360
-      }
+      angle_degrees <- readable_angle_degrees(angle_degrees)
 
       if (rotate_labels) {
+            # Auto-rotation sets its own justification, since vjust would push
+            # text perpendicular to the axis it belongs to and hjust is decided
+            # by which end of the edge the text hangs off. A value the user
+            # chose still wins over both.
+            chosen <- if (is_title) theme_elements$title_justification else theme_elements$text_justification
+
             result <- list(
                   angle = angle_degrees,
-                  vjust = 0.5
+                  vjust = chosen$vjust %||% 0.5,
+                  hjust_chosen = !is.null(chosen$hjust)
             )
             # Add hjust calculation for labels (not titles)
             if (!is_title) {
-                  result$hjust <- NULL  # Will be calculated in caller based on position
+                  result$hjust <- chosen$hjust  # NULL leaves it to the caller
                   result$gridline_center_x <- mean(gridline_data$x)
                   result$gridline_center_y <- mean(gridline_data$y)
             } else {
                   element_type <- "axis_title"
-                  result$hjust <- theme_elements[[element_type]]$hjust %||% 0.5
+                  result$hjust <- chosen$hjust %||% theme_elements[[element_type]]$hjust %||% 0.5
             }
             return(result)
       } else {
@@ -625,6 +734,171 @@ create_axis_ticks <- function(axis, standard_gridlines, theme_elements,
       list(ticks = list(tick_grob), tick_reach = tick_reach)
 }
 
+# The ray a collapsed axis's furniture is laid out along: from the projected
+# cube centre through the point the axis collapses to, in points.
+collapsed_axis_ray <- function(axis_selection, panel_params, ctx) {
+      if (is.null(axis_selection$edge_p1_2d)) return(NULL)
+
+      corner_pt <- plot_to_pt(axis_selection$edge_p1_2d$x,
+                              axis_selection$edge_p1_2d$y, ctx)
+
+      cube_center_2d <- transform_3d_standard(data.frame(x = 0, y = 0, z = 0),
+                                              panel_params$proj)
+      cube_center_pt <- plot_to_pt(cube_center_2d$x, cube_center_2d$y, ctx)
+
+      ray_x <- corner_pt$x - cube_center_pt$x
+      ray_y <- corner_pt$y - cube_center_pt$y
+      ray_length <- sqrt(ray_x^2 + ray_y^2)
+      if (!is.finite(ray_length) || ray_length == 0) return(NULL)
+
+      list(origin_x = corner_pt$x, origin_y = corner_pt$y,
+           dx = ray_x / ray_length, dy = ray_y / ray_length)
+}
+
+# What a collapsed axis can say about itself: the extent it spans.
+#
+# Individual breaks are meaningless here, since they all project to the same
+# point, but the range is not. Continuous scales report their unexpanded data
+# range in the scale's own notation; discrete scales list their levels, or
+# count them when the list would not fit the space available. Brackets mark
+# the result as one item rather than a row of tick labels, and the comma
+# separator keeps a negative lower bound readable.
+collapsed_range_label <- function(info, budget_pt, fontsize, family, face) {
+      if (is.null(info)) return(NULL)
+
+      if (!is.null(info$range_labels) && length(info$range_labels) == 2) {
+            return(paste0("[", info$range_labels[1], ", ", info$range_labels[2], "]"))
+      }
+
+      labels <- info$labels
+      if (is.null(labels) || length(labels) == 0) return(NULL)
+
+      labels <- as.character(labels)
+      labels <- labels[!is.na(labels)]
+      if (length(labels) == 0) return(NULL)
+
+      listed <- paste0("[", paste(labels, collapse = ", "), "]")
+      if (!is.finite(budget_pt) || budget_pt <= 0) return(listed)
+
+      box <- measure_text_box(listed, fontsize, family, face)
+      if (box$width <= budget_pt) return(listed)
+
+      paste0("[", length(labels), " levels]")
+}
+
+# Build the range text for one collapsed axis.
+#
+# Sits on the ray where the suppressed break labels would have gone, aligned
+# with the stub. Reports the offsets the title needs to sit clear of it.
+create_collapsed_axis_text <- function(axis, theme_elements, panel_params, ctx,
+                                       axis_selection, rotate_labels, tick_reach,
+                                       offsets) {
+
+      empty <- list(labels = list(), along_ray = 0, perpendicular = 0)
+
+      ray <- collapsed_axis_ray(axis_selection, panel_params, ctx)
+      if (is.null(ray)) return(empty)
+
+      fontsize <- resolve_fontsize(theme_elements$axis_text$size, 8.5)
+      family <- theme_elements$axis_text$family %||% ""
+      face <- theme_elements$axis_text$face %||% "plain"
+
+      # The text runs diagonally out of a corner, so the space before it
+      # reaches the edge of the canvas is longer than either margin alone.
+      # A quarter of the panel diagonal is a conservative share of it.
+      budget_pt <- 0.25 * sqrt(ctx$panel_width_pt^2 + ctx$panel_height_pt^2)
+
+      text <- collapsed_range_label(panel_params$scale_info[[axis]], budget_pt,
+                                    fontsize, family, face)
+      if (is.null(text) || !nzchar(text)) return(empty)
+
+      along_ray <- max(tick_reach, 0) + offsets$text_offset
+      anchor_x <- ray$origin_x + ray$dx * along_ray
+      anchor_y <- ray$origin_y + ray$dy * along_ray
+
+      position_npc <- pt_to_npc(anchor_x, anchor_y, ctx)
+      if (is.null(position_npc)) return(empty)
+
+      chosen <- theme_elements$text_justification
+
+      if (rotate_labels) {
+            angle_degrees <- readable_angle_degrees(atan2(ray$dy, ray$dx) * 180 / pi)
+            angle_rad <- angle_degrees * pi / 180
+            outward <- ray$dx * cos(angle_rad) + ray$dy * sin(angle_rad)
+            hjust <- chosen$hjust %||% (if (outward > 0) 0 else 1)
+            vjust <- chosen$vjust %||% 0.5
+      } else {
+            angle_degrees <- theme_elements$axis_text$angle %||% 0
+            hjust <- theme_elements$axis_text$hjust %||% 0.5
+            vjust <- theme_elements$axis_text$vjust %||% 0.5
+      }
+
+      box <- measure_text_box(text, fontsize, family, face)
+
+      grob <- create_text_grob(text, position_npc$x, position_npc$y,
+                               list(angle = angle_degrees, hjust = hjust, vjust = vjust),
+                               theme_elements, is_title = FALSE, fontsize = fontsize)
+
+      list(labels = if (is.null(grob)) list() else list(grob),
+           along_ray = along_ray,
+           perpendicular = box$height)
+}
+
+# Build the tick for one collapsed axis.
+#
+# A collapsed axis has no usable free axis: the directions available in cube
+# space either run along the sightline, where the tick projects to nothing, or
+# duplicate a neighbouring axis's ticks, which makes the mark look like it
+# belongs to that axis instead. The stub is therefore built in device space,
+# pointing out of the corner along the same ray as the title, so the two read
+# as one piece of furniture belonging to neither live axis. The coincident
+# ticks collapse to the single mark they would have painted anyway.
+create_collapsed_axis_tick <- function(axis, theme_elements, panel_params, ctx,
+                                       axis_selection) {
+
+      empty <- list(ticks = list(), tick_reach = 0)
+
+      element <- theme_elements$axis_ticks
+      draw <- !is.null(element) && !inherits(element, "element_blank")
+
+      length_pt <- theme_elements$tick_length %||% 0
+      if (!is.finite(length_pt) || length_pt <= 0) return(empty)
+
+      ray <- collapsed_axis_ray(axis_selection, panel_params, ctx)
+      if (is.null(ray)) return(empty)
+
+      # Drawn at the requested length rather than foreshortened: there is no
+      # cube-space direction left to foreshorten. Depth scaling is likewise
+      # dropped, since the whole axis sits at a single depth.
+      start_npc <- pt_to_npc(ray$origin_x, ray$origin_y, ctx)
+      end_npc <- pt_to_npc(ray$origin_x + ray$dx * length_pt,
+                           ray$origin_y + ray$dy * length_pt, ctx)
+      if (is.null(start_npc) || is.null(end_npc)) return(empty)
+
+      if (!draw) return(list(ticks = list(), tick_reach = length_pt))
+
+      base_lwd <- (element$linewidth %||% 0.5) * .pt
+
+      tick_grob <- tryCatch({
+            grid::segmentsGrob(
+                  x0 = start_npc$x, y0 = start_npc$y,
+                  x1 = end_npc$x, y1 = end_npc$y,
+                  default.units = "npc",
+                  gp = grid::gpar(
+                        col = element$colour %||% "grey20",
+                        lwd = safe_lwd(base_lwd, base_lwd),
+                        lty = element$linetype %||% 1,
+                        lineend = element$lineend %||% "butt"
+                  ),
+                  name = paste0("axis.ticks.", axis, ".3d")
+            )
+      }, error = function(e) NULL)
+
+      if (is.null(tick_grob)) return(list(ticks = list(), tick_reach = length_pt))
+
+      list(ticks = list(tick_grob), tick_reach = length_pt)
+}
+
 
 # Label and title construction ---------------------------------------------
 
@@ -709,7 +983,8 @@ create_axis_labels <- function(axis, edge_gridlines, theme_elements, offsets,
 create_axis_title <- function(axis, edge_gridlines, theme_elements, offsets,
                               panel_params, rotate_labels, ctx, chosen_edge,
                               axis_uses_start, on_hull = TRUE, axis_selection = NULL,
-                              title_position = "auto", label_reach = 0) {
+                              title_position = "auto", label_reach = 0,
+                              collapsed = FALSE, collapsed_offsets = NULL) {
 
       axis_name <- panel_params$scale_info[[axis]]$name
 
@@ -731,7 +1006,11 @@ create_axis_title <- function(axis, edge_gridlines, theme_elements, offsets,
       title_family <- theme_elements$axis_title$family %||% ""
       title_face <- theme_elements$axis_title$face %||% "plain"
 
-      if (!on_hull && title_position != "center" && !is.null(axis_selection)) {
+      # A collapsed axis has no edge to run a title along and no meaningful
+      # centre, so it takes the same corner placement as an interior edge: the
+      # title sits just outside the point the axis projects to. An explicit
+      # `title_position = "center"` still wins, as it does elsewhere.
+      if ((collapsed || !on_hull) && title_position != "center" && !is.null(axis_selection)) {
             # Place title at the near (peripheral) end of the axis edge
             p1_depth <- axis_selection$edge_p1_2d$depth
             p2_depth <- axis_selection$edge_p2_2d$depth
@@ -755,19 +1034,47 @@ create_axis_title <- function(axis, edge_gridlines, theme_elements, offsets,
                   offset_dy <- offset_dy / offset_len
             }
 
-            title_offset <- offsets$title_margin
-            final_x <- title_pos_pt$x + offset_dx * title_offset
-            final_y <- title_pos_pt$y + offset_dy * title_offset
+            # A collapsed axis's stub runs along this same ray, so the title
+            # has to clear it; an interior edge's title is spaced from the edge
+            # itself, as before. When range text is present the title stacks
+            # above it instead, offset perpendicular in the text's own frame so
+            # the two lines stay parallel.
+            perpendicular_x <- 0
+            perpendicular_y <- 0
+
+            if (collapsed && !is.null(collapsed_offsets)) {
+                  title_offset <- collapsed_offsets$along_ray
+                  text_angle_rad <- readable_angle_degrees(
+                        atan2(offset_dy, offset_dx) * 180 / pi) * pi / 180
+                  perpendicular <- collapsed_offsets$perpendicular + offsets$title_margin
+                  perpendicular_x <- -sin(text_angle_rad) * perpendicular
+                  perpendicular_y <- cos(text_angle_rad) * perpendicular
+            } else if (collapsed) {
+                  title_offset <- max(label_reach, 0) + offsets$title_margin
+            } else {
+                  title_offset <- offsets$title_margin
+            }
+
+            final_x <- title_pos_pt$x + offset_dx * title_offset + perpendicular_x
+            final_y <- title_pos_pt$y + offset_dy * title_offset + perpendicular_y
 
             position_npc <- pt_to_npc(final_x, final_y, ctx)
             if (is.null(position_npc)) return(list())
 
-            edge_p1_pt <- plot_to_pt(axis_selection$edge_p1_2d$x,
-                                     axis_selection$edge_p1_2d$y, ctx)
-            edge_p2_pt <- plot_to_pt(axis_selection$edge_p2_2d$x,
-                                     axis_selection$edge_p2_2d$y, ctx)
-            axis_angle <- atan2(edge_p2_pt$y - edge_p1_pt$y,
-                                edge_p2_pt$x - edge_p1_pt$x)
+            if (collapsed) {
+                  # The edge endpoints coincide, so their difference carries no
+                  # angle. Aligning with the outward ray instead gives the title
+                  # its own orientation, distinguishing it from the titles of
+                  # the two axes that still have length.
+                  axis_angle <- atan2(offset_dy, offset_dx)
+            } else {
+                  edge_p1_pt <- plot_to_pt(axis_selection$edge_p1_2d$x,
+                                           axis_selection$edge_p1_2d$y, ctx)
+                  edge_p2_pt <- plot_to_pt(axis_selection$edge_p2_2d$x,
+                                           axis_selection$edge_p2_2d$y, ctx)
+                  axis_angle <- atan2(edge_p2_pt$y - edge_p1_pt$y,
+                                      edge_p2_pt$x - edge_p1_pt$x)
+            }
 
             rotation_info <- calculate_text_rotation_and_justification(
                   edge_gridlines[edge_gridlines$group == edge_gridlines$group[1], ],
@@ -775,10 +1082,12 @@ create_axis_title <- function(axis, edge_gridlines, theme_elements, offsets,
             )
 
             # hjust: anchor text so it extends away from the plot
-            angle_rad <- rotation_info$angle * pi / 180
-            text_dir <- c(cos(angle_rad), sin(angle_rad))
-            dot <- offset_dx * text_dir[1] + offset_dy * text_dir[2]
-            rotation_info$hjust <- if (dot > 0) 0 else 1
+            if (!isTRUE(rotation_info$hjust_chosen)) {
+                  angle_rad <- rotation_info$angle * pi / 180
+                  text_dir <- c(cos(angle_rad), sin(angle_rad))
+                  dot <- offset_dx * text_dir[1] + offset_dy * text_dir[2]
+                  rotation_info$hjust <- if (dot > 0) 0 else 1
+            }
 
             title_grob <- create_text_grob(axis_name, position_npc$x, position_npc$y,
                                            rotation_info, theme_elements,
@@ -907,9 +1216,33 @@ render_axis_text <- function(self, panel_params, theme, panel_width_pt, panel_he
                   axis_uses_start <- determine_endpoint_preference_by_boundary(chosen_edge, edge_gridlines)
                   axis_angle <- calculate_axis_angle(edge_gridlines, axis_uses_start)
 
+                  # An axis parallel to the sightline projects to a point. Its
+                  # gridlines still have length on whichever face carries them,
+                  # so the angle derived from them is noise rather than the
+                  # axis's own direction; NA keeps it from being used as one.
+                  axis_collapsed <- axis_is_collapsed(axis_selection, ctx)
+                  if (axis_collapsed) axis_angle <- NA_real_
+
+                  # Per-axis blanking. The global flags above only see the
+                  # parent elements, so `axis.text.y = element_blank()` reaches
+                  # this loop as an element with no properties and would
+                  # otherwise render at every inherited default.
+                  draw_text <- should_render_axis_text && !isTRUE(theme_elements_axis$text_blank)
+                  draw_title <- should_render_axis_title && !isTRUE(theme_elements_axis$title_blank)
+                  collapsed_offsets <- NULL
+
                   # Ticks first: label clearance is measured from the tick tip,
                   # and the drawn extent is only known once projected.
-                  if (!is.null(panel_params$grid_standard)) {
+                  if (axis_collapsed) {
+                        tick_result <- create_collapsed_axis_tick(
+                              axis, theme_elements_axis, panel_params, ctx,
+                              axis_selection)
+
+                        tick_reach <- tick_result$tick_reach
+                        if (should_render_axis_ticks) {
+                              all_ticks <- c(all_ticks, tick_result$ticks)
+                        }
+                  } else if (!is.null(panel_params$grid_standard)) {
                         standard_gridlines <- panel_params$grid_standard[
                               panel_params$grid_standard$face == chosen_face &
                                     panel_params$grid_standard$break_axis == axis, ]
@@ -928,7 +1261,15 @@ render_axis_text <- function(self, panel_params, theme, panel_width_pt, panel_he
                         }
                   }
 
-                  if (should_render_axis_text) {
+                  if (draw_text && axis_collapsed) {
+                        text_result <- create_collapsed_axis_text(
+                              axis, theme_elements_axis, panel_params, ctx,
+                              axis_selection, self$rotate_labels, tick_reach, offsets)
+
+                        all_labels <- c(all_labels, text_result$labels)
+                        label_reach <- max(tick_reach, 0)
+                        if (length(text_result$labels) > 0) collapsed_offsets <- text_result
+                  } else if (draw_text) {
                         label_result <- create_axis_labels(axis, edge_gridlines, theme_elements_axis,
                                                            offsets, panel_params, self$rotate_labels,
                                                            ctx, chosen_edge, axis_uses_start,
@@ -940,13 +1281,14 @@ render_axis_text <- function(self, panel_params, theme, panel_width_pt, panel_he
                         label_reach <- max(tick_reach, 0)
                   }
 
-                  if (should_render_axis_title) {
+                  if (draw_title) {
                         title_result <- create_axis_title(axis, edge_gridlines, theme_elements_axis,
                                                           offsets, panel_params, self$rotate_labels,
                                                           ctx, chosen_edge, axis_uses_start,
                                                           on_hull, axis_selection,
                                                           self$title_position %||% "auto",
-                                                          label_reach)
+                                                          label_reach, axis_collapsed,
+                                                          collapsed_offsets)
                         all_titles <- c(all_titles, title_result)
                   }
             }

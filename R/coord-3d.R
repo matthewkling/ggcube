@@ -58,6 +58,16 @@
 #' @param rotate_labels Logical indicating whether axis labels (text and titles) should automatically
 #'   rotate to align with the projected axis directions. When \code{FALSE}, uses theme
 #'   text and title angle settings.
+#'
+#'   Automatic rotation also sets its own justification, since \code{vjust} would
+#'   push text perpendicular to the axis it belongs to and \code{hjust} decides
+#'   which end of the edge the text hangs off. A \code{vjust} or \code{hjust} set
+#'   in the theme still takes precedence. "Set" means differing from the value the
+#'   element inherits from \code{\link[ggplot2]{theme_grey}}, so assigning a value
+#'   that happens to equal the inherited one has no effect. Note also that
+#'   \code{theme(axis.text = ...)} does not reach the x axis, whose
+#'   \code{vjust} and \code{hjust} are given explicitly by \code{theme_grey()};
+#'   use \code{axis.text.x} for that axis.
 #' @param scale_depth Controls how axis-related elements scale with viewing
 #'   distance under perspective projection, in which objects nearer the viewer are drawn
 #'   larger. Accepts:
@@ -98,6 +108,17 @@
 #'   here as well as adding [light()] to the plot is an error. Use `NULL` to
 #'   disable lighting, or `light("none")` for an equivalent lighting object.
 #' @param ... Additional arguments reserved for internal use.
+#'
+#' @section Collapsed axes:
+#'
+#' An axis parallel to the viewing direction projects to a single point rather
+#' than a line. This happens under \code{persp = FALSE} if the view is
+#' square to a cube face, and is approached as \code{dist} grows. Every break
+#' then falls in the same place, so tick labels would stack into an illegible
+#' pile. In this situation, an axis is drawn as a single diagonal tick at the
+#' corner it collapses to, and the pile of tick labels is replaced with a bracketed
+#' summary of the axis range. You can remove the summary with
+#' \code{theme(axis.text.y = element_blank())}, for example.
 #'
 #' @examples
 #' # base plot used in examples
@@ -1051,6 +1072,53 @@ is_theme_void_like <- function(theme_obj) {
       return(blank_count >= 3)
 }
 
+# A continuous scale's transformation object, or NULL when it has none usable.
+scale_transformation <- function(scale_obj) {
+      trans <- tryCatch(scale_obj$get_transformation(), error = function(e) NULL)
+      if (is.null(trans)) trans <- tryCatch(scale_obj$trans, error = function(e) NULL)
+      if (is.null(trans)) return(NULL)
+      if (!is.function(trans$transform) || !is.function(trans$inverse)) return(NULL)
+      trans
+}
+
+# Round a data range outward to the precision the axis breaks are shown at.
+#
+# Break spacing sets the precision because it is what the labels beside it are
+# drawn at: a range printed to more decimals than the ticks looks like a
+# different quantity, and one printed to fewer can claim a span the data does
+# not have. Rounding outward rather than to nearest keeps the reported
+# interval containing the data. Spacing is used only to choose the number of
+# decimals, never to snap the endpoints to break multiples, which would
+# overstate the range by up to a whole break.
+round_range_outward <- function(limits, breaks) {
+      finite_breaks <- breaks[is.finite(breaks)]
+
+      step <- NA_real_
+      if (length(finite_breaks) >= 2) {
+            gaps <- diff(sort(finite_breaks))
+            gaps <- gaps[gaps > 0]
+            if (length(gaps) > 0) step <- min(gaps)
+      }
+
+      if (!is.finite(step) || step <= 0) {
+            # No usable spacing: fall back to three significant digits of the
+            # span, which is about what a reader can take in anyway.
+            span <- abs(diff(limits))
+            if (!is.finite(span) || span == 0) return(limits)
+            step <- 10^(floor(log10(span)) - 2)
+      }
+
+      digits <- max(0, -floor(log10(step)))
+      unit <- 10^(-digits)
+
+      # The nudges absorb binary representation error, so that a limit already
+      # sitting on the rounding grid is not pushed a whole unit outward.
+      lower <- floor(limits[1] / unit + 1e-9) * unit
+      upper <- ceiling(limits[2] / unit - 1e-9) * unit
+
+      c(round(lower, digits), round(upper, digits))
+}
+
 get_scale_info <- function(scale_obj, expand = TRUE, axis_name = NULL) {
 
       default_expansion <- utils::getFromNamespace("default_expansion", "ggplot2")
@@ -1089,7 +1157,59 @@ get_scale_info <- function(scale_obj, expand = TRUE, axis_name = NULL) {
       # Get the scale name if axis_name is provided
       scale_name <- if (!is.null(axis_name)) get_scale_names(scale_obj, axis_name) else NULL
 
+      # Labels for the unexpanded data range, formatted by the scale itself so
+      # that a collapsed axis can report its extent in the same notation as its
+      # breaks. Discrete scales are described by their levels instead, and not
+      # every scale labels values that aren't breaks, hence both guards.
+      #
+      # Rounding happens in data space rather than transformed space: on a
+      # log10 axis a tidy interval in transformed space back-transforms into
+      # values like 50.11872, whereas rounding the data range itself gives the
+      # same figures the breaks are drawn from.
+      transformation <- scale_transformation(scale_obj)
+      data_limits <- limits
+      range_labels <- NULL
+
+      if (is.numeric(limits) && length(limits) == 2 && all(is.finite(limits))) {
+            untransformed <- tryCatch({
+                  if (is.null(transformation)) {
+                        list(limits = limits, breaks = valid_breaks)
+                  } else {
+                        list(limits = transformation$inverse(limits),
+                             breaks = transformation$inverse(valid_breaks))
+                  }
+            }, error = function(e) NULL)
+
+            usable <- !is.null(untransformed) &&
+                  is.numeric(untransformed$limits) &&
+                  length(untransformed$limits) == 2 &&
+                  all(is.finite(untransformed$limits))
+
+            if (usable) {
+                  data_limits <- untransformed$limits
+                  rounded <- round_range_outward(data_limits, untransformed$breaks)
+                  label_at <- if (is.null(transformation)) {
+                        rounded
+                  } else {
+                        tryCatch(transformation$transform(rounded), error = function(e) NULL)
+                  }
+            } else {
+                  label_at <- limits
+            }
+
+            if (!is.null(label_at)) {
+                  range_labels <- tryCatch(as.character(scale_obj$get_labels(label_at)),
+                                           error = function(e) NULL)
+            }
+            if (!is.null(range_labels) &&
+                (length(range_labels) != 2 || anyNA(range_labels))) {
+                  range_labels <- NULL
+            }
+      }
+
       result <- list(limits = expanded_range,
+                     data_limits = data_limits,
+                     range_labels = range_labels,
                      breaks = valid_breaks,
                      labels = valid_labels)
 

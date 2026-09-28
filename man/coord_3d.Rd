@@ -84,7 +84,17 @@ end of the axis, outside the plot area.
 
 \item{rotate_labels}{Logical indicating whether axis labels (text and titles) should automatically
 rotate to align with the projected axis directions. When \code{FALSE}, uses theme
-text and title angle settings.}
+text and title angle settings.
+
+Automatic rotation also sets its own justification, since \code{vjust} would
+push text perpendicular to the axis it belongs to and \code{hjust} decides
+which end of the edge the text hangs off. A \code{vjust} or \code{hjust} set
+in the theme still takes precedence. "Set" means differing from the value the
+element inherits from \code{\link[ggplot2]{theme_grey}}, so assigning a value
+that happens to equal the inherited one has no effect. Note also that
+\code{theme(axis.text = ...)} does not reach the x axis, whose
+\code{vjust} and \code{hjust} are given explicitly by \code{theme_grey()};
+use \code{axis.text.x} for that axis.}
 
 \item{scales}{Character string specifying aspect ratio behavior:
 \itemize{
@@ -144,6 +154,19 @@ This is the essential core component of any plot made with \code{ggcube}.
 It supports rotation, perspective projection, and options for controlling plot
 aspect ratios, panel selection, axis label placement, and lighting.
 }
+\section{Collapsed axes}{
+
+
+An axis parallel to the viewing direction projects to a single point rather
+than a line. This happens under \code{persp = FALSE} if the view is
+square to a cube face, and is approached as \code{dist} grows. Every break
+then falls in the same place, so tick labels would stack into an illegible
+pile. In this situation, an axis is drawn as a single diagonal tick at the
+corner it collapses to, and the pile of tick labels is replaced with a bracketed
+summary of the axis range. You can remove the summary with
+\code{theme(axis.text.y = element_blank())}, for example.
+}
+
 \examples{
 # base plot used in examples
 p <- ggplot() +
