@@ -172,6 +172,7 @@ kde2d <- function(x, y, eval_x, eval_y, h) {
 #' @inheritParams polygon_params
 #' @inheritParams light_param
 #' @inheritParams position_param
+#' @inheritParams annotate_params
 #'
 #' @section Aesthetics:
 #' `stat_density_3d()` requires the following aesthetics from input data:
@@ -250,6 +251,7 @@ geom_density_3d <- function(mapping = NULL, data = NULL,
                             stat = "density_3d",
                             position = "identity",
                             ...,
+                            annotate = NULL,
                             grid = "rectangle", n = 40, direction = "x", trim = TRUE,
                             h = NULL, adjust = 1,
                             pad = 0.1,
@@ -261,7 +263,7 @@ geom_density_3d <- function(mapping = NULL, data = NULL,
 
       layer(data = data, mapping = mapping, stat = get_proto(stat, "stat"), geom = GeomSurface3D,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
-            params = list(n = n, grid = grid, direction = direction, trim = trim,
+            params = list(annotate = annotate, n = n, grid = grid, direction = direction, trim = trim,
                           force_convex = force_convex, cull_backfaces = cull_backfaces,
                           sort_method = sort_method, scale_depth = scale_depth,
                           h = h, adjust = adjust, pad = pad, min_ndensity = min_ndensity,

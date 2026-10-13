@@ -196,10 +196,12 @@ stat_surface_3d <- function(mapping = NULL, data = NULL,
 #'   "auto" (default), "grid", or "delaunay".
 #' @param grid Tile geometry for regular grids: "rectangle" (default),
 #'   "right1", or "right2".
+#' @inheritParams annotate_params
 #' @export
 geom_surface_3d <- function(mapping = NULL, data = NULL,
                             stat = "surface_3d", position = "identity",
                             ...,
+                            annotate = NULL,
                             method = "auto",
                             grid = NULL,
                             cull_backfaces = FALSE,
@@ -220,6 +222,7 @@ geom_surface_3d <- function(mapping = NULL, data = NULL,
             show.legend = show.legend,
             inherit.aes = inherit.aes,
             params = list(
+                  annotate = annotate,
                   method = method,
                   grid = grid,
                   cull_backfaces = cull_backfaces,

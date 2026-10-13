@@ -645,12 +645,19 @@ pw_render_order <- function(data,
       grp_idx <- split(seq_along(grp), grp)
       grp_idx <- grp_idx[ugrp]
 
-      if (has_prim) {
-            prim_vec <- data$.prim
-            prim_lookup <- vapply(grp_idx, function(idx) prim_vec[idx[1]], character(1))
+      # Primitive type per group. Groups without one (e.g. in point layers,
+      # whose types are assigned only when rendering) are typed by their
+      # vertex count: 1 = point, 2 = segment, 3+ = polygon.
+      prim_lookup <- if (has_prim) {
+            vapply(grp_idx, function(idx) data$.prim[idx[1]], character(1))
       } else {
-            prim_lookup <- rep("polygon", length(ugrp))
-            names(prim_lookup) <- ugrp
+            setNames(rep(NA_character_, length(ugrp)), ugrp)
+      }
+      untyped <- is.na(prim_lookup)
+      if (any(untyped)) {
+            n_vert <- lengths(grp_idx)[untyped]
+            prim_lookup[untyped] <- ifelse(n_vert == 1, "point",
+                                           ifelse(n_vert == 2, "segment", "polygon"))
       }
 
       grp_data <- lapply(grp_idx, function(idx) {

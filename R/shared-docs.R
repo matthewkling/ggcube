@@ -40,6 +40,16 @@ NULL
 NULL
 
 
+#' Annotation parameter
+#'
+#' @param annotate An [annotate_3d()] specification, or a list of them, to draw
+#'   within this layer. Annotations are depth-sorted together with the layer's
+#'   own geometry, so they can pass in front of and behind it correctly.
+#' @name annotate_params
+#' @keywords internal
+NULL
+
+
 #' Depth scaling parameter
 #'
 #' Generic wording for layers whose depth-scaled property is something other

@@ -17,6 +17,8 @@ GeomPoint3D <- ggproto("GeomPoint3D", GeomPoint,
 
                              validate_coord3d(coord)
 
+                             data <- prepare_annotations(data, panel_params, annotate)
+
                              # Seed annotation rows with columns the point pipeline expects
                              # (coord$transform calls points_to_circles which needs these)
                              if (".ann" %in% names(data) && any(!is.na(data$.ann) & data$.ann)) {
@@ -33,7 +35,6 @@ GeomPoint3D <- ggproto("GeomPoint3D", GeomPoint,
 
                              # Point-specific preprocessing
                              data$ref_circle_radius <- data$ref_circle_radius / 100
-                             data <- prepare_annotations(data, panel_params)
                              sort_method <- match.arg(sort_method, c("auto", "pairwise", "painter"))
                              data$.sort_method <- sort_method
                              coords <- coord$transform(data, panel_params)
@@ -395,6 +396,7 @@ generate_point_elements <- function(data, raw_points,
 #' @param inherit.aes If `FALSE`, overrides the default aesthetics.
 #' @inheritParams sort_params
 #' @inheritParams depth_params
+#' @inheritParams annotate_params
 #' @param raw_points Logical indicating whether to show the original 3D points.
 #'   Default is `TRUE`.
 #' @param ref_lines Logical indicating whether to show reference lines projecting
@@ -494,6 +496,7 @@ generate_point_elements <- function(data, raw_points,
 geom_point_3d <- function(mapping = NULL, data = NULL,
                           stat = StatPoint3D, position = "identity",
                           ...,
+                          annotate = NULL,
                           na.rm = FALSE,
                           sort_method = "painter",
                           scale_depth = TRUE,
@@ -528,6 +531,7 @@ geom_point_3d <- function(mapping = NULL, data = NULL,
             data = data, mapping = mapping, stat = get_proto(stat, "stat"), geom = GeomPoint3D,
             position = position,  show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(
+                  annotate = annotate,
                   na.rm = na.rm,
                   sort_method = sort_method,
                   scale_depth = scale_depth,

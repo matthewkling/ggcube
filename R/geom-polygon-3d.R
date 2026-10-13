@@ -29,9 +29,8 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                                # Parameter validation
                                validate_coord3d(coord)
 
-                               # Resolve annotation sentinels that need panel range info
-                               # (no-op for v1 types; will expand plane extents when added)
-                               data <- prepare_annotations(data, panel_params)
+                               # Add annotations that span the panel (built from its limits)
+                               data <- prepare_annotations(data, panel_params, annotate)
 
                                # Transform data
                                sort_method <- match.arg(sort_method, c("auto", "pairwise", "painter"))
@@ -119,6 +118,7 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
 #' @inheritParams polygon_params
 #' @inheritParams light_param
 #' @inheritParams position_param
+#' @inheritParams annotate_params
 #'
 #' @section Aesthetics:
 #' `geom_polygon_3d()` requires:
@@ -175,6 +175,7 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
 geom_polygon_3d <- function(mapping = NULL, data = NULL, stat = StatIdentity3D,
                             position = "identity",
                             ...,
+                            annotate = NULL,
                             rule = "evenodd",
                             sort_method = "auto", scale_depth = TRUE, force_convex = FALSE,
                             cull_backfaces = FALSE,
@@ -184,7 +185,7 @@ geom_polygon_3d <- function(mapping = NULL, data = NULL, stat = StatIdentity3D,
       layer(
             geom = GeomPolygon3D, mapping = mapping, data = data, stat = get_proto(stat, "stat"),
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
-            params = list(rule = rule,
+            params = list(annotate = annotate, rule = rule,
                           sort_method = sort_method,
                           scale_depth = scale_depth,
                           force_convex = force_convex,

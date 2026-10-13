@@ -10,6 +10,7 @@ geom_text_3d(
   data = NULL,
   position = "identity",
   ...,
+  annotate = NULL,
   method = c("billboard", "polygon"),
   facing = "zmax",
   coord = NULL,
@@ -74,6 +75,10 @@ stat_text_3d(
 \item{position}{Position adjustment. Defaults to \code{"identity"}.}
 
 \item{...}{Other arguments passed to the layer.}
+
+\item{annotate}{An \code{\link[=annotate_3d]{annotate_3d()}} specification, or a list of them, to draw
+within this layer. Annotations are depth-sorted together with the layer's
+own geometry, so they can pass in front of and behind it correctly.}
 
 \item{method}{Rendering method: \code{"billboard"} (default) for flat camera-facing
 text, or \code{"polygon"} for 3D-oriented filled text.}

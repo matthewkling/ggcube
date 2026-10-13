@@ -11,6 +11,7 @@ geom_path_3d(
   stat = StatPath3D,
   position = "identity",
   ...,
+  annotate = NULL,
   sort_method = "painter",
   scale_depth = TRUE,
   arrow = NULL,
@@ -46,6 +47,10 @@ coordinates. Grouping aesthetics determine separate paths.}
 \item{position}{Position adjustment, defaults to "identity".}
 
 \item{...}{Other arguments passed on to \code{\link[ggplot2:layer]{ggplot2::layer()}}.}
+
+\item{annotate}{An \code{\link[=annotate_3d]{annotate_3d()}} specification, or a list of them, to draw
+within this layer. Annotations are depth-sorted together with the layer's
+own geometry, so they can pass in front of and behind it correctly.}
 
 \item{sort_method}{Depth sorting algorithm. See \link{sorting_methods} for details.}
 

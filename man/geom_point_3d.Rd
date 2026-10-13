@@ -11,6 +11,7 @@ geom_point_3d(
   stat = StatPoint3D,
   position = "identity",
   ...,
+  annotate = NULL,
   na.rm = FALSE,
   sort_method = "painter",
   scale_depth = TRUE,
@@ -78,6 +79,10 @@ the standard point aesthetics, \code{geom_point_3d()} requires x, y, and z coord
 \item{position}{Position adjustment, defaults to "identity".}
 
 \item{...}{Other arguments passed on to \code{\link[ggplot2:layer]{ggplot2::layer()}}.}
+
+\item{annotate}{An \code{\link[=annotate_3d]{annotate_3d()}} specification, or a list of them, to draw
+within this layer. Annotations are depth-sorted together with the layer's
+own geometry, so they can pass in front of and behind it correctly.}
 
 \item{na.rm}{If \code{FALSE}, missing values are removed with a warning.}
 

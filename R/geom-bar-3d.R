@@ -447,6 +447,7 @@ compute_bar_stats <- function(agg_data) {
 #' @inheritParams polygon_params
 #' @inheritParams light_param
 #' @inheritParams position_param
+#' @inheritParams annotate_params
 #'
 #' @section Aesthetics:
 #' `stat_bar_3d()` requires the following aesthetics:
@@ -509,6 +510,7 @@ geom_bar_3d <- function(mapping = NULL, data = NULL,
                         stat = StatBar3D,
                         position = "identity",
                         ...,
+                        annotate = NULL,
                         bins = 10, binwidth = NULL, drop = TRUE,
                         width = 1.0, faces = "all",
                         light = NULL,
@@ -518,7 +520,7 @@ geom_bar_3d <- function(mapping = NULL, data = NULL,
 
       layer(data = data, mapping = mapping, stat = get_proto(stat, "stat"), geom = GeomPolygon3D,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
-            params = list(na.rm = na.rm, bins = bins, binwidth = binwidth, drop = drop,
+            params = list(annotate = annotate, na.rm = na.rm, bins = bins, binwidth = binwidth, drop = drop,
                           width = width, faces = faces, light = light,
                           force_convex = force_convex, cull_backfaces = cull_backfaces,
                           sort_method = sort_method, scale_depth = scale_depth,

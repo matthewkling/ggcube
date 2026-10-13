@@ -218,6 +218,7 @@ create_cols <- function(data, x_spacing, y_spacing, width, selected_faces) {
 #' @inheritParams polygon_params
 #' @inheritParams light_param
 #' @inheritParams position_param
+#' @inheritParams annotate_params
 #'
 #' @section Aesthetics:
 #' `stat_col_3d()` requires the following aesthetics:
@@ -276,6 +277,7 @@ geom_col_3d <- function(mapping = NULL, data = NULL,
                         stat = StatCol3D,
                         position = "identity",
                         ...,
+                        annotate = NULL,
                         width = 1.0, faces = "all", zmin = NULL,
                         light = NULL,
                         cull_backfaces = TRUE, sort_method = NULL,
@@ -284,7 +286,7 @@ geom_col_3d <- function(mapping = NULL, data = NULL,
 
       layer(data = data, mapping = mapping, stat = get_proto(stat, "stat"), geom = GeomPolygon3D,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
-            params = list(na.rm = na.rm, width = width, faces = faces, light = light, zmin = zmin,
+            params = list(annotate = annotate, na.rm = na.rm, width = width, faces = faces, light = light, zmin = zmin,
                           force_convex = force_convex, cull_backfaces = cull_backfaces,
                           sort_method = sort_method, scale_depth = scale_depth,
                           ...)

@@ -549,6 +549,27 @@ compute_light_in_coord <- function(data, standardized_coords, scale_ranges, scal
       # Filter to polygon groups only — points and segments don't have
       # meaningful surface normals and should not receive lighting
       has_prim <- ".prim" %in% names(data)
+
+      # Annotation polygons (e.g. planes) don't share the layer's geometry, so
+      # they get normals from their own vertices rather than the layer's
+      # normal method, and are lit separately
+      ann_poly <- has_prim && ".ann" %in% names(data)
+      if (ann_poly) {
+            ann_poly <- data$.ann %in% TRUE & (is.na(data$.prim) | data$.prim == "polygon")
+            if (any(ann_poly)) {
+                  ann_lit <- light_annotation_polygons(
+                        data[ann_poly, , drop = FALSE],
+                        standardized_coords[ann_poly, , drop = FALSE],
+                        light, camera_directional, proj)
+                  if (all(ann_poly)) return(ann_lit)
+                  rest <- compute_light_in_coord(data[!ann_poly, , drop = FALSE],
+                                                 standardized_coords[!ann_poly, , drop = FALSE],
+                                                 scale_ranges, scales, ratio, proj)
+                  out <- bind_rows(rest, ann_lit)
+                  return(out[order(c(which(!ann_poly), which(ann_poly))), , drop = FALSE])
+            }
+      }
+
       if (has_prim) {
             poly_mask <- is.na(data$.prim) | data$.prim == "polygon"
       } else {
@@ -724,6 +745,58 @@ compute_surface_gradients_from_vertices <- function(data) {
             select(group, dzdx, dzdy)
 
       return(gradients)
+}
+
+
+#' Light annotation polygons
+#'
+#' Annotation polygons such as planes are flat sheets, so they are lit from
+#' whichever side faces the viewer: each face's normal comes from its own
+#' vertices (Newell's method, in scene space) and is flipped toward the
+#' viewer before the layer's lighting model is applied.
+#'
+#' @param data Annotation polygon rows.
+#' @param standardized_coords Their standardized (scene-space) coordinates.
+#' @param light Resolved lighting specification.
+#' @param camera_directional Whether lighting is camera-anchored directional.
+#' @param proj Projection parameters.
+#' @return `data` with lighting columns added.
+#' @keywords internal
+#' @noRd
+light_annotation_polygons <- function(data, standardized_coords, light,
+                                      camera_directional, proj) {
+      poly_data <- data
+      poly_data$x <- standardized_coords$x
+      poly_data$y <- standardized_coords$y
+      poly_data$z <- standardized_coords$z
+
+      faces <- poly_data %>% group_by(group) %>% slice(1) %>% ungroup()
+      face_centers <- calculate_face_centers(poly_data)
+      eye <- eye_in_cube_space(proj)
+
+      normals <- t(vapply(faces$group, function(g) {
+            pts <- as.matrix(poly_data[poly_data$group == g, c("x", "y", "z")])
+            pl <- polygon_plane(pts)
+            if (is.null(pl)) return(c(0, 0, 1))
+            n <- pl$normal
+            if (!is.null(eye)) {
+                  toward <- if (eye$persp) eye$v - colMeans(pts) else eye$v
+                  if (sum(n * toward) < 0) n <- -n
+            }
+            n
+      }, numeric(3)))
+      if (camera_directional) normals <- rotate_normals_to_camera(normals, proj)
+
+      faces <- apply_surface_light(faces, normals, face_centers, light)
+
+      out <- data[, !names(data) %in% c("normal_x", "normal_y", "normal_z"), drop = FALSE]
+      out <- left_join(out, faces, by = join_by(group))
+      if (light$method == "rgb") out$light <- I(out$light)
+      out$shade_enabled <- light$shade
+      out$shade_strength <- light$shade_strength
+      out$shade_mode <- light$shade_mode
+      out$lighting_method <- light$method
+      out
 }
 
 

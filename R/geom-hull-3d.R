@@ -314,6 +314,7 @@ StatHull3D <- ggproto("StatHull3D", Stat,
 #' @inheritParams light_param
 #' @inheritParams polygon_params
 #' @inheritParams position_param
+#' @inheritParams annotate_params
 #'
 #' @section Grouping:
 #' Hulls respect ggplot2 grouping aesthetics. To create separate hulls for different
@@ -394,13 +395,14 @@ geom_hull_3d <- function(mapping = NULL, data = NULL,
                          stat = StatHull3D,
                          position = "identity",
                          ...,
+                         annotate = NULL,
                          method = "convex", radius = NULL, singular = FALSE, light = NULL,
                          cull_backfaces = TRUE, sort_method = NULL, scale_depth = TRUE,
                          inherit.aes = TRUE, show.legend = TRUE) {
 
       layer(data = data, mapping = mapping, stat = get_proto(stat, "stat"), geom = GeomPolygon3D,
             position = position, inherit.aes = inherit.aes, show.legend = show.legend,
-            params = list(method = method, radius = radius, singular = singular, light = light,
+            params = list(annotate = annotate, method = method, radius = radius, singular = singular, light = light,
                           cull_backfaces = cull_backfaces, sort_method = sort_method, scale_depth = scale_depth,
                           ...)
       )

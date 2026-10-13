@@ -77,6 +77,7 @@ GeomRidgeline3D <- ggproto("GeomRidgeline3D", GeomPolygon3D,
 #' @inheritParams ridgeline_params
 #' @inheritParams polygon_params
 #' @inheritParams light_param
+#' @inheritParams annotate_params
 #'
 #' @return A `Layer` object that can be added to a ggplot.
 #'
@@ -123,6 +124,7 @@ GeomRidgeline3D <- ggproto("GeomRidgeline3D", GeomPolygon3D,
 geom_ridgeline_3d <- function(mapping = NULL, data = NULL,
                               stat = "identity_3d", position = "identity",
                               ...,
+                              annotate = NULL,
                               direction = "x",
                               base = NULL,
                               cull_backfaces = FALSE,
@@ -143,6 +145,7 @@ geom_ridgeline_3d <- function(mapping = NULL, data = NULL,
             show.legend = show.legend,
             inherit.aes = inherit.aes,
             params = list(
+                  annotate = annotate,
                   direction = direction,
                   base = base,
                   cull_backfaces = cull_backfaces,

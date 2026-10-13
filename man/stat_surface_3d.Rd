@@ -24,6 +24,7 @@ geom_surface_3d(
   stat = "surface_3d",
   position = "identity",
   ...,
+  annotate = NULL,
   method = "auto",
   grid = NULL,
   cull_backfaces = FALSE,
@@ -70,6 +71,10 @@ which takes precedence.}
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics.}
 
 \item{stat}{Statistical transformation to use on the data. Defaults to \code{"surface_3d"}.}
+
+\item{annotate}{An \code{\link[=annotate_3d]{annotate_3d()}} specification, or a list of them, to draw
+within this layer. Annotations are depth-sorted together with the layer's
+own geometry, so they can pass in front of and behind it correctly.}
 
 \item{method}{Tessellation method passed to \code{\link[=geom_surface_3d]{geom_surface_3d()}}:
 "auto" (default), "grid", or "delaunay".}

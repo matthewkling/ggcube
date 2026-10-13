@@ -11,6 +11,7 @@ geom_voxel_3d(
   stat = StatVoxel3D,
   position = "identity",
   ...,
+  annotate = NULL,
   width = 1,
   faces = "all",
   light = NULL,
@@ -53,6 +54,10 @@ onto one 2D surface, use \code{position_on_face()}.}
 
 \item{...}{Other arguments passed on to the layer function (typically GeomPolygon3D), such as
 aesthetics like \code{colour}, \code{fill}, \code{linewidth}, \code{annotate = annotate_3d(...)}, etc.}
+
+\item{annotate}{An \code{\link[=annotate_3d]{annotate_3d()}} specification, or a list of them, to draw
+within this layer. Annotations are depth-sorted together with the layer's
+own geometry, so they can pass in front of and behind it correctly.}
 
 \item{width}{Numeric value controlling box width as a fraction of grid spacing.
 Default is 1.0 (volumes touch each other). Use 0.8 for small gaps, 1.2 for overlap.

@@ -387,6 +387,24 @@ edge_chains <- function(x, y, keep) {
 }
 
 
+#' Normalize a font face to a form grid accepts
+#'
+#' Font faces arrive as numbers (1-4) or names, and binding annotation rows
+#' onto layer data can coerce numbers to strings such as `"1"`, which grid
+#' rejects. Numeric values, including numeric strings, are mapped to names.
+#'
+#' @param x Font face value(s).
+#' @return Character vector of font face names.
+#' @keywords internal
+#' @noRd
+as_fontface <- function(x) {
+      faces <- c("plain", "bold", "italic", "bold.italic")
+      num <- suppressWarnings(as.integer(x))
+      ifelse(!is.na(num) & num %in% 1:4, faces[pmax(1L, pmin(4L, num))],
+             as.character(x))
+}
+
+
 #' Render point primitives
 #'
 #' Each group is a single point. Points are rendered in a single vectorized
@@ -503,36 +521,73 @@ render_segments <- function(data, arrow = NULL, lineend = "butt") {
       lty <- if ("linetype" %in% names(start_rows)) start_rows$linetype else 1
       lty <- rep_len(lty, nrow(start_rows))
 
-      draw <- function(i, arrow_i) {
+      arrows <- segment_arrows(start_rows, arrow)
+      ends <- segment_arrow_ends(start_rows, arrows$arrows)
+
+      draw <- function(i) {
+            k <- i[1]
+            arrow_i <- if (ends[k] == "none") NULL else arrow_with_ends(arrows$arrows[[k]], ends[k])
+            gp <- grid::gpar(
+                  col = start_rows$colour[i],
+                  lwd = start_rows$linewidth[i] * .pt,
+                  lty = lty[i],
+                  lineend = lineend,
+                  alpha = ifelse(is.na(start_rows$alpha[i]), 1, start_rows$alpha[i])
+            )
+            if (!is.null(arrow_i) && arrows$filled[k]) gp$fill <- start_rows$colour[i]
             grid::segmentsGrob(
                   x0 = start_rows$x[i], y0 = start_rows$y[i],
                   x1 = end_rows$x[i], y1 = end_rows$y[i],
                   default.units = "npc",
                   arrow = arrow_i,
-                  gp = grid::gpar(
-                        col = start_rows$colour[i],
-                        lwd = start_rows$linewidth[i] * .pt,
-                        lty = lty[i],
-                        lineend = lineend,
-                        alpha = ifelse(is.na(start_rows$alpha[i]), 1, start_rows$alpha[i])
-                  )
+                  gp = gp
             )
       }
 
-      ends <- segment_arrow_ends(start_rows, arrow)
-      if (length(unique(ends)) == 1) {
-            return(draw(seq_len(nrow(start_rows)),
-                        if (ends[1] == "none") NULL else arrow_with_ends(arrow, ends[1])))
-      }
-
-      # Pieces of split segments differ in which ends carry arrowheads. Draw
+      # Segments can differ in their arrows (an annotation's own arrow, or
+      # pieces of a split segment carrying only some of its arrowheads). Draw
       # each run of consecutive segments sharing an arrow configuration as one
       # grob, so the depth-sorted drawing order is preserved.
-      run <- cumsum(c(TRUE, ends[-1] != ends[-length(ends)]))
-      grobs <- lapply(split(seq_along(ends), run), function(i) {
-            draw(i, if (ends[i[1]] == "none") NULL else arrow_with_ends(arrow, ends[i[1]]))
-      })
+      key <- vapply(seq_along(ends), function(k) {
+            if (ends[k] == "none") return("none")
+            a <- arrows$arrows[[k]]
+            paste(ends[k], a$angle, format(a$length), a$type, arrows$filled[k])
+      }, character(1))
+
+      if (length(unique(key)) == 1) return(draw(seq_along(key)))
+
+      run <- cumsum(c(TRUE, key[-1] != key[-length(key)]))
+      grobs <- lapply(split(seq_along(key), run), draw)
       do.call(grid::grobTree, unname(grobs))
+}
+
+
+#' Arrow for each segment
+#'
+#' Annotation segments carry their own arrow in `.arrow_*` columns (see
+#' `add_arrow_columns()`), which takes precedence over the layer's arrow.
+#' Closed arrowheads from annotations are filled with the segment colour, as
+#' in ggplot2; the layer's own arrows keep grid's default fill.
+#'
+#' @param start_rows Start rows of the segments, one per segment.
+#' @param arrow The layer's arrow from [grid::arrow()], or NULL.
+#' @return List with `arrows` (an arrow or NULL per segment) and logical
+#'   `filled`.
+#' @keywords internal
+#' @noRd
+segment_arrows <- function(start_rows, arrow) {
+      n <- nrow(start_rows)
+      own <- if (".arrow_type" %in% names(start_rows)) !is.na(start_rows$.arrow_type) else rep(FALSE, n)
+      arrows <- rep(list(arrow), n)
+      for (k in which(own)) {
+            arrows[[k]] <- grid::arrow(
+                  angle = start_rows$.arrow_angle[k],
+                  length = grid::unit(start_rows$.arrow_length[k], start_rows$.arrow_unit[k]),
+                  ends = c("first", "last", "both")[start_rows$.arrow_ends[k]],
+                  type = c("open", "closed")[start_rows$.arrow_type[k]]
+            )
+      }
+      list(arrows = arrows, filled = own)
 }
 
 
@@ -541,20 +596,17 @@ render_segments <- function(data, arrow = NULL, lineend = "butt") {
 #' A segment split where it passes through polygons keeps the arrowheads of
 #' the original segment on the pieces holding its ends: an arrowhead at the
 #' start only on the first piece (`.seg_first`), and at the end only on the
-#' last piece (`.seg_last`). Unsplit segments keep the arrow as given.
+#' last piece (`.seg_last`). Unsplit segments keep their arrow as given.
 #'
 #' @param start_rows Start rows of the segments, one per segment.
-#' @param arrow Arrow specification from [grid::arrow()], or NULL.
+#' @param arrows List of arrows (or NULL) per segment, from `segment_arrows()`.
 #' @return Character vector of `"first"`, `"last"`, `"both"`, or `"none"`.
 #' @keywords internal
 #' @noRd
-segment_arrow_ends <- function(start_rows, arrow) {
-      n <- nrow(start_rows)
-      if (is.null(arrow)) return(rep("none", n))
-
-      code <- rep_len(arrow$ends, n)                 # 1 = first, 2 = last, 3 = both
-      first <- code %in% c(1, 3)
-      last <- code %in% c(2, 3)
+segment_arrow_ends <- function(start_rows, arrows) {
+      code <- vapply(arrows, function(a) if (is.null(a)) 0L else as.integer(a$ends[1]), integer(1))
+      first <- code %in% c(1L, 3L)                     # 1 = first, 2 = last, 3 = both
+      last <- code %in% c(2L, 3L)
 
       is_first <- if (".seg_first" %in% names(start_rows)) start_rows$.seg_first else NA
       is_last <- if (".seg_last" %in% names(start_rows)) start_rows$.seg_last else NA
@@ -605,7 +657,7 @@ render_texts <- function(data) {
                         col = alpha(labels$colour[i], alpha[i]),
                         fontsize = fontsize[i],
                         fontfamily = labels$family[i] %||% "",
-                        fontface = labels$fontface[i] %||% 1,
+                        fontface = as_fontface(labels$fontface[i] %||% 1),
                         lineheight = labels$lineheight[i] %||% 1.2
                   )
             )

@@ -924,7 +924,21 @@ GeomText3DBillboard <- ggproto("GeomText3DBillboard", Geom,
                                      lineheight = 1.2
                                ),
 
+                               setup_data = function(data, params) {
+                                     setup_annotations(data, params)
+                               },
+
+                               # Annotation rows other than text have no label, so they are
+                               # exempt from the missing-value check on required aesthetics
+                               handle_na = function(self, data, params) {
+                                     is_ann <- if (".ann" %in% names(data)) data$.ann %in% TRUE else rep(FALSE, nrow(data))
+                                     if (!any(is_ann)) return(ggproto_parent(Geom, self)$handle_na(data, params))
+                                     kept <- ggproto_parent(Geom, self)$handle_na(data[!is_ann, , drop = FALSE], params)
+                                     dplyr::bind_rows(kept, data[is_ann, , drop = FALSE])
+                               },
+
                                draw_panel = function(data, panel_params, coord,
+                                                     annotate = NULL,
                                                      scale_depth = TRUE,
                                                      na.rm = FALSE) {
 
@@ -935,46 +949,24 @@ GeomText3DBillboard <- ggproto("GeomText3DBillboard", Geom,
                                            return(grid::nullGrob())
                                      }
 
-                                     # Transform through coord (3D -> 2D projection)
+                                     data <- prepare_annotations(data, panel_params, annotate)
+
+                                     # Each label is its own primitive, numbered in data order
+                                     # so that depth ties keep their original order. Annotation
+                                     # rows keep their own types and groups.
+                                     is_ann <- if (".ann" %in% names(data)) data$.ann %in% TRUE else rep(FALSE, nrow(data))
+                                     if (!".prim" %in% names(data)) data$.prim <- NA_character_
+                                     data$.prim[!is_ann] <- "text"
+                                     data$group <- as.character(data$group)
+                                     data$group[!is_ann] <- sprintf("text__%08d", seq_len(sum(!is_ann)))
+
+                                     # Transform through coord (3D -> 2D projection), sorted back to front
                                      coords <- coord$transform(data, panel_params)
 
-                                     # Scale sizes by depth if enabled
-                                     text_strength <- resolve_layer_scale_depth(scale_depth)
-                                     if (text_strength > 0 && "depth_scale" %in% names(coords)) {
-                                           coords$size <- coords$size *
-                                                 apply_depth_strength(coords$depth_scale, text_strength)
-                                     }
+                                     coords <- apply_annotation_styles(coords)
+                                     coords <- apply_depth_scaling(coords, scale_depth)
 
-                                     # Convert size from mm to grid fontsize
-                                     # ggplot2 size aesthetic is in mm, we need to convert appropriately
-                                     fontsize_pts <- coords$size * .pt
-
-                                     # Sort by depth (back to front) for proper rendering order
-                                     if ("depth" %in% names(coords)) {
-                                           coords <- coords[order(coords$depth, decreasing = TRUE), ]
-                                     }
-
-                                     # Create text grobs for each label
-                                     grobs <- lapply(seq_len(nrow(coords)), function(i) {
-                                           grid::textGrob(
-                                                 label = coords$label[i],
-                                                 x = coords$x[i],
-                                                 y = coords$y[i],
-                                                 default.units = "npc",
-                                                 hjust = coords$hjust[i],
-                                                 vjust = coords$vjust[i],
-                                                 rot = coords$angle[i],
-                                                 gp = grid::gpar(
-                                                       col = alpha(coords$colour[i], coords$alpha[i]),
-                                                       fontsize = fontsize_pts[i],
-                                                       fontfamily = coords$family[i],
-                                                       fontface = coords$fontface[i],
-                                                       lineheight = coords$lineheight[i]
-                                                 )
-                                           )
-                                     })
-
-                                     do.call(grid::grobTree, grobs)
+                                     render_mixed_grobs(coords)
                                },
 
                                draw_key = ggplot2::draw_key_text
@@ -1103,6 +1095,7 @@ GeomText3DBillboard <- ggproto("GeomText3DBillboard", Geom,
 #' @param tolerance (Polygon method only) Bezier curve tolerance for text
 #'   outlines. Lower values give smoother curves but more vertices.
 #' @inheritParams depth_params
+#' @inheritParams annotate_params
 #' @param na.rm If TRUE, silently remove missing values.
 #' @param show.legend Logical. Should this layer be included in the legends?
 #' @param inherit.aes If TRUE, inherit aesthetics from the plot's default.
@@ -1171,6 +1164,7 @@ GeomText3DBillboard <- ggproto("GeomText3DBillboard", Geom,
 geom_text_3d <- function(mapping = NULL, data = NULL,
                          position = "identity",
                          ...,
+                         annotate = NULL,
                          method = c("billboard", "polygon"),
                          # Polygon parameters
                          facing = "zmax",
@@ -1232,6 +1226,7 @@ geom_text_3d <- function(mapping = NULL, data = NULL,
                   show.legend = show.legend,
                   inherit.aes = inherit.aes,
                   params = list(
+                        annotate = annotate,
                         nudge_x = nudge_x,
                         nudge_y = nudge_y,
                         nudge_z = nudge_z,
@@ -1258,6 +1253,7 @@ geom_text_3d <- function(mapping = NULL, data = NULL,
                   show.legend = show.legend,
                   inherit.aes = inherit.aes,
                   params = list(
+                        annotate = annotate,
                         facing = facing,
                         coord = coord,
                         aspect_adjust = aspect_adjust,

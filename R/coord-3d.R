@@ -1354,6 +1354,12 @@ process_backfaces <- function(data) {
                   ungroup()
       }
 
+      # Annotation polygons (e.g. planes) are sheets rather than closed solids,
+      # so they are never culled or shaded as back faces
+      if (".ann" %in% names(data)) {
+            data$.backface[data$.ann %in% TRUE] <- FALSE
+      }
+
       # Apply culling if requested
       if("cull_backfaces" %in% names(data) && data$cull_backfaces[1]) {
             data <- filter(data, !.backface)

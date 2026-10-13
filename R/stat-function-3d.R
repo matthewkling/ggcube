@@ -108,6 +108,7 @@ StatFunction3D <- ggproto("StatFunction3D", Stat,
 #' @inheritParams ridgeline_params
 #' @inheritParams polygon_params
 #' @inheritParams light_param
+#' @inheritParams annotate_params
 #'
 #' @return A `Layer` object that can be added to a ggplot.
 #'
@@ -187,6 +188,7 @@ stat_function_3d <- function(mapping = NULL, data = ensure_nonempty_data,
 geom_function_3d <- function(mapping = NULL, data = ensure_nonempty_data,
                              stat = "function_3d", position = "identity",
                              ...,
+                             annotate = NULL,
                              fun = NULL,
                              xlim = NULL, ylim = NULL,
                              grid = "rectangle", n = 40, direction = "x", trim = TRUE,
@@ -205,6 +207,7 @@ geom_function_3d <- function(mapping = NULL, data = ensure_nonempty_data,
             show.legend = show.legend,
             inherit.aes = inherit.aes,
             params = list(
+                  annotate = annotate,
                   fun = fun,
                   xlim = xlim, ylim = ylim,
                   grid = grid, n = n, direction = direction, trim = trim,

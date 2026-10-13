@@ -171,8 +171,8 @@ test_that("ray_sample_order resolves disjoint primitives that straddle each othe
             expect_true(is.na(ggcube:::plane_side_order(g_poly, g_seg, ggcube:::eye_in_cube_space(proj))))
 
             m <- function(g) { r <- d[d$group == g, ]
-            cbind(x = r$x, y = r$y, z = r$depth,
-                  matrix(c(range(r$x), range(r$y), range(r$depth)), nrow(r), 6, byrow = TRUE)) }
+                  cbind(x = r$x, y = r$y, z = r$depth,
+                        matrix(c(range(r$x), range(r$y), range(r$depth)), nrow(r), 6, byrow = TRUE)) }
             mid <- ggcube:::segment_overlap_midpoint(m("plane"), m("seg"))
             expect_false(is.null(mid))
             ord <- ggcube:::ray_sample_order(g_poly, g_seg, m("plane"), m("seg"), "polygon", "segment", proj, pb)
@@ -278,4 +278,20 @@ test_that("per-piece arrow runs preserve drawing order", {
       expect_equal(ys, 1:4)
       has_arrow <- unname(unlist(lapply(g$children, function(k) rep(!is.null(k$arrow), length(k$y0)))))
       expect_equal(has_arrow, c(TRUE, FALSE, TRUE, TRUE))
+})
+
+
+test_that("pairwise sorting types untyped groups by vertex count", {
+      # Point layers assign primitive types only when rendering, so their
+      # groups reach the sort untyped, alongside typed annotation rows
+      p <- ggplot(data.frame(x = 1:3, y = 1:3, z = 1:3), aes(x, y, z)) +
+            geom_point_3d(sort_method = "pairwise", ref_lines = TRUE,
+                          annotate = annotate_3d("point", x = 2, y = 2, z = 2.5)) +
+            coord_3d()
+      expect_no_error(ggplotGrob(p))
+
+      d <- data.frame(x = c(0, 0, 1, 0, 1, 1), y = c(0, 0, 0, 1, 0, 1), depth = 1,
+                      group = c("p", "s", "s", "g", "g", "g"))
+      res <- pw_render_order(d, "depth")
+      expect_setequal(unique(res$data$group), c("p", "s", "g"))
 })

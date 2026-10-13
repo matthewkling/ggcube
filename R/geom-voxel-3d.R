@@ -205,6 +205,7 @@ convert_to_numeric <- function(data) {
 #' @inheritParams polygon_params
 #' @inheritParams light_param
 #' @inheritParams position_param
+#' @inheritParams annotate_params
 #'
 #' @section Aesthetics:
 #' Voxel 3D requires the following aesthetics:
@@ -248,6 +249,7 @@ geom_voxel_3d <- function(mapping = NULL, data = NULL,
                           stat = StatVoxel3D,
                           position = "identity",
                           ...,
+                          annotate = NULL,
                           width = 1.0, faces = "all",
                           light = NULL,
                           cull_backfaces = TRUE, sort_method = NULL,
@@ -256,7 +258,7 @@ geom_voxel_3d <- function(mapping = NULL, data = NULL,
 
       layer(data = data, mapping = mapping, stat = get_proto(stat, "stat"), geom = GeomPolygon3D,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
-            params = list(na.rm = na.rm, width = width, faces = faces, light = light,
+            params = list(annotate = annotate, na.rm = na.rm, width = width, faces = faces, light = light,
                           force_convex = force_convex, cull_backfaces = cull_backfaces,
                           sort_method = sort_method, scale_depth = scale_depth,
                           ...)

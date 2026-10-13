@@ -17,6 +17,7 @@
 #' @param inherit.aes If `FALSE`, overrides the default aesthetics.
 #' @inheritParams sort_params
 #' @inheritParams depth_params
+#' @inheritParams annotate_params
 #' @param arrow Specification for arrow heads, created by [arrow()].
 #' @param lineend Line end style, one of "round", "butt", "square".
 #'
@@ -54,6 +55,7 @@
 geom_segment_3d <- function(mapping = NULL, data = NULL,
                             stat = StatSegment3D, position = "identity",
                             ...,
+                            annotate = NULL,
                             sort_method = "painter",
                             scale_depth = TRUE, arrow = NULL, lineend = "butt",
                             na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
@@ -61,6 +63,7 @@ geom_segment_3d <- function(mapping = NULL, data = NULL,
       layer(data = data, mapping = mapping, stat = get_proto(stat, "stat"), geom = GeomSegment3D,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(
+                  annotate = annotate,
                   na.rm = na.rm,
                   sort_method = sort_method,
                   scale_depth = scale_depth,
@@ -226,7 +229,7 @@ GeomSegment3D <- ggproto("GeomSegment3D", Geom,
                                      return(grid::nullGrob())
                                }
 
-                               data <- prepare_annotations(data, panel_params)
+                               data <- prepare_annotations(data, panel_params, annotate)
 
                                sort_method <- match.arg(sort_method, c("auto", "pairwise", "painter"))
                                data$.sort_method <- sort_method

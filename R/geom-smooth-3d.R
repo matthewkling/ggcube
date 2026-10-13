@@ -380,6 +380,7 @@ gam_model <- function(){
 #' @inheritParams polygon_params
 #' @inheritParams light_param
 #' @inheritParams position_param
+#' @inheritParams annotate_params
 #'
 #' @section Aesthetics:
 #' `stat_smooth_3d()` requires the following aesthetics from input data:
@@ -472,6 +473,7 @@ gam_model <- function(){
 geom_smooth_3d <- function(mapping = NULL, data = NULL, stat = StatSmooth3D,
                            position = "identity",
                            ...,
+                           annotate = NULL,
                            method = "loess",
                            formula = NULL,
                            method.args = list(),
@@ -517,7 +519,7 @@ geom_smooth_3d <- function(mapping = NULL, data = NULL, stat = StatSmooth3D,
       layer(
             geom = GeomPolygon3D, mapping = mapping, data = data, stat = get_proto(stat, "stat"),
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
-            params = list(method = method, formula = formula, method.args = method.args,
+            params = list(annotate = annotate, method = method, formula = formula, method.args = method.args,
                           xlim = xlim, ylim = ylim, domain = domain, n = n, se = se, level = level,
                           grid = grid, direction = direction, trim = trim,
                           force_convex = force_convex, cull_backfaces = cull_backfaces,

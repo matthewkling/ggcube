@@ -11,6 +11,7 @@ geom_hull_3d(
   stat = StatHull3D,
   position = "identity",
   ...,
+  annotate = NULL,
   method = "convex",
   radius = NULL,
   singular = FALSE,
@@ -53,6 +54,10 @@ onto one 2D surface, use \code{position_on_face()}.}
 
 \item{...}{Other arguments passed on to the layer function (typically GeomPolygon3D), such as
 aesthetics like \code{colour}, \code{fill}, \code{linewidth}, \code{annotate = annotate_3d(...)}, etc.}
+
+\item{annotate}{An \code{\link[=annotate_3d]{annotate_3d()}} specification, or a list of them, to draw
+within this layer. Annotations are depth-sorted together with the layer's
+own geometry, so they can pass in front of and behind it correctly.}
 
 \item{method}{Triangulation method. Either:
 \itemize{

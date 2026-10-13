@@ -210,6 +210,7 @@ points_to_contours <- function(data,
 #'   both `bins` and `binwidth` if provided.
 #' @inheritParams polygon_params
 #' @inheritParams light_param
+#' @inheritParams annotate_params
 #'
 #' @section Aesthetics:
 #' `geom_contour_3d()` requires:
@@ -278,6 +279,7 @@ points_to_contours <- function(data,
 geom_contour_3d <- function(mapping = NULL, data = NULL,
                             stat = "surface_3d", position = "identity",
                             ...,
+                            annotate = NULL,
                             bins = 20,
                             binwidth = NULL,
                             breaks = NULL,
@@ -299,6 +301,7 @@ geom_contour_3d <- function(mapping = NULL, data = NULL,
             show.legend = show.legend,
             inherit.aes = inherit.aes,
             params = list(
+                  annotate = annotate,
                   bins = bins,
                   binwidth = binwidth,
                   breaks = breaks,

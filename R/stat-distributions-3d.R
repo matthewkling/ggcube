@@ -246,6 +246,7 @@ StatDistributions3D <- ggproto("StatDistributions3D", Stat,
 #' @inheritParams polygon_params
 #' @inheritParams light_param
 #' @inheritParams position_param
+#' @inheritParams annotate_params
 #'
 #' @section Aesthetics:
 #' `stat_distributions_3d()` understands the following aesthetics (required
@@ -385,6 +386,7 @@ geom_distributions_3d <- function(mapping = NULL, data = NULL,
                                   stat = "distributions_3d",
                                   position = "identity",
                                   ...,
+                                  annotate = NULL,
                                   direction = NULL,
                                   bw = "nrd0",
                                   adjust = 1,
@@ -413,6 +415,7 @@ geom_distributions_3d <- function(mapping = NULL, data = NULL,
             show.legend = show.legend,
             inherit.aes = inherit.aes,
             params = list(
+                  annotate = annotate,
                   direction = direction,
                   bw = bw,
                   adjust = adjust,
