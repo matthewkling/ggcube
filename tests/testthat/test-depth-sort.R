@@ -211,3 +211,71 @@ test_that("strongly_connected_components groups mutually reachable nodes", {
       expect_length(unique(comp[4:5]), 1)
       expect_length(unique(comp), 3)
 })
+
+
+# Arrowheads on split segments --------------------------------------------------
+
+test_that("split segments keep arrowheads only on the pieces holding the original ends", {
+      pl <- ggcube:::polygon_plane(tilted_plane)
+      hit <- c(0.1, -0.2, 0.42 * -0.2)
+      a <- hit - 0.15 * c(0.3, 0.2, 0.9)
+      b <- hit + 0.25 * c(0.3, 0.2, 0.9)
+      d <- rbind(scene_rows(tilted_plane, "plane", "polygon", proj_p),
+                 scene_rows(rbind(a, b), "seg", "segment", proj_p))
+      d$colour <- "black"; d$linewidth <- 0.5; d$alpha <- NA
+      out <- ggcube:::split_interpenetrating_segments(d, proj_p, pb)
+      segs <- out[out$.prim == "segment", ]
+      starts <- segs[segs$point_type == "start", ]
+      starts <- starts[order(starts$group), ]
+      expect_equal(starts$.seg_first, c(TRUE, FALSE))
+      expect_equal(starts$.seg_last, c(FALSE, TRUE))
+
+      arrow_grobs <- function(g) {
+            kids <- if (inherits(g, "gTree")) g$children else list(g)
+            Filter(function(k) !is.null(k$arrow), kids)
+      }
+      end_xy <- function(piece) unlist(segs[segs$group == piece & segs$point_type == "end", c("x", "y")])
+      start_xy <- function(piece) unlist(segs[segs$group == piece & segs$point_type == "start", c("x", "y")])
+
+      # ends = "last": one arrowhead, at the end of the last piece
+      g <- arrow_grobs(ggcube:::render_segments(segs, arrow = grid::arrow()))
+      expect_length(g, 1)
+      expect_equal(g[[1]]$arrow$ends, 2L)
+      expect_equal(c(as.numeric(g[[1]]$x1), as.numeric(g[[1]]$y1)), unname(end_xy("seg__split2")))
+
+      # ends = "both": a start arrowhead on the first piece, an end arrowhead on the last
+      g <- arrow_grobs(ggcube:::render_segments(segs, arrow = grid::arrow(ends = "both")))
+      expect_length(g, 2)
+      by_end <- setNames(g, vapply(g, function(k) k$arrow$ends, 1L))
+      expect_setequal(names(by_end), c("1", "2"))
+      expect_equal(c(as.numeric(by_end[["1"]]$x0), as.numeric(by_end[["1"]]$y0)), unname(start_xy("seg__split1")))
+      expect_equal(c(as.numeric(by_end[["2"]]$x1), as.numeric(by_end[["2"]]$y1)), unname(end_xy("seg__split2")))
+})
+
+
+test_that("unsplit segments are drawn as a single grob with the arrow unchanged", {
+      d <- data.frame(x = c(0, 1, 0, 1), y = c(0, 0, 1, 1), group = c(1, 1, 2, 2),
+                      point_type = c("start", "end", "start", "end"),
+                      colour = "black", linewidth = 0.5, alpha = NA)
+      arr <- grid::arrow(ends = "both", type = "closed")
+      g <- ggcube:::render_segments(d, arrow = arr)
+      expect_s3_class(g, "segments")
+      expect_identical(g$arrow, arr)
+      expect_null(ggcube:::render_segments(d)$arrow)
+})
+
+
+test_that("per-piece arrow runs preserve drawing order", {
+      # Draw order: a (unsplit), p1 (first piece), p2 (last piece), b (unsplit)
+      d <- data.frame(x = c(0, 1, 0, 0.5, 0.5, 1, 0, 1), y = rep(1:4, each = 2),
+                      group = rep(c("a", "p__split1", "p__split2", "b"), each = 2),
+                      point_type = rep(c("start", "end"), 4),
+                      .seg_first = rep(c(NA, TRUE, FALSE, NA), each = 2),
+                      .seg_last = rep(c(NA, FALSE, TRUE, NA), each = 2),
+                      colour = "black", linewidth = 0.5, alpha = NA)
+      g <- ggcube:::render_segments(d, arrow = grid::arrow())
+      ys <- unname(unlist(lapply(g$children, function(k) as.numeric(k$y0))))
+      expect_equal(ys, 1:4)
+      has_arrow <- unname(unlist(lapply(g$children, function(k) rep(!is.null(k$arrow), length(k$y0)))))
+      expect_equal(has_arrow, c(TRUE, FALSE, TRUE, TRUE))
+})

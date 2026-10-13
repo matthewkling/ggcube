@@ -501,20 +501,76 @@ render_segments <- function(data, arrow = NULL, lineend = "butt") {
       if (nrow(start_rows) == 0) return(grid::nullGrob())
 
       lty <- if ("linetype" %in% names(start_rows)) start_rows$linetype else 1
+      lty <- rep_len(lty, nrow(start_rows))
 
-      grid::segmentsGrob(
-            x0 = start_rows$x, y0 = start_rows$y,
-            x1 = end_rows$x, y1 = end_rows$y,
-            default.units = "npc",
-            arrow = arrow,
-            gp = grid::gpar(
-                  col = start_rows$colour,
-                  lwd = start_rows$linewidth * .pt,
-                  lty = lty,
-                  lineend = lineend,
-                  alpha = ifelse(is.na(start_rows$alpha), 1, start_rows$alpha)
+      draw <- function(i, arrow_i) {
+            grid::segmentsGrob(
+                  x0 = start_rows$x[i], y0 = start_rows$y[i],
+                  x1 = end_rows$x[i], y1 = end_rows$y[i],
+                  default.units = "npc",
+                  arrow = arrow_i,
+                  gp = grid::gpar(
+                        col = start_rows$colour[i],
+                        lwd = start_rows$linewidth[i] * .pt,
+                        lty = lty[i],
+                        lineend = lineend,
+                        alpha = ifelse(is.na(start_rows$alpha[i]), 1, start_rows$alpha[i])
+                  )
             )
-      )
+      }
+
+      ends <- segment_arrow_ends(start_rows, arrow)
+      if (length(unique(ends)) == 1) {
+            return(draw(seq_len(nrow(start_rows)),
+                        if (ends[1] == "none") NULL else arrow_with_ends(arrow, ends[1])))
+      }
+
+      # Pieces of split segments differ in which ends carry arrowheads. Draw
+      # each run of consecutive segments sharing an arrow configuration as one
+      # grob, so the depth-sorted drawing order is preserved.
+      run <- cumsum(c(TRUE, ends[-1] != ends[-length(ends)]))
+      grobs <- lapply(split(seq_along(ends), run), function(i) {
+            draw(i, if (ends[i[1]] == "none") NULL else arrow_with_ends(arrow, ends[i[1]]))
+      })
+      do.call(grid::grobTree, unname(grobs))
+}
+
+
+#' Which ends of each segment should carry an arrowhead
+#'
+#' A segment split where it passes through polygons keeps the arrowheads of
+#' the original segment on the pieces holding its ends: an arrowhead at the
+#' start only on the first piece (`.seg_first`), and at the end only on the
+#' last piece (`.seg_last`). Unsplit segments keep the arrow as given.
+#'
+#' @param start_rows Start rows of the segments, one per segment.
+#' @param arrow Arrow specification from [grid::arrow()], or NULL.
+#' @return Character vector of `"first"`, `"last"`, `"both"`, or `"none"`.
+#' @keywords internal
+#' @noRd
+segment_arrow_ends <- function(start_rows, arrow) {
+      n <- nrow(start_rows)
+      if (is.null(arrow)) return(rep("none", n))
+
+      code <- rep_len(arrow$ends, n)                 # 1 = first, 2 = last, 3 = both
+      first <- code %in% c(1, 3)
+      last <- code %in% c(2, 3)
+
+      is_first <- if (".seg_first" %in% names(start_rows)) start_rows$.seg_first else NA
+      is_last <- if (".seg_last" %in% names(start_rows)) start_rows$.seg_last else NA
+      first <- first & (is.na(is_first) | is_first)
+      last <- last & (is.na(is_last) | is_last)
+
+      ifelse(first & last, "both", ifelse(first, "first", ifelse(last, "last", "none")))
+}
+
+
+#' Copy of an arrow specification with different ends
+#' @keywords internal
+#' @noRd
+arrow_with_ends <- function(arrow, ends) {
+      arrow$ends <- match(ends, c("first", "last", "both"))
+      arrow
 }
 
 

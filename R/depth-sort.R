@@ -853,7 +853,9 @@ compute_prim_depth <- function(data) {
 #' @param proj Projection parameters, as in `panel_params$proj`.
 #' @param plot_bounds Plot bounds used for NPC scaling.
 #' @return Data frame with interpenetrating segments replaced by sub-segments
-#'   (groups suffixed `__split1`, `__split2`, ...). Other rows are unchanged.
+#'   (groups suffixed `__split1`, `__split2`, ...), flagged with `.seg_first`
+#'   and `.seg_last` to mark the pieces holding the original segment's start
+#'   and end. Other rows are unchanged.
 #' @keywords internal
 #' @noRd
 split_interpenetrating_segments <- function(data, proj, plot_bounds) {
@@ -950,6 +952,10 @@ split_interpenetrating_segments <- function(data, proj, plot_bounds) {
                   piece$.z3d <- p3[, 3]
                   piece$.new_vertex <- c(t01[1] > 0, t01[2] < 1)
                   piece$group <- paste0(start_row$group, "__split", k)
+                  # Which pieces hold the original segment's ends, so that
+                  # arrowheads are drawn only there (see render_segments())
+                  piece$.seg_first <- k == 1
+                  piece$.seg_last <- k == length(breaks) - 1
                   if (has_seg_id && !is.na(start_row$segment_id)) {
                         piece$segment_id <- start_row$segment_id + (k - 1) * 0.01
                   }
@@ -964,7 +970,10 @@ split_interpenetrating_segments <- function(data, proj, plot_bounds) {
       new_rows <- project_new_vertices(new_rows, proj, plot_bounds)
       new_rows$.new_vertex <- NULL
 
-      rbind(data[-rows_to_drop, , drop = FALSE], new_rows)
+      kept <- data[-rows_to_drop, , drop = FALSE]
+      kept$.seg_first <- rep(NA, nrow(kept))
+      kept$.seg_last <- rep(NA, nrow(kept))
+      rbind(kept, new_rows)
 }
 
 
