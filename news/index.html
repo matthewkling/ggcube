@@ -41,7 +41,10 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="ggcube-development-version">ggcube (development version)<a class="anchor" aria-label="anchor" href="#ggcube-development-version"></a></h2>
-</div>
+<ul><li>Pairwise depth sorting (<code>sort_method = "pairwise"</code>, and <code>"auto"</code> for small layers) now splits polygons that pass through one another, so intersecting planes and surfaces render with correct occlusion along their line of intersection. Outlines are drawn only along original polygon edges, not along the cuts.</li>
+<li>Pairwise sorting now orders polygons with an exact 3D test whenever one polygon lies entirely on one side of another’s plane. This fixes misordering under perspective projection that could occur with large polygons.</li>
+<li>Fixed a spurious “Cycle breaking exceeded maximum iterations” warning for pairwise-sorted layers containing a single element.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.3.0" id="ggcube-030">ggcube 0.3.0<a class="anchor" aria-label="anchor" href="#ggcube-030"></a></h2><p class="text-muted">CRAN release: 2026-09-05</p>
 <p>Changes to default behaviors, which slightly alter styling relative to prior version:</p>
