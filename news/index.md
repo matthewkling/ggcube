@@ -2,17 +2,41 @@
 
 ## ggcube (development version)
 
+- [`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md)
+  now draws axis lines from the `axis.line` theme elements, plus a new
+  `axis.line.z`. Each line runs along the cube edge carrying its axis’s
+  ticks and labels, so it appears only alongside rendered panels. Axis
+  lines are blank in most complete themes, but plots using
+  [`theme_classic()`](https://ggplot2.tidyverse.org/reference/ggtheme.html)
+  now show them. Lines run toward increasing data values, so arrows set
+  with `element_line(arrow = )` point up each axis. They are
+  depth-scaled with the cube edges, under the `"border"` key of
+  `coord_3d(scale_depth = )`.
 - Pairwise depth sorting (`sort_method = "pairwise"`, and `"auto"` for
   small layers) now splits polygons that pass through one another, so
   intersecting planes and surfaces render with correct occlusion along
   their line of intersection. Outlines are drawn only along original
   polygon edges, not along the cuts.
-- Pairwise sorting now orders polygons with an exact 3D test whenever
-  one polygon lies entirely on one side of another’s plane. This fixes
-  misordering under perspective projection that could occur with large
-  polygons.
+- Pairwise sorting now determines the order of a polygon and any element
+  overlapping it on screen (polygon, segment, point, or text) exactly
+  from their 3D geometry where possible, rather than from sampled
+  screen-space depths. This fixes misordering under perspective
+  projection, which was common for elements close to large polygons.
+- Segments that pass through polygons are now split at the exact 3D
+  crossing point. Previously, under perspective projection, most such
+  crossings went undetected and the rest were split at visibly wrong
+  positions.
+- When pairwise sorting finds cyclic overlaps, it now drops only
+  constraints that are part of a cycle. Previously it could discard many
+  unrelated constraints, and pairwise sorting of large layers is now
+  considerably faster when cycles occur.
 - Fixed a spurious “Cycle breaking exceeded maximum iterations” warning
   for pairwise-sorted layers containing a single element.
+- Fixed a bug where pairwise sorting never constrained the order of a
+  segment relative to a polygon it overlapped on screen, so segments
+  (e.g. residual lines and
+  [`annotate_3d()`](https://matthewkling.github.io/ggcube/reference/annotate_3d.md)
+  segments) could be drawn on the wrong side of polygons.
 
 ## ggcube 0.3.0
 

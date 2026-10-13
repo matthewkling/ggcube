@@ -41,9 +41,14 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="ggcube-development-version">ggcube (development version)<a class="anchor" aria-label="anchor" href="#ggcube-development-version"></a></h2>
-<ul><li>Pairwise depth sorting (<code>sort_method = "pairwise"</code>, and <code>"auto"</code> for small layers) now splits polygons that pass through one another, so intersecting planes and surfaces render with correct occlusion along their line of intersection. Outlines are drawn only along original polygon edges, not along the cuts.</li>
-<li>Pairwise sorting now orders polygons with an exact 3D test whenever one polygon lies entirely on one side of another’s plane. This fixes misordering under perspective projection that could occur with large polygons.</li>
+<ul><li>
+<code><a href="../reference/coord_3d.html">coord_3d()</a></code> now draws axis lines from the <code>axis.line</code> theme elements, plus a new <code>axis.line.z</code>. Each line runs along the cube edge carrying its axis’s ticks and labels, so it appears only alongside rendered panels. Axis lines are blank in most complete themes, but plots using <code><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_classic()</a></code> now show them. Lines run toward increasing data values, so arrows set with <code>element_line(arrow = )</code> point up each axis. They are depth-scaled with the cube edges, under the <code>"border"</code> key of <code>coord_3d(scale_depth = )</code>.</li>
+<li>Pairwise depth sorting (<code>sort_method = "pairwise"</code>, and <code>"auto"</code> for small layers) now splits polygons that pass through one another, so intersecting planes and surfaces render with correct occlusion along their line of intersection. Outlines are drawn only along original polygon edges, not along the cuts.</li>
+<li>Pairwise sorting now determines the order of a polygon and any element overlapping it on screen (polygon, segment, point, or text) exactly from their 3D geometry where possible, rather than from sampled screen-space depths. This fixes misordering under perspective projection, which was common for elements close to large polygons.</li>
+<li>Segments that pass through polygons are now split at the exact 3D crossing point. Previously, under perspective projection, most such crossings went undetected and the rest were split at visibly wrong positions.</li>
+<li>When pairwise sorting finds cyclic overlaps, it now drops only constraints that are part of a cycle. Previously it could discard many unrelated constraints, and pairwise sorting of large layers is now considerably faster when cycles occur.</li>
 <li>Fixed a spurious “Cycle breaking exceeded maximum iterations” warning for pairwise-sorted layers containing a single element.</li>
+<li>Fixed a bug where pairwise sorting never constrained the order of a segment relative to a polygon it overlapped on screen, so segments (e.g. residual lines and <code><a href="../reference/annotate_3d.html">annotate_3d()</a></code> segments) could be drawn on the wrong side of polygons.</li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.3.0" id="ggcube-030">ggcube 0.3.0<a class="anchor" aria-label="anchor" href="#ggcube-030"></a></h2><p class="text-muted">CRAN release: 2026-09-05</p>

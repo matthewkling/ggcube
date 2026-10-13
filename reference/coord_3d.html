@@ -178,8 +178,9 @@ larger. Accepts:</p><ul><li><p><code>TRUE</code> (default) or <code>FALSE</code>
 strength, <code>0</code> disables scaling, values below 1 subdue the effect and
 values above 1 exaggerate it. Negative values are an error.</p></li>
 <li><p>A named numeric vector, to set elements individually. Names are
-<code>"grid"</code> (panel gridlines), <code>"border"</code> (cube edges), and
-<code>"text"</code> (axis tick labels), after the theme elements they govern.
+<code>"grid"</code> (panel gridlines), <code>"border"</code> (cube edges and axis
+lines), <code>"ticks"</code> (axis ticks), and <code>"text"</code> (axis tick
+labels), after the theme elements they govern.
 Unnamed elements keep their default.</p></li>
 </ul><p>Strength <code>s</code> maps a depth factor <code>d</code> to <code>d^s</code>, so the effect
 scales geometrically and never produces a non-positive size. This affects axis-related

@@ -165,9 +165,9 @@ coord_3d(
     values above 1 exaggerate it. Negative values are an error.
 
   - A named numeric vector, to set elements individually. Names are
-    `"grid"` (panel gridlines), `"border"` (cube edges), and `"text"`
-    (axis tick labels), after the theme elements they govern. Unnamed
-    elements keep their default.
+    `"grid"` (panel gridlines), `"border"` (cube edges and axis lines),
+    `"ticks"` (axis ticks), and `"text"` (axis tick labels), after the
+    theme elements they govern. Unnamed elements keep their default.
 
   Strength `s` maps a depth factor `d` to `d^s`, so the effect scales
   geometrically and never produces a non-positive size. This affects

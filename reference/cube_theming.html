@@ -93,6 +93,20 @@ intact; set <code>axis.ticks.length = unit(0, "pt")</code> to close the gap as w
 Negative lengths point ticks inward, and do not displace the axis text.</p>
     </div>
     <div class="section level2">
+    <h2 id="axis-lines">Axis lines<a class="anchor" aria-label="anchor" href="#axis-lines"></a></h2>
+
+
+<ul><li><p><code>axis.line.z</code>: Styling for the z-axis line (inherits from <code>axis.line</code>)</p></li>
+<li><p><code>axis.line</code>, <code>axis.line.x</code>, <code>axis.line.y</code>: Standard styling with <code><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_line()</a></code>.</p></li>
+</ul><p>Each axis line runs the full length of the cube edge where that axis's ticks
+and labels are placed, so like them it is drawn only alongside a rendered
+panel (see the <code>panels</code> argument of <code><a href="coord_3d.html">coord_3d()</a></code>). Axis lines are blank in
+most complete themes; <code><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">ggplot2::theme_classic()</a></code> turns them on. Lines run
+from the low to the high end of their axis in data terms, so an arrow set
+with <code>element_line(arrow = )</code> points toward increasing values, including on
+reversed scales.</p>
+    </div>
+    <div class="section level2">
     <h2 id="panel-elements">Panel elements<a class="anchor" aria-label="anchor" href="#panel-elements"></a></h2>
 
 
