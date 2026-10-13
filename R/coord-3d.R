@@ -77,8 +77,9 @@
 #'       strength, \code{0} disables scaling, values below 1 subdue the effect and
 #'       values above 1 exaggerate it. Negative values are an error.
 #'     \item A named numeric vector, to set elements individually. Names are
-#'       \code{"grid"} (panel gridlines), \code{"border"} (cube edges), and
-#'       \code{"text"} (axis tick labels), after the theme elements they govern.
+#'       \code{"grid"} (panel gridlines), \code{"border"} (cube edges and axis
+#'       lines), \code{"ticks"} (axis ticks), and \code{"text"} (axis tick
+#'       labels), after the theme elements they govern.
 #'       Unnamed elements keep their default.
 #'   }
 #'   Strength \code{s} maps a depth factor \code{d} to \code{d^s}, so the effect

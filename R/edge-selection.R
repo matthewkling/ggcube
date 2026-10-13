@@ -541,8 +541,8 @@ create_manual_axis_selection <- function(axis, face1, face2, proj, visible_faces
             fixed_coords = setNames(c(edge_coords[[f1$coord]], edge_coords[[f2$coord]]),
                                     c(f1$coord, f2$coord)),
             touching_faces = c(face1, face2),
-            p1 = c(p1$x, p1$y, p1$z),
-            p2 = c(p2$x, p2$y, p2$z),
+            p1 = c(x = p1$x, y = p1$y, z = p1$z),
+            p2 = c(x = p2$x, y = p2$y, z = p2$z),
             axis = axis,
             edge_id = "manual"
       )

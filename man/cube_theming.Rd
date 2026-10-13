@@ -51,6 +51,22 @@ intact; set \code{axis.ticks.length = unit(0, "pt")} to close the gap as well.
 Negative lengths point ticks inward, and do not displace the axis text.
 }
 
+\section{Axis lines}{
+
+\itemize{
+\item \code{axis.line.z}: Styling for the z-axis line (inherits from \code{axis.line})
+\item \code{axis.line}, \code{axis.line.x}, \code{axis.line.y}: Standard styling with \code{element_line()}.
+}
+
+Each axis line runs the full length of the cube edge where that axis's ticks
+and labels are placed, so like them it is drawn only alongside a rendered
+panel (see the \code{panels} argument of \code{\link[=coord_3d]{coord_3d()}}). Axis lines are blank in
+most complete themes; \code{ggplot2::theme_classic()} turns them on. Lines run
+from the low to the high end of their axis in data terms, so an arrow set
+with \code{element_line(arrow = )} points toward increasing values, including on
+reversed scales.
+}
+
 \section{Panel elements}{
 
 \itemize{

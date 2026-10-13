@@ -39,6 +39,18 @@
 #' intact; set `axis.ticks.length = unit(0, "pt")` to close the gap as well.
 #' Negative lengths point ticks inward, and do not displace the axis text.
 #'
+#' @section Axis lines:
+#' - `axis.line.z`: Styling for the z-axis line (inherits from `axis.line`)
+#' - `axis.line`, `axis.line.x`, `axis.line.y`: Standard styling with `element_line()`.
+#'
+#' Each axis line runs the full length of the cube edge where that axis's ticks
+#' and labels are placed, so like them it is drawn only alongside a rendered
+#' panel (see the `panels` argument of [coord_3d()]). Axis lines are blank in
+#' most complete themes; `ggplot2::theme_classic()` turns them on. Lines run
+#' from the low to the high end of their axis in data terms, so an arrow set
+#' with `element_line(arrow = )` points toward increasing values, including on
+#' reversed scales.
+#'
 #' @section Panel elements:
 #' - `panel.foreground`: Styling for cube faces rendered in front of data (inherits from `panel.background`).
 #'          Foreground panels default to 20% opacity to keep them from obscuring the data; this can be

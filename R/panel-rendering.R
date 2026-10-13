@@ -469,13 +469,16 @@ render_cube <- function(self, panel_params, theme, layer = "background"){
             should_render_axis_text <- theme_elements$show_axis_text %||% !inherits(calc_element("axis.text", theme), "element_blank")
             should_render_axis_title <- theme_elements$show_axis_title %||% !inherits(calc_element("axis.title", theme), "element_blank")
             should_render_axis_ticks <- theme_elements$show_axis_ticks %||% !inherits(calc_element("axis.ticks", theme), "element_blank")
+            should_render_axis_line <- any_axis_line(theme)
 
-            if (should_render_axis_text || should_render_axis_title || should_render_axis_ticks) {
+            if (should_render_axis_text || should_render_axis_title ||
+                should_render_axis_ticks || should_render_axis_line) {
                   furniture <- axis_furniture_grob(
                         self, panel_params, theme,
                         show_text = should_render_axis_text,
                         show_title = should_render_axis_title,
                         show_ticks = should_render_axis_ticks,
+                        show_lines = should_render_axis_line,
                         name = paste0("axis.furniture.", layer, ".3d")
                   )
                   bg <- grid::grobTree(bg, furniture,

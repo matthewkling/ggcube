@@ -20,6 +20,11 @@
                   axis.title.z = el_def("element_text", "axis.title"),
                   axis.ticks.z = el_def("element_line", "axis.ticks"),
 
+                  # Registered in the element tree only, so that it inherits
+                  # blankness from axis.line in themes like theme_grey(); a
+                  # registered default would draw a z line on its own.
+                  axis.line.z = el_def("element_line", "axis.line"),
+
                   # Registered in the element tree only. A unit-valued element
                   # has no sensible standalone default, so the value comes from
                   # axis.ticks.length by inheritance.

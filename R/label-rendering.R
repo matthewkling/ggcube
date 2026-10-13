@@ -97,12 +97,84 @@ extract_axis_theme_elements <- function(axis, theme) {
             axis_title = axis_title_theme,
             parent_text = parent_text_theme,
             axis_ticks = axis_ticks_theme,
+            axis_line = resolve_axis_line_element(axis, theme),
             text_blank = axis_text_blank,
             title_blank = axis_title_blank,
             text_justification = element_justification(axis_text_theme, default_axis_text),
             title_justification = element_justification(axis_title_theme, default_axis_title),
             tick_length = resolve_tick_length_points(axis, theme)
       ))
+}
+
+# Axis line element for one axis. Per-axis elements are checked individually
+# because they can be set while the parent `axis.line` is blank, as in
+# theme_grey() + theme(axis.line.x = element_line()).
+resolve_axis_line_element <- function(axis, theme) {
+      element <- tryCatch(calc_element(paste0("axis.line.", axis), theme),
+                          error = function(e) NULL)
+      if (is.null(element)) {
+            element <- tryCatch(calc_element("axis.line", theme),
+                                error = function(e) NULL)
+      }
+      element
+}
+
+# Does any axis draw a line?
+any_axis_line <- function(theme) {
+      any(vapply(c("x", "y", "z"), function(axis) {
+            !element_is_blank(resolve_axis_line_element(axis, theme))
+      }, logical(1)))
+}
+
+# Build the axis line for one axis.
+#
+# The line runs the full length of the cube edge carrying the axis's ticks and
+# labels, so it is drawn only where that furniture is, i.e. on a rendered
+# panel. It runs from the low to the high end of the axis in data terms, so
+# an arrow set via element_line(arrow = ) points toward increasing values,
+# including on reversed scales.
+create_axis_line <- function(axis, axis_selection, element, panel_params, ctx,
+                             effective_ratios, line_depth_strength = 1) {
+      if (element_is_blank(element)) return(NULL)
+
+      edge <- axis_selection$edge
+      if (is.null(edge$p1) || is.null(edge$p2)) return(NULL)
+
+      coords <- c("x", "y", "z")
+      ends <- rbind(edge$p1[coords], edge$p2[coords])
+      ends <- sweep(ends, 2, effective_ratios, `*`)
+      if (isTRUE(panel_params$scale_flips[[axis]])) ends <- ends[2:1, ]
+
+      projected <- transform_3d_standard(
+            data.frame(x = ends[, 1], y = ends[, 2], z = ends[, 3]),
+            panel_params$proj)
+
+      pb <- ctx$plot_bounds
+      x <- (projected$x - pb[1]) / (pb[2] - pb[1])
+      y <- (projected$y - pb[3]) / (pb[4] - pb[3])
+      if (!all(is.finite(c(x, y)))) return(NULL)
+
+      depth <- mean(projected$depth_scale)
+      if (!is.finite(depth) || depth <= 0) depth <- 1
+
+      base_lwd <- (element$linewidth %||% 0.5) * .pt
+      colour <- element$colour %||% "black"
+      arrow <- if (inherits(element$arrow, "arrow")) element$arrow else NULL
+
+      grid::segmentsGrob(
+            x0 = x[1], y0 = y[1], x1 = x[2], y1 = y[2],
+            default.units = "npc",
+            arrow = arrow,
+            gp = grid::gpar(
+                  col = colour,
+                  fill = element$arrow.fill %||% colour,
+                  lwd = safe_lwd(base_lwd * apply_depth_strength(depth, line_depth_strength),
+                                 base_lwd),
+                  lty = element$linetype %||% 1,
+                  lineend = element$lineend %||% "butt"
+            ),
+            name = paste0("axis.line.", axis, ".3d")
+      )
 }
 
 # Resolve axis text and title margins, in points. Placement converts these to
@@ -1163,14 +1235,17 @@ render_axis_text <- function(self, panel_params, theme, panel_width_pt, panel_he
             all_labels <- list()
             all_titles <- list()
             all_ticks <- list()
+            all_lines <- list()
 
             theme_elements <- panel_params$theme_elements %||% list()
             should_render_axis_text <- theme_elements$show_axis_text %||% !inherits(calc_element("axis.text", theme), "element_blank")
             should_render_axis_title <- theme_elements$show_axis_title %||% !inherits(calc_element("axis.title", theme), "element_blank")
             should_render_axis_ticks <- theme_elements$show_axis_ticks %||% !inherits(calc_element("axis.ticks", theme), "element_blank")
+            should_render_axis_line <- any_axis_line(theme)
 
-            if (!should_render_axis_text && !should_render_axis_title && !should_render_axis_ticks) {
-                  return(list(labels = list(), titles = list(), ticks = list()))
+            if (!should_render_axis_text && !should_render_axis_title &&
+                !should_render_axis_ticks && !should_render_axis_line) {
+                  return(list(labels = list(), titles = list(), ticks = list(), lines = list()))
             }
 
             ctx <- make_device_context(panel_params$plot_bounds,
@@ -1222,6 +1297,14 @@ render_axis_text <- function(self, panel_params, theme, panel_width_pt, panel_he
                   # axis's own direction; NA keeps it from being used as one.
                   axis_collapsed <- axis_is_collapsed(axis_selection, ctx)
                   if (axis_collapsed) axis_angle <- NA_real_
+
+                  # A collapsed axis projects to a point, so has no line to draw
+                  if (should_render_axis_line && !axis_collapsed) {
+                        all_lines <- c(all_lines, list(create_axis_line(
+                              axis, axis_selection, theme_elements_axis$axis_line,
+                              panel_params, ctx, effective_ratios,
+                              depth_strength(self, "border"))))
+                  }
 
                   # Per-axis blanking. The global flags above only see the
                   # parent elements, so `axis.text.y = element_blank()` reaches
@@ -1293,10 +1376,11 @@ render_axis_text <- function(self, panel_params, theme, panel_width_pt, panel_he
                   }
             }
 
-            return(list(labels = all_labels, titles = all_titles, ticks = all_ticks))
+            return(list(labels = all_labels, titles = all_titles, ticks = all_ticks,
+                        lines = all_lines))
       }, error = function(e) {
             warning("Axis label/title rendering failed: ", e$message)
-            return(list(labels = list(), titles = list(), ticks = list()))
+            return(list(labels = list(), titles = list(), ticks = list(), lines = list()))
       })
 }
 
@@ -1304,7 +1388,8 @@ render_axis_text <- function(self, panel_params, theme, panel_width_pt, panel_he
 # happens in makeContent(), inside the panel viewport, where the panel's real
 # dimensions and text metrics are available.
 axis_furniture_grob <- function(self, panel_params, theme, show_text, show_title,
-                                show_ticks = TRUE, name = "axis.furniture.3d") {
+                                show_ticks = TRUE, show_lines = FALSE,
+                                name = "axis.furniture.3d") {
       grid::gTree(
             coord = self,
             panel_params = panel_params,
@@ -1312,6 +1397,7 @@ axis_furniture_grob <- function(self, panel_params, theme, show_text, show_title
             show_text = show_text,
             show_title = show_title,
             show_ticks = show_ticks,
+            show_lines = show_lines,
             name = name,
             cl = "ggcube_axis_furniture"
       )
@@ -1333,6 +1419,14 @@ makeContent.ggcube_axis_furniture <- function(x) {
                                          panel_width_pt, panel_height_pt)
 
             kids <- list()
+
+            if (isTRUE(x$show_lines)) {
+                  lines <- elements$lines[!vapply(elements$lines, is.null, logical(1))]
+                  if (length(lines) > 0) {
+                        kids[[length(kids) + 1]] <- do.call(
+                              grid::grobTree, c(list(name = "axis.lines.3d"), lines))
+                  }
+            }
 
             if (isTRUE(x$show_ticks)) {
                   ticks <- elements$ticks[!vapply(elements$ticks, is.null, logical(1))]
