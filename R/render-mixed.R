@@ -191,6 +191,10 @@ render_single_type <- function(data, prim_type, rule, arrow, lineend) {
 render_polygons <- function(data, rule = "evenodd") {
       if (nrow(data) == 0) return(grid::nullGrob())
 
+      if (".cut_edge" %in% names(data) && any(data$.cut_edge, na.rm = TRUE)) {
+            return(render_cut_polygons(data, rule))
+      }
+
       # Detect subgroup column
       has_subgroup <- any(c("subgroup", ".subgroup") %in% names(data))
       if (has_subgroup) {
@@ -262,6 +266,124 @@ render_polygons <- function(data, rule = "evenodd") {
                   )
             )
       }
+}
+
+
+#' Render polygons that include pieces of split polygons
+#'
+#' Pieces produced by `split_intersecting_polygons()` carry a per-vertex
+#' `.cut_edge` flag. Stroking their full outlines would draw the cut lines,
+#' so each cut piece is drawn as a fill-only polygon followed by a polyline
+#' along its original (uncut) edges. Runs of consecutive uncut groups are
+#' batched through the standard polygon renderer. Draw order is preserved.
+#'
+#' @param data Polygon data with a `.cut_edge` column, depth-sorted.
+#' @param rule Fill rule passed through for uncut polygons.
+#' @return A grobTree.
+#' @keywords internal
+#' @noRd
+render_cut_polygons <- function(data, rule = "evenodd") {
+      cut_flag <- !is.na(data$.cut_edge) & data$.cut_edge
+      data$.cut_edge <- NULL
+
+      grp <- data$group
+      ugrp <- unique(grp)
+      grp_has_cut <- unname(tapply(cut_flag, factor(grp, levels = ugrp), any))
+
+      # Runs of consecutive groups sharing cut status
+      run_id <- cumsum(c(TRUE, grp_has_cut[-1] != grp_has_cut[-length(grp_has_cut)]))
+      row_run <- run_id[match(grp, ugrp)]
+
+      grobs <- list()
+      for (r in unique(run_id)) {
+            rows <- which(row_run == r)
+            if (!grp_has_cut[which(run_id == r)[1]]) {
+                  grobs <- c(grobs, list(render_polygons(data[rows, , drop = FALSE], rule)))
+                  next
+            }
+            for (g in ugrp[run_id == r]) {
+                  gi <- rows[grp[rows] == g]
+                  grobs <- c(grobs, list(cut_polygon_grob(data[gi, , drop = FALSE],
+                                                          cut_flag[gi])))
+            }
+      }
+      do.call(grid::grobTree, grobs)
+}
+
+
+#' Grob for a single cut polygon piece: fill plus original-edge outline
+#'
+#' @param d Rows of one polygon group, in vertex order.
+#' @param flag Logical vector; `flag[k]` is TRUE if the edge from vertex k to
+#'   vertex k+1 (wrapping) lies along a cut.
+#' @return A grob.
+#' @keywords internal
+#' @noRd
+cut_polygon_grob <- function(d, flag) {
+      alpha <- d$alpha[1]
+      if (is.na(alpha)) alpha <- 1
+      lty <- if ("linetype" %in% names(d) && !is.na(d$linetype[1])) d$linetype[1] else 1
+
+      grobs <- list(grid::polygonGrob(
+            x = d$x, y = d$y, default.units = "npc",
+            gp = grid::gpar(col = NA, fill = d$fill[1], alpha = alpha)
+      ))
+
+      # Opaque pieces: a hairline in the fill colour along cut edges hides the
+      # anti-aliasing gap between abutting pieces. Skipped for translucent
+      # fills, where the overlap would darken the cut line.
+      if (alpha >= 1 && !is.na(d$fill[1]) && any(flag)) {
+            cut <- edge_chains(d$x, d$y, flag)
+            grobs <- c(grobs, list(grid::polylineGrob(
+                  x = cut$x, y = cut$y, id = cut$id, default.units = "npc",
+                  gp = grid::gpar(col = d$fill[1], lwd = 0.5, lineend = "round")
+            )))
+      }
+
+      if (!is.na(d$colour[1]) && !all(flag)) {
+            orig <- edge_chains(d$x, d$y, !flag)
+            grobs <- c(grobs, list(grid::polylineGrob(
+                  x = orig$x, y = orig$y, id = orig$id, default.units = "npc",
+                  gp = grid::gpar(col = d$colour[1], lwd = d$linewidth[1] * .pt,
+                                  lty = lty, alpha = alpha)
+            )))
+      }
+
+      if (length(grobs) == 1) return(grobs[[1]])
+      do.call(grid::grobTree, grobs)
+}
+
+
+#' Chains of consecutive selected edges around a closed ring
+#'
+#' @param x,y Ring vertex coordinates.
+#' @param keep Logical vector; `keep[k]` selects the edge from vertex k to
+#'   vertex k+1 (wrapping).
+#' @return List with `x`, `y`, and polyline `id` vectors.
+#' @keywords internal
+#' @noRd
+edge_chains <- function(x, y, keep) {
+      n <- length(x)
+      if (all(keep)) return(list(x = c(x, x[1]), y = c(y, y[1]), id = rep(1L, n + 1)))
+      start <- which(!keep)[1] %% n + 1
+      ord <- c(start:n, seq_len(start - 1))
+      xs <- numeric(0); ys <- numeric(0); ids <- integer(0)
+      chain <- 0L
+      in_chain <- FALSE
+      for (k in ord) {
+            if (!keep[k]) {
+                  in_chain <- FALSE
+                  next
+            }
+            nk <- if (k == n) 1L else k + 1L
+            if (!in_chain) {
+                  chain <- chain + 1L
+                  xs <- c(xs, x[k]); ys <- c(ys, y[k]); ids <- c(ids, chain)
+                  in_chain <- TRUE
+            }
+            xs <- c(xs, x[nk]); ys <- c(ys, y[nk]); ids <- c(ids, chain)
+      }
+      list(x = xs, y = ys, id = ids)
 }
 
 

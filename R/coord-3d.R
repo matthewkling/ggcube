@@ -737,6 +737,12 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                          result <- bind_cols(select(result, x, y, z, depth, depth_scale),
                                              select(data, -x, -y, -z))
 
+                         # Retain standardized cube-space coordinates for exact
+                         # 3D geometry during depth sorting (dropped by sort_by_depth)
+                         result$.x3d <- data$x
+                         result$.y3d <- data$y
+                         result$.z3d <- data$z
+
                          # Apply final coordinate transformation to fit plot bounds
                          result <- scale_to_npc_coordinates(result, plot_bounds = panel_params$plot_bounds)
 
@@ -744,7 +750,8 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                          result <- process_backfaces(result)
 
                          # Hierarchical depth sorting
-                         result <- sort_by_depth(result)
+                         result <- sort_by_depth(result, proj = panel_params$proj,
+                                                 plot_bounds = panel_params$plot_bounds)
 
                          # convert group to integer to prevent downstream rendering errors
                          result$group <- as.integer(factor(result$group))

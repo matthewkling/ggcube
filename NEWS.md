@@ -1,5 +1,9 @@
 # ggcube (development version)
 
+* Pairwise depth sorting (`sort_method = "pairwise"`, and `"auto"` for small layers) now splits polygons that pass through one another, so intersecting planes and surfaces render with correct occlusion along their line of intersection. Outlines are drawn only along original polygon edges, not along the cuts.
+* Pairwise sorting now orders polygons with an exact 3D test whenever one polygon lies entirely on one side of another's plane. This fixes misordering under perspective projection that could occur with large polygons.
+* Fixed a spurious "Cycle breaking exceeded maximum iterations" warning for pairwise-sorted layers containing a single element.
+
 # ggcube 0.3.0
 
 Changes to default behaviors, which slightly alter styling relative to prior version:
