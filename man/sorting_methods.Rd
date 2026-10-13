@@ -15,12 +15,16 @@ polygons, points, segments, and text. Default varies by geometry type.
 viewer after rotation) of their vertices. This is fast, but can give incorrect
 results when primitives overlap in screen space at different depths.}
 \item{\code{"pairwise"}}{A more intensive sorting algorithm that compares every
-pair of elements to determine occlusion order. Uses type-specific geometric
-tests: polygon overlap detection for polygon-polygon pairs, point-in-polygon
-tests for polygon-point pairs, line clipping for polygon-segment pairs, and
-line intersection for segment-segment pairs. When elements are coplanar,
-smaller primitives (points, segments) render on top of larger ones (polygons).
-Slower but more accurate.}
+pair of elements to determine occlusion order. Polygons that pass through
+one another are first split along their line of intersection, and segments
+that pass through polygons are split where they cross them. Wherever a
+polygon and another element overlap on screen, their order is then
+determined exactly from their 3D geometry where possible, and otherwise
+estimated from depths sampled in the region of overlap. When elements are
+coplanar, smaller primitives (points, segments) render on top of larger ones
+(polygons). Results are exact for planar polygons; non-planar polygons
+(e.g. tiles of a curved surface on a rectangular grid) are treated as
+approximately planar. Slower but more accurate.}
 \item{\code{"auto"}}{Uses pairwise if the data has fewer than 500 rows, and
 painter otherwise.}
 }
