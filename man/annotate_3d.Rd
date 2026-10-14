@@ -8,7 +8,8 @@ annotate_3d(type, ...)
 }
 \arguments{
 \item{type}{Character string specifying the annotation type. One of
-\code{"point"}, \code{"text"}, \code{"segment"}, \code{"axes"}, or \code{"plane"}.}
+\code{"point"}, \code{"text"}, \code{"segment"}, \code{"polygon"}, \code{"axes"}, \code{"line"}, or
+\code{"plane"}.}
 
 \item{...}{Type-specific parameters. See Details.}
 }
@@ -34,6 +35,12 @@ Requires \code{x}, \code{y}, \code{z}. Optional styling: \code{colour}/\code{col
 
 Requires \code{x}, \code{y}, \code{z}, \code{label}. Optional styling: \code{colour}/\code{color}, \code{size},
 \code{alpha}, \code{family}, \code{fontface}, \code{hjust}, \code{vjust}, \code{angle}, \code{lineheight}.
+
+By default, labels are depth-sorted with the rest of the layer, so geometry
+in front of a label hides it. Set \code{on_top = TRUE} to draw labels on top of
+everything else in the layer instead, keeping them legible wherever they
+fall (e.g. labels in a diagram). \code{on_top} can be a vector, to set it per
+label.
 }
 
 \subsection{Segment annotations}{
@@ -44,6 +51,21 @@ specification created by \code{\link[grid:arrow]{grid::arrow()}} that applies to
 the call. Closed arrowheads are filled with the segment colour. When a
 segment passes through a polygon and is split, its arrowheads stay at the
 segment's original ends.
+}
+
+\subsection{Polygon annotations}{
+
+Requires \code{x}, \code{y}, \code{z} giving the polygon's vertices in order. To draw
+several polygons in one call, give \code{group}, with one value per vertex;
+vertices sharing a value form one polygon. Each polygon needs at least 3
+vertices. Optional styling: \code{fill} (default \code{"grey60"}), \code{alpha} (default
+\code{0.5}), \code{colour}/\code{color} for the outline (default \code{"grey30"}), \code{linewidth},
+\code{linetype}. Styling values apply per polygon, so they must have length 1 or
+one value per polygon, in the order the groups first appear.
+
+Like planes, polygons are lit from whichever side faces the viewer and are
+never removed by back-face culling. Unlike planes, they are placed in data
+space, so they expand the plot's axis ranges to fit.
 }
 
 \subsection{Axes annotations}{
@@ -61,18 +83,53 @@ Axes are built from the panel's limits when the plot is drawn, so unlike
 other annotations they don't expand the plot's axis ranges.
 }
 
+\subsection{Line annotations}{
+
+Draws infinite lines, clipped to the panel. Each line passes through the
+point \code{x}, \code{y}, \code{z} (each defaulting to \code{0}) in the direction \code{dx}, \code{dy},
+\code{dz} (each defaulting to \code{0}, but not all zero). For example, the line
+spanned by a vector \code{v} is \code{annotate_3d("line", dx = v[1], dy = v[2], dz = v[3])}, and the vertical line at \code{x = 1}, \code{y = 2} is
+\code{annotate_3d("line", x = 1, y = 2, dz = 1)}. All values can be vectors to
+draw several lines. Optional styling: \code{colour}/\code{color}, \code{linewidth},
+\code{linetype}, \code{alpha}.
+
+Like axes and planes, lines are built from the panel's limits and don't
+expand the plot's axis ranges. A line that misses the panel entirely is
+skipped with a warning.
+}
+
 \subsection{Plane annotations}{
 
-Draws the plane \code{a * x + b * y + c * z = d}, clipped to the panel. Requires
-\code{a}, \code{b}, \code{c} (not all zero); \code{d} defaults to \code{0}. All four can be vectors
-to draw several planes, matching the rows of a linear system \verb{A x = d}.
-Optional styling: \code{fill} (default \code{"grey60"}), \code{alpha} (default \code{0.5}),
+Draws planes, clipped to the panel. Each call gives its planes in one of
+three forms:
+\itemize{
+\item \code{xintercept}, \code{yintercept}, or \code{zintercept}: planes perpendicular to an
+axis, e.g. \code{yintercept = 2} for the plane \code{y = 2}. Only one of the three
+can be used per call.
+\item \code{intercept}, \code{slope_x}, \code{slope_y}: the plane
+\code{z = intercept + slope_x * x + slope_y * y}, as from a linear model.
+Any of the three left out defaults to \code{0}.
+\item \code{a}, \code{b}, \code{c}, \code{d}: the general form \code{a * x + b * y + c * z = d}.
+Requires \code{a}, \code{b}, \code{c} (not all zero); \code{d} defaults to \code{0}.
+}
+
+Values can be vectors to draw several planes. In the general form, for
+example, \code{a}, \code{b}, \code{c} can be the columns of a matrix \code{A} and \code{d} the
+right-hand side of the linear system \verb{A x = d}. To combine forms, use
+separate \code{annotate_3d()} calls. Optional styling: \code{fill} (default \code{"grey60"}), \code{alpha} (default \code{0.5}),
 \code{colour}/\code{color} for the outline (default none), \code{linewidth}, \code{linetype}.
 
 Like axes, planes are built from the panel's limits and don't expand the
 plot's axis ranges. They are lit like the layer's other polygons, from
 whichever side faces the viewer, and are never removed by back-face
 culling. A plane that misses the panel entirely is skipped with a warning.
+
+Planes are large, so they rarely sort correctly by average depth alone.
+Use pairwise sorting (\code{sort_method = "pairwise"}, or \code{"auto"} for small
+layers) to split planes where they intersect each other or the layer's
+polygons, and to hide the elements they pass in front of. Layers that
+default to painter sorting, such as \code{\link[=geom_point_3d]{geom_point_3d()}}, need this set
+explicitly.
 }
 
 \subsection{Coordinates}{
@@ -80,6 +137,13 @@ culling. A plane that misses the panel entirely is skipped with a warning.
 Annotation coordinates are placed directly in the plot's (transformed)
 scale space: with \code{scale_x_log10()}, for example, give x positions as
 log10 values.
+}
+
+\subsection{Coincident elements}{
+
+With pairwise sorting, a point, segment, line, or text label lying exactly
+in the plane of a polygon (such as a line drawn along a plane, or along
+the intersection of two planes) is drawn on top of that polygon.
 }
 }
 \examples{
@@ -109,14 +173,40 @@ p + geom_surface_3d(
                 xend = .5, yend = .25, zend = 50,
                 color = "red", size = 3)))
 
-# Planes of a linear system, meeting at its solution
+# Planes of a linear system, meeting at its solution, and the line along
+# which the first two planes intersect
 A <- rbind(c(1, 1, 1), c(1, -1, 0), c(0, 1, -1))
 ggplot(data.frame(x = 1/3, y = 1/3, z = 1/3), aes(x, y, z)) +
   geom_point_3d(size = 3, sort_method = "pairwise",
-                annotate = annotate_3d("plane", a = A[, 1], b = A[, 2],
-                                       c = A[, 3], d = c(1, 0, 0),
-                                       fill = c("tomato", "seagreen", "steelblue"))) +
+                annotate = list(
+                  annotate_3d("plane", a = A[, 1], b = A[, 2],
+                              c = A[, 3], d = c(1, 0, 0),
+                              fill = c("tomato", "seagreen", "steelblue")),
+                  annotate_3d("line", x = 1/3, y = 1/3, z = 1/3,
+                              dx = 1, dy = 1, dz = -2, linewidth = 1))) +
   lims(x = c(-1, 1), y = c(-1, 1)) + zlim(-1, 1) +
+  coord_3d()
+
+# A fitted regression plane, with a horizontal reference plane
+fit <- lm(mpg ~ wt + hp, data = mtcars)
+b <- coef(fit)
+ggplot(mtcars, aes(wt, hp, mpg)) +
+  geom_point_3d(sort_method = "pairwise", annotate = list(
+    annotate_3d("plane", intercept = b[1], slope_x = b["wt"], slope_y = b["hp"],
+                fill = "steelblue"),
+    annotate_3d("plane", zintercept = 20, alpha = 0.3))) +
+  coord_3d(yaw = 120)
+
+# A polygon: the triangle spanned by two vectors and the origin
+u <- c(1, 0.2, 0.5); v <- c(0.3, 1, 0.8)
+ggplot(data.frame(x = 0, y = 0, z = 0, xend = c(u[1], v[1]),
+                  yend = c(u[2], v[2]), zend = c(u[3], v[3])),
+       aes(x, y, z, xend = xend, yend = yend, zend = zend)) +
+  geom_segment_3d(arrow = arrow(type = "closed", length = unit(8, "pt")),
+                  sort_method = "pairwise",
+                  annotate = annotate_3d("polygon", x = c(0, u[1], v[1]),
+                                         y = c(0, u[2], v[2]), z = c(0, u[3], v[3]),
+                                         fill = "steelblue")) +
   coord_3d()
 
 # Axes through the origin, depth-sorted with a surface

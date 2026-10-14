@@ -95,12 +95,14 @@ apply_depth_scaling <- function(coords, strength){
 #' @param rule Polygon fill rule: `"evenodd"` or `"winding"`. Only used
 #'   for polygons with subgroups (holes).
 #' @param arrow Arrow specification for segments, created by [grid::arrow()].
+#' @param arrow.fill Fill colour for closed arrowheads on the layer's own
+#'   segments; `NULL` uses each segment's colour.
 #' @param lineend Line end style for segments.
 #' @return A grid grob.
 #' @keywords internal
 #' @noRd
 render_mixed_grobs <- function(data, rule = "evenodd",
-                               arrow = NULL, lineend = "butt") {
+                               arrow = NULL, arrow.fill = NULL, lineend = "butt") {
 
       if (nrow(data) == 0) return(grid::nullGrob())
 
@@ -114,7 +116,7 @@ render_mixed_grobs <- function(data, rule = "evenodd",
 
       if (nrow(runs) == 1) {
             # Single type: fast path
-            return(render_single_type(data, runs$.prim[1], rule, arrow, lineend))
+            return(render_single_type(data, runs$.prim[1], rule, arrow, arrow.fill, lineend))
       }
 
       # Multiple types: render each run, assemble into grobTree
@@ -122,7 +124,7 @@ render_mixed_grobs <- function(data, rule = "evenodd",
       for (i in seq_len(nrow(runs))) {
             run_data <- data[runs$start[i]:runs$end[i], ]
             grobs[[i]] <- render_single_type(run_data, runs$.prim[i],
-                                             rule, arrow, lineend)
+                                             rule, arrow, arrow.fill, lineend)
       }
 
       # Drop nullGrobs
@@ -164,11 +166,11 @@ compute_prim_runs <- function(data) {
 #' Dispatch to the correct renderer for a single primitive type
 #' @keywords internal
 #' @noRd
-render_single_type <- function(data, prim_type, rule, arrow, lineend) {
+render_single_type <- function(data, prim_type, rule, arrow, arrow.fill, lineend) {
       switch(prim_type,
              polygon = render_polygons(data, rule),
              point   = render_points(data),
-             segment = render_segments(data, arrow, lineend),
+             segment = render_segments(data, arrow, arrow.fill, lineend),
              text    = render_texts(data),
              {
                    warning("Unknown .prim type: ", prim_type, "; skipping")
@@ -484,11 +486,13 @@ render_points <- function(data) {
 #'   Each group must have exactly 2 rows with `point_type` "start"/"end",
 #'   or simply two rows in order.
 #' @param arrow Arrow specification.
+#' @param arrow.fill Fill colour for closed arrowheads on the layer's own
+#'   segments; `NULL` uses each segment's colour.
 #' @param lineend Line end style.
 #' @return A segmentsGrob.
 #' @keywords internal
 #' @noRd
-render_segments <- function(data, arrow = NULL, lineend = "butt") {
+render_segments <- function(data, arrow = NULL, arrow.fill = NULL, lineend = "butt") {
       if (nrow(data) == 0) return(grid::nullGrob())
 
       # Segments are stored as two rows per group: start and end
@@ -523,6 +527,8 @@ render_segments <- function(data, arrow = NULL, lineend = "butt") {
 
       arrows <- segment_arrows(start_rows, arrow)
       ends <- segment_arrow_ends(start_rows, arrows$arrows)
+      fill <- rep_len(arrow.fill %||% start_rows$colour, nrow(start_rows))
+      fill[arrows$own] <- start_rows$colour[arrows$own]
 
       draw <- function(i) {
             k <- i[1]
@@ -534,7 +540,7 @@ render_segments <- function(data, arrow = NULL, lineend = "butt") {
                   lineend = lineend,
                   alpha = ifelse(is.na(start_rows$alpha[i]), 1, start_rows$alpha[i])
             )
-            if (!is.null(arrow_i) && arrows$filled[k]) gp$fill <- start_rows$colour[i]
+            if (!is.null(arrow_i)) gp$fill <- fill[i]
             grid::segmentsGrob(
                   x0 = start_rows$x[i], y0 = start_rows$y[i],
                   x1 = end_rows$x[i], y1 = end_rows$y[i],
@@ -551,7 +557,7 @@ render_segments <- function(data, arrow = NULL, lineend = "butt") {
       key <- vapply(seq_along(ends), function(k) {
             if (ends[k] == "none") return("none")
             a <- arrows$arrows[[k]]
-            paste(ends[k], a$angle, format(a$length), a$type, arrows$filled[k])
+            paste(ends[k], a$angle, format(a$length), a$type)
       }, character(1))
 
       if (length(unique(key)) == 1) return(draw(seq_along(key)))
@@ -564,21 +570,22 @@ render_segments <- function(data, arrow = NULL, lineend = "butt") {
 
 #' Arrow for each segment
 #'
-#' Annotation segments carry their own arrow in `.arrow_*` columns (see
-#' `add_arrow_columns()`), which takes precedence over the layer's arrow.
-#' Closed arrowheads from annotations are filled with the segment colour, as
-#' in ggplot2; the layer's own arrows keep grid's default fill.
+#' The layer's arrow applies to the layer's own segments. Annotation segments
+#' carry their own arrow, if any, in `.arrow_*` columns (see
+#' `add_arrow_columns()`), and never take the layer's.
 #'
 #' @param start_rows Start rows of the segments, one per segment.
 #' @param arrow The layer's arrow from [grid::arrow()], or NULL.
 #' @return List with `arrows` (an arrow or NULL per segment) and logical
-#'   `filled`.
+#'   `own`, marking segments that carry their own arrow.
 #' @keywords internal
 #' @noRd
 segment_arrows <- function(start_rows, arrow) {
       n <- nrow(start_rows)
       own <- if (".arrow_type" %in% names(start_rows)) !is.na(start_rows$.arrow_type) else rep(FALSE, n)
       arrows <- rep(list(arrow), n)
+      ann <- if (".ann" %in% names(start_rows)) start_rows$.ann %in% TRUE else rep(FALSE, n)
+      arrows[ann & !own] <- list(NULL)
       for (k in which(own)) {
             arrows[[k]] <- grid::arrow(
                   angle = start_rows$.arrow_angle[k],
@@ -587,7 +594,7 @@ segment_arrows <- function(start_rows, arrow) {
                   type = c("open", "closed")[start_rows$.arrow_type[k]]
             )
       }
-      list(arrows = arrows, filled = own)
+      list(arrows = arrows, own = own)
 }
 
 

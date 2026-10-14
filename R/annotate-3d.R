@@ -2,8 +2,8 @@
 # In-layer 3D annotation system
 #
 # Provides annotate_3d() for embedding annotations (points, text labels,
-# segments, axes, planes) within a 3D layer so they participate in the same
-# depth sorting pass as the primary geometry.
+# segments, polygons, axes, lines, planes) within a 3D layer so they
+# participate in the same depth sorting pass as the primary geometry.
 
 
 # Constructor ------------------------------------------------------------------
@@ -19,7 +19,8 @@
 #' `ggplot2::annotate()` behaviour).
 #'
 #' @param type Character string specifying the annotation type. One of
-#'   `"point"`, `"text"`, `"segment"`, `"axes"`, or `"plane"`.
+#'   `"point"`, `"text"`, `"segment"`, `"polygon"`, `"axes"`, `"line"`, or
+#'   `"plane"`.
 #' @param ... Type-specific parameters. See Details.
 #'
 #' @details
@@ -31,6 +32,12 @@
 #' Requires `x`, `y`, `z`, `label`. Optional styling: `colour`/`color`, `size`,
 #' `alpha`, `family`, `fontface`, `hjust`, `vjust`, `angle`, `lineheight`.
 #'
+#' By default, labels are depth-sorted with the rest of the layer, so geometry
+#' in front of a label hides it. Set `on_top = TRUE` to draw labels on top of
+#' everything else in the layer instead, keeping them legible wherever they
+#' fall (e.g. labels in a diagram). `on_top` can be a vector, to set it per
+#' label.
+#'
 #' ## Segment annotations
 #' Requires `x`, `y`, `z`, `xend`, `yend`, `zend`. Optional styling:
 #' `colour`/`color`, `linewidth`, `linetype`, `alpha`, and `arrow`, an arrow
@@ -38,6 +45,19 @@
 #' the call. Closed arrowheads are filled with the segment colour. When a
 #' segment passes through a polygon and is split, its arrowheads stay at the
 #' segment's original ends.
+#'
+#' ## Polygon annotations
+#' Requires `x`, `y`, `z` giving the polygon's vertices in order. To draw
+#' several polygons in one call, give `group`, with one value per vertex;
+#' vertices sharing a value form one polygon. Each polygon needs at least 3
+#' vertices. Optional styling: `fill` (default `"grey60"`), `alpha` (default
+#' `0.5`), `colour`/`color` for the outline (default `"grey30"`), `linewidth`,
+#' `linetype`. Styling values apply per polygon, so they must have length 1 or
+#' one value per polygon, in the order the groups first appear.
+#'
+#' Like planes, polygons are lit from whichever side faces the viewer and are
+#' never removed by back-face culling. Unlike planes, they are placed in data
+#' space, so they expand the plot's axis ranges to fit.
 #'
 #' ## Axes annotations
 #' Draws a line along each of the x, y, and z axes through an origin given by
@@ -52,11 +72,37 @@
 #' Axes are built from the panel's limits when the plot is drawn, so unlike
 #' other annotations they don't expand the plot's axis ranges.
 #'
+#' ## Line annotations
+#' Draws infinite lines, clipped to the panel. Each line passes through the
+#' point `x`, `y`, `z` (each defaulting to `0`) in the direction `dx`, `dy`,
+#' `dz` (each defaulting to `0`, but not all zero). For example, the line
+#' spanned by a vector `v` is `annotate_3d("line", dx = v[1], dy = v[2],
+#' dz = v[3])`, and the vertical line at `x = 1`, `y = 2` is
+#' `annotate_3d("line", x = 1, y = 2, dz = 1)`. All values can be vectors to
+#' draw several lines. Optional styling: `colour`/`color`, `linewidth`,
+#' `linetype`, `alpha`.
+#'
+#' Like axes and planes, lines are built from the panel's limits and don't
+#' expand the plot's axis ranges. A line that misses the panel entirely is
+#' skipped with a warning.
+#'
 #' ## Plane annotations
-#' Draws the plane `a * x + b * y + c * z = d`, clipped to the panel. Requires
-#' `a`, `b`, `c` (not all zero); `d` defaults to `0`. All four can be vectors
-#' to draw several planes, matching the rows of a linear system `A x = d`.
-#' Optional styling: `fill` (default `"grey60"`), `alpha` (default `0.5`),
+#' Draws planes, clipped to the panel. Each call gives its planes in one of
+#' three forms:
+#'
+#' * `xintercept`, `yintercept`, or `zintercept`: planes perpendicular to an
+#'   axis, e.g. `yintercept = 2` for the plane `y = 2`. Only one of the three
+#'   can be used per call.
+#' * `intercept`, `slope_x`, `slope_y`: the plane
+#'   `z = intercept + slope_x * x + slope_y * y`, as from a linear model.
+#'   Any of the three left out defaults to `0`.
+#' * `a`, `b`, `c`, `d`: the general form `a * x + b * y + c * z = d`.
+#'   Requires `a`, `b`, `c` (not all zero); `d` defaults to `0`.
+#'
+#' Values can be vectors to draw several planes. In the general form, for
+#' example, `a`, `b`, `c` can be the columns of a matrix `A` and `d` the
+#' right-hand side of the linear system `A x = d`. To combine forms, use
+#' separate `annotate_3d()` calls. Optional styling: `fill` (default `"grey60"`), `alpha` (default `0.5`),
 #' `colour`/`color` for the outline (default none), `linewidth`, `linetype`.
 #'
 #' Like axes, planes are built from the panel's limits and don't expand the
@@ -64,10 +110,22 @@
 #' whichever side faces the viewer, and are never removed by back-face
 #' culling. A plane that misses the panel entirely is skipped with a warning.
 #'
+#' Planes are large, so they rarely sort correctly by average depth alone.
+#' Use pairwise sorting (`sort_method = "pairwise"`, or `"auto"` for small
+#' layers) to split planes where they intersect each other or the layer's
+#' polygons, and to hide the elements they pass in front of. Layers that
+#' default to painter sorting, such as [geom_point_3d()], need this set
+#' explicitly.
+#'
 #' ## Coordinates
 #' Annotation coordinates are placed directly in the plot's (transformed)
 #' scale space: with `scale_x_log10()`, for example, give x positions as
 #' log10 values.
+#'
+#' ## Coincident elements
+#' With pairwise sorting, a point, segment, line, or text label lying exactly
+#' in the plane of a polygon (such as a line drawn along a plane, or along
+#' the intersection of two planes) is drawn on top of that polygon.
 #'
 #' @return An S3 object of class `"annotate_3d"`.
 #'
@@ -98,14 +156,40 @@
 #'                 xend = .5, yend = .25, zend = 50,
 #'                 color = "red", size = 3)))
 #'
-#' # Planes of a linear system, meeting at its solution
+#' # Planes of a linear system, meeting at its solution, and the line along
+#' # which the first two planes intersect
 #' A <- rbind(c(1, 1, 1), c(1, -1, 0), c(0, 1, -1))
 #' ggplot(data.frame(x = 1/3, y = 1/3, z = 1/3), aes(x, y, z)) +
 #'   geom_point_3d(size = 3, sort_method = "pairwise",
-#'                 annotate = annotate_3d("plane", a = A[, 1], b = A[, 2],
-#'                                        c = A[, 3], d = c(1, 0, 0),
-#'                                        fill = c("tomato", "seagreen", "steelblue"))) +
+#'                 annotate = list(
+#'                   annotate_3d("plane", a = A[, 1], b = A[, 2],
+#'                               c = A[, 3], d = c(1, 0, 0),
+#'                               fill = c("tomato", "seagreen", "steelblue")),
+#'                   annotate_3d("line", x = 1/3, y = 1/3, z = 1/3,
+#'                               dx = 1, dy = 1, dz = -2, linewidth = 1))) +
 #'   lims(x = c(-1, 1), y = c(-1, 1)) + zlim(-1, 1) +
+#'   coord_3d()
+#'
+#' # A fitted regression plane, with a horizontal reference plane
+#' fit <- lm(mpg ~ wt + hp, data = mtcars)
+#' b <- coef(fit)
+#' ggplot(mtcars, aes(wt, hp, mpg)) +
+#'   geom_point_3d(sort_method = "pairwise", annotate = list(
+#'     annotate_3d("plane", intercept = b[1], slope_x = b["wt"], slope_y = b["hp"],
+#'                 fill = "steelblue"),
+#'     annotate_3d("plane", zintercept = 20, alpha = 0.3))) +
+#'   coord_3d(yaw = 120)
+#'
+#' # A polygon: the triangle spanned by two vectors and the origin
+#' u <- c(1, 0.2, 0.5); v <- c(0.3, 1, 0.8)
+#' ggplot(data.frame(x = 0, y = 0, z = 0, xend = c(u[1], v[1]),
+#'                   yend = c(u[2], v[2]), zend = c(u[3], v[3])),
+#'        aes(x, y, z, xend = xend, yend = yend, zend = zend)) +
+#'   geom_segment_3d(arrow = arrow(type = "closed", length = unit(8, "pt")),
+#'                   sort_method = "pairwise",
+#'                   annotate = annotate_3d("polygon", x = c(0, u[1], v[1]),
+#'                                          y = c(0, u[2], v[2]), z = c(0, u[3], v[3]),
+#'                                          fill = "steelblue")) +
 #'   coord_3d()
 #'
 #' # Axes through the origin, depth-sorted with a surface
@@ -119,7 +203,7 @@
 #' @export
 annotate_3d <- function(type, ...) {
 
-      valid_types <- c("point", "text", "segment", "axes", "plane")
+      valid_types <- c("point", "text", "segment", "polygon", "axes", "line", "plane")
       if (!type %in% valid_types) {
             stop("annotate_3d() type must be one of: ",
                  paste(valid_types, collapse = ", "),
@@ -144,6 +228,16 @@ annotate_3d <- function(type, ...) {
                  call. = FALSE)
       }
 
+      if ("on_top" %in% names(params)) {
+            if (type != "text") {
+                  stop("annotate_3d(): `on_top` applies only to text annotations.", call. = FALSE)
+            }
+            v <- params$on_top
+            if (!is.logical(v) || length(v) == 0 || anyNA(v)) {
+                  stop("annotate_3d(): `on_top` must be TRUE or FALSE.", call. = FALSE)
+            }
+      }
+
       # Normalize color -> colour (American -> British, matching ggplot2)
       if ("color" %in% names(params)) {
             params$colour <- params$colour %||% params$color
@@ -151,13 +245,15 @@ annotate_3d <- function(type, ...) {
       }
 
       if (type == "axes") return(new_axes_spec(params, arrow))
+      if (type == "plane") return(new_plane_spec(params))
+      if (type == "line") return(new_line_spec(params))
+      if (type == "polygon") return(new_polygon_spec(params))
 
       # Validate required parameters
       required <- switch(type,
                          point   = c("x", "y", "z"),
                          text    = c("x", "y", "z", "label"),
-                         segment = c("x", "y", "z", "xend", "yend", "zend"),
-                         plane   = c("a", "b", "c")
+                         segment = c("x", "y", "z", "xend", "yend", "zend")
       )
       missing <- setdiff(required, names(params))
       if (length(missing) > 0) {
@@ -166,34 +262,128 @@ annotate_3d <- function(type, ...) {
                  call. = FALSE)
       }
 
-      # Expand and recycle all params via data.frame(). This handles
-      # vectorized inputs (e.g. x = 1:5, colour = "red") with standard
-      # R recycling rules and throws clear errors for incompatible lengths.
-      params_df <- tryCatch(
+      structure(
+            list(type = type, data = recycle_annotation_params(params), arrow = arrow),
+            class = "annotate_3d"
+      )
+}
+
+
+#' Expand and recycle annotation parameters into a data frame
+#'
+#' Uses data.frame() to handle vectorized inputs (e.g. x = 1:5, colour = "red")
+#' with standard R recycling rules, with a clear error for incompatible lengths.
+#'
+#' @param params Named list of user parameters.
+#' @return Data frame with one row per annotation.
+#' @keywords internal
+#' @noRd
+recycle_annotation_params <- function(params) {
+      tryCatch(
             data.frame(params, stringsAsFactors = FALSE),
             error = function(e) {
                   stop("annotate_3d(): incompatible parameter lengths.\n",
                        conditionMessage(e), call. = FALSE)
             }
       )
+}
 
-      if (type == "plane") {
-            if (!"d" %in% names(params_df)) params_df$d <- 0
-            coefs <- as.matrix(params_df[c("a", "b", "c", "d")])
-            if (!is.numeric(coefs) || any(!is.finite(coefs))) {
-                  stop("annotate_3d('plane'): `a`, `b`, `c`, and `d` must be finite numbers.",
-                       call. = FALSE)
-            }
-            if (any(rowSums(coefs[, 1:3, drop = FALSE]^2) == 0)) {
-                  stop("annotate_3d('plane'): `a`, `b`, and `c` can't all be zero.",
+
+#' Build the specification for a plane annotation
+#'
+#' Accepts planes in one of three forms -- axis intercepts, regression
+#' (intercept and slopes), or general coefficients `a x + b y + c z = d` --
+#' and converts them all to general coefficients, stored in columns `a`, `b`,
+#' `c`, `d` alongside any styling columns.
+#'
+#' @param params Named list of user parameters.
+#' @return An `annotate_3d` object of type `"plane"`.
+#' @keywords internal
+#' @noRd
+new_plane_spec <- function(params) {
+      forms <- list(
+            intercept  = c("xintercept", "yintercept", "zintercept"),
+            regression = c("intercept", "slope_x", "slope_y"),
+            general    = c("a", "b", "c", "d")
+      )
+      used <- names(forms)[vapply(forms, function(f) any(f %in% names(params)), logical(1))]
+      if (length(used) == 0) {
+            stop("annotate_3d('plane') requires one of `xintercept`, `yintercept`, or `zintercept`; ",
+                 "`intercept`, `slope_x`, and/or `slope_y`; or `a`, `b`, and `c`.",
+                 call. = FALSE)
+      }
+      if (length(used) > 1) {
+            stop("annotate_3d('plane'): give planes either as `xintercept`/`yintercept`/`zintercept`, ",
+                 "as `intercept`/`slope_x`/`slope_y`, or as `a`/`b`/`c`/`d`, not a mix. ",
+                 "Use separate annotate_3d() calls to combine them.",
+                 call. = FALSE)
+      }
+      form <- used
+      given <- intersect(forms[[form]], names(params))
+
+      if (form == "intercept" && length(given) > 1) {
+            stop("annotate_3d('plane'): give only one of `xintercept`, `yintercept`, and `zintercept` ",
+                 "per call. Use separate annotate_3d() calls to combine them.",
+                 call. = FALSE)
+      }
+      if (form == "general") {
+            missing <- setdiff(c("a", "b", "c"), given)
+            if (length(missing) > 0) {
+                  stop("annotate_3d('plane') requires: ", paste(missing, collapse = ", "),
                        call. = FALSE)
             }
       }
+      for (nm in given) {
+            v <- params[[nm]]
+            if (!is.numeric(v) || length(v) == 0 || any(!is.finite(v))) {
+                  stop("annotate_3d('plane'): `", nm, "` must contain only finite numbers.",
+                       call. = FALSE)
+            }
+            params[[nm]] <- unname(v)
+      }
+
+      d <- recycle_annotation_params(params)
+      zero <- rep(0, nrow(d))
+      coefs <- switch(form,
+            intercept = {
+                  axis <- substr(given, 1, 1)
+                  list(a = zero + (axis == "x"), b = zero + (axis == "y"),
+                       c = zero + (axis == "z"), d = d[[given]])
+            },
+            regression = list(a = -(d[["slope_x"]] %||% zero), b = -(d[["slope_y"]] %||% zero),
+                              c = zero + 1, d = d[["intercept"]] %||% zero),
+            general = list(a = d[["a"]], b = d[["b"]], c = d[["c"]], d = d[["d"]] %||% zero)
+      )
+      if (any(coefs$a == 0 & coefs$b == 0 & coefs$c == 0)) {
+            stop("annotate_3d('plane'): `a`, `b`, and `c` can't all be zero.",
+                 call. = FALSE)
+      }
+
+      d <- d[setdiff(names(d), unlist(forms))]
+      d <- cbind(as.data.frame(coefs), d)
 
       structure(
-            list(type = type, data = params_df, arrow = arrow),
+            list(type = "plane", data = d, arrow = NULL),
             class = "annotate_3d"
       )
+}
+
+
+#' Format a plane's equation for messages
+#'
+#' @param coefs Numeric vector of coefficients `a`, `b`, `c`, `d`.
+#' @return Character string such as `"y = 2"` or `"x - 2y + z = 1"`.
+#' @keywords internal
+#' @noRd
+format_plane_equation <- function(coefs) {
+      lhs <- c(x = coefs[1], y = coefs[2], z = coefs[3])
+      lhs <- lhs[lhs != 0]
+      num <- function(v) format(signif(v, 4))
+      terms <- paste0(ifelse(abs(lhs) == 1, "", num(abs(lhs))), names(lhs))
+      signs <- ifelse(lhs < 0, "-", "+")
+      out <- paste0(if (signs[1] == "-") "-" else "", terms[1])
+      for (i in seq_along(terms)[-1]) out <- paste(out, signs[i], terms[i])
+      paste(out, "=", num(coefs[4]))
 }
 
 
@@ -244,9 +434,94 @@ new_axes_spec <- function(params, arrow) {
 }
 
 
+#' Build the specification for a polygon annotation
+#'
+#' Vertices are stored with a `.poly` index giving the polygon they belong to;
+#' styling is stored per polygon.
+#'
+#' @param params Named list of user parameters.
+#' @return An `annotate_3d` object of type `"polygon"`.
+#' @keywords internal
+#' @noRd
+new_polygon_spec <- function(params) {
+      missing <- setdiff(c("x", "y", "z"), names(params))
+      if (length(missing) > 0) {
+            stop("annotate_3d('polygon') requires: ", paste(missing, collapse = ", "),
+                 call. = FALSE)
+      }
+      verts <- recycle_annotation_params(params[c("x", "y", "z")])
+      n <- nrow(verts)
+
+      group <- params$group %||% 1
+      if (length(group) == 1) group <- rep(group, n)
+      if (length(group) != n) {
+            stop("annotate_3d('polygon'): `group` must have one value per vertex.",
+                 call. = FALSE)
+      }
+      ids <- unique(group)
+      verts$.poly <- match(group, ids)
+      if (any(tabulate(verts$.poly) < 3)) {
+            stop("annotate_3d('polygon'): each polygon needs at least 3 vertices.",
+                 call. = FALSE)
+      }
+
+      style <- params[setdiff(names(params), c("x", "y", "z", "group"))]
+      bad <- vapply(style, function(v) !length(v) %in% c(1, length(ids)), logical(1))
+      if (any(bad)) {
+            stop("annotate_3d('polygon'): styling values must have length 1 or one per polygon (",
+                 length(ids), "): ", paste(names(style)[bad], collapse = ", "),
+                 call. = FALSE)
+      }
+
+      structure(
+            list(type = "polygon", data = verts,
+                 style = lapply(style, rep_len, length(ids)), arrow = NULL),
+            class = "annotate_3d"
+      )
+}
+
+
+#' Build the specification for a line annotation
+#'
+#' @param params Named list of user parameters.
+#' @return An `annotate_3d` object of type `"line"`, whose data has columns
+#'   `x`, `y`, `z`, `dx`, `dy`, `dz` plus any styling columns.
+#' @keywords internal
+#' @noRd
+new_line_spec <- function(params) {
+      dirs <- c("dx", "dy", "dz")
+      if (!any(dirs %in% names(params))) {
+            stop("annotate_3d('line') requires a direction: one or more of `dx`, `dy`, `dz`.",
+                 call. = FALSE)
+      }
+      for (nm in intersect(c("x", "y", "z", dirs), names(params))) {
+            v <- params[[nm]]
+            if (!is.numeric(v) || length(v) == 0 || any(!is.finite(v))) {
+                  stop("annotate_3d('line'): `", nm, "` must contain only finite numbers.",
+                       call. = FALSE)
+            }
+            params[[nm]] <- unname(v)
+      }
+
+      d <- recycle_annotation_params(params)
+      for (nm in c("x", "y", "z", dirs)) {
+            if (!nm %in% names(d)) d[[nm]] <- 0
+      }
+      if (any(d$dx == 0 & d$dy == 0 & d$dz == 0)) {
+            stop("annotate_3d('line'): `dx`, `dy`, and `dz` can't all be zero.",
+                 call. = FALSE)
+      }
+
+      structure(
+            list(type = "line", data = d, arrow = NULL),
+            class = "annotate_3d"
+      )
+}
+
+
 # Annotation types built at draw time from the panel's limits, rather than in
 # setup_data. They never take part in scale training.
-.panel_annotation_types <- c("axes", "plane")
+.panel_annotation_types <- c("axes", "line", "plane")
 
 
 # Build annotations ------------------------------------------------------------
@@ -287,6 +562,7 @@ build_annotations <- function(annotate, max_group = 0) {
                              point   = make_annotation_point_rows(spec, group_offset),
                              text    = make_annotation_text_rows(spec, group_offset),
                              segment = make_annotation_segment_rows(spec, group_offset),
+                             polygon = make_annotation_polygon_rows(spec, group_offset),
                              stop("Unknown annotation type: ", spec$type, call. = FALSE)
             )
             all_rows <- c(all_rows, list(result$data))
@@ -418,6 +694,7 @@ prepare_annotations <- function(data, panel_params, annotate = NULL) {
       rows <- lapply(seq_along(specs), function(i) {
             switch(specs[[i]]$type,
                    axes = make_annotation_axes_rows(specs[[i]], limits, i),
+                   line = make_annotation_line_rows(specs[[i]], limits, i),
                    plane = make_annotation_plane_rows(specs[[i]], limits, i))
       })
       rows <- dplyr::bind_rows(rows)
@@ -530,6 +807,7 @@ make_annotation_text_rows <- function(spec, group_offset) {
             label = d$label,
             .prim = "text",
             .ann = TRUE,
+            .on_top = if ("on_top" %in% names(d)) d$on_top else FALSE,
             stringsAsFactors = FALSE
       )
 
@@ -607,6 +885,41 @@ make_annotation_segment_rows <- function(spec, group_offset) {
       rows <- add_arrow_columns(rows, spec$arrow)
 
       list(data = rows, next_offset = group_offset + n)
+}
+
+
+#' Generate polygon annotation rows
+#' @keywords internal
+#' @noRd
+make_annotation_polygon_rows <- function(spec, group_offset) {
+
+      d <- spec$data
+      n_poly <- max(d$.poly)
+
+      rows <- data.frame(
+            x = d$x,
+            y = d$y,
+            z = d$z,
+            group = paste0("ann__poly", d$.poly + group_offset),
+            .prim = "polygon",
+            .ann = TRUE,
+            stringsAsFactors = FALSE
+      )
+
+      style_defaults <- list(
+            fill      = "grey60",
+            alpha     = 0.5,
+            colour    = "grey30",
+            linewidth = 0.5,
+            linetype  = 1
+      )
+
+      for (col in names(style_defaults)) {
+            val <- spec$style[[col]] %||% rep(style_defaults[[col]], n_poly)
+            rows[[paste0(".ann_", col)]] <- val[d$.poly]
+      }
+
+      list(data = rows, next_offset = group_offset + n_poly)
 }
 
 
@@ -699,6 +1012,74 @@ make_annotation_axes_rows <- function(spec, limits, index) {
 
 
 
+#' Generate line annotation rows
+#'
+#' Each line is clipped to the panel box, giving one segment.
+#'
+#' @param spec Line specification from `new_line_spec()`.
+#' @param limits Named list of panel limits for x, y, z.
+#' @param index Index of this spec, used to build unique group names.
+#' @return Data frame of segment rows.
+#' @keywords internal
+#' @noRd
+make_annotation_line_rows <- function(spec, limits, index) {
+      d <- spec$data
+      style_defaults <- list(colour = "black", linewidth = 0.5, linetype = 1, alpha = 1)
+
+      rows <- list()
+      for (k in seq_len(nrow(d))) {
+            point <- c(d$x[k], d$y[k], d$z[k])
+            direction <- c(d$dx[k], d$dy[k], d$dz[k])
+            ends <- clip_line_to_box(point, direction, limits)
+            if (is.null(ends)) {
+                  fmt <- function(v) paste0("(", paste(signif(v, 4), collapse = ", "), ")")
+                  warning("annotate_3d('line'): the line through ", fmt(point), " in direction ",
+                          fmt(direction), " doesn't cross the panel, so it is not drawn.",
+                          call. = FALSE)
+                  next
+            }
+            seg <- data.frame(x = ends[, 1], y = ends[, 2], z = ends[, 3],
+                              group = paste0("ann__line", index, "_", k),
+                              point_type = c("start", "end"), segment_id = NA_real_,
+                              .prim = "segment", .ann = TRUE, stringsAsFactors = FALSE)
+            for (nm in names(style_defaults)) {
+                  seg[[paste0(".ann_", nm)]] <- if (nm %in% names(d)) d[[nm]][k] else style_defaults[[nm]]
+            }
+            rows <- c(rows, list(seg))
+      }
+      dplyr::bind_rows(rows)
+}
+
+
+#' Clip a line to an axis-aligned box
+#'
+#' @param point Length-3 point on the line.
+#' @param direction Length-3 direction vector (not all zero).
+#' @param limits Named list of x, y, z limits.
+#' @return 2 x 3 matrix of the clipped segment's endpoints, or NULL if the
+#'   line misses the box or only touches its boundary at a point.
+#' @keywords internal
+#' @noRd
+clip_line_to_box <- function(point, direction, limits) {
+      lo <- vapply(limits[c("x", "y", "z")], min, numeric(1))
+      hi <- vapply(limits[c("x", "y", "z")], max, numeric(1))
+      t0 <- -Inf
+      t1 <- Inf
+      for (k in 1:3) {
+            if (direction[k] == 0) {
+                  if (point[k] < lo[k] || point[k] > hi[k]) return(NULL)
+            } else {
+                  ta <- (lo[k] - point[k]) / direction[k]
+                  tb <- (hi[k] - point[k]) / direction[k]
+                  t0 <- max(t0, min(ta, tb))
+                  t1 <- min(t1, max(ta, tb))
+            }
+      }
+      if ((t1 - t0) * sqrt(sum(direction^2)) <= 1e-10 * sqrt(sum((hi - lo)^2))) return(NULL)
+      rbind(point + t0 * direction, point + t1 * direction)
+}
+
+
 #' Generate plane annotation rows
 #'
 #' Each plane `a x + b y + c z = d` is clipped to the panel box, giving one
@@ -719,8 +1100,9 @@ make_annotation_plane_rows <- function(spec, limits, index) {
       for (k in seq_len(nrow(d))) {
             verts <- clip_plane_to_box(c(d$a[k], d$b[k], d$c[k]), d$d[k], limits)
             if (is.null(verts)) {
-                  warning("annotate_3d('plane'): the plane ", d$a[k], "x + ", d$b[k], "y + ",
-                          d$c[k], "z = ", d$d[k], " doesn't cross the panel, so it is not drawn.",
+                  warning("annotate_3d('plane'): the plane ",
+                          format_plane_equation(c(d$a[k], d$b[k], d$c[k], d$d[k])),
+                          " doesn't cross the panel, so it is not drawn.",
                           call. = FALSE)
                   next
             }

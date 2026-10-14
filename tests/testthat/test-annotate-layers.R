@@ -63,17 +63,28 @@ test_that("every layer draws annotations of each type", {
                                   colour = "#FF00FF"),
             text = annotate_3d("text", x = 0.5, y = 0.5, z = 0.5, label = "ann", colour = "#FF00FF"),
             axes = annotate_3d("axes", colour = "#FF00FF"),
-            plane = NULL
+            plane = NULL,
+            line = NULL,
+            polygon = NULL
       )
       for (type in names(anns)) {
             plots <- annotation_layer_plots(anns[[type]])
             for (nm in names(plots)) {
                   p <- plots[[nm]] + coord_3d()
-                  if (type == "plane") {
-                        # A horizontal plane through the middle of this panel
-                        mid <- mean(ggplot_build(p)$layout$panel_params[[1]]$scale_info$z$limits)
-                        p$layers[[1]]$geom_params$annotate <-
-                              annotate_3d("plane", a = 0, b = 0, c = 1, d = mid, colour = "#FF00FF")
+                  if (type %in% c("plane", "line", "polygon")) {
+                        # Placed through the middle of this panel
+                        info <- ggplot_build(p)$layout$panel_params[[1]]$scale_info
+                        lim <- lapply(info[c("x", "y", "z")], function(s) range(s$limits))
+                        mid <- vapply(lim, mean, numeric(1))
+                        step <- vapply(lim, diff, numeric(1)) / 10
+                        p$layers[[1]]$geom_params$annotate <- switch(type,
+                              plane = annotate_3d("plane", zintercept = mid[["z"]], colour = "#FF00FF"),
+                              line = annotate_3d("line", x = mid[["x"]], y = mid[["y"]], z = mid[["z"]],
+                                                 dx = 1, dy = 1, dz = 1, colour = "#FF00FF"),
+                              polygon = annotate_3d("polygon", x = mid[["x"]] + c(0, step[["x"]], 0),
+                                                    y = mid[["y"]] + c(0, 0, step[["y"]]),
+                                                    z = mid[["z"]] + c(0, step[["z"]], step[["z"]]),
+                                                    colour = "#FF00FF"))
                   }
                   warnings <- character(0)
                   g <- withCallingHandlers(

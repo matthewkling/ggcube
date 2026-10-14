@@ -216,10 +216,35 @@ test_that("annotation arrows are rebuilt at render time and filled with the segm
       expect_equal(grid::unitType(g$arrow$length), "points")
       expect_equal(g$gp$fill, "black")
 
-      # The layer's own arrow keeps grid's default fill
+      # The annotation's own arrow ignores the layer's arrow.fill
+      g <- render_segments(rows, arrow.fill = "white")
+      expect_equal(g$gp$fill, "black")
+
+      # Annotation segments without an arrow of their own don't take the layer's
       plain <- rows[setdiff(names(rows), grep("^\\.arrow_", names(rows), value = TRUE))]
-      g <- render_segments(plain, arrow = grid::arrow(type = "closed"))
-      expect_null(g$gp$fill)
+      expect_null(render_segments(plain, arrow = grid::arrow(type = "closed"))$arrow)
+})
+
+
+test_that("layer arrows are filled with the segment colour unless arrow.fill is given", {
+      rows <- data.frame(x = c(0, 1, 0, 1), y = c(0, 1, 1, 0), group = c(1, 1, 2, 2),
+                         point_type = c("start", "end", "start", "end"),
+                         colour = c("red", "red", "blue", "blue"), linewidth = 0.5,
+                         linetype = 1, alpha = 1, stringsAsFactors = FALSE)
+      closed <- grid::arrow(type = "closed")
+      expect_equal(render_segments(rows, arrow = closed)$gp$fill, c("red", "blue"))
+      expect_equal(render_segments(rows, arrow = closed, arrow.fill = "white")$gp$fill,
+                   c("white", "white"))
+      expect_null(render_segments(rows)$gp$fill)
+
+      p <- ggplot(data.frame(x = 0, y = 0, z = 0, xend = 1, yend = 1, zend = 1),
+                  aes(x, y, z, xend = xend, yend = yend, zend = zend)) +
+            geom_segment_3d(colour = "#00FF00", arrow = closed, arrow.fill = "#0000FF") +
+            coord_3d()
+      b <- ggplot_build(p)
+      g <- b$plot$layers[[1]]$draw_geom(b$data[[1]], b$layout)[[1]]
+      expect_equal(g$gp$fill, "#0000FF")
+      expect_equal(substr(g$gp$col, 1, 7), "#00FF00")
 })
 
 
@@ -331,6 +356,46 @@ test_that("plane specs validate their coefficients and default d to 0", {
 })
 
 
+test_that("intercept and regression plane forms convert to general coefficients", {
+      coefs <- function(spec) as.matrix(spec$data[c("a", "b", "c", "d")])
+
+      expect_equal(unname(coefs(annotate_3d("plane", xintercept = 3))), matrix(c(1, 0, 0, 3), 1))
+      expect_equal(unname(coefs(annotate_3d("plane", yintercept = 2))), matrix(c(0, 1, 0, 2), 1))
+      expect_equal(unname(coefs(annotate_3d("plane", zintercept = c(0, 5)))),
+                   rbind(c(0, 0, 1, 0), c(0, 0, 1, 5)))
+
+      # z = 1 + 2x - y  <=>  -2x + y + z = 1
+      expect_equal(unname(coefs(annotate_3d("plane", intercept = 1, slope_x = 2, slope_y = -1))),
+                   matrix(c(-2, 1, 1, 1), 1))
+      expect_equal(unname(coefs(annotate_3d("plane", slope_y = 3))), matrix(c(0, -3, 1, 0), 1))
+
+      # Named inputs (e.g. from coef()) and styling columns carry through
+      spec <- annotate_3d("plane", intercept = c(a = 1, b = 2), fill = c("red", "blue"))
+      expect_equal(spec$data$d, c(1, 2))
+      expect_equal(spec$data$fill, c("red", "blue"))
+      expect_false(any(c("intercept", "slope_x", "slope_y") %in% names(spec$data)))
+})
+
+
+test_that("plane forms can't be mixed and must be valid", {
+      expect_error(annotate_3d("plane"), "requires one of")
+      expect_error(annotate_3d("plane", fill = "red"), "requires one of")
+      expect_error(annotate_3d("plane", yintercept = 1, a = 1, b = 0, c = 0), "not a mix")
+      expect_error(annotate_3d("plane", zintercept = 1, slope_x = 1), "not a mix")
+      expect_error(annotate_3d("plane", xintercept = 1, yintercept = 1), "only one of")
+      expect_error(annotate_3d("plane", yintercept = NA), "`yintercept` must contain only finite")
+      expect_error(annotate_3d("plane", slope_x = "a"), "`slope_x` must contain only finite")
+      expect_error(annotate_3d("plane", d = 1), "requires: a, b, c")
+})
+
+
+test_that("format_plane_equation writes readable equations", {
+      expect_equal(format_plane_equation(c(0, 1, 0, 2)), "y = 2")
+      expect_equal(format_plane_equation(c(-2, 1, 1, 1)), "-2x + y + z = 1")
+      expect_equal(format_plane_equation(c(1, -0.5, 0, 0)), "x - 0.5y = 0")
+})
+
+
 test_that("clip_plane_to_box returns the plane's convex cross-section of the box", {
       lim <- list(x = c(-1, 1), y = c(-1, 1), z = c(-1, 1))
       check <- function(normal, offset, n_expected) {
@@ -378,8 +443,29 @@ test_that("planes are clipped to the panel and don't affect the axis ranges", {
       base <- ggplot_build(plane_plot(NULL))$layout$panel_params[[1]]$scale_info
       for (a in c("x", "y", "z")) expect_equal(pp$scale_info[[a]]$limits, base[[a]]$limits)
 
-      expect_warning(prepare_annotations(b$data[[1]], pp, annotate_3d("plane", a = 0, b = 0, c = 1, d = 100)),
-                     "doesn't cross the panel")
+      expect_warning(prepare_annotations(b$data[[1]], pp, annotate_3d("plane", zintercept = 100)),
+                     "the plane z = 100 doesn't cross the panel")
+})
+
+
+test_that("intercept and regression planes are drawn where they belong", {
+      p <- plane_plot(NULL)
+      b <- ggplot_build(p)
+      pp <- b$layout$panel_params[[1]]
+      lim <- lapply(pp$scale_info[c("x", "y", "z")], function(s) range(s$limits))
+      ann_rows <- function(ann) {
+            rows <- prepare_annotations(b$data[[1]], pp, ann)
+            rows[rows$.ann %in% TRUE, ]
+      }
+
+      rows <- ann_rows(annotate_3d("plane", yintercept = 2))
+      expect_equal(rows$y, rep(2, nrow(rows)))
+      expect_equal(sort(unique(round(rows$x, 9))), round(lim$x, 9))
+      expect_equal(sort(unique(round(rows$z, 9))), round(lim$z, 9))
+
+      rows <- ann_rows(annotate_3d("plane", intercept = 2, slope_x = 0.5, slope_y = -0.25))
+      expect_gte(nrow(rows), 3)
+      expect_equal(rows$z, 2 + 0.5 * rows$x - 0.25 * rows$y, tolerance = 1e-12)
 })
 
 
@@ -434,4 +520,194 @@ test_that("intersecting plane annotations are split along their intersection", {
       out <- b$plot$coordinates$transform(ld, pp)
       # Group names are integer-coded by the coord, so count the pieces instead
       expect_gt(length(unique(out$group[out$.ann %in% TRUE])), 2)
+})
+
+
+# Polygons ----------------------------------------------------------------------
+
+test_that("polygon specs group vertices and style each polygon", {
+      spec <- annotate_3d("polygon", x = c(0, 1, 1, 0, 2, 3, 2), y = c(0, 0, 1, 1, 0, 0, 1), z = 0,
+                          group = c("a", "a", "a", "a", "b", "b", "b"), fill = c("red", "blue"))
+      expect_equal(spec$data$.poly, c(1, 1, 1, 1, 2, 2, 2))
+      expect_equal(spec$style$fill, c("red", "blue"))
+
+      rows <- build_annotations(spec, max_group = 10)
+      expect_equal(unique(rows$.prim), "polygon")
+      expect_equal(length(unique(rows$group)), 2)
+      expect_equal(rows$.ann_fill, rep(c("red", "blue"), c(4, 3)))
+      expect_equal(unique(rows$.ann_colour), "grey30")
+      expect_equal(unique(rows$.ann_alpha), 0.5)
+
+      # Without group, all vertices form one polygon
+      expect_equal(unique(annotate_3d("polygon", x = 1:3, y = c(0, 1, 0), z = 0)$data$.poly), 1)
+
+      expect_error(annotate_3d("polygon", x = 1:3, y = 1:3), "requires: z")
+      expect_error(annotate_3d("polygon", x = 1:4, y = 1:4, z = 0, group = c(1, 1, 2, 2)),
+                   "at least 3 vertices")
+      expect_error(annotate_3d("polygon", x = 1:3, y = 1:3, z = 0, group = 1:2), "one value per vertex")
+      expect_error(annotate_3d("polygon", x = 1:6, y = 1:6, z = 0, group = rep(1:2, each = 3),
+                               fill = c("red", "blue", "green")),
+                   "length 1 or one per polygon \\(2\\): fill")
+})
+
+
+test_that("polygon annotations expand the axis ranges and are drawn per group", {
+      ann <- annotate_3d("polygon", x = c(0, 5, 5), y = c(0, 0, 5), z = c(0, 0, 8),
+                         fill = "#FF00FF")
+      p <- ggplot(data.frame(x = 1:2, y = 1:2, z = 1:2), aes(x, y, z)) +
+            geom_point_3d(annotate = ann) + coord_3d()
+      b <- ggplot_build(p)
+      lim <- b$layout$panel_params[[1]]$scale_info
+      expect_true(all(c(0, 5) >= min(lim$x$limits) & c(0, 5) <= max(lim$x$limits)))
+      expect_true(8 <= max(lim$z$limits))
+      fills <- function(g) {
+            own <- if (inherits(g, "grob") && !is.null(g$gp$fill)) g$gp$fill else character(0)
+            kids <- if (inherits(g, "gtable")) g$grobs else if (inherits(g, "gTree")) g$children else list()
+            c(own, unlist(lapply(kids, fills)))
+      }
+      expect_true(any(substr(toupper(fills(ggplotGrob(p))), 1, 7) == "#FF00FF"))
+})
+
+
+# Lines -------------------------------------------------------------------------
+
+test_that("line specs validate their point and direction", {
+      spec <- annotate_3d("line", dz = 1)
+      expect_equal(unlist(spec$data[c("x", "y", "z", "dx", "dy", "dz")]),
+                   c(x = 0, y = 0, z = 0, dx = 0, dy = 0, dz = 1))
+      expect_equal(nrow(annotate_3d("line", x = 1:3, dx = 1)$data), 3)
+      expect_equal(annotate_3d("line", dx = c(a = 2))$data$dx, 2)
+
+      expect_error(annotate_3d("line", x = 1), "requires a direction")
+      expect_error(annotate_3d("line", dx = 0, dy = 0), "can't all be zero")
+      expect_error(annotate_3d("line", dx = NA), "`dx` must contain only finite")
+      expect_error(annotate_3d("line", dx = 1, arrow = grid::arrow()), "only to segment and axes")
+})
+
+
+test_that("clip_line_to_box returns the line's chord through the box", {
+      lim <- list(x = c(-1, 1), y = c(-1, 1), z = c(0, 2))
+
+      # Axis-parallel
+      expect_equal(clip_line_to_box(c(0.5, -0.5, 7), c(0, 0, 3), lim),
+                   rbind(c(0.5, -0.5, 0), c(0.5, -0.5, 2)))
+
+      # Oblique: endpoints lie on the line and on the box boundary
+      p <- c(0.2, 0.1, 1); v <- c(1, 2, -0.5)
+      e <- clip_line_to_box(p, v, lim)
+      for (k in 1:2) {
+            t <- sum((e[k, ] - p) * v) / sum(v^2)
+            expect_equal(e[k, ], p + t * v, tolerance = 1e-12)
+            on_face <- abs(e[k, ] - c(-1, -1, 0)) < 1e-12 | abs(e[k, ] - c(1, 1, 2)) < 1e-12
+            expect_true(any(on_face))
+            expect_true(all(e[k, ] >= c(-1, -1, 0) - 1e-12 & e[k, ] <= c(1, 1, 2) + 1e-12))
+      }
+
+      expect_null(clip_line_to_box(c(3, 0, 1), c(0, 1, 0), lim))   # parallel, outside
+      expect_null(clip_line_to_box(c(5, 5, 5), c(1, 0, 0), lim))   # misses
+      expect_null(clip_line_to_box(c(1, 1, 2), c(1, -1, 1), lim))  # touches one corner only
+})
+
+
+test_that("lines are clipped to the panel and don't affect the axis ranges", {
+      p <- plane_plot(annotate_3d("line", x = 0, y = 1, z = 2, dx = 1, dy = 1, dz = 1, colour = "red"))
+      b <- ggplot_build(p)
+      pp <- b$layout$panel_params[[1]]
+      lim <- lapply(pp$scale_info[c("x", "y", "z")], function(s) range(s$limits))
+      rows <- prepare_annotations(b$data[[1]], pp, b$plot$layers[[1]]$computed_geom_params$annotate)
+      rows <- rows[rows$.ann %in% TRUE, ]
+      expect_equal(nrow(rows), 2)
+      expect_equal(rows$.prim, c("segment", "segment"))
+      expect_equal(rows$point_type, c("start", "end"))
+      expect_equal(rows$y - rows$x, c(1, 1), tolerance = 1e-12)
+      expect_equal(rows$z - rows$x, c(2, 2), tolerance = 1e-12)
+      for (a in c("x", "y", "z")) {
+            expect_true(all(rows[[a]] >= lim[[a]][1] - 1e-9 & rows[[a]] <= lim[[a]][2] + 1e-9))
+      }
+
+      base <- ggplot_build(plane_plot(NULL))$layout$panel_params[[1]]$scale_info
+      for (a in c("x", "y", "z")) expect_equal(pp$scale_info[[a]]$limits, base[[a]]$limits)
+
+      expect_warning(prepare_annotations(b$data[[1]], pp, annotate_3d("line", z = 100, dx = 1)),
+                     "the line through \\(0, 0, 100\\) in direction \\(1, 0, 0\\) doesn't cross")
+})
+
+
+test_that("lines and segments lying in a plane are drawn on top of it", {
+      drawn_order <- function(ann, persp, yaw) {
+            p <- ggplot(data.frame(x = c(-1, 1), y = c(-1, 1), z = c(-1, 1)), aes(x, y, z)) +
+                  geom_point_3d(sort_method = "pairwise", annotate = ann) +
+                  coord_3d(persp = persp, yaw = yaw)
+            b <- ggplot_build(p)
+            g <- b$plot$layers[[1]]$draw_geom(b$data[[1]], b$layout)[[1]]
+            flat <- function(g) {
+                  if (inherits(g, "gTree") && !inherits(g, c("polygon", "segments"))) {
+                        unlist(lapply(g$children, flat))
+                  } else {
+                        class(g)[1]
+                  }
+            }
+            flat(g)
+      }
+      for (ann in list(annotate_3d("segment", x = -0.8, y = -0.5, z = 0, xend = 0.7, yend = 0.6, zend = 0),
+                       annotate_3d("line", y = 0.2, dx = 1, dy = 0.5))) {
+            for (persp in c(TRUE, FALSE)) {
+                  for (yaw in c(-30, 60, 150, 240)) {
+                        cl <- drawn_order(list(annotate_3d("plane", zintercept = 0), ann), persp, yaw)
+                        expect_gt(min(which(cl == "segments")), max(which(cl == "polygon")))
+                  }
+            }
+      }
+
+      g_plane <- list(plane = list(normal = c(0, 0, 1), offset = 0, warp = 0, planar = TRUE))
+      g_seg <- list(pts = rbind(c(0, 0, 0), c(1, 1, 0)))
+      g_off <- list(pts = rbind(c(0, 0, 0), c(1, 1, 0.1)))
+      expect_equal(coplanar_order(g_plane, g_seg, "polygon", "segment"), 1)
+      expect_equal(coplanar_order(g_seg, g_plane, "segment", "polygon"), -1)
+      expect_true(is.na(coplanar_order(g_plane, g_off, "polygon", "segment")))
+})
+
+
+# Labels on top -----------------------------------------------------------------
+
+test_that("on_top is validated and recorded on text rows", {
+      rows <- build_annotations(annotate_3d("text", x = 1:2, y = 0, z = 0, label = c("a", "b"),
+                                            on_top = c(TRUE, FALSE)))
+      expect_equal(rows$.on_top, c(TRUE, FALSE))
+      expect_false(build_annotations(annotate_3d("text", x = 0, y = 0, z = 0, label = "a"))$.on_top)
+
+      expect_error(annotate_3d("point", x = 0, y = 0, z = 0, on_top = TRUE), "only to text")
+      expect_error(annotate_3d("text", x = 0, y = 0, z = 0, label = "a", on_top = NA), "TRUE or FALSE")
+      expect_error(annotate_3d("text", x = 0, y = 0, z = 0, label = "a", on_top = "yes"), "TRUE or FALSE")
+})
+
+
+test_that("on_top labels are drawn after everything else, in depth order", {
+      drawn <- function(on_top, sort_method) {
+            ann <- list(annotate_3d("plane", zintercept = 0, alpha = 1),
+                        annotate_3d("text", x = c(0, 0.5), y = c(0, 0.5), z = c(-0.5, -0.8),
+                                    label = c("near", "far"), on_top = on_top))
+            p <- ggplot(data.frame(x = c(-1, 1), y = c(-1, 1), z = c(-1, 1)), aes(x, y, z)) +
+                  geom_point_3d(sort_method = sort_method, annotate = ann) + coord_3d()
+            b <- ggplot_build(p)
+            g <- b$plot$layers[[1]]$draw_geom(b$data[[1]], b$layout)[[1]]
+            flat <- function(g) {
+                  if (inherits(g, "gTree") && !inherits(g, c("polygon", "segments"))) {
+                        do.call(rbind, lapply(g$children, flat))
+                  } else {
+                        data.frame(cls = class(g)[1], label = if (inherits(g, "text")) g$label else NA)
+                  }
+            }
+            flat(g)
+      }
+      for (sm in c("pairwise", "painter")) {
+            # Labels under an opaque plane, seen from above, are drawn before it ...
+            out <- drawn(FALSE, sm)
+            expect_lt(max(which(out$cls == "text")), max(which(out$cls == "polygon")))
+
+            # ... unless they're on top, in which case they come last, far before near
+            out <- drawn(TRUE, sm)
+            expect_gt(min(which(out$cls == "text")), max(which(out$cls != "text")))
+            expect_equal(out$label[out$cls == "text"], c("far", "near"))
+      }
 })

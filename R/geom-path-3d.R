@@ -19,6 +19,8 @@
 #' @inheritParams depth_params
 #' @inheritParams annotate_params
 #' @param arrow Specification for arrow heads, created by [arrow()].
+#' @param arrow.fill Fill colour for closed arrowheads. Defaults to the
+#'   path colour.
 #' @param lineend Line end style, one of "round", "butt", "square".
 #'
 #' @section Aesthetics:
@@ -74,7 +76,8 @@ geom_path_3d <- function(mapping = NULL, data = NULL,
                          ...,
                          annotate = NULL,
                          sort_method = "painter",
-                         scale_depth = TRUE, arrow = NULL, lineend = "butt",
+                         scale_depth = TRUE, arrow = NULL, arrow.fill = NULL,
+                         lineend = "butt",
                          na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
 
       layer(data = data, mapping = mapping, stat = get_proto(stat, "stat"), geom = GeomSegment3D,
@@ -85,6 +88,7 @@ geom_path_3d <- function(mapping = NULL, data = NULL,
                   sort_method = sort_method,
                   scale_depth = scale_depth,
                   arrow = arrow,
+                  arrow.fill = arrow.fill,
                   lineend = lineend,
                   ...
             )
@@ -97,7 +101,8 @@ stat_path_3d <- function(mapping = NULL, data = NULL,
                          geom = GeomSegment3D, position = "identity",
                          ...,
                          sort_method = "painter",
-                         scale_depth = TRUE, arrow = NULL, lineend = "butt",
+                         scale_depth = TRUE, arrow = NULL, arrow.fill = NULL,
+                         lineend = "butt",
                          na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
 
       layer(data = data, mapping = mapping, stat = StatPath3D, geom = get_proto(geom, "geom"),
@@ -107,6 +112,7 @@ stat_path_3d <- function(mapping = NULL, data = NULL,
                   sort_method = sort_method,
                   scale_depth = scale_depth,
                   arrow = arrow,
+                  arrow.fill = arrow.fill,
                   lineend = lineend,
                   ...
             )

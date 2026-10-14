@@ -15,6 +15,7 @@ geom_path_3d(
   sort_method = "painter",
   scale_depth = TRUE,
   arrow = NULL,
+  arrow.fill = NULL,
   lineend = "butt",
   na.rm = FALSE,
   show.legend = NA,
@@ -30,6 +31,7 @@ stat_path_3d(
   sort_method = "painter",
   scale_depth = TRUE,
   arrow = NULL,
+  arrow.fill = NULL,
   lineend = "butt",
   na.rm = FALSE,
   show.legend = NA,
@@ -62,6 +64,9 @@ subdue the effect and values above 1 exaggerate it. This affects the layer
 only; use \code{coord_3d(scale_depth = )} for panel and axis components.}
 
 \item{arrow}{Specification for arrow heads, created by \code{\link[=arrow]{arrow()}}.}
+
+\item{arrow.fill}{Fill colour for closed arrowheads. Defaults to the
+path colour.}
 
 \item{lineend}{Line end style, one of "round", "butt", "square".}
 

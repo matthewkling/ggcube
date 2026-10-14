@@ -20,9 +20,9 @@ one another are first split along their line of intersection, and segments
 that pass through polygons are split where they cross them. Wherever a
 polygon and another element overlap on screen, their order is then
 determined exactly from their 3D geometry where possible, and otherwise
-estimated from depths sampled in the region of overlap. When elements are
-coplanar, smaller primitives (points, segments) render on top of larger ones
-(polygons). Results are exact for planar polygons; non-planar polygons
+estimated from depths sampled in the region of overlap. Points,
+segments, and text lying in the plane of a planar polygon render on top
+of it. Results are exact for planar polygons; non-planar polygons
 (e.g. tiles of a curved surface on a rectangular grid) are treated as
 approximately planar. Slower but more accurate.}
 \item{\code{"auto"}}{Uses pairwise if the data has fewer than 500 rows, and

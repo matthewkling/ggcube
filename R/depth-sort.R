@@ -704,6 +704,9 @@ pw_render_order <- function(data,
                   if (!is.null(eye) && !is.null(geom_3d[[i]]) && !is.null(geom_3d[[j]])) {
                         exact <- plane_side_order(geom_3d[[i]], geom_3d[[j]], eye)
                         if (is.na(exact)) {
+                              exact <- coplanar_order(geom_3d[[i]], geom_3d[[j]], ti, tj)
+                        }
+                        if (is.na(exact)) {
                               exact <- ray_sample_order(geom_3d[[i]], geom_3d[[j]], di, dj,
                                                         ti, tj, proj, plot_bounds)
                         }
@@ -753,6 +756,20 @@ sort_by_depth <- function(data, proj = NULL, plot_bounds = NULL) {
             }
       }else{
             method <- "painter"
+      }
+
+      # Elements flagged `.on_top` (e.g. text annotations with `on_top = TRUE`)
+      # aren't sorted against the rest: they're drawn after everything else,
+      # in depth order among themselves
+      top <- if (".on_top" %in% names(data)) data$.on_top %in% TRUE else FALSE
+      if (any(top) && !all(top)) {
+            front <- data[top, , drop = FALSE]
+            front$.on_top <- FALSE
+            front$.sort_method <- "painter"
+            front <- sort_by_depth(front, proj, plot_bounds)
+            front$.on_top <- TRUE
+            rest <- sort_by_depth(data[!top, , drop = FALSE], proj, plot_bounds)
+            return(dplyr::bind_rows(rest, front[intersect(names(front), names(rest))]))
       }
 
       # Vertex order within each group (preserves polygon winding)
@@ -1447,6 +1464,32 @@ plane_side_order <- function(gi, gj, eye, tol = 1e-6) {
             e <- eye_side_of_plane(gj$plane, eye)
             if (!is.na(s) && e != 0) return(if (s == e) -1 else 1)
       }
+      NA
+}
+
+
+#' Order of a polygon and a smaller primitive lying in its plane
+#'
+#' A point, segment, or text label lying exactly in a planar polygon's plane
+#' (such as a line drawn along a plane) has no geometric depth order with it,
+#' and comparing sampled depths gives an arbitrary result. Such primitives are
+#' drawn on top of the polygon.
+#'
+#' @param gi,gj Group geometry from `group_geometry_3d()`.
+#' @param ti,tj Primitive types.
+#' @param tol Absolute distance tolerance in cube units.
+#' @return 1 if i is the polygon (drawn behind j), -1 if j is, or NA if the
+#'   pair isn't a planar polygon and a primitive lying in its plane.
+#' @keywords internal
+#' @noRd
+coplanar_order <- function(gi, gj, ti, tj, tol = 1e-6) {
+      in_plane <- function(poly, other, other_type) {
+            !is.null(poly$plane) && isTRUE(poly$plane$planar) &&
+                  other_type %in% c("point", "segment", "text") &&
+                  all(abs(as.vector(other$pts %*% poly$plane$normal - poly$plane$offset)) <= tol)
+      }
+      if (ti == "polygon" && in_plane(gi, gj, tj)) return(1)
+      if (tj == "polygon" && in_plane(gj, gi, ti)) return(-1)
       NA
 }
 
