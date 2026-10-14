@@ -345,9 +345,10 @@ article.
 ## Annotations
 
 [`annotate_3d()`](https://matthewkling.github.io/ggcube/reference/annotate_3d.md)
-adds reference geometry — points, text labels, or segments — to any 3D
-layer. Unlike adding a separate layer, annotations are embedded within
-the host layer so they participate in the same depth sorting:
+adds reference geometry — points, text labels, segments, axis lines, or
+planes — to any 3D layer. Unlike adding a separate layer, annotations
+are embedded within the host layer so they participate in the same depth
+sorting:
 
 ``` r
 
@@ -355,6 +356,7 @@ summit <- filter(mountain, z == max(z))
 ggplot(mountain, aes(x, y, z)) +
       geom_contour_3d(
             annotate = list(
+                  annotate_3d("plane", a = 0, b = 1, c = 0, d = .5, fill = "blue", alpha = .25),
                   annotate_3d("point", x = summit$x, y = summit$y, z = summit$z, color = "red"),
                   annotate_3d("text", x = summit$x, y = summit$y, z = summit$z, color = "red",
                               label = "Summit", fontface = "bold", vjust = -1)

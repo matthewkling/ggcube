@@ -18,6 +18,7 @@ geom_segment_3d(
   sort_method = "painter",
   scale_depth = TRUE,
   arrow = NULL,
+  arrow.fill = NULL,
   lineend = "butt",
   na.rm = FALSE,
   show.legend = NA,
@@ -33,6 +34,7 @@ stat_segment_3d(
   sort_method = "painter",
   scale_depth = TRUE,
   arrow = NULL,
+  arrow.fill = NULL,
   lineend = "butt",
   na.rm = FALSE,
   show.legend = NA,
@@ -95,6 +97,10 @@ stat_segment_3d(
 
   Specification for arrow heads, created by
   [`arrow()`](https://rdrr.io/r/grid/arrow.html).
+
+- arrow.fill:
+
+  Fill colour for closed arrowheads. Defaults to the segment colour.
 
 - lineend:
 

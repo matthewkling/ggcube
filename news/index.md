@@ -13,12 +13,40 @@
   [`geom_text_3d()`](https://matthewkling.github.io/ggcube/reference/geom_text_3d.md)
   (billboard method) could draw labels at each other’s depth-scaled
   sizes under perspective projection.
-- New `annotate_3d("plane")` draws planes `a * x + b * y + c * z = d`,
-  clipped to the panel. The coefficients are vectorized, so a linear
-  system can be drawn in one call. Planes are depth-sorted (and, with
-  pairwise sorting, split where they intersect) with the layer’s
-  geometry, lit from the side facing the viewer, never removed by
-  back-face culling, and don’t expand the plot’s axis ranges.
+- Text annotations gain an `on_top` argument:
+  `annotate_3d("text", ..., on_top = TRUE)` draws labels after
+  everything else in the layer, instead of depth-sorting them, so
+  geometry never hides or clips them.
+- New `annotate_3d("polygon")` draws filled polygons from their
+  vertices, with `group` to draw several in one call. Like planes, they
+  are lit from the side facing the viewer and never removed by back-face
+  culling.
+- New `annotate_3d("line")` draws infinite lines through a point (`x`,
+  `y`, `z`) in a direction (`dx`, `dy`, `dz`), clipped to the panel.
+  Like planes, lines don’t expand the plot’s axis ranges.
+- Annotation segments no longer take the arrowheads of the layer they’re
+  in (e.g. `geom_segment_3d(arrow = )`); they’re drawn with an arrow
+  only when given their own via `annotate_3d(arrow = )`.
+- [`geom_segment_3d()`](https://matthewkling.github.io/ggcube/reference/geom_segment_3d.md)
+  and
+  [`geom_path_3d()`](https://matthewkling.github.io/ggcube/reference/geom_path_3d.md)
+  gain an `arrow.fill` argument. Closed arrowheads are now filled with
+  the line colour by default, as in ggplot2; previously they were drawn
+  hollow.
+- Pairwise sorting now always draws points, segments, and text lying in
+  the plane of a planar polygon (e.g. a line drawn along a plane) on top
+  of it. Previously, especially under perspective projection, they were
+  often hidden behind it.
+- New `annotate_3d("plane")` draws planes clipped to the panel. Planes
+  can be given as `xintercept`, `yintercept`, or `zintercept`
+  (perpendicular to an axis); as `intercept`, `slope_x`, and `slope_y`
+  (`z = intercept + slope_x * x + slope_y * y`, as from a linear model);
+  or as general coefficients `a * x + b * y + c * z = d`. All forms are
+  vectorized, so e.g. a linear system can be drawn in one call. Planes
+  are depth-sorted (and, with pairwise sorting, split where they
+  intersect) with the layer’s geometry, lit from the side facing the
+  viewer, never removed by back-face culling, and don’t expand the
+  plot’s axis ranges.
 - Fixed an error when a
   [`geom_point_3d()`](https://matthewkling.github.io/ggcube/reference/geom_point_3d.md)
   layer with pairwise sorting contained annotations. Pairwise sorting

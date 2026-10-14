@@ -65,6 +65,7 @@ coordinates (xend, yend, zend).</p>
 <span>  sort_method <span class="op">=</span> <span class="st">"painter"</span>,</span>
 <span>  scale_depth <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  arrow <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  arrow.fill <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  lineend <span class="op">=</span> <span class="st">"butt"</span>,</span>
 <span>  na.rm <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  show.legend <span class="op">=</span> <span class="cn">NA</span>,</span>
@@ -80,6 +81,7 @@ coordinates (xend, yend, zend).</p>
 <span>  sort_method <span class="op">=</span> <span class="st">"painter"</span>,</span>
 <span>  scale_depth <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  arrow <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  arrow.fill <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  lineend <span class="op">=</span> <span class="st">"butt"</span>,</span>
 <span>  na.rm <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  show.legend <span class="op">=</span> <span class="cn">NA</span>,</span>
@@ -133,6 +135,11 @@ only; use <code>coord_3d(scale_depth = )</code> for panel and axis components.</
 
 <dt id="arg-arrow">arrow<a class="anchor" aria-label="anchor" href="#arg-arrow"></a></dt>
 <dd><p>Specification for arrow heads, created by <code><a href="https://rdrr.io/r/grid/arrow.html" class="external-link">arrow()</a></code>.</p></dd>
+
+
+<dt id="arg-arrow-fill">arrow.fill<a class="anchor" aria-label="anchor" href="#arg-arrow-fill"></a></dt>
+<dd><p>Fill colour for closed arrowheads. Defaults to the
+segment colour.</p></dd>
 
 
 <dt id="arg-lineend">lineend<a class="anchor" aria-label="anchor" href="#arg-lineend"></a></dt>
