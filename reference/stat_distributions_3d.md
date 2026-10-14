@@ -40,6 +40,7 @@ geom_distributions_3d(
   stat = "distributions_3d",
   position = "identity",
   ...,
+  annotate = NULL,
   direction = NULL,
   bw = "nrd0",
   adjust = 1,
@@ -232,6 +233,14 @@ geom_distributions_3d(
 
   Statistical transformation to use on the data. Defaults to
   `stat_distributions_3d()`.
+
+- annotate:
+
+  An
+  [`annotate_3d()`](https://matthewkling.github.io/ggcube/reference/annotate_3d.md)
+  specification, or a list of them, to draw within this layer.
+  Annotations are depth-sorted together with the layer's own geometry,
+  so they can pass in front of and behind it correctly.
 
 ## Value
 

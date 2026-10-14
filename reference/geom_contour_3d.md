@@ -12,6 +12,7 @@ geom_contour_3d(
   stat = "surface_3d",
   position = "identity",
   ...,
+  annotate = NULL,
   bins = 20,
   binwidth = NULL,
   breaks = NULL,
@@ -67,6 +68,14 @@ stat_contour_3d(
 - ...:
 
   Other arguments passed to the layer.
+
+- annotate:
+
+  An
+  [`annotate_3d()`](https://matthewkling.github.io/ggcube/reference/annotate_3d.md)
+  specification, or a list of them, to draw within this layer.
+  Annotations are depth-sorted together with the layer's own geometry,
+  so they can pass in front of and behind it correctly.
 
 - bins:
 

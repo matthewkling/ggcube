@@ -32,6 +32,7 @@ geom_function_3d(
   stat = "function_3d",
   position = "identity",
   ...,
+  annotate = NULL,
   fun = NULL,
   xlim = NULL,
   ylim = NULL,
@@ -125,6 +126,14 @@ geom_function_3d(
 
   Statistical transformation to use on the data. Defaults to
   `"surface_3d"`.
+
+- annotate:
+
+  An
+  [`annotate_3d()`](https://matthewkling.github.io/ggcube/reference/annotate_3d.md)
+  specification, or a list of them, to draw within this layer.
+  Annotations are depth-sorted together with the layer's own geometry,
+  so they can pass in front of and behind it correctly.
 
 ## Value
 

@@ -61,6 +61,7 @@ coordinates (xend, yend, zend).</p>
 <span>  stat <span class="op">=</span> <span class="va">StatSegment3D</span>,</span>
 <span>  position <span class="op">=</span> <span class="st">"identity"</span>,</span>
 <span>  <span class="va">...</span>,</span>
+<span>  annotate <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  sort_method <span class="op">=</span> <span class="st">"painter"</span>,</span>
 <span>  scale_depth <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  arrow <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -109,6 +110,12 @@ for start coordinates and xend, yend, zend for end coordinates.</p></dd>
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Other arguments passed on to <code><a href="https://ggplot2.tidyverse.org/reference/layer.html" class="external-link">ggplot2::layer()</a></code>.</p></dd>
+
+
+<dt id="arg-annotate">annotate<a class="anchor" aria-label="anchor" href="#arg-annotate"></a></dt>
+<dd><p>An <code><a href="annotate_3d.html">annotate_3d()</a></code> specification, or a list of them, to draw
+within this layer. Annotations are depth-sorted together with the layer's
+own geometry, so they can pass in front of and behind it correctly.</p></dd>
 
 
 <dt id="arg-sort-method">sort_method<a class="anchor" aria-label="anchor" href="#arg-sort-method"></a></dt>

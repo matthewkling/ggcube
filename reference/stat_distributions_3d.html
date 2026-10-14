@@ -84,6 +84,7 @@ but rendered as 3D surfaces using <code><a href="geom_ridgeline_3d.html">geom_ri
 <span>  stat <span class="op">=</span> <span class="st">"distributions_3d"</span>,</span>
 <span>  position <span class="op">=</span> <span class="st">"identity"</span>,</span>
 <span>  <span class="va">...</span>,</span>
+<span>  annotate <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  direction <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  bw <span class="op">=</span> <span class="st">"nrd0"</span>,</span>
 <span>  adjust <span class="op">=</span> <span class="fl">1</span>,</span>
@@ -259,6 +260,12 @@ voxels, FALSE is safe because polygons fill always be convex.</p></dd>
 <dt id="arg-stat">stat<a class="anchor" aria-label="anchor" href="#arg-stat"></a></dt>
 <dd><p>Statistical transformation to use on the data. Defaults to
 <code>stat_distributions_3d()</code>.</p></dd>
+
+
+<dt id="arg-annotate">annotate<a class="anchor" aria-label="anchor" href="#arg-annotate"></a></dt>
+<dd><p>An <code><a href="annotate_3d.html">annotate_3d()</a></code> specification, or a list of them, to draw
+within this layer. Annotations are depth-sorted together with the layer's
+own geometry, so they can pass in front of and behind it correctly.</p></dd>
 
 </dl></div>
     <div class="section level2">

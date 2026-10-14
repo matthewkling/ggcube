@@ -2,6 +2,38 @@
 
 ## ggcube (development version)
 
+- Every `geom_*_3d()` function now has a documented `annotate` argument
+  for embedding
+  [`annotate_3d()`](https://matthewkling.github.io/ggcube/reference/annotate_3d.md)
+  annotations in the layer.
+  [`geom_text_3d()`](https://matthewkling.github.io/ggcube/reference/geom_text_3d.md)
+  with its default `method = "billboard"` now supports annotations;
+  previously it ignored them with an “unknown parameter” warning.
+- Fixed a bug where
+  [`geom_text_3d()`](https://matthewkling.github.io/ggcube/reference/geom_text_3d.md)
+  (billboard method) could draw labels at each other’s depth-scaled
+  sizes under perspective projection.
+- New `annotate_3d("plane")` draws planes `a * x + b * y + c * z = d`,
+  clipped to the panel. The coefficients are vectorized, so a linear
+  system can be drawn in one call. Planes are depth-sorted (and, with
+  pairwise sorting, split where they intersect) with the layer’s
+  geometry, lit from the side facing the viewer, never removed by
+  back-face culling, and don’t expand the plot’s axis ranges.
+- Fixed an error when a
+  [`geom_point_3d()`](https://matthewkling.github.io/ggcube/reference/geom_point_3d.md)
+  layer with pairwise sorting contained annotations. Pairwise sorting
+  now also treats the reference lines of point layers as segments rather
+  than degenerate polygons.
+- New `annotate_3d("axes")` draws x, y, and z axis lines through an
+  origin (default `0`), each spanning the panel’s full range, with
+  arrowheads and labels at their high ends. Axes are depth-sorted with
+  the layer’s geometry, and are built from the panel’s limits at draw
+  time, so they don’t expand the plot’s axis ranges.
+- `annotate_3d("segment")` gains an `arrow` argument, taking a
+  [`grid::arrow()`](https://rdrr.io/r/grid/arrow.html) specification.
+  Closed arrowheads are filled with the segment colour, and when a
+  segment is split where it passes through a polygon, its arrowheads
+  stay at the original ends.
 - [`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md)
   now draws axis lines from the `axis.line` theme elements, plus a new
   `axis.line.z`. Each line runs along the cube edge carrying its axis’s

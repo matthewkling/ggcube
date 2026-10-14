@@ -58,6 +58,7 @@ from <code><a href="geom_hull_3d.html">stat_hull_3d()</a></code> and <code><a hr
 <span>  stat <span class="op">=</span> <span class="va">StatIdentity3D</span>,</span>
 <span>  position <span class="op">=</span> <span class="st">"identity"</span>,</span>
 <span>  <span class="va">...</span>,</span>
+<span>  annotate <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  rule <span class="op">=</span> <span class="st">"evenodd"</span>,</span>
 <span>  sort_method <span class="op">=</span> <span class="st">"auto"</span>,</span>
 <span>  scale_depth <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -96,6 +97,12 @@ onto one 2D surface, use <code><a href="position_on_face.html">position_on_face(
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Other arguments passed on to the layer function (typically GeomPolygon3D), such as
 aesthetics like <code>colour</code>, <code>fill</code>, <code>linewidth</code>, <code>annotate = annotate_3d(...)</code>, etc.</p></dd>
+
+
+<dt id="arg-annotate">annotate<a class="anchor" aria-label="anchor" href="#arg-annotate"></a></dt>
+<dd><p>An <code><a href="annotate_3d.html">annotate_3d()</a></code> specification, or a list of them, to draw
+within this layer. Annotations are depth-sorted together with the layer's
+own geometry, so they can pass in front of and behind it correctly.</p></dd>
 
 
 <dt id="arg-rule">rule<a class="anchor" aria-label="anchor" href="#arg-rule"></a></dt>

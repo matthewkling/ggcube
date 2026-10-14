@@ -13,6 +13,7 @@ geom_text_3d(
   data = NULL,
   position = "identity",
   ...,
+  annotate = NULL,
   method = c("billboard", "polygon"),
   facing = "zmax",
   coord = NULL,
@@ -88,6 +89,14 @@ stat_text_3d(
 - ...:
 
   Other arguments passed to the layer.
+
+- annotate:
+
+  An
+  [`annotate_3d()`](https://matthewkling.github.io/ggcube/reference/annotate_3d.md)
+  specification, or a list of them, to draw within this layer.
+  Annotations are depth-sorted together with the layer's own geometry,
+  so they can pass in front of and behind it correctly.
 
 - method:
 
