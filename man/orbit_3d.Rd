@@ -9,6 +9,8 @@ orbit_3d(
   pitch = NULL,
   roll = NULL,
   yaw = NULL,
+  light_azimuth = NULL,
+  light_elevation = NULL,
   n = 36,
   loop = NULL,
   start = NULL,
@@ -31,6 +33,21 @@ draggable axis. For \code{yaw}, using a larger value for \code{from} than \code{
 more natural results. Values specified here replace the ones specified in
 \code{coord_3d()}. See Details.}
 
+\item{light_azimuth, light_elevation}{Light direction in degrees, using the
+same conventions as \code{\link[=direction]{direction()}}: azimuth is a bearing clockwise from the
+positive y axis, and elevation is the angle above the xy plane (between
+-90 and 90). Each is either a single value (held fixed) or a length-2
+range \code{c(from, to)} that becomes a draggable axis. When either is
+given, the other is held at the plot light's current value unless also
+given; when both are \code{NULL} (the default), lighting is left as the plot
+specifies. These move the plot-level light set with \code{\link[=light]{light()}} or
+\code{coord_3d(light = )}, which must be directional (not \code{position}-based);
+it is an error to use them when lighting is disabled or when any layer
+has its own \code{light}. The light's \code{anchor} is respected: with the default
+\code{anchor = "scene"} the light moves around the data, so orbiting \code{yaw} and
+\code{light_azimuth} together partly cancels out; with \code{anchor = "camera"} it
+moves around the viewer.}
+
 \item{n}{Grid resolution. For a 1D orbit, a single number giving the
 frame count. For a 2D orbit, a length-2 vector giving the counts for
 the horizontal and vertical screen axes respectively (in that order, x then y).
@@ -43,12 +60,13 @@ wrapping on or off for all axes.}
 
 \item{start}{Initial viewing angle(s) the orbit opens at, given in
 degrees as a named vector matching the variable axes, e.g.
-\code{start = c(yaw = 30)} or \code{start = c(yaw = 30, roll = 45)}. For a
+\code{start = c(yaw = 30)}, \code{start = c(yaw = 30, roll = 45)}, or
+\code{start = c(light_azimuth = 90)}. For a
 1D orbit a bare scalar (e.g. \code{start = 30}) is also accepted. The
 orbit opens at the frame nearest each given angle. Any variable axis not
 named in \code{start} opens at the midpoint of its range, as does every
 axis when \code{start = NULL} (the default). Naming an axis that is
-fixed rather than variable throas an error.}
+fixed rather than variable throws an error.}
 
 \item{max_frames}{Safety cap on the total number of rendered frames
 (\code{prod(n)}). A 2D grid can become very large; if the requested grid
@@ -92,12 +110,12 @@ RStudio Viewer, embeds in R Markdown and Quarto documents, works in Shiny
 file with \verb{file =}. When viewing it, navigate through the views by dragging
 the image or using the keyboard arrows.
 }
-\section{Specifying rotation}{
+\section{Specifying rotation and lighting}{
 
-Each of \code{pitch}, \code{roll}, and \code{yaw} is given either as a
-single value (held fixed) or as a length-2 range \code{c(from, to)} that
-is a variable, draggable axis. The number of ranges determines the
-interaction:
+Each of \code{pitch}, \code{roll}, \code{yaw}, \code{light_azimuth}, and
+\code{light_elevation} is given either as a single value (held fixed) or as
+a length-2 range \code{c(from, to)} that is a variable, draggable axis. The
+number of ranges determines the interaction:
 \itemize{
 \item One range gives a 1D orbit: horizontal drag (or left/right
 keyboard arrows) vary that one parameter across its range.
@@ -110,10 +128,15 @@ At least one range is required. Supplying three ranges is an error.
 For a 2D orbit, the horizontal (x) and vertical (y) axes are assigned
 from whichever parameters are ranged, by priority. The x axis takes the
 highest-priority ranged parameter in the order \code{yaw}, \code{pitch},
-\code{roll}; the y axis takes the highest-priority remaining ranged
-parameter in the order \code{roll}, \code{pitch}. In the common case
+\code{roll}, \code{light_azimuth}, \code{light_elevation}, and the y axis
+takes the other. Camera parameters outrank light parameters, so an orbit
+that ranges one of each puts the camera on horizontal drag and the light on
+vertical drag. In the common case
 \code{yaw = c(0, 360), roll = c(...)} this puts yaw on horizontal drag and
-roll on vertical drag.
+roll on vertical drag; \code{yaw = c(0, 360), light_elevation = c(...)}
+spins the camera horizontally and raises the light vertically; and
+\code{light_azimuth = c(0, 360), light_elevation = c(...)} moves only the
+light, with azimuth horizontal and elevation vertical.
 
 The range direction follows the order the values are written: for example
 \code{yaw = c(360, 0)} rotates the opposite way from \code{yaw = c(0, 360)}.
@@ -152,6 +175,11 @@ orbit_3d(p, yaw = c(360, 0), n = 12)
 # (note you could increase `cores` to speed up compute time)
 orbit_3d(p, yaw = c(360, 0), roll = c(-90, 0), n = c(20, 10),
             width = 1000, height = 1000, cores = 1)
+
+# Light orbit: drag horizontally to move the light around,
+# vertically to raise and lower it
+orbit_3d(p, light_azimuth = c(0, 360), light_elevation = c(0, 90),
+            n = c(12, 4))
 
 # Save to a chosen path
 orbit_3d(p, yaw = c(360, 0), n = 12,

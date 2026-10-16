@@ -193,3 +193,87 @@ test_that("a bare scalar start errors for a 2D orbit", {
                              start = 30),
             "named vector")
 })
+
+# --- Light parameters ---------------------------------------------------------
+
+test_that("camera-only axis layouts are unchanged by the light parameters", {
+      expect_equal(resolve_orbit_axes(yaw = c(0, 360), roll = c(-45, 45))$axes,
+                   c("yaw", "roll"))
+      expect_equal(resolve_orbit_axes(yaw = c(0, 360), pitch = c(0, 90))$axes,
+                   c("yaw", "pitch"))
+      expect_equal(resolve_orbit_axes(pitch = c(0, 90), roll = c(-45, 45))$axes,
+                   c("pitch", "roll"))
+})
+
+test_that("camera parameters claim x and light parameters claim y", {
+      expect_equal(
+            resolve_orbit_axes(yaw = c(0, 360), light_elevation = c(0, 90))$axes,
+            c("yaw", "light_elevation"))
+      expect_equal(
+            resolve_orbit_axes(yaw = c(0, 360), light_azimuth = c(0, 360))$axes,
+            c("yaw", "light_azimuth"))
+      expect_equal(
+            resolve_orbit_axes(roll = c(-90, 0), light_azimuth = c(0, 360))$axes,
+            c("roll", "light_azimuth"))
+      # With only light ranged, azimuth goes horizontal and elevation vertical.
+      expect_equal(
+            resolve_orbit_axes(light_azimuth = c(0, 360),
+                               light_elevation = c(0, 90))$axes,
+            c("light_azimuth", "light_elevation"))
+      expect_equal(resolve_orbit_axes(light_elevation = c(0, 90))$axes,
+                   "light_elevation")
+})
+
+test_that("more than two ranged parameters, light included, is an error", {
+      expect_error(
+            resolve_orbit_axes(yaw = c(0, 360), light_azimuth = c(0, 360),
+                               light_elevation = c(0, 90)),
+            "at most two")
+})
+
+test_that("light columns appear only when the light is orbited", {
+      spec <- resolve_orbit_axes(yaw = c(0, 90))
+      grid <- build_param_grid(fake_coord(), spec, n = 3, loop = NULL)
+      expect_named(grid$param_seqs, c("pitch", "roll", "yaw"))
+
+      grid <- build_param_grid(fake_coord(), spec, n = 3, loop = NULL,
+                               light_angles = list(azimuth = 270,
+                                                   elevation = 60))
+      expect_named(grid$param_seqs,
+                   c("pitch", "roll", "yaw", "light_azimuth", "light_elevation"))
+})
+
+test_that("light parameters default to the plot light and honor fixed values", {
+      angles <- list(azimuth = 270, elevation = 60)
+
+      spec <- resolve_orbit_axes(light_azimuth = c(0, 180))
+      grid <- build_param_grid(fake_coord(), spec, n = 4, loop = NULL,
+                               light_angles = angles)
+      expect_equal(grid$param_seqs$light_azimuth, seq(0, 180, length.out = 4))
+      expect_true(all(grid$param_seqs$light_elevation == 60))
+      # Camera held at the coord's angles.
+      expect_true(all(grid$param_seqs$yaw == 30))
+
+      spec <- resolve_orbit_axes(yaw = c(0, 90), light_elevation = 15)
+      grid <- build_param_grid(fake_coord(), spec, n = 4, loop = NULL,
+                               light_angles = angles)
+      expect_true(all(grid$param_seqs$light_elevation == 15))
+      expect_true(all(grid$param_seqs$light_azimuth == 270))
+})
+
+test_that("a full-turn light azimuth loops and an elevation sweep clamps", {
+      spec <- resolve_orbit_axes(light_azimuth = c(0, 360),
+                                 light_elevation = c(-90, 90))
+      grid <- build_param_grid(fake_coord(), spec, n = c(4, 3), loop = NULL,
+                               light_angles = list(azimuth = 0, elevation = 0))
+      expect_equal(grid$loop_flags, c(TRUE, FALSE))
+      expect_equal(grid$dims, c(4L, 3L))
+})
+
+test_that("start can name a light axis", {
+      spec <- resolve_orbit_axes(yaw = c(0, 350), light_azimuth = c(0, 350))
+      grid <- build_param_grid(fake_coord(), spec, n = c(36, 36), loop = FALSE,
+                               start = c(light_azimuth = 100),
+                               light_angles = list(azimuth = 0, elevation = 30))
+      expect_equal(grid$start[2], 10L)
+})

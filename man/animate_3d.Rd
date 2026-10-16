@@ -9,6 +9,8 @@ animate_3d(
   pitch = NULL,
   roll = NULL,
   yaw = NULL,
+  light_azimuth = NULL,
+  light_elevation = NULL,
   nframes = NULL,
   fps = NULL,
   duration = NULL,
@@ -38,6 +40,20 @@ interpolated linearly across the animation. Keyframes are evenly
 spaced, so \code{c(0, 180, 180)} with 100 frames means: start at 0,
 reach 180 at frame 50, hold at 180 until frame 100.
 }}
+
+\item{light_azimuth, light_elevation}{Light direction parameters to animate,
+in degrees, using the same conventions as \code{\link[=direction]{direction()}}: azimuth is a
+bearing clockwise from the positive y axis, and elevation is the angle
+above the xy plane (between -90 and 90). Each takes the same forms as the
+rotation parameters. When either is given, the other is held at the plot
+light's current value unless also given. When both are \code{NULL} (the
+default), lighting is left as the plot specifies. These move the
+plot-level light set with \code{\link[=light]{light()}} or \code{coord_3d(light = )}, which must be
+directional (not \code{position}-based); it is an error to use them when
+lighting is disabled or when any layer has its own \code{light}. The light's
+\code{anchor} is respected: with the default \code{anchor = "scene"} the light
+moves around the data, so animating \code{yaw} and \code{light_azimuth} together
+partly cancels out; with \code{anchor = "camera"} it moves around the viewer.}
 
 \item{nframes, fps, duration}{Control animation length and speed. Specify
 any two of three; the third is computed as
@@ -113,6 +129,10 @@ animate_3d(p, yaw = c(-30, 330), nframes = 12)
 # Multi-segment orbit with pitch change
 animate_3d(p, yaw = c(0, 720), roll = c(-90, 0, -90),
            nframes = 12, fps = 15)
+
+# Sweep the light while the camera holds still
+animate_3d(p, light_azimuth = c(0, 360), light_elevation = 30,
+           nframes = 12)
 
 # Save to file (writes to a temporary path; specify your own to keep it)
 anim <- animate_3d(p, yaw = c(0, 360), nframes = 12)

@@ -15,6 +15,19 @@
 #'       spaced, so \code{c(0, 180, 180)} with 100 frames means: start at 0,
 #'       reach 180 at frame 50, hold at 180 until frame 100.
 #'   }
+#' @param light_azimuth,light_elevation Light direction parameters to animate,
+#'   in degrees, using the same conventions as [direction()]: azimuth is a
+#'   bearing clockwise from the positive y axis, and elevation is the angle
+#'   above the xy plane (between -90 and 90). Each takes the same forms as the
+#'   rotation parameters. When either is given, the other is held at the plot
+#'   light's current value unless also given. When both are `NULL` (the
+#'   default), lighting is left as the plot specifies. These move the
+#'   plot-level light set with [light()] or `coord_3d(light = )`, which must be
+#'   directional (not `position`-based); it is an error to use them when
+#'   lighting is disabled or when any layer has its own `light`. The light's
+#'   `anchor` is respected: with the default `anchor = "scene"` the light
+#'   moves around the data, so animating `yaw` and `light_azimuth` together
+#'   partly cancels out; with `anchor = "camera"` it moves around the viewer.
 #' @param nframes,fps,duration Control animation length and speed. Specify
 #'   any two of three; the third is computed as
 #'   \code{duration = nframes / fps}. Defaults: \code{nframes = 100},
@@ -76,6 +89,10 @@
 #' animate_3d(p, yaw = c(0, 720), roll = c(-90, 0, -90),
 #'            nframes = 12, fps = 15)
 #'
+#' # Sweep the light while the camera holds still
+#' animate_3d(p, light_azimuth = c(0, 360), light_elevation = 30,
+#'            nframes = 12)
+#'
 #' # Save to file (writes to a temporary path; specify your own to keep it)
 #' anim <- animate_3d(p, yaw = c(0, 360), nframes = 12)
 #' anim_save_3d(anim, file.path(tempdir(), "rotating_surface.gif"))
@@ -89,6 +106,8 @@ animate_3d <- function(plot,
                        pitch = NULL,
                        roll = NULL,
                        yaw = NULL,
+                       light_azimuth = NULL,
+                       light_elevation = NULL,
                        nframes = NULL,
                        fps = NULL,
                        duration = NULL,
@@ -123,13 +142,25 @@ animate_3d <- function(plot,
       nframes <- timing$nframes
       fps <- timing$fps
 
+      # --- Resolve the light to animate, if any ---
+      light <- NULL
+      light_angles <- NULL
+      if (!is.null(light_azimuth) || !is.null(light_elevation)) {
+            validate_light_elevation(light_elevation)
+            light <- resolve_animated_light(plot)
+            light_angles <- direction_angles(light$direction)
+      }
+
       # --- Build per-frame parameter sequences ---
       param_seqs <- build_param_sequences(
             coord = coord,
             pitch = pitch,
             roll = roll,
             yaw = yaw,
-            nframes = nframes
+            nframes = nframes,
+            light_azimuth = light_azimuth,
+            light_elevation = light_elevation,
+            light_angles = light_angles
       )
 
       # --- Apply start_pause, end_pause, rewind ---
@@ -147,7 +178,8 @@ animate_3d <- function(plot,
             device = device,
             cores = cores,
             progress = progress,
-            prefix = "ggcube_anim_"
+            prefix = "ggcube_anim_",
+            light = light
       )
 
       message("Assembling animation...")
@@ -184,9 +216,13 @@ animate_3d <- function(plot,
 #' @param plot A ggplot object using [coord_3d()].
 #' @param coord The plot's Coord3D object (\code{plot$coordinates}).
 #' @param param_seqs A data.frame with columns \code{pitch}, \code{roll},
-#'   \code{yaw}; one row per frame.
+#'   \code{yaw}, plus \code{light_azimuth} and \code{light_elevation} when the
+#'   light is animated; one row per frame.
 #' @param width,height,res,device,cores,progress As in [animate_3d()].
 #' @param prefix Prefix for the temporary frame directory.
+#' @param light \code{NULL} to leave lighting as the plot specifies, or the
+#'   base `light` object (from resolve_animated_light()) whose direction is
+#'   set per frame from the light columns of \code{param_seqs}.
 #'
 #' @return A list with elements \code{files} (character vector of PNG paths),
 #'   \code{tmpdir} (the directory containing them), and \code{width},
@@ -195,7 +231,7 @@ animate_3d <- function(plot,
 #' @noRd
 render_3d_frames <- function(plot, coord, param_seqs, width, height, res,
                              device, cores, progress,
-                             prefix = "ggcube_frames_") {
+                             prefix = "ggcube_frames_", light = NULL) {
       total_frames <- nrow(param_seqs)
 
       # --- Set up output directory ---
@@ -241,14 +277,20 @@ render_3d_frames <- function(plot, coord, param_seqs, width, height, res,
             )
       }
 
+      # --- Per-frame lighting ---
+      prepared <- prepare_frame_lights(plot, light, param_seqs)
+      plot <- prepared$plot
+      frame_lights <- prepared$frame_lights
+
       # --- Render frames ---
       if (cores > 1) {
             render_frames_parallel(plot, param_seqs, static_params, global_bounds,
-                                   frame_files, width, height, res, device, cores)
+                                   frame_files, width, height, res, device, cores,
+                                   frame_lights)
       } else {
             render_frames_sequential(plot, param_seqs, static_params, global_bounds,
                                      frame_files, width, height, res, device,
-                                     progress)
+                                     progress, frame_lights)
       }
 
       list(files = frame_files, tmpdir = tmpdir, width = width, height = height)
@@ -260,7 +302,8 @@ render_3d_frames <- function(plot, coord, param_seqs, width, height, res,
 #' @noRd
 render_frames_sequential <- function(plot, param_seqs, static_params,
                                      global_bounds, frame_files,
-                                     width, height, res, device, progress) {
+                                     width, height, res, device, progress,
+                                     frame_lights = NULL) {
       total_frames <- nrow(param_seqs)
       message(sprintf("Rendering %d frames...", total_frames))
 
@@ -275,7 +318,8 @@ render_frames_sequential <- function(plot, param_seqs, static_params,
       for (i in seq_len(total_frames)) {
             if (!is.null(pb)) pb$tick()
             render_single_frame(plot, param_seqs, static_params, global_bounds,
-                                frame_files[i], i, width, height, res, device)
+                                frame_files[i], i, width, height, res, device,
+                                frame_lights[[i]])
       }
 }
 
@@ -285,7 +329,8 @@ render_frames_sequential <- function(plot, param_seqs, static_params,
 #' @noRd
 render_frames_parallel <- function(plot, param_seqs, static_params,
                                    global_bounds, frame_files,
-                                   width, height, res, device, cores) {
+                                   width, height, res, device, cores,
+                                   frame_lights = NULL) {
       total_frames <- nrow(param_seqs)
       cores <- min(cores, total_frames)
       message(sprintf("Rendering %d frames across %d cores...",
@@ -304,7 +349,7 @@ render_frames_parallel <- function(plot, param_seqs, static_params,
       parallel::clusterExport(cl, c("plot", "param_seqs", "static_params",
                                     "global_bounds", "frame_files",
                                     "width", "height", "res",
-                                    "device"),
+                                    "device", "frame_lights"),
                               envir = environment())
 
       # Render in parallel. The worker function is defined inline so that
@@ -320,6 +365,9 @@ render_frames_parallel <- function(plot, param_seqs, static_params,
                         fixed_bounds = global_bounds
                   )
             )
+            if (!is.null(frame_lights)) {
+                  frame_coord_args$light <- frame_lights[[i]]
+            }
             frame_coord <- do.call(ggcube::coord_3d, frame_coord_args)
 
             frame_plot <- plot
@@ -348,7 +396,22 @@ render_frames_parallel <- function(plot, param_seqs, static_params,
 #' @keywords internal
 #' @noRd
 render_single_frame <- function(plot, param_seqs, static_params, global_bounds,
-                                file, i, width, height, res, device) {
+                                file, i, width, height, res, device,
+                                frame_light = NULL) {
+      frame_plot <- build_frame_plot(plot, param_seqs, static_params,
+                                     global_bounds, i, frame_light)
+      render_frame(frame_plot, file, width, height, res, device)
+}
+
+
+#' Build the plot for a single animation frame
+#'
+#' Swaps a coord carrying frame \code{i}'s rotation (and, when the light is
+#' animated, its light) onto the plot.
+#' @keywords internal
+#' @noRd
+build_frame_plot <- function(plot, param_seqs, static_params, global_bounds,
+                             i, frame_light = NULL) {
       frame_coord_args <- modifyList(
             static_params,
             list(
@@ -358,14 +421,105 @@ render_single_frame <- function(plot, param_seqs, static_params, global_bounds,
                   fixed_bounds = global_bounds
             )
       )
+      # Assigned directly rather than through modifyList(), which would merge a
+      # light spec field by field into the static one instead of replacing it.
+      if (!is.null(frame_light)) {
+            frame_coord_args$light <- frame_light
+      }
       frame_coord <- do.call(coord_3d, frame_coord_args)
 
       # coord_3d() returns a list of (ggproto, theme); we only need the
       # ggproto since the theme is already applied from the original plot.
       frame_plot <- plot
       frame_plot$coordinates <- frame_coord[[1]]
+      frame_plot
+}
 
-      render_frame(frame_plot, file, width, height, res, device)
+
+# Animated lighting --------------------------------------------------------
+
+#' Resolve the plot-level light that animated light angles act on
+#'
+#' Light angles can only move a directional light that applies to the whole
+#' plot, so this errors when lighting is disabled, when the light is
+#' positional, or when any layer carries its own light (which would ignore the
+#' animated one).
+#' @param plot A ggplot object using [coord_3d()].
+#' @return A `light` object.
+#' @keywords internal
+#' @noRd
+resolve_animated_light <- function(plot) {
+      layer_lit <- vapply(plot$layers,
+                          function(layer) !is.null(layer$stat_params$light),
+                          logical(1))
+      if (any(layer_lit)) {
+            stop("`light_azimuth` and `light_elevation` move the plot-level ",
+                 "light, but layer ", paste(which(layer_lit), collapse = ", "),
+                 " ", if (sum(layer_lit) == 1) "sets its" else "set their",
+                 " own `light`, which would not respond. Remove the layer-level ",
+                 "`light` to animate lighting.", call. = FALSE)
+      }
+
+      pending <- attr(plot, "ggcube_pending_light")
+      base <- resolve_light(if (!is.null(pending)) pending else plot$coordinates$light)
+
+      if (is.null(base) || identical(base, "none") ||
+          (inherits(base, "light") && identical(base$shade, "neither"))) {
+            stop("`light_azimuth` and `light_elevation` require lighting, but ",
+                 "lighting is disabled for this plot.", call. = FALSE)
+      }
+      if (!is.null(base$position)) {
+            stop("`light_azimuth` and `light_elevation` require a directional ",
+                 "light, but this plot's light uses `position`.", call. = FALSE)
+      }
+
+      base
+}
+
+
+#' Check that animated light elevations are valid angles
+#' @keywords internal
+#' @noRd
+validate_light_elevation <- function(light_elevation) {
+      if (!is.null(light_elevation) &&
+          (!is.numeric(light_elevation) || any(!is.finite(light_elevation)) ||
+           any(light_elevation < -90 | light_elevation > 90))) {
+            stop("`light_elevation` must be between -90 and 90 degrees.",
+                 call. = FALSE)
+      }
+      invisible(light_elevation)
+}
+
+
+#' Prepare a plot and per-frame light specs for animated lighting
+#'
+#' When the light is animated, each frame carries its own light spec on its
+#' coord, built from the base light with its direction set from that frame's
+#' light angles. The plot-level `+ light()` stash is cleared so that it cannot
+#' collide with the coord's now-explicit light.
+#' @param plot A ggplot object using [coord_3d()].
+#' @param light \code{NULL} when the light is not animated, or the base `light`
+#'   object from resolve_animated_light().
+#' @param param_seqs Per-frame parameters, including \code{light_azimuth} and
+#'   \code{light_elevation} columns when \code{light} is given.
+#' @return A list with \code{plot} and \code{frame_lights} (a list of `light`
+#'   objects, one per frame, or \code{NULL} when the light is not animated).
+#' @keywords internal
+#' @noRd
+prepare_frame_lights <- function(plot, light, param_seqs) {
+      if (is.null(light)) {
+            return(list(plot = plot, frame_lights = NULL))
+      }
+
+      frame_lights <- lapply(seq_len(nrow(param_seqs)), function(i) {
+            frame_light <- light
+            frame_light$direction <- direction(param_seqs$light_azimuth[i],
+                                               param_seqs$light_elevation[i])
+            frame_light
+      })
+      attr(plot, "ggcube_pending_light") <- NULL
+
+      list(plot = plot, frame_lights = frame_lights)
 }
 
 
@@ -410,7 +564,9 @@ resolve_timing <- function(nframes, fps, duration) {
 #' Build parameter sequences for each frame
 #' @keywords internal
 #' @noRd
-build_param_sequences <- function(coord, pitch, roll, yaw, nframes) {
+build_param_sequences <- function(coord, pitch, roll, yaw, nframes,
+                                  light_azimuth = NULL, light_elevation = NULL,
+                                  light_angles = NULL) {
 
       make_seq <- function(user_val, coord_val, n) {
             if (is.null(user_val)) {
@@ -435,11 +591,22 @@ build_param_sequences <- function(coord, pitch, roll, yaw, nframes) {
             }
       }
 
-      data.frame(
+      out <- data.frame(
             pitch = make_seq(pitch, coord$pitch, nframes),
             roll  = make_seq(roll,  coord$roll,  nframes),
             yaw   = make_seq(yaw,   coord$yaw,   nframes)
       )
+
+      # Light columns are added only when the light is animated, holding any
+      # unspecified light angle at the plot light's current value.
+      if (!is.null(light_angles)) {
+            out$light_azimuth <- make_seq(light_azimuth, light_angles$azimuth,
+                                          nframes)
+            out$light_elevation <- make_seq(light_elevation,
+                                            light_angles$elevation, nframes)
+      }
+
+      out
 }
 
 
@@ -490,8 +657,9 @@ compute_global_bounds <- function(param_seqs, static_params, effective_ratios) {
             z = c(-0.5, 0.5) * effective_ratios[3]
       ))
 
-      # Find unique rotation combinations to avoid redundant projections
-      unique_params <- unique(param_seqs)
+      # Find unique rotation combinations to avoid redundant projections.
+      # Light angles don't affect geometry, so they're excluded.
+      unique_params <- unique(param_seqs[c("pitch", "roll", "yaw")])
 
       # Collect all projected x/y across all frames
       all_x <- numeric(0)
