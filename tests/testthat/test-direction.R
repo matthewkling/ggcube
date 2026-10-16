@@ -139,3 +139,32 @@ test_that("print.light() reports the angular form of the direction", {
       output <- capture.output(print(light(position = c(1, 1, 1))))
       expect_false(any(grepl("azimuth", output)))
 })
+
+test_that("wrap_angle() reports signed rotations in [-180, 180)", {
+      expect_equal(wrap_angle(c(-30, 330, 720, -190, 0)), c(-30, -30, 0, 170, 0))
+      # The range includes -180 but not 180.
+      expect_equal(wrap_angle(c(180, -180, 540)), c(-180, -180, -180))
+      expect_equal(wrap_angle(179.9), 179.9)
+})
+
+test_that("wrap_angle() reports bearings in [0, 360)", {
+      expect_equal(wrap_angle(c(-90, 360, 725, 0, 359.9), "bearing"),
+                   c(270, 0, 5, 0, 359.9))
+})
+
+test_that("wrap_angle() rounds before wrapping so values don't land on the excluded end", {
+      expect_equal(wrap_angle(359.97, "bearing", digits = 1), 0)
+      expect_equal(wrap_angle(179.96, digits = 1), -180)
+      expect_equal(wrap_angle(-180.04, digits = 1), -180)
+})
+
+test_that("coord_3d(direction =) stores yaw in [-180, 180)", {
+      # Azimuth 0 maps to yaw 180 before wrapping.
+      expect_equal(direction_rotation(direction(0, 30))$yaw, -180)
+      expect_equal(direction_rotation(direction(90, 30))$yaw, 90)
+})
+
+test_that("print.light() doesn't report an azimuth of 360", {
+      output <- capture.output(print(light(direction = direction(359.97, 10))))
+      expect_true(any(grepl("azimuth: 0 ", output)))
+})

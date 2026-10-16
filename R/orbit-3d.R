@@ -49,6 +49,7 @@
 #' @section Keyboard:
 #' Once the widget has focus, the arrow keys step one frame: left/right move
 #' the horizontal axis, and (in a 2D orbit) up/down move the vertical axis.
+#' The `r` key shows or hides the angle readout (see `readout`).
 #'
 #' @inheritParams animate_3d
 #' @param pitch,roll,yaw Rotation angles in degrees. Each is either a single
@@ -94,6 +95,16 @@
 #' @param file Optional path to write a self-contained HTML file (via
 #'   [htmlwidgets::saveWidget()]). If `NULL` (default), no file is written and
 #'   the widget is simply returned for display or embedding.
+#' @param readout Logical. Whether the orbit opens with a readout in its corner
+#'   showing the angles of the current view, which you can copy into
+#'   [coord_3d()] to reproduce it. The readout always lists `pitch`, `roll`,
+#'   and `yaw`, and adds the light's azimuth and elevation (for use with
+#'   [direction()]) when the orbit moves the light. Angles are reported in
+#'   standard ranges, azimuth from 0 to 360 and `pitch`, `roll`, and `yaw` from
+#'   -180 to 180, which can differ from the range the orbit was given (an orbit
+#'   over `yaw = c(360, 0)` reports 315 as -45) but describe the same view. This
+#'   sets only how the orbit opens: pressing `r` while the orbit has focus shows
+#'   or hides the readout either way. Default is `FALSE`.
 #'
 #' @return A `orbit_3d` htmlwidget. Printed at the console it opens in the
 #'   RStudio Viewer or browser; in a knitr document it embeds automatically;
@@ -145,7 +156,8 @@ orbit_3d <- function(plot,
                      cores = 1,
                      device = "png",
                      progress = interactive(),
-                     file = NULL) {
+                     file = NULL,
+                     readout = FALSE) {
 
       # --- Validate input plot ---
       if (!inherits(plot, "gg")) {
@@ -163,6 +175,9 @@ orbit_3d <- function(plot,
       if (cores < 1) stop("`cores` must be at least 1.", call. = FALSE)
       if (!is.null(loop) && !(is.logical(loop) && length(loop) == 1)) {
             stop("`loop` must be NULL, TRUE, or FALSE.", call. = FALSE)
+      }
+      if (!is.logical(readout) || length(readout) != 1 || is.na(readout)) {
+            stop("`readout` must be TRUE or FALSE.", call. = FALSE)
       }
 
       # --- Classify rotation parameters and assign drag axes ---
@@ -239,7 +254,7 @@ orbit_3d <- function(plot,
             light = light
       )
 
-      message("Assembling orbit...")
+      message("Assembling orbit (press `r` on the orbit to toggle its angle readout)...")
 
       # --- Encode frames and build the htmlwidget ---
       # The frame/parameter logic above is unchanged; only the output layer
@@ -265,7 +280,9 @@ orbit_3d <- function(plot,
             frames = as.list(data_uris),
             dims = as.list(as.integer(dims)),
             loop_flags = as.list(as.logical(loop_flags)),
-            start = as.list(as.integer(start_cell))
+            start = as.list(as.integer(start_cell)),
+            labels = as.list(orbit_readout_labels(param_seqs)),
+            readout = readout
       )
 
       widget <- htmlwidgets::createWidget(
@@ -481,6 +498,39 @@ build_param_grid <- function(coord, spec, n, loop, start = NULL,
 
       list(param_seqs = out, dims = dims, loop_flags = loop_flags,
            start = start_cell)
+}
+
+
+#' Build the per-frame text for an orbit's angle readout
+#'
+#' One label per row of \code{param_seqs}: the camera angles on one line, and,
+#' when the orbit moves the light, the light angles on a second. Angles are
+#' reported in standard ranges (see wrap_angle()) rather than the range the
+#' orbit was sampled over.
+#'
+#' @param param_seqs Flat per-frame parameter data.frame from build_param_grid().
+#' @return Character vector of labels, one per frame.
+#' @keywords internal
+#' @noRd
+orbit_readout_labels <- function(param_seqs) {
+      fmt <- function(x, type = NULL) {
+            x <- if (is.null(type)) round(x, 1) else wrap_angle(x, type, digits = 1)
+            x[x == 0] <- 0  # avoid printing "-0"
+            sub("\\.0$", "", sprintf("%.1f", x))
+      }
+
+      labels <- paste0("pitch ", fmt(param_seqs$pitch, "signed"),
+                       "  roll ", fmt(param_seqs$roll, "signed"),
+                       "  yaw ", fmt(param_seqs$yaw, "signed"))
+
+      if (!is.null(param_seqs$light_azimuth)) {
+            labels <- paste0(labels,
+                             "\nlight azimuth ",
+                             fmt(param_seqs$light_azimuth, "bearing"),
+                             "  elevation ", fmt(param_seqs$light_elevation))
+      }
+
+      labels
 }
 
 

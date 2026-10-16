@@ -24,6 +24,21 @@
   pointer-events: none;
 }
 
+.ggcube-orbit .ggcube-orbit-readout {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  padding: 2px 5px;
+  background: #fff;
+  color: #000;
+  border: 1px solid #000;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11px;
+  line-height: 1.35;
+  white-space: pre;
+  pointer-events: none;
+}
+
 .ggcube-orbit .ggcube-orbit-loading {
   position: absolute;
   top: 50%;

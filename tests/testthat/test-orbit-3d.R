@@ -277,3 +277,72 @@ test_that("start can name a light axis", {
                                light_angles = list(azimuth = 0, elevation = 30))
       expect_equal(grid$start[2], 10L)
 })
+
+# --- Angle readout ------------------------------------------------------------
+
+test_that("readout labels show the camera angles of each frame", {
+      spec <- resolve_orbit_axes(yaw = c(0, 90), roll = -60)
+      grid <- build_param_grid(fake_coord(pitch = 0), spec, n = 3, loop = NULL)
+      expect_equal(orbit_readout_labels(grid$param_seqs),
+                   c("pitch 0  roll -60  yaw 0",
+                     "pitch 0  roll -60  yaw 45",
+                     "pitch 0  roll -60  yaw 90"))
+})
+
+test_that("readout labels add a light line only when the light is orbited", {
+      seqs <- data.frame(pitch = 0, roll = -60, yaw = -30)
+      expect_false(grepl("light", orbit_readout_labels(seqs)))
+
+      seqs$light_azimuth <- 210
+      seqs$light_elevation <- 45
+      expect_equal(orbit_readout_labels(seqs),
+                   "pitch 0  roll -60  yaw -30\nlight azimuth 210  elevation 45")
+})
+
+test_that("readout labels round to one decimal without stray zeros or signs", {
+      seqs <- data.frame(pitch = c(0, -0.04, 12.34),
+                         roll = c(-60, 297.1428571, 0.96),
+                         yaw = c(-0, 330, -12.06))
+      expect_equal(orbit_readout_labels(seqs),
+                   c("pitch 0  roll -60  yaw 0",
+                     "pitch 0  roll -62.9  yaw -30",
+                     "pitch 12.3  roll 1  yaw -12.1"))
+})
+
+test_that("readout must be a single logical", {
+      p <- ggplot(sphere_points, aes(x, y, z)) + geom_hull_3d() + coord_3d()
+      expect_error(orbit_3d(p, yaw = c(0, 90), readout = "yes"), "TRUE or FALSE")
+      expect_error(orbit_3d(p, yaw = c(0, 90), readout = NA), "TRUE or FALSE")
+      expect_error(orbit_3d(p, yaw = c(0, 90), readout = c(TRUE, FALSE)),
+                   "TRUE or FALSE")
+})
+
+test_that("the widget carries one readout label per frame and the starting state", {
+      p <- ggplot(sphere_points, aes(x, y, z)) + geom_hull_3d() + coord_3d()
+      w <- suppressMessages(
+            orbit_3d(p, yaw = c(0, 90), n = 2, width = 60, height = 60,
+                     progress = FALSE))
+      expect_length(w$x$labels, length(w$x$frames))
+      expect_equal(unlist(w$x$labels),
+                   orbit_readout_labels(data.frame(pitch = 0, roll = -60,
+                                                   yaw = c(0, 90))))
+      expect_false(w$x$readout)
+
+      w <- suppressMessages(
+            orbit_3d(p, yaw = c(0, 90), n = 2, width = 60, height = 60,
+                     progress = FALSE, readout = TRUE))
+      expect_true(w$x$readout)
+})
+
+test_that("readout labels report camera angles in [-180, 180) and azimuth in [0, 360)", {
+      seqs <- data.frame(pitch = c(0, 0, 0, 0),
+                         roll = c(-60, 300, -200, 180),
+                         yaw = c(315, 675, 179.96, -180),
+                         light_azimuth = c(-90, 359.97, 720, 0),
+                         light_elevation = c(45, -90, 90, 0))
+      expect_equal(orbit_readout_labels(seqs),
+                   c("pitch 0  roll -60  yaw -45\nlight azimuth 270  elevation 45",
+                     "pitch 0  roll -60  yaw -45\nlight azimuth 0  elevation -90",
+                     "pitch 0  roll 160  yaw -180\nlight azimuth 0  elevation 90",
+                     "pitch 0  roll -180  yaw -180\nlight azimuth 0  elevation 0"))
+})

@@ -277,7 +277,7 @@ print.light <- function(x, ...) {
       } else {
             cat("  Direction: [", paste(x$direction, collapse = ", "), "] (directional lighting)\n")
             angles <- direction_angles(x$direction)
-            cat("    azimuth:", round(angles$azimuth, 1),
+            cat("    azimuth:", wrap_angle(angles$azimuth, "bearing", digits = 1),
                 "deg, elevation:", round(angles$elevation, 1), "deg\n")
       }
 

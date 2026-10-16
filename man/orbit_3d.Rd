@@ -21,7 +21,8 @@ orbit_3d(
   cores = 1,
   device = "png",
   progress = interactive(),
-  file = NULL
+  file = NULL,
+  readout = FALSE
 )
 }
 \arguments{
@@ -95,6 +96,17 @@ Default is \code{"png"}. Other options include \code{"ragg_png"}
 \item{file}{Optional path to write a self-contained HTML file (via
 \code{\link[htmlwidgets:saveWidget]{htmlwidgets::saveWidget()}}). If \code{NULL} (default), no file is written and
 the widget is simply returned for display or embedding.}
+
+\item{readout}{Logical. Whether the orbit opens with a readout in its corner
+showing the angles of the current view, which you can copy into
+\code{\link[=coord_3d]{coord_3d()}} to reproduce it. The readout always lists \code{pitch}, \code{roll},
+and \code{yaw}, and adds the light's azimuth and elevation (for use with
+\code{\link[=direction]{direction()}}) when the orbit moves the light. Angles are reported in
+standard ranges, azimuth from 0 to 360 and \code{pitch}, \code{roll}, and \code{yaw} from
+-180 to 180, which can differ from the range the orbit was given (an orbit
+over \code{yaw = c(360, 0)} reports 315 as -45) but describe the same view. This
+sets only how the orbit opens: pressing \code{r} while the orbit has focus shows
+or hides the readout either way. Default is \code{FALSE}.}
 }
 \value{
 A \code{orbit_3d} htmlwidget. Printed at the console it opens in the
@@ -156,6 +168,7 @@ off for all axes at once.
 
 Once the widget has focus, the arrow keys step one frame: left/right move
 the horizontal axis, and (in a 2D orbit) up/down move the vertical axis.
+The \code{r} key shows or hides the angle readout (see \code{readout}).
 }
 
 \examples{

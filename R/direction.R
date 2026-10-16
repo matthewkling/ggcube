@@ -54,6 +54,19 @@ direction <- function(azimuth, elevation) {
         sin(el))
 }
 
+# Wrap angles into the range they're reported in. Bearings (azimuths) go to
+# [0, 360); signed rotations (pitch, roll, yaw) go to [-180, 180). Both describe
+# the same orientation as the unwrapped angle, so this is for presentation only;
+# inputs are never wrapped, since animation keyframes depend on raw values.
+#
+# When `digits` is given, values are rounded before wrapping so that rounding
+# can't carry a value onto the excluded end of the range (359.96 -> 0, not 360).
+wrap_angle <- function(x, type = c("signed", "bearing"), digits = NULL) {
+      type <- match.arg(type)
+      if (!is.null(digits)) x <- round(x, digits)
+      if (type == "bearing") x %% 360 else (x + 180) %% 360 - 180
+}
+
 # Inverse of direction(): decompose a direction vector into azimuth and
 # elevation in degrees. Azimuth is returned in [0, 360).
 #
@@ -67,7 +80,7 @@ direction_angles <- function(v) {
       azimuth <- if (horizontal < 1e-10) 180 else atan2(v[1], v[2]) * 180 / pi
       elevation <- asin(v[3] / sqrt(sum(v^2))) * 180 / pi
 
-      list(azimuth = azimuth %% 360, elevation = elevation)
+      list(azimuth = wrap_angle(azimuth, "bearing"), elevation = elevation)
 }
 
 validate_direction <- function(v, arg = "direction") {
@@ -90,6 +103,6 @@ validate_direction <- function(v, arg = "direction") {
 direction_rotation <- function(v) {
       angles <- direction_angles(v)
       list(pitch = 0,
-           roll = angles$elevation - 90,
-           yaw = 180 - angles$azimuth)
+           roll = wrap_angle(angles$elevation - 90),
+           yaw = wrap_angle(180 - angles$azimuth))
 }
