@@ -101,6 +101,7 @@
 #' @seealso [anim_save_3d()] for saving animations to file.
 #'   [gifski_renderer_3d()] and [file_renderer_3d()] for renderer options.
 #'   [orbit_3d()] for interactive drag-to-rotate ggcubes.
+#'   [multiview_3d()] for a static figure showing several views side by side.
 #' @export
 animate_3d <- function(plot,
                        pitch = NULL,
@@ -143,13 +144,9 @@ animate_3d <- function(plot,
       fps <- timing$fps
 
       # --- Resolve the light to animate, if any ---
-      light <- NULL
-      light_angles <- NULL
-      if (!is.null(light_azimuth) || !is.null(light_elevation)) {
-            validate_light_elevation(light_elevation)
-            light <- resolve_animated_light(plot)
-            light_angles <- direction_angles(light$direction)
-      }
+      animated <- resolve_light_angles(plot, light_azimuth, light_elevation)
+      light <- animated$light
+      light_angles <- animated$angles
 
       # --- Build per-frame parameter sequences ---
       param_seqs <- build_param_sequences(
@@ -243,39 +240,9 @@ render_3d_frames <- function(plot, coord, param_seqs, width, height, res,
       # Extract static coord params to carry through every frame
       static_params <- extract_static_coord_params(coord)
 
-      # --- Build plot once to extract actual data bounds and train z scale ---
-      # This is needed because:
-      # 1. Parallel workers need the trained z scale
-      # 2. compute_global_bounds needs the actual standardized data extents,
-      #    not just the theoretical [-0.5, 0.5] cube
-      built <- ggplot_build(plot)
-
-      # Extract the effective ratios from the built plot's panel_params
-      # These account for both the ratio setting and any data-dependent scaling
-      panel_params <- built$layout$panel_params[[1]]
-      effective_ratios <- if (!is.null(panel_params$effective_ratios)) {
-            panel_params$effective_ratios
-      } else {
-            static_params$ratio
-      }
-
-      # --- Compute global bounds across all frames ---
+      # --- Compute one fixed viewport across all frames ---
       # This prevents the plot from rescaling at each rotation angle.
-      global_bounds <- compute_global_bounds(param_seqs, static_params,
-                                             effective_ratios)
-
-      # Apply zoom to global bounds
-      zoom <- static_params$zoom %||% 1
-      if (zoom != 1) {
-            x_center <- mean(global_bounds[1:2])
-            y_center <- mean(global_bounds[3:4])
-            x_half <- diff(global_bounds[1:2]) / 2 / zoom
-            y_half <- diff(global_bounds[3:4]) / 2 / zoom
-            global_bounds <- c(
-                  x_center - x_half, x_center + x_half,
-                  y_center - y_half, y_center + y_half
-            )
-      }
+      global_bounds <- compute_frame_bounds(plot, static_params, param_seqs)
 
       # --- Per-frame lighting ---
       prepared <- prepare_frame_lights(plot, light, param_seqs)
@@ -474,6 +441,26 @@ resolve_animated_light <- function(plot) {
       }
 
       base
+}
+
+
+#' Resolve the light to move, if any light angle was given
+#'
+#' @param plot A ggplot object using [coord_3d()].
+#' @param light_azimuth,light_elevation User-supplied light angle arguments.
+#' @return A list with \code{light} (the base `light` object, or \code{NULL}
+#'   when no light angle was given) and \code{angles} (its current azimuth and
+#'   elevation, used to hold unspecified light angles constant, or
+#'   \code{NULL}).
+#' @keywords internal
+#' @noRd
+resolve_light_angles <- function(plot, light_azimuth, light_elevation) {
+      if (is.null(light_azimuth) && is.null(light_elevation)) {
+            return(list(light = NULL, angles = NULL))
+      }
+      validate_light_elevation(light_elevation)
+      light <- resolve_animated_light(plot)
+      list(light = light, angles = direction_angles(light$direction))
 }
 
 
@@ -688,6 +675,47 @@ compute_global_bounds <- function(param_seqs, static_params, effective_ratios) {
 
       c(x_range[1] - x_pad, x_range[2] + x_pad,
         y_range[1] - y_pad, y_range[2] + y_pad)
+}
+
+
+#' Compute a fixed viewport shared by a set of frames
+#'
+#' Builds the plot once to get its effective axis ratios (which account for
+#' both `ratio` and any data-dependent scaling), takes the union of the cube's
+#' projections across every frame's rotation, and applies the coord's zoom.
+#' @param plot A ggplot object using [coord_3d()].
+#' @param static_params Output of extract_static_coord_params().
+#' @param param_seqs Per-frame parameters with \code{pitch}, \code{roll},
+#'   \code{yaw} columns.
+#' @return Numeric bounds \code{c(xmin, xmax, ymin, ymax)}.
+#' @keywords internal
+#' @noRd
+compute_frame_bounds <- function(plot, static_params, param_seqs) {
+      built <- ggplot_build(plot)
+
+      panel_params <- built$layout$panel_params[[1]]
+      effective_ratios <- if (!is.null(panel_params$effective_ratios)) {
+            panel_params$effective_ratios
+      } else {
+            static_params$ratio
+      }
+
+      global_bounds <- compute_global_bounds(param_seqs, static_params,
+                                             effective_ratios)
+
+      zoom <- static_params$zoom %||% 1
+      if (zoom != 1) {
+            x_center <- mean(global_bounds[1:2])
+            y_center <- mean(global_bounds[3:4])
+            x_half <- diff(global_bounds[1:2]) / 2 / zoom
+            y_half <- diff(global_bounds[3:4]) / 2 / zoom
+            global_bounds <- c(
+                  x_center - x_half, x_center + x_half,
+                  y_center - y_half, y_center + y_half
+            )
+      }
+
+      global_bounds
 }
 
 

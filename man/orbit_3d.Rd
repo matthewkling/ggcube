@@ -101,11 +101,9 @@ the widget is simply returned for display or embedding.}
 showing the angles of the current view, which you can copy into
 \code{\link[=coord_3d]{coord_3d()}} to reproduce it. The readout always lists \code{pitch}, \code{roll},
 and \code{yaw}, and adds the light's azimuth and elevation (for use with
-\code{\link[=direction]{direction()}}) when the orbit moves the light. Angles are reported in
-standard ranges, azimuth from 0 to 360 and \code{pitch}, \code{roll}, and \code{yaw} from
--180 to 180, which can differ from the range the orbit was given (an orbit
-over \code{yaw = c(360, 0)} reports 315 as -45) but describe the same view. This
-sets only how the orbit opens: pressing \code{r} while the orbit has focus shows
+\code{\link[=direction]{direction()}}) when the orbit moves the light. Angles are shown in the
+terms you gave them: an orbit over \code{yaw = c(0, 360)} reports values from 0
+to 360. This sets only how the orbit opens: pressing \code{r} while the orbit has focus shows
 or hides the readout either way. Default is \code{FALSE}.}
 }
 \value{
@@ -202,5 +200,6 @@ orbit_3d(p, yaw = c(360, 0), n = 12,
 }
 \seealso{
 \code{\link[=animate_3d]{animate_3d()}} for GIF/MP4 output.
+\code{\link[=multiview_3d]{multiview_3d()}} for a static figure showing the same views side by side.
 \link{orbit_3d-shiny} for including orbits in  Shiny apps.
 }

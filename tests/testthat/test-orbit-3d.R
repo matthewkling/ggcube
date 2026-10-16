@@ -305,7 +305,7 @@ test_that("readout labels round to one decimal without stray zeros or signs", {
                          yaw = c(-0, 330, -12.06))
       expect_equal(orbit_readout_labels(seqs),
                    c("pitch 0  roll -60  yaw 0",
-                     "pitch 0  roll -62.9  yaw -30",
+                     "pitch 0  roll 297.1  yaw 330",
                      "pitch 12.3  roll 1  yaw -12.1"))
 })
 
@@ -334,15 +334,23 @@ test_that("the widget carries one readout label per frame and the starting state
       expect_true(w$x$readout)
 })
 
-test_that("readout labels report camera angles in [-180, 180) and azimuth in [0, 360)", {
-      seqs <- data.frame(pitch = c(0, 0, 0, 0),
-                         roll = c(-60, 300, -200, 180),
-                         yaw = c(315, 675, 179.96, -180),
-                         light_azimuth = c(-90, 359.97, 720, 0),
-                         light_elevation = c(45, -90, 90, 0))
+test_that("readout labels show angles in the terms of the orbit's range", {
+      # A sweep through 180 keeps counting rather than flipping sign partway.
+      spec <- resolve_orbit_axes(yaw = c(0, 360), light_azimuth = c(-90, 270))
+      grid <- build_param_grid(fake_coord(pitch = 0, roll = -60), spec,
+                               n = c(4, 4), loop = NULL,
+                               light_angles = list(azimuth = 0, elevation = 30))
+      labels <- orbit_readout_labels(grid$param_seqs)
+      expect_equal(labels[1:4],
+                   c("pitch 0  roll -60  yaw 0\nlight azimuth -90  elevation 30",
+                     "pitch 0  roll -60  yaw 90\nlight azimuth -90  elevation 30",
+                     "pitch 0  roll -60  yaw 180\nlight azimuth -90  elevation 30",
+                     "pitch 0  roll -60  yaw 270\nlight azimuth -90  elevation 30"))
+      expect_equal(sub(".*azimuth (-?[0-9]+).*", "\\1", labels[c(1, 5, 9, 13)]),
+                   c("-90", "0", "90", "180"))
+
+      # Values beyond one turn are shown as given too.
+      seqs <- data.frame(pitch = 0, roll = -60, yaw = c(675, -200))
       expect_equal(orbit_readout_labels(seqs),
-                   c("pitch 0  roll -60  yaw -45\nlight azimuth 270  elevation 45",
-                     "pitch 0  roll -60  yaw -45\nlight azimuth 0  elevation -90",
-                     "pitch 0  roll 160  yaw -180\nlight azimuth 0  elevation 90",
-                     "pitch 0  roll -180  yaw -180\nlight azimuth 0  elevation 0"))
+                   c("pitch 0  roll -60  yaw 675", "pitch 0  roll -60  yaw -200"))
 })

@@ -99,11 +99,9 @@
 #'   showing the angles of the current view, which you can copy into
 #'   [coord_3d()] to reproduce it. The readout always lists `pitch`, `roll`,
 #'   and `yaw`, and adds the light's azimuth and elevation (for use with
-#'   [direction()]) when the orbit moves the light. Angles are reported in
-#'   standard ranges, azimuth from 0 to 360 and `pitch`, `roll`, and `yaw` from
-#'   -180 to 180, which can differ from the range the orbit was given (an orbit
-#'   over `yaw = c(360, 0)` reports 315 as -45) but describe the same view. This
-#'   sets only how the orbit opens: pressing `r` while the orbit has focus shows
+#'   [direction()]) when the orbit moves the light. Angles are shown in the
+#'   terms you gave them: an orbit over `yaw = c(0, 360)` reports values from 0
+#'   to 360. This sets only how the orbit opens: pressing `r` while the orbit has focus shows
 #'   or hides the readout either way. Default is `FALSE`.
 #'
 #' @return A `orbit_3d` htmlwidget. Printed at the console it opens in the
@@ -138,6 +136,7 @@
 #' }
 #'
 #' @seealso [animate_3d()] for GIF/MP4 output.
+#'   [multiview_3d()] for a static figure showing the same views side by side.
 #'   [orbit_3d-shiny] for including orbits in  Shiny apps.
 #' @export
 orbit_3d <- function(plot,
@@ -190,27 +189,12 @@ orbit_3d <- function(plot,
       ndim <- length(spec$axes)
 
       # --- Resolve the light to orbit, if any ---
-      light <- NULL
-      light_angles <- NULL
-      if (!is.null(light_azimuth) || !is.null(light_elevation)) {
-            validate_light_elevation(light_elevation)
-            light <- resolve_animated_light(plot)
-            light_angles <- direction_angles(light$direction)
-      }
+      orbited <- resolve_light_angles(plot, light_azimuth, light_elevation)
+      light <- orbited$light
+      light_angles <- orbited$angles
 
       # --- Validate n against dimensionality, and enforce the frame cap ---
-      n <- as.integer(n)
-      if (any(is.na(n)) || any(n < 1)) {
-            stop("`n` must be one or more positive integers.", call. = FALSE)
-      }
-      if (length(n) != ndim) {
-            stop(sprintf(
-                  "`n` has length %d but %d rotation %s ranged (needs length %d). %s",
-                  length(n), ndim, if (ndim == 1) "parameter is" else "parameters are",
-                  ndim,
-                  "Give one count per ranged parameter (x then y)."),
-                 call. = FALSE)
-      }
+      n <- validate_grid_n(n, ndim)
       total <- prod(n)
       if (total > max_frames) {
             stop(sprintf(
@@ -395,6 +379,30 @@ resolve_orbit_axes <- function(pitch = NULL, roll = NULL, yaw = NULL,
 }
 
 
+#' Validate grid counts against the number of ranged parameters
+#'
+#' @param n User-supplied counts, one per ranged parameter (x then y).
+#' @param ndim Number of ranged parameters.
+#' @return \code{n} as an integer vector.
+#' @keywords internal
+#' @noRd
+validate_grid_n <- function(n, ndim) {
+      n <- suppressWarnings(as.integer(n))
+      if (length(n) == 0 || any(is.na(n)) || any(n < 1)) {
+            stop("`n` must be one or more positive integers.", call. = FALSE)
+      }
+      if (length(n) != ndim) {
+            stop(sprintf(
+                  "`n` has length %d but %d rotation %s ranged (needs length %d). %s",
+                  length(n), ndim, if (ndim == 1) "parameter is" else "parameters are",
+                  ndim,
+                  "Give one count per ranged parameter (x then y)."),
+                 call. = FALSE)
+      }
+      n
+}
+
+
 #' Build the flattened parameter grid for a orbit
 #'
 #' Produces one 1D range per variable axis (with per-axis loop detection and
@@ -505,32 +513,41 @@ build_param_grid <- function(coord, spec, n, loop, start = NULL,
 #'
 #' One label per row of \code{param_seqs}: the camera angles on one line, and,
 #' when the orbit moves the light, the light angles on a second. Angles are
-#' reported in standard ranges (see wrap_angle()) rather than the range the
-#' orbit was sampled over.
+#' shown as sampled, in the terms of the range the orbit was given.
 #'
 #' @param param_seqs Flat per-frame parameter data.frame from build_param_grid().
 #' @return Character vector of labels, one per frame.
 #' @keywords internal
 #' @noRd
 orbit_readout_labels <- function(param_seqs) {
-      fmt <- function(x, type = NULL) {
-            x <- if (is.null(type)) round(x, 1) else wrap_angle(x, type, digits = 1)
-            x[x == 0] <- 0  # avoid printing "-0"
-            sub("\\.0$", "", sprintf("%.1f", x))
-      }
-
-      labels <- paste0("pitch ", fmt(param_seqs$pitch, "signed"),
-                       "  roll ", fmt(param_seqs$roll, "signed"),
-                       "  yaw ", fmt(param_seqs$yaw, "signed"))
+      labels <- paste0("pitch ", format_angle(param_seqs$pitch),
+                       "  roll ", format_angle(param_seqs$roll),
+                       "  yaw ", format_angle(param_seqs$yaw))
 
       if (!is.null(param_seqs$light_azimuth)) {
             labels <- paste0(labels,
-                             "\nlight azimuth ",
-                             fmt(param_seqs$light_azimuth, "bearing"),
-                             "  elevation ", fmt(param_seqs$light_elevation))
+                             "\nlight azimuth ", format_angle(param_seqs$light_azimuth),
+                             "  elevation ", format_angle(param_seqs$light_elevation))
       }
 
       labels
+}
+
+
+#' Format angles for display
+#'
+#' Rounds to one decimal, drops a trailing ".0", and avoids "-0". Angles are not
+#' wrapped: they come from ranges the user gave, and wrapping them individually
+#' would break up a sweep that passes the wrapping point (0, 90, 180, 270 would
+#' read 0, 90, -180, -90).
+#' @param x Numeric angles in degrees.
+#' @return Character vector.
+#' @keywords internal
+#' @noRd
+format_angle <- function(x) {
+      x <- round(x, 1)
+      x[x == 0] <- 0
+      sub("\\.0$", "", sprintf("%.1f", x))
 }
 
 

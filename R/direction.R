@@ -54,10 +54,12 @@ direction <- function(azimuth, elevation) {
         sin(el))
 }
 
-# Wrap angles into the range they're reported in. Bearings (azimuths) go to
-# [0, 360); signed rotations (pitch, roll, yaw) go to [-180, 180). Both describe
-# the same orientation as the unwrapped angle, so this is for presentation only;
-# inputs are never wrapped, since animation keyframes depend on raw values.
+# Wrap angles that ggcube computes itself (rather than takes from the user) into
+# a standard range. Bearings (azimuths) go to [0, 360); signed rotations (pitch,
+# roll, yaw) go to [-180, 180). Both describe the same orientation as the
+# unwrapped angle. Angles the user gave are never wrapped: animation keyframes
+# depend on raw values, and labels for a sampled range read in order only when
+# left in the user's terms.
 #
 # When `digits` is given, values are rounded before wrapping so that rounding
 # can't carry a value onto the excluded end of the range (359.96 -> 0, not 360).
