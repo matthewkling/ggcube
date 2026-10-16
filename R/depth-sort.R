@@ -772,6 +772,10 @@ sort_by_depth <- function(data, proj = NULL, plot_bounds = NULL) {
             return(dplyr::bind_rows(rest, front[intersect(names(front), names(rest))]))
       }
 
+      if (method == "painter") {
+            data <- subdivide_segments_for_painter(data, proj, plot_bounds)
+      }
+
       # Vertex order within each group (preserves polygon winding)
       data <- data %>%
             group_by(group) %>%
@@ -998,6 +1002,120 @@ split_interpenetrating_segments <- function(data, proj, plot_bounds) {
       kept$.seg_first <- rep(NA, nrow(kept))
       kept$.seg_last <- rep(NA, nrow(kept))
       rbind(kept, new_rows)
+}
+
+
+#' Cut segments into short pieces for painter sorting
+#'
+#' Painter sorting places each element by its mean depth, so a long segment
+#' running through a surface (such as an axis line) is drawn entirely in front
+#' of or behind every polygon. When a layer mixes segments and polygons, this
+#' cuts each segment into pieces about as long on screen as a typical polygon,
+#' so that each piece is placed by its own depth. This isn't exact, but makes
+#' segments interleave plausibly with surfaces at little cost. Runs of pieces
+#' that don't overlap any polygon on screen are merged back together, since
+#' cutting there gains nothing and the joints can show faint seams.
+#'
+#' Pieces are cut in cube space and projected with the same functions as
+#' `coord_3d()`. Like the pieces made by `split_interpenetrating_segments()`,
+#' they are flagged with `.seg_first` and `.seg_last` so that arrowheads stay
+#' at the segment's original ends.
+#'
+#' @param data Data frame with projected coordinates, `.x3d`/`.y3d`/`.z3d`,
+#'   `group`, and `.prim`.
+#' @param proj Projection parameters.
+#' @param plot_bounds Plot bounds used for NPC scaling.
+#' @param max_pieces Maximum number of pieces per segment.
+#' @return Data frame with long segments replaced by pieces (groups suffixed
+#'   `__piece1`, `__piece2`, ...). Other rows are unchanged.
+#' @keywords internal
+#' @noRd
+subdivide_segments_for_painter <- function(data, proj, plot_bounds, max_pieces = 100) {
+
+      if (is.null(proj) || is.null(plot_bounds)) return(data)
+      if (!all(c(".x3d", ".y3d", ".z3d", ".prim") %in% names(data))) return(data)
+
+      grp <- as.character(data$group)
+      ugrp <- unique(grp)
+      grp_idx <- split(seq_along(grp), factor(grp, levels = ugrp))
+      prim <- vapply(grp_idx, function(idx) data$.prim[idx[1]], character(1))
+
+      seg_ids <- which(prim %in% "segment" & lengths(grp_idx) == 2)
+      poly_ids <- which(prim %in% "polygon" & lengths(grp_idx) >= 3)
+      if (length(seg_ids) == 0 || length(poly_ids) == 0) return(data)
+
+      # Polygon screen bounding boxes, and their typical size
+      pbox <- t(vapply(poly_ids, function(g) {
+            idx <- grp_idx[[g]]
+            c(range(data$x[idx]), range(data$y[idx]))
+      }, numeric(4)))
+      poly_size <- stats::median(sqrt((pbox[, 2] - pbox[, 1])^2 + (pbox[, 4] - pbox[, 3])^2))
+      if (!is.finite(poly_size) || poly_size <= 0) return(data)
+      overlaps_poly <- function(x0, x1, y0, y1) {
+            any(pbox[, 1] <= x1 & pbox[, 2] >= x0 & pbox[, 3] <= y1 & pbox[, 4] >= y0)
+      }
+
+      xyz <- cbind(data$.x3d, data$.y3d, data$.z3d)
+      data$group <- grp
+      has_seg_id <- "segment_id" %in% names(data)
+      rows_to_drop <- integer(0)
+      new_rows <- list()
+
+      for (s in seg_ids) {
+            idx <- seg_endpoint_rows(data, grp_idx[[s]])
+            len <- sqrt(diff(data$x[idx])^2 + diff(data$y[idx])^2)
+            k <- min(max_pieces, ceiling(len / poly_size))
+            if (!is.finite(k) || k <= 1) next
+
+            start_row <- data[idx[1], , drop = FALSE]
+            end_row <- data[idx[2], , drop = FALSE]
+            a <- xyz[idx[1], ]
+            b <- xyz[idx[2], ]
+            breaks <- seq(0, 1, length.out = k + 1)
+
+            # Keep only the cuts that separate pieces overlapping a polygon
+            bp <- outer(breaks, b - a) + rep(a, each = k + 1)
+            scr <- scale_to_npc_coordinates(
+                  transform_3d_standard(data.frame(x = bp[, 1], y = bp[, 2], z = bp[, 3]), proj),
+                  plot_bounds = plot_bounds)
+            busy <- vapply(seq_len(k), function(j) {
+                  overlaps_poly(min(scr$x[j + 0:1]), max(scr$x[j + 0:1]),
+                                min(scr$y[j + 0:1]), max(scr$y[j + 0:1]))
+            }, logical(1))
+            keep_cut <- busy[-1] | busy[-k]
+            breaks <- c(0, breaks[2:k][keep_cut], 1)
+            k <- length(breaks) - 1
+            if (k <= 1) next
+
+            for (j in seq_len(k)) {
+                  piece <- rbind(start_row, end_row)
+                  t01 <- breaks[j + 0:1]
+                  p3 <- rbind(a + t01[1] * (b - a), a + t01[2] * (b - a))
+                  piece$.x3d <- p3[, 1]
+                  piece$.y3d <- p3[, 2]
+                  piece$.z3d <- p3[, 3]
+                  piece$.new_vertex <- c(j > 1, j < k)
+                  piece$group <- paste0(start_row$group, "__piece", j)
+                  piece$.seg_first <- j == 1
+                  piece$.seg_last <- j == k
+                  if (has_seg_id && !is.na(start_row$segment_id)) {
+                        piece$segment_id <- start_row$segment_id + (j - 1) / (k + 1)
+                  }
+                  new_rows <- c(new_rows, list(piece))
+            }
+            rows_to_drop <- c(rows_to_drop, idx)
+      }
+
+      if (length(new_rows) == 0) return(data)
+
+      new_rows <- do.call(rbind, new_rows)
+      new_rows <- project_new_vertices(new_rows, proj, plot_bounds)
+      new_rows$.new_vertex <- NULL
+
+      kept <- data[-rows_to_drop, , drop = FALSE]
+      if (!".seg_first" %in% names(kept)) kept$.seg_first <- rep(NA, nrow(kept))
+      if (!".seg_last" %in% names(kept)) kept$.seg_last <- rep(NA, nrow(kept))
+      rbind(kept, new_rows[names(kept)])
 }
 
 

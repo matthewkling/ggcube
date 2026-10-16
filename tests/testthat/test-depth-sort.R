@@ -295,3 +295,70 @@ test_that("pairwise sorting types untyped groups by vertex count", {
       res <- pw_render_order(d, "depth")
       expect_setequal(unique(res$data$group), c("p", "s", "g"))
 })
+
+
+# Painter sorting of segments through polygons --------------------------------
+
+painter_tile_scene <- function(seg, persp = TRUE) {
+      g <- expand.grid(i = 1:10, j = 1:10)
+      tiles <- do.call(rbind, lapply(seq_len(nrow(g)), function(k) {
+            x0 <- -1 + (g$i[k] - 1) * 0.2; y0 <- -1 + (g$j[k] - 1) * 0.2
+            data.frame(x = x0 + c(0, 0.2, 0.2, 0), y = y0 + c(0, 0, 0.2, 0.2), z = 0, tile = k)
+      }))
+      p <- ggplot(tiles, aes(x, y, z, group = tile)) +
+            geom_polygon_3d(sort_method = "painter", annotate = seg) +
+            zlim(-1, 1) + coord_3d(persp = persp)
+      b <- ggplot_build(p)
+      d <- b$data[[1]]
+      d$.prim[is.na(d$.prim)] <- "polygon"   # as geom_polygon_3d's draw_panel does
+      d$.sort_method <- "painter"
+      b$plot$coordinates$transform(d, b$layout$panel_params[[1]])
+}
+
+
+test_that("painter sorting cuts segments mixed with polygons into pieces", {
+      seg <- annotate_3d("segment", x = 0.1, y = 0.1, z = -0.8, xend = 0.1, yend = 0.1, zend = 0.8,
+                         arrow = grid::arrow())
+      out <- painter_tile_scene(seg)
+      pieces <- out[out$.prim %in% "segment", ]
+      ids <- unique(pieces$group)
+      expect_gt(length(ids), 2)
+
+      # Arrowheads stay at the original ends
+      starts <- pieces[pieces$point_type == "start", ]
+      expect_equal(sum(starts$.seg_first), 1)
+      expect_equal(sum(starts$.seg_last), 1)
+
+      # Without polygons, segments are left whole
+      p <- ggplot(data.frame(x = 0:1, y = 0:1, z = 0:1), aes(x, y, z)) +
+            geom_point_3d(annotate = seg) + coord_3d()
+      b <- ggplot_build(p)
+      rows <- b$data[[1]][b$data[[1]]$.prim %in% "segment", ]
+      rows$.x3d <- rows$x; rows$.y3d <- rows$y; rows$.z3d <- rows$z
+      pp <- b$layout$panel_params[[1]]
+      expect_identical(subdivide_segments_for_painter(rows, pp$proj, pp$plot_bounds), rows)
+})
+
+
+test_that("with painter sorting, segments above a surface stay in front of it and those below behind", {
+      for (persp in c(TRUE, FALSE)) {
+            for (zz in c(0.3, -0.3)) {
+                  seg <- annotate_3d("segment", x = -0.9, y = -0.6, z = zz, xend = 0.9, yend = 0.7, zend = zz)
+                  out <- painter_tile_scene(seg, persp)
+                  tiles <- unique(out$group[out$.prim %in% "polygon"])
+                  for (id in unique(out$group[out$.prim %in% "segment"])) {
+                        r <- which(out$group == id)
+                        f <- seq(0.1, 0.9, by = 0.1)
+                        sx <- out$x[r[1]] + f * diff(out$x[r])
+                        sy <- out$y[r[1]] + f * diff(out$y[r])
+                        for (t in tiles) {
+                              tr <- which(out$group == t)
+                              covered <- any(mapply(point_in_polygon, sx, sy,
+                                                    MoreArgs = list(poly_x = out$x[tr], poly_y = out$y[tr])))
+                              if (!covered) next
+                              if (zz > 0) expect_gt(min(r), max(tr)) else expect_lt(max(r), min(tr))
+                        }
+                  }
+            }
+      }
+})

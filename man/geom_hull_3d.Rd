@@ -111,8 +111,10 @@ and axis text.}
 A \code{Layer} object that can be added to a ggplot.
 }
 \description{
-Turns 3D point clouds into surface hulls consisting of triangular polygons,
-using either convex hull or alpha shape algorithms.
+Turns 3D point clouds into surface hulls, using either convex hull or alpha
+shape algorithms. Hulls are triangulated, except that adjacent triangles
+lying in the same plane are merged into a single polygonal face, so that
+e.g. the hull of a box's corners is drawn with square faces.
 }
 \section{Grouping}{
 

@@ -195,7 +195,8 @@
 #' # Axes through the origin, depth-sorted with a surface
 #' ggplot() +
 #'   geom_function_3d(fun = function(x, y) (x^2 - y^2) / 2,
-#'                    xlim = c(-1, 1), ylim = c(-1, 1),
+#'                    xlim = c(-1, 1), ylim = c(-1, 1), n = 20,
+#'                    sort_method = "pairwise",
 #'                    annotate = annotate_3d("axes", linewidth = 0.8)) +
 #'   coord_3d(panels = "none") +
 #'   theme_void()

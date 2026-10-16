@@ -172,6 +172,129 @@ orient_triangles <- function(coords, tri, reference_points = NULL) {
       list(tri = tri, normals = normals)
 }
 
+#' Merge adjacent coplanar triangles into polygonal faces
+#'
+#' Triangles that share an edge, lie in the same plane, and face the same way
+#' are merged into one polygon, traced along the boundary of the merged region
+#' so that the triangles' (outward) winding is preserved. Regions whose
+#' boundary isn't a single simple loop (e.g. a coplanar ring with a hole) are
+#' left as separate triangles.
+#'
+#' Coplanarity is tested with coordinates scaled by each axis's range, so the
+#' tolerance doesn't depend on the data's units.
+#'
+#' @param coords Vertex coordinate matrix (n x 3).
+#' @param tri Triangle index matrix (m x 3), consistently wound.
+#' @param normals Unit normal matrix (m x 3), one row per triangle.
+#' @param mergeable Logical vector, one per triangle; `FALSE` keeps a triangle
+#'   separate (e.g. singular alpha-shape faces).
+#' @param tol Coplanarity tolerance, as a fraction of the data's extent.
+#' @return List with `vertices` (a list of vertex index vectors, one per face),
+#'   `normals` (one row per face), and `singular` (logical, one per face,
+#'   `TRUE` for faces kept separate because they weren't mergeable).
+#' @keywords internal
+#' @noRd
+merge_coplanar_triangles <- function(coords, tri, normals, mergeable = rep(TRUE, nrow(tri)),
+                                     tol = 1e-8) {
+      m <- nrow(tri)
+      single <- list(vertices = lapply(seq_len(m), function(i) tri[i, ]),
+                     normals = normals, singular = !mergeable)
+      if (m < 2) return(single)
+
+      rng <- apply(coords, 2, function(v) diff(range(v)))
+      rng[!is.finite(rng) | rng == 0] <- 1
+      p <- sweep(coords, 2, rng, "/")
+
+      # Triangle planes in scaled coordinates
+      e1 <- p[tri[, 2], , drop = FALSE] - p[tri[, 1], , drop = FALSE]
+      e2 <- p[tri[, 3], , drop = FALSE] - p[tri[, 1], , drop = FALSE]
+      nrm <- cbind(e1[, 2] * e2[, 3] - e1[, 3] * e2[, 2],
+                   e1[, 3] * e2[, 1] - e1[, 1] * e2[, 3],
+                   e1[, 1] * e2[, 2] - e1[, 2] * e2[, 1])
+      len <- sqrt(rowSums(nrm^2))
+      ok <- mergeable & len > 0
+      nrm <- nrm / ifelse(len > 0, len, 1)
+      off <- rowSums(nrm * p[tri[, 1], , drop = FALSE])
+
+      # Pairs of triangles sharing an edge
+      a <- as.vector(tri)
+      b <- as.vector(tri[, c(2, 3, 1)])
+      key <- paste(pmin(a, b), pmax(a, b))
+      owner <- rep(seq_len(m), 3)
+      by_edge <- split(owner, key)
+      pairs <- do.call(rbind, by_edge[lengths(by_edge) == 2])
+      if (is.null(pairs)) return(single)
+
+      # Union-find over coplanar, like-facing neighbours
+      parent <- seq_len(m)
+      find <- function(i) {
+            while (parent[i] != i) i <- parent[i]
+            i
+      }
+      for (r in seq_len(nrow(pairs))) {
+            i <- pairs[r, 1]; j <- pairs[r, 2]
+            if (!ok[i] || !ok[j]) next
+            if (sum(normals[i, ] * normals[j, ]) <= 0) next
+            dist <- abs(as.vector(p[tri[j, ], , drop = FALSE] %*% nrm[i, ]) - off[i])
+            if (max(dist) > tol * sqrt(3)) next
+            ri <- find(i); rj <- find(j)
+            if (ri != rj) parent[rj] <- ri
+      }
+      root <- vapply(seq_len(m), find, integer(1))
+      if (length(unique(root)) == m) return(single)
+
+      vertices <- list(); face_normals <- list(); singular <- logical(0)
+      for (r in unique(root)) {
+            members <- which(root == r)
+            loop <- if (length(members) > 1) boundary_loop(tri[members, , drop = FALSE]) else NULL
+            if (is.null(loop)) {
+                  for (i in members) {
+                        vertices <- c(vertices, list(tri[i, ]))
+                        face_normals <- c(face_normals, list(normals[i, ]))
+                        singular <- c(singular, !mergeable[i])
+                  }
+            } else {
+                  vertices <- c(vertices, list(loop))
+                  face_normals <- c(face_normals, list(normals[members[1], ]))
+                  singular <- c(singular, FALSE)
+            }
+      }
+      list(vertices = vertices, normals = do.call(rbind, face_normals), singular = singular)
+}
+
+
+#' Boundary of a set of consistently wound triangles, as one vertex loop
+#'
+#' @param tri Triangle index matrix (k x 3).
+#' @return Integer vector of vertex indices around the boundary, in the
+#'   triangles' winding direction, or NULL if the boundary isn't a single
+#'   simple loop.
+#' @keywords internal
+#' @noRd
+boundary_loop <- function(tri) {
+      from <- as.vector(tri)
+      to <- as.vector(tri[, c(2, 3, 1)])
+      # Interior edges appear once in each direction; boundary edges once in total
+      fwd <- paste(from, to)
+      rev <- paste(to, from)
+      is_boundary <- !(fwd %in% rev)
+      from <- from[is_boundary]
+      to <- to[is_boundary]
+      if (length(from) < 3 || anyDuplicated(from) || anyDuplicated(to)) return(NULL)
+
+      nxt <- setNames(to, from)
+      loop <- from[1]
+      repeat {
+            v <- nxt[[as.character(loop[length(loop)])]]
+            if (v == loop[1]) break
+            if (length(loop) >= length(from)) return(NULL)
+            loop <- c(loop, v)
+      }
+      if (length(loop) != length(from)) return(NULL)
+      loop
+}
+
+
 StatHull3D <- ggproto("StatHull3D", Stat,
                       required_aes = c("x", "y", "z"),
                       compute_group = function(data, scales,
@@ -255,23 +378,29 @@ StatHull3D <- ggproto("StatHull3D", Stat,
                             tri <- oriented$tri
                             normals <- oriented$normals
 
-                            # Assemble triangle vertices with corrected winding order
-                            data <- data[as.vector(t(tri)), ]
+                            # Merge adjacent coplanar triangles into single faces, so that
+                            # e.g. the square faces of a box aren't drawn as pairs of triangles
+                            if (is.null(singular_faces)) singular_faces <- rep(FALSE, nrow(tri))
+                            faces <- merge_coplanar_triangles(coords, tri, normals, mergeable = !singular_faces)
+                            n_vert <- lengths(faces$vertices)
+
+                            # Assemble face vertices, with winding order preserved
+                            data <- data[unlist(faces$vertices), ]
 
                             # Create unique face IDs that won't collide across groups,
                             # using a random suffix to ensure uniqueness across compute_group calls
                             group_suffix <- sample(10000:99999, 1)
-                            data$group <- rep(paste0("sh3d__hull", group_suffix, "_tri", 1:nrow(tri)), each = 3)
+                            data$group <- rep(paste0("sh3d__hull", group_suffix, "_face", seq_along(n_vert)), n_vert)
 
-                            # Add computed normal variables (replicated for each vertex in triangle)
-                            data$normal_x <- rep(normals[, 1], each = 3)
-                            data$normal_y <- rep(normals[, 2], each = 3)
-                            data$normal_z <- rep(normals[, 3], each = 3)
+                            # Add computed normal variables (replicated for each vertex of a face)
+                            data$normal_x <- rep(faces$normals[, 1], n_vert)
+                            data$normal_y <- rep(faces$normals[, 2], n_vert)
+                            data$normal_z <- rep(faces$normals[, 3], n_vert)
 
                             # Singular faces have no consistent outward orientation, so culling
                             # them by winding would discard them arbitrarily
-                            if (!is.null(singular_faces) && any(singular_faces)) {
-                                  data$cull_backfaces <- rep(!singular_faces & isTRUE(cull_backfaces), each = 3)
+                            if (any(faces$singular)) {
+                                  data$cull_backfaces <- rep(!faces$singular & isTRUE(cull_backfaces), n_vert)
                             } else {
                                   data$cull_backfaces <- cull_backfaces
                             }
@@ -287,8 +416,10 @@ StatHull3D <- ggproto("StatHull3D", Stat,
 
 #' 3D convex and alpha hulls
 #'
-#' Turns 3D point clouds into surface hulls consisting of triangular polygons,
-#' using either convex hull or alpha shape algorithms.
+#' Turns 3D point clouds into surface hulls, using either convex hull or alpha
+#' shape algorithms. Hulls are triangulated, except that adjacent triangles
+#' lying in the same plane are merged into a single polygonal face, so that
+#' e.g. the hull of a box's corners is drawn with square faces.
 #'
 #' @param mapping Set of aesthetic mappings created by [aes()]. The required
 #'   aesthetics are `x`, `y`, and `z`. Additional aesthetics can use computed
