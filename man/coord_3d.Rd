@@ -8,6 +8,7 @@ coord_3d(
   pitch = 0,
   roll = -60,
   yaw = -30,
+  direction = NULL,
   persp = TRUE,
   dist = 2,
   expand = TRUE,
@@ -29,6 +30,17 @@ coord_3d(
 \arguments{
 \item{roll, pitch, yaw}{Rotation around x, y, and z axes, respectively, in degrees.
 Positive values rotate the near face of the plot "downward", "rightward", and clockwise, respectively.}
+
+\item{direction}{Optional length-3 numeric vector \code{c(x, y, z)} giving the
+direction the scene is viewed from, as an alternative to specifying
+\code{pitch}, \code{roll}, and \code{yaw}. Magnitude is ignored, so \code{c(1, 1, 1)} views the
+cube from the xmax-ymax-zmax corner. A direction fixes only the position of
+the viewer, so the remaining rotational degree of freedom is resolved by
+keeping the z axis pointing up the plot; use \code{pitch}, \code{roll}, and \code{yaw}
+directly for views that need a twist about the view axis. Use
+\code{\link[=direction]{direction()}} to build the vector from an azimuth and elevation. The
+default rotation corresponds to \code{direction(210, 30)}. Supplying this
+argument alongside \code{pitch}, \code{roll}, or \code{yaw} is an error.}
 
 \item{persp}{Logical indicating whether to apply perspective projection. When \code{TRUE} (the default),
 objects farther from the viewer appear smaller. When \code{FALSE}, produces an orthographic projection in which

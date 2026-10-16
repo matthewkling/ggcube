@@ -7,6 +7,16 @@
 #'
 #' @param roll,pitch,yaw Rotation around x, y, and z axes, respectively, in degrees.
 #'    Positive values rotate the near face of the plot "downward", "rightward", and clockwise, respectively.
+#' @param direction Optional length-3 numeric vector `c(x, y, z)` giving the
+#'   direction the scene is viewed from, as an alternative to specifying
+#'   `pitch`, `roll`, and `yaw`. Magnitude is ignored, so `c(1, 1, 1)` views the
+#'   cube from the xmax-ymax-zmax corner. A direction fixes only the position of
+#'   the viewer, so the remaining rotational degree of freedom is resolved by
+#'   keeping the z axis pointing up the plot; use `pitch`, `roll`, and `yaw`
+#'   directly for views that need a twist about the view axis. Use
+#'   [direction()] to build the vector from an azimuth and elevation. The
+#'   default rotation corresponds to `direction(210, 30)`. Supplying this
+#'   argument alongside `pitch`, `roll`, or `yaw` is an error.
 #' @param persp Logical indicating whether to apply perspective projection. When \code{TRUE} (the default),
 #'   objects farther from the viewer appear smaller. When \code{FALSE}, produces an orthographic projection in which
 #'   lines that are parallel in 3D space render as parallel in the plot.
@@ -203,6 +213,7 @@
 #'   text styling, [polygon_params] for 3D-related parameters for polygon layers.
 #' @export
 coord_3d <- function(pitch = 0, roll = -60, yaw = -30,
+                     direction = NULL,
                      persp = TRUE, dist = 2,
                      expand = TRUE, clip = "off",
                      panels = "background",
@@ -219,6 +230,17 @@ coord_3d <- function(pitch = 0, roll = -60, yaw = -30,
       # Capture internal-only params from ...
       dots <- list(...)
       fixed_bounds <- dots$fixed_bounds
+
+      if (!is.null(direction)) {
+            if (!missing(pitch) || !missing(roll) || !missing(yaw)) {
+                  stop("`direction` cannot be combined with `pitch`, `roll`, or `yaw`. ",
+                       "Use one parameterization or the other.")
+            }
+            rotation <- direction_rotation(direction)
+            pitch <- rotation$pitch
+            roll <- rotation$roll
+            yaw <- rotation$yaw
+      }
 
       # Validate parameters
       if (!scales %in% c("free", "fixed")) {

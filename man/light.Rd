@@ -40,8 +40,9 @@ either the plot axes or the viewing pane. The default is \code{c(-.5, 0, 1)}, gi
 diagonal lighting from the upper right edge with default rotation and anchor. At least
 one value must be non-zero. Values are automatically normalized, so magnitude doesn't
 matter, only sign and relative magnitude. Direction is specified in visual space (relative
-to the rendered cube's bounding box), not data space. This argument is ignored if
-\code{position} is provided.}
+to the rendered cube's bounding box), not data space. Use \code{\link[=direction]{direction()}} to build this
+vector from an azimuth and elevation instead of components; the default corresponds to
+\code{direction(270, 63.43)}. This argument is ignored if \code{position} is provided.}
 
 \item{anchor}{Character string specifying the reference frame for light direction:
 \itemize{

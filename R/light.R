@@ -45,8 +45,9 @@
 #'   diagonal lighting from the upper right edge with default rotation and anchor. At least
 #'   one value must be non-zero. Values are automatically normalized, so magnitude doesn't
 #'   matter, only sign and relative magnitude. Direction is specified in visual space (relative
-#'   to the rendered cube's bounding box), not data space. This argument is ignored if
-#'   \code{position} is provided.
+#'   to the rendered cube's bounding box), not data space. Use [direction()] to build this
+#'   vector from an azimuth and elevation instead of components; the default corresponds to
+#'   \code{direction(270, 63.43)}. This argument is ignored if \code{position} is provided.
 #' @param anchor Character string specifying the reference frame for light direction:
 #'   \itemize{
 #'     \item \code{"scene"} (default): Light `direction` is fixed relative to the data/scene.
@@ -275,6 +276,9 @@ print.light <- function(x, ...) {
             }
       } else {
             cat("  Direction: [", paste(x$direction, collapse = ", "), "] (directional lighting)\n")
+            angles <- direction_angles(x$direction)
+            cat("    azimuth:", round(angles$azimuth, 1),
+                "deg, elevation:", round(angles$elevation, 1), "deg\n")
       }
 
       cat("  anchor:", x$anchor, "\n")

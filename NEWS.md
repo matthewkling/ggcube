@@ -1,5 +1,9 @@
 # ggcube (development version)
 
+* New `direction()` builds the length-3 direction vectors used by `coord_3d()` and `light()` from an azimuth and an elevation in degrees, for cases where angles are easier to reason about than components. Azimuth is a compass bearing measured clockwise from the positive y axis, matching terrain shading conventions.
+* `coord_3d()` gains a `direction` argument: an alternative to `pitch`, `roll`, and `yaw` that specifies the direction the scene is viewed from, so `direction = c(1, 1, 1)` views the cube from its xmax-ymax-zmax corner. The z axis is kept pointing up the plot, and supplying `direction` alongside any of the Euler angles is an error. The default rotation corresponds to `direction(210, 30)`.
+* `print.light()` now reports a directional light's azimuth and elevation alongside its direction vector.
+
 * Every `geom_*_3d()` function now has a documented `annotate` argument for embedding `annotate_3d()` annotations in the layer. `geom_text_3d()` with its default `method = "billboard"` now supports annotations; previously it ignored them with an "unknown parameter" warning.
 * Fixed a bug where `geom_text_3d()` (billboard method) could draw labels at each other's depth-scaled sizes under perspective projection.
 * Text annotations gain an `on_top` argument: `annotate_3d("text", ..., on_top = TRUE)` draws labels after everything else in the layer, instead of depth-sorting them, so geometry never hides or clips them.
