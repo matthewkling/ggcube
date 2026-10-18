@@ -42,7 +42,7 @@
 <li><a class="dropdown-item" href="../articles/coord_3d.html">Controlling the 3D view</a></li>
     <li><a class="dropdown-item" href="../articles/surfaces.html">Surfaces</a></li>
     <li><a class="dropdown-item" href="../articles/lighting.html">Lighting and shading</a></li>
-    <li><a class="dropdown-item" href="../articles/animation.html">Animated and interactive rotation</a></li>
+    <li><a class="dropdown-item" href="../articles/animation.html">Animation, orbits, and multiple views</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -122,6 +122,11 @@ around the x-axis), <code>roll</code> (tilt around the y-axis), and
 <span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>panel.border <span class="op">=</span> <span class="fu"><a href="../reference/element_rect.html">element_rect</a></span><span class="op">(</span>color <span class="op">=</span> <span class="st">"black"</span><span class="op">)</span>,</span>
 <span>            panel.foreground <span class="op">=</span> <span class="fu"><a href="../reference/element_rect.html">element_rect</a></span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">.1</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p><img src="ggcube_files/figure-html/rotation-1.png" class="r-plt" alt="" width="1050"></p>
+<p>Alternatively, <code>direction</code> gives the direction the plot is
+viewed from as a vector: <code>coord_3d(direction = c(1, 1, 1))</code>
+looks at the cube from its xmax-ymax-zmax corner. The
+<code><a href="../reference/direction.html">direction()</a></code> helper builds such vectors from an azimuth and
+an elevation, for both views and lights.</p>
 <p>Perspective projection is on by default, making distant objects
 appear smaller. The <code>dist</code> parameter controls the strength of
 this effect (larger values = less distortion), and
@@ -378,16 +383,22 @@ onto a face, or place a natively 2D layer (like
 <p><img src="ggcube_files/figure-html/face_projection-1.png" class="r-plt" alt="" width="1050"></p>
 </div>
 <div class="section level2">
-<h2 id="interactivity-animation">Interactivity &amp; animation<a class="anchor" aria-label="anchor" href="#interactivity-animation"></a>
+<h2 id="animation-multiple-views">Animation &amp; multiple views<a class="anchor" aria-label="anchor" href="#animation-multiple-views"></a>
 </h2>
 <p>A major limitation of 3D figures is that you can’t get a full view of
-the data from any single angle. One way to mitigate this is by rotating
-the figure to view the data from different directions. ggcube offers two
-options for rotating 3D plots. <code><a href="../reference/animate_3d.html">animate_3d()</a></code> makes a gif or
-movie of a spinning plot across a specified sequence of rotation angles,
-while <code><a href="../reference/orbit_3d.html">orbit_3d()</a></code> produces an interactive HTML widget that
-you can drag to rotate. Both functions take a pre-made plot and a range
-of rotation angles:</p>
+the data from any single angle. One way to mitigate this is by showing
+the data from several directions. The facets
+<code><a href="../reference/facet_wrap_views.html">facet_wrap_views()</a></code> and <code><a href="../reference/facet_wrap_views.html">facet_grid_views()</a></code> lay
+out a plot from several angles side by side, like
+<code><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap()</a></code> and <code><a href="https://ggplot2.tidyverse.org/reference/facet_grid.html" class="external-link">facet_grid()</a></code> but varying the
+viewing angle rather than the data:
+<code>p + facet_grid_views(roll ~ yaw)</code> crosses a range of tilts
+with a range of turns. ggcube also offers two options for rotating 3D
+plots. <code><a href="../reference/animate_3d.html">animate_3d()</a></code> makes a gif or movie of a spinning plot
+across a specified sequence of rotation angles, while
+<code><a href="../reference/orbit_3d.html">orbit_3d()</a></code> produces an interactive HTML widget that you can
+drag to rotate. Both functions take a pre-made plot and a range of
+rotation angles:</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mountain</span>, <span class="fu"><a href="../reference/aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>      <span class="fu"><a href="../reference/geom_contour_3d.html">geom_contour_3d</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="st">"black"</span>, color <span class="op">=</span> <span class="st">"white"</span>, linewidth <span class="op">=</span> <span class="fl">.5</span>, light <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span> <span class="op">+</span></span>
@@ -396,8 +407,8 @@ of rotation angles:</p>
 <span></span>
 <span><span class="fu"><a href="../reference/orbit_3d.html">orbit_3d</a></span><span class="op">(</span><span class="va">p</span>, yaw <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">360</span>, <span class="fl">0</span><span class="op">)</span>, roll <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">90</span>, <span class="fl">0</span><span class="op">)</span>, n <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">24</span>, <span class="fl">8</span><span class="op">)</span>,</span>
 <span>         start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>yaw <span class="op">=</span> <span class="fl">300</span>, roll <span class="op">=</span> <span class="op">-</span><span class="fl">60</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p>See the <a href="https://matthewkling.github.io/ggcube/articles/animation.html">animation
-and interaction</a> article for more examples.</p>
+<p>See the <a href="https://matthewkling.github.io/ggcube/articles/animation.html">animation,
+orbits, and multiple views</a> article for more examples.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

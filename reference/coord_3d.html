@@ -28,7 +28,7 @@ aspect ratios, panel selection, axis label placement, and lighting."><meta prope
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/coord_3d.html">Controlling the 3D view</a></li>
     <li><a class="dropdown-item" href="../articles/surfaces.html">Surfaces</a></li>
     <li><a class="dropdown-item" href="../articles/lighting.html">Lighting and shading</a></li>
-    <li><a class="dropdown-item" href="../articles/animation.html">Animated and interactive rotation</a></li>
+    <li><a class="dropdown-item" href="../articles/animation.html">Animation, orbits, and multiple views</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -59,6 +59,7 @@ aspect ratios, panel selection, axis label placement, and lighting.</p>
 <span>  pitch <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  roll <span class="op">=</span> <span class="op">-</span><span class="fl">60</span>,</span>
 <span>  yaw <span class="op">=</span> <span class="op">-</span><span class="fl">30</span>,</span>
+<span>  direction <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  persp <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  dist <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  expand <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -85,6 +86,19 @@ aspect ratios, panel selection, axis label placement, and lighting.</p>
 <dl><dt id="arg-roll-pitch-yaw">roll, pitch, yaw<a class="anchor" aria-label="anchor" href="#arg-roll-pitch-yaw"></a></dt>
 <dd><p>Rotation around x, y, and z axes, respectively, in degrees.
 Positive values rotate the near face of the plot "downward", "rightward", and clockwise, respectively.</p></dd>
+
+
+<dt id="arg-direction">direction<a class="anchor" aria-label="anchor" href="#arg-direction"></a></dt>
+<dd><p>Optional length-3 numeric vector <code>c(x, y, z)</code> giving the
+direction the scene is viewed from, as an alternative to specifying
+<code>pitch</code>, <code>roll</code>, and <code>yaw</code>. Magnitude is ignored, so <code>c(1, 1, 1)</code> views the
+cube from the xmax-ymax-zmax corner. A direction fixes only the position of
+the viewer, so the remaining rotational degree of freedom is resolved by
+keeping the z axis pointing up the plot; use <code>pitch</code>, <code>roll</code>, and <code>yaw</code>
+directly for views that need a twist about the view axis. Use
+<code><a href="direction.html">direction()</a></code> to build the vector from an azimuth and elevation. The
+default rotation corresponds to <code>direction(210, 30)</code>. Supplying this
+argument alongside <code>pitch</code>, <code>roll</code>, or <code>yaw</code> is an error.</p></dd>
 
 
 <dt id="arg-persp">persp<a class="anchor" aria-label="anchor" href="#arg-persp"></a></dt>

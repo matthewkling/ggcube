@@ -4,6 +4,8 @@
 
 - [`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md)
   : 3D coordinate system
+- [`direction()`](https://matthewkling.github.io/ggcube/reference/direction.md)
+  : Specify a direction using angles
 - [`aes()`](https://matthewkling.github.io/ggcube/reference/aes.md) :
   Aesthetic mapping with positional z support
 - [`position_on_face()`](https://matthewkling.github.io/ggcube/reference/position_on_face.md)
@@ -80,7 +82,7 @@
 - [`sorting_methods`](https://matthewkling.github.io/ggcube/reference/sorting_methods.md)
   : Depth sorting method
 
-## Interactivity & animation
+## Animation & multiple views
 
 - [`orbit_3d()`](https://matthewkling.github.io/ggcube/reference/orbit_3d.md)
   : Create an interactive drag-to-rotate ggcube
@@ -95,6 +97,9 @@
   [`av_renderer_3d()`](https://matthewkling.github.io/ggcube/reference/renderers_3d.md)
   [`file_renderer_3d()`](https://matthewkling.github.io/ggcube/reference/renderers_3d.md)
   : Animation renderers for animate_3d
+- [`facet_wrap_views()`](https://matthewkling.github.io/ggcube/reference/facet_wrap_views.md)
+  [`facet_grid_views()`](https://matthewkling.github.io/ggcube/reference/facet_wrap_views.md)
+  : Facet a plot by viewing angle
 
 ## Z axis scales
 

@@ -7,5 +7,5 @@
 - [Surfaces](https://matthewkling.github.io/ggcube/articles/surfaces.md):
 - [Lighting and
   shading](https://matthewkling.github.io/ggcube/articles/lighting.md):
-- [Animated and interactive
-  rotation](https://matthewkling.github.io/ggcube/articles/animation.md):
+- [Animation, orbits, and multiple
+  views](https://matthewkling.github.io/ggcube/articles/animation.md):

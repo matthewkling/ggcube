@@ -64,6 +64,13 @@ ggplot(mpg, aes(displ, hwy, drv, color = class)) +
 
 ![](ggcube_files/figure-html/rotation-1.png)
 
+Alternatively, `direction` gives the direction the plot is viewed from
+as a vector: `coord_3d(direction = c(1, 1, 1))` looks at the cube from
+its xmax-ymax-zmax corner. The
+[`direction()`](https://matthewkling.github.io/ggcube/reference/direction.md)
+helper builds such vectors from an azimuth and an elevation, for both
+views and lights.
+
 Perspective projection is on by default, making distant objects appear
 smaller. The `dist` parameter controls the strength of this effect
 (larger values = less distortion), and `persp = FALSE` switches to
@@ -387,12 +394,21 @@ ggplot(iris, aes(Sepal.Length, Sepal.Width, Petal.Length,
 
 ![](ggcube_files/figure-html/face_projection-1.png)
 
-## Interactivity & animation
+## Animation & multiple views
 
 A major limitation of 3D figures is that you can’t get a full view of
-the data from any single angle. One way to mitigate this is by rotating
-the figure to view the data from different directions. ggcube offers two
-options for rotating 3D plots.
+the data from any single angle. One way to mitigate this is by showing
+the data from several directions. The facets
+[`facet_wrap_views()`](https://matthewkling.github.io/ggcube/reference/facet_wrap_views.md)
+and
+[`facet_grid_views()`](https://matthewkling.github.io/ggcube/reference/facet_wrap_views.md)
+lay out a plot from several angles side by side, like
+[`facet_wrap()`](https://ggplot2.tidyverse.org/reference/facet_wrap.html)
+and
+[`facet_grid()`](https://ggplot2.tidyverse.org/reference/facet_grid.html)
+but varying the viewing angle rather than the data:
+`p + facet_grid_views(roll ~ yaw)` crosses a range of tilts with a range
+of turns. ggcube also offers two options for rotating 3D plots.
 [`animate_3d()`](https://matthewkling.github.io/ggcube/reference/animate_3d.md)
 makes a gif or movie of a spinning plot across a specified sequence of
 rotation angles, while
@@ -411,6 +427,6 @@ orbit_3d(p, yaw = c(360, 0), roll = c(-90, 0), n = c(24, 8),
          start = c(yaw = 300, roll = -60))
 ```
 
-See the [animation and
-interaction](https://matthewkling.github.io/ggcube/articles/animation.html)
+See the [animation, orbits, and multiple
+views](https://matthewkling.github.io/ggcube/articles/animation.html)
 article for more examples.

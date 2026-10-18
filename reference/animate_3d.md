@@ -12,6 +12,8 @@ animate_3d(
   pitch = NULL,
   roll = NULL,
   yaw = NULL,
+  light_azimuth = NULL,
+  light_elevation = NULL,
   nframes = NULL,
   fps = NULL,
   duration = NULL,
@@ -50,6 +52,26 @@ animate_3d(
     linearly across the animation. Keyframes are evenly spaced, so
     `c(0, 180, 180)` with 100 frames means: start at 0, reach 180 at
     frame 50, hold at 180 until frame 100.
+
+- light_azimuth, light_elevation:
+
+  Light direction parameters to animate, in degrees, using the same
+  conventions as
+  [`direction()`](https://matthewkling.github.io/ggcube/reference/direction.md):
+  azimuth is a bearing clockwise from the positive y axis, and elevation
+  is the angle above the xy plane (between -90 and 90). Each takes the
+  same forms as the rotation parameters. When either is given, the other
+  is held at the plot light's current value unless also given. When both
+  are `NULL` (the default), lighting is left as the plot specifies.
+  These move the plot-level light set with
+  [`light()`](https://matthewkling.github.io/ggcube/reference/light.md)
+  or `coord_3d(light = )`, which must be directional (not
+  `position`-based); it is an error to use them when lighting is
+  disabled or when any layer has its own `light`. The light's `anchor`
+  is respected: with the default `anchor = "scene"` the light moves
+  around the data, so animating `yaw` and `light_azimuth` together
+  partly cancels out; with `anchor = "camera"` it moves around the
+  viewer.
 
 - nframes, fps, duration:
 
@@ -133,6 +155,10 @@ and
 for renderer options.
 [`orbit_3d()`](https://matthewkling.github.io/ggcube/reference/orbit_3d.md)
 for interactive drag-to-rotate ggcubes.
+[`facet_wrap_views()`](https://matthewkling.github.io/ggcube/reference/facet_wrap_views.md)
+and
+[`facet_grid_views()`](https://matthewkling.github.io/ggcube/reference/facet_wrap_views.md)
+for a static figure showing several views side by side.
 
 ## Examples
 
@@ -160,11 +186,17 @@ animate_3d(p, yaw = c(0, 720), roll = c(-90, 0, -90),
 #> Rendering 12 frames...
 #> Assembling animation...
 
+# Sweep the light while the camera holds still
+animate_3d(p, light_azimuth = c(0, 360), light_elevation = 30,
+           nframes = 12)
+#> Rendering 12 frames...
+#> Assembling animation...
+
 # Save to file (writes to a temporary path; specify your own to keep it)
 anim <- animate_3d(p, yaw = c(0, 360), nframes = 12)
 #> Rendering 12 frames...
 #> Assembling animation...
 anim_save_3d(anim, file.path(tempdir(), "rotating_surface.gif"))
-#> Animation saved to /tmp/RtmpiZzGHM/rotating_surface.gif
+#> Animation saved to /tmp/RtmpX51JmR/rotating_surface.gif
 # }
 ```

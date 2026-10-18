@@ -24,7 +24,7 @@ smoothly interpolating rotation angles across frames."><meta property="og:image"
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/coord_3d.html">Controlling the 3D view</a></li>
     <li><a class="dropdown-item" href="../articles/surfaces.html">Surfaces</a></li>
     <li><a class="dropdown-item" href="../articles/lighting.html">Lighting and shading</a></li>
-    <li><a class="dropdown-item" href="../articles/animation.html">Animated and interactive rotation</a></li>
+    <li><a class="dropdown-item" href="../articles/animation.html">Animation, orbits, and multiple views</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -54,6 +54,8 @@ smoothly interpolating rotation angles across frames.</p>
 <span>  pitch <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  roll <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  yaw <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  light_azimuth <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  light_elevation <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  nframes <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  fps <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  duration <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -88,6 +90,22 @@ interpolated linearly across the animation. Keyframes are evenly
 spaced, so <code>c(0, 180, 180)</code> with 100 frames means: start at 0,
 reach 180 at frame 50, hold at 180 until frame 100.</p></li>
 </ul></dd>
+
+
+<dt id="arg-light-azimuth-light-elevation">light_azimuth, light_elevation<a class="anchor" aria-label="anchor" href="#arg-light-azimuth-light-elevation"></a></dt>
+<dd><p>Light direction parameters to animate,
+in degrees, using the same conventions as <code><a href="direction.html">direction()</a></code>: azimuth is a
+bearing clockwise from the positive y axis, and elevation is the angle
+above the xy plane (between -90 and 90). Each takes the same forms as the
+rotation parameters. When either is given, the other is held at the plot
+light's current value unless also given. When both are <code>NULL</code> (the
+default), lighting is left as the plot specifies. These move the
+plot-level light set with <code><a href="light.html">light()</a></code> or <code>coord_3d(light = )</code>, which must be
+directional (not <code>position</code>-based); it is an error to use them when
+lighting is disabled or when any layer has its own <code>light</code>. The light's
+<code>anchor</code> is respected: with the default <code>anchor = "scene"</code> the light
+moves around the data, so animating <code>yaw</code> and <code>light_azimuth</code> together
+partly cancels out; with <code>anchor = "camera"</code> it moves around the viewer.</p></dd>
 
 
 <dt id="arg-nframes-fps-duration">nframes, fps, duration<a class="anchor" aria-label="anchor" href="#arg-nframes-fps-duration"></a></dt>
@@ -160,7 +178,9 @@ character vector of file paths to the rendered frame images.</p>
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="anim_save_3d.html">anim_save_3d()</a></code> for saving animations to file.
 <code><a href="renderers_3d.html">gifski_renderer_3d()</a></code> and <code><a href="renderers_3d.html">file_renderer_3d()</a></code> for renderer options.
-<code><a href="orbit_3d.html">orbit_3d()</a></code> for interactive drag-to-rotate ggcubes.</p></div>
+<code><a href="orbit_3d.html">orbit_3d()</a></code> for interactive drag-to-rotate ggcubes.
+<code><a href="facet_wrap_views.html">facet_wrap_views()</a></code> and <code><a href="facet_wrap_views.html">facet_grid_views()</a></code> for a static figure showing
+several views side by side.</p></div>
     </div>
 
     <div class="section level2">
@@ -188,12 +208,18 @@ character vector of file paths to the rendered frame images.</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Rendering 12 frames...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Assembling animation...</span>
 <span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Sweep the light while the camera holds still</span></span></span>
+<span class="r-in"><span><span class="fu">animate_3d</span><span class="op">(</span><span class="va">p</span>, light_azimuth <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">360</span><span class="op">)</span>, light_elevation <span class="op">=</span> <span class="fl">30</span>,</span></span>
+<span class="r-in"><span>           nframes <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Rendering 12 frames...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Assembling animation...</span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Save to file (writes to a temporary path; specify your own to keep it)</span></span></span>
 <span class="r-in"><span><span class="va">anim</span> <span class="op">&lt;-</span> <span class="fu">animate_3d</span><span class="op">(</span><span class="va">p</span>, yaw <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">360</span><span class="op">)</span>, nframes <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Rendering 12 frames...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Assembling animation...</span>
 <span class="r-in"><span><span class="fu"><a href="anim_save_3d.html">anim_save_3d</a></span><span class="op">(</span><span class="va">anim</span>, <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"rotating_surface.gif"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Animation saved to /tmp/RtmpiZzGHM/rotating_surface.gif</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Animation saved to /tmp/RtmpX51JmR/rotating_surface.gif</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

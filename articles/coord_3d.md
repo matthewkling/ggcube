@@ -57,6 +57,64 @@ mutlti-panel plot):
 
 ![](coord_3d_files/figure-html/rotation-1.png)
 
+### Viewing direction
+
+Instead of rotation angles, you can give the `direction` the plot is
+viewed *from*, as a vector `c(x, y, z)` in the same orientation as the
+data axes. Only the direction of the vector matters, not its length, so
+`c(1, 1, 1)` and `c(2, 2, 2)` both view the cube from its xmax-ymax-zmax
+corner. The plot is turned so that the z axis points up the page, or,
+when looking straight down the z axis, so that the y axis does.
+
+``` r
+
+(p + coord_3d(direction = c(0, 0, 1)) + ggtitle("c(0, 0, 1)")) +
+  (p + coord_3d(direction = c(1, 1, 1)) + ggtitle("c(1, 1, 1)")) +
+  (p + coord_3d(direction = c(-1, -1, 1)) + ggtitle("c(-1, -1, 1)")) +
+  (p + coord_3d(direction = c(0, -1, 0)) + ggtitle("c(0, -1, 0)")) +
+  (p + coord_3d(direction = c(1, 0, 0.5)) + ggtitle("c(1, 0, 0.5)")) +
+  (p + coord_3d(direction = c(1, -1, -1)) + ggtitle("c(1, -1, -1)")) +
+  plot_layout(nrow = 2)
+```
+
+![](coord_3d_files/figure-html/view-direction-1.png)
+
+If you’d rather think in angles,
+[`direction()`](https://matthewkling.github.io/ggcube/reference/direction.md)
+builds the vector from an azimuth and an elevation in degrees. Azimuth
+is a compass bearing, measured clockwise from the positive y axis, and
+elevation is the angle above the xy plane. The default view, for
+example, is from an azimuth of 210 and an elevation of 30, so
+`coord_3d(direction = direction(210, 30))` gives the same plot as
+[`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md):
+
+``` r
+
+direction(210, 30)
+#> [1] -0.4330127 -0.7500000  0.5000000
+```
+
+Because a direction only says where the viewer is, it can’t express a
+view that is tilted sideways; use `pitch`, `roll`, and `yaw` for those.
+Supplying `direction` together with any of the rotation angles is an
+error.
+
+### Finding a view
+
+Choosing angles by trial and error can be slow. Two tools help: the
+facets
+[`facet_wrap_views()`](https://matthewkling.github.io/ggcube/reference/facet_wrap_views.md)
+and
+[`facet_grid_views()`](https://matthewkling.github.io/ggcube/reference/facet_wrap_views.md)
+lay out a grid of views side by side for comparison, and
+[`orbit_3d()`](https://matthewkling.github.io/ggcube/reference/orbit_3d.md)
+lets you drag the plot around and read the angles of the current view
+off its corner, ready to copy into
+[`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md).
+See the [animation and multiple
+views](https://matthewkling.github.io/ggcube/articles/animation.md)
+article for both.
+
 ## Perspective and distance
 
 By default,

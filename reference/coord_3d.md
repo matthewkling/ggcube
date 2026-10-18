@@ -12,6 +12,7 @@ coord_3d(
   pitch = 0,
   roll = -60,
   yaw = -30,
+  direction = NULL,
   persp = TRUE,
   dist = 2,
   expand = TRUE,
@@ -38,6 +39,20 @@ coord_3d(
   Rotation around x, y, and z axes, respectively, in degrees. Positive
   values rotate the near face of the plot "downward", "rightward", and
   clockwise, respectively.
+
+- direction:
+
+  Optional length-3 numeric vector `c(x, y, z)` giving the direction the
+  scene is viewed from, as an alternative to specifying `pitch`, `roll`,
+  and `yaw`. Magnitude is ignored, so `c(1, 1, 1)` views the cube from
+  the xmax-ymax-zmax corner. A direction fixes only the position of the
+  viewer, so the remaining rotational degree of freedom is resolved by
+  keeping the z axis pointing up the plot; use `pitch`, `roll`, and
+  `yaw` directly for views that need a twist about the view axis. Use
+  [`direction()`](https://matthewkling.github.io/ggcube/reference/direction.md)
+  to build the vector from an azimuth and elevation. The default
+  rotation corresponds to `direction(210, 30)`. Supplying this argument
+  alongside `pitch`, `roll`, or `yaw` is an error.
 
 - persp:
 

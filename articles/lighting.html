@@ -42,7 +42,7 @@
 <li><a class="dropdown-item" href="../articles/coord_3d.html">Controlling the 3D view</a></li>
     <li><a class="dropdown-item" href="../articles/surfaces.html">Surfaces</a></li>
     <li><a class="dropdown-item" href="../articles/lighting.html">Lighting and shading</a></li>
-    <li><a class="dropdown-item" href="../articles/animation.html">Animated and interactive rotation</a></li>
+    <li><a class="dropdown-item" href="../articles/animation.html">Animation, orbits, and multiple views</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -237,6 +237,33 @@ rotation.</li>
 <span>  <span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span><span class="st">"direct"</span>, direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="op">-</span><span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span>, anchor <span class="op">=</span> <span class="st">"camera"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">'anchor = "camera"'</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p><img src="lighting_files/figure-html/direction-1.png" class="r-plt" alt="" width="1050"></p>
+<p>Directions can also be given as angles with <code><a href="../reference/direction.html">direction()</a></code>,
+which takes an azimuth (a compass bearing, measured clockwise from the
+positive y axis) and an elevation (degrees above the xy plane). This is
+often easier when you want to raise or lower a light without changing
+which side it comes from. Here the light comes from the negative x side
+(an azimuth of 270), low and then high:</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span><span class="st">"direct"</span>, direction <span class="op">=</span> <span class="fu"><a href="../reference/direction.html">direction</a></span><span class="op">(</span><span class="fl">270</span>, <span class="fl">10</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"elevation 10"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span><span class="st">"direct"</span>, direction <span class="op">=</span> <span class="fu"><a href="../reference/direction.html">direction</a></span><span class="op">(</span><span class="fl">270</span>, <span class="fl">60</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"elevation 60"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p><img src="lighting_files/figure-html/direction-angles-1.png" class="r-plt" alt="" width="1050"></p>
+<p>Printing a light shows its direction both ways, which can help in
+translating between the two:</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span>direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">0.5</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Lighting specification:</span></span>
+<span><span class="co">#&gt;   Method: diffuse </span></span>
+<span><span class="co">#&gt;   Direction: [ -0.5, 0, 1 ] (directional lighting)</span></span>
+<span><span class="co">#&gt;     azimuth: 270 deg, elevation: 63.4 deg</span></span>
+<span><span class="co">#&gt;   anchor: scene </span></span>
+<span><span class="co">#&gt;   Shading: fill + color (contrast = 1 , mode = hsv )</span></span></code></pre></div>
+<p>To compare light directions side by side, or to move the light around
+interactively, see the <code>light_azimuth</code> and
+<code>light_elevation</code> arguments of <code><a href="../reference/orbit_3d.html">orbit_3d()</a></code> and
+<code><a href="../reference/animate_3d.html">animate_3d()</a></code>, and the view facets
+<code><a href="../reference/facet_wrap_views.html">facet_wrap_views()</a></code> and <code><a href="../reference/facet_wrap_views.html">facet_grid_views()</a></code>,
+covered in the <a href="../articles/animation.html">animation and
+multiple views</a> article.</p>
 </div>
 <div class="section level3">
 <h3 id="positional-lighting">Positional lighting<a class="anchor" aria-label="anchor" href="#positional-lighting"></a>
@@ -247,7 +274,7 @@ ggcube also supports positional lighting from a point source. Use
 light source location in data coordinates. Setting
 <code>distance_falloff = TRUE</code> applies inverse-square intensity
 falloff from the light source position.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mountain</span>, <span class="fu"><a href="../reference/aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="../reference/stat_surface_3d.html">stat_surface_3d</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="st">"red"</span>, color <span class="op">=</span> <span class="st">"red"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="../reference/coord_3d.html">coord_3d</a></span><span class="op">(</span></span>
@@ -267,7 +294,7 @@ creating strong visual contrast between the two sides. Setting
 <code>backface_scale = 1</code> lights backfaces the same as frontfaces.
 Modifying <code>backface_offset</code> to uniformly darkens or brightens
 all backfaces.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pb</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="../reference/stat_function_3d.html">geom_function_3d</a></span><span class="op">(</span>fun <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span> <span class="va">x</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span> <span class="va">y</span><span class="op">^</span><span class="fl">2</span>,</span>
 <span>                   xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3</span>, <span class="fl">3</span><span class="op">)</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3</span>, <span class="fl">3</span><span class="op">)</span>,</span>
@@ -290,7 +317,7 @@ all backfaces.</p>
 range of shaded colors visible in the plot. ggcube provides
 <code><a href="../reference/guide_3d.html">guide_colorbar_3d()</a></code> and <code><a href="../reference/guide_3d.html">guide_legend_3d()</a></code> to
 create guides that show the full shading gradient:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mountain</span>, <span class="fu"><a href="../reference/aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span>, fill <span class="op">=</span> <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="../reference/stat_surface_3d.html">stat_surface_3d</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span>mode <span class="op">=</span> <span class="st">"hsl"</span>, direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
@@ -298,7 +325,7 @@ create guides that show the full shading gradient:</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_gradient.html" class="external-link">scale_fill_gradientn</a></span><span class="op">(</span>colors <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"tomato"</span>, <span class="st">"dodgerblue"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="../reference/coord_3d.html">coord_3d</a></span><span class="op">(</span>ratio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">1.5</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p><img src="lighting_files/figure-html/guide_colorbar-1.png" class="r-plt" alt="" width="1050"></p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mountain</span>, <span class="fu"><a href="../reference/aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span>, fill <span class="op">=</span> <span class="va">x</span> <span class="op">&gt;</span> <span class="fl">.5</span>, group <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="../reference/stat_surface_3d.html">stat_surface_3d</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span>mode <span class="op">=</span> <span class="st">"hsl"</span>, direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>

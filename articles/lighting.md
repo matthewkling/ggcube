@@ -175,6 +175,50 @@ direction is relative to the data axes or the camera:
 
 ![](lighting_files/figure-html/direction-1.png)
 
+Directions can also be given as angles with
+[`direction()`](https://matthewkling.github.io/ggcube/reference/direction.md),
+which takes an azimuth (a compass bearing, measured clockwise from the
+positive y axis) and an elevation (degrees above the xy plane). This is
+often easier when you want to raise or lower a light without changing
+which side it comes from. Here the light comes from the negative x side
+(an azimuth of 270), low and then high:
+
+``` r
+
+(p + light("direct", direction = direction(270, 10)) + ggtitle("elevation 10")) +
+  (p + light("direct", direction = direction(270, 60)) + ggtitle("elevation 60"))
+```
+
+![](lighting_files/figure-html/direction-angles-1.png)
+
+Printing a light shows its direction both ways, which can help in
+translating between the two:
+
+``` r
+
+light(direction = c(-0.5, 0, 1))
+#> Lighting specification:
+#>   Method: diffuse 
+#>   Direction: [ -0.5, 0, 1 ] (directional lighting)
+#>     azimuth: 270 deg, elevation: 63.4 deg
+#>   anchor: scene 
+#>   Shading: fill + color (contrast = 1 , mode = hsv )
+```
+
+To compare light directions side by side, or to move the light around
+interactively, see the `light_azimuth` and `light_elevation` arguments
+of
+[`orbit_3d()`](https://matthewkling.github.io/ggcube/reference/orbit_3d.md)
+and
+[`animate_3d()`](https://matthewkling.github.io/ggcube/reference/animate_3d.md),
+and the view facets
+[`facet_wrap_views()`](https://matthewkling.github.io/ggcube/reference/facet_wrap_views.md)
+and
+[`facet_grid_views()`](https://matthewkling.github.io/ggcube/reference/facet_wrap_views.md),
+covered in the [animation and multiple
+views](https://matthewkling.github.io/ggcube/articles/animation.md)
+article.
+
 ### Positional lighting
 
 In addition to directional lighting (parallel rays from a direction),

@@ -7,6 +7,8 @@ HTMLWidgets.widget({
 
     // ---- Per-instance state -------------------------------------------------
     var srcs = [];
+    var labels = [];
+    var readoutVisible = false;
     var nx = 1, ny = 1, n = 0;
     var loopX = false, loopY = false;
     var ix = 0, iy = 0;
@@ -23,12 +25,21 @@ HTMLWidgets.widget({
     el.classList.add("ggcube-orbit");
     el.setAttribute("tabindex", "0");
     el.setAttribute("aria-label",
-      "3D plot. Drag or use the arrow keys to rotate.");
+      "3D plot. Drag or use the arrow keys to rotate. " +
+      "Press R to show or hide the viewing angles.");
 
     var imgEl = document.createElement("img");
     imgEl.className = "ggcube-orbit-frame";
     imgEl.setAttribute("alt", "3D plot (drag or arrow keys to rotate)");
     el.appendChild(imgEl);
+
+    // Angle readout for the current frame. Its text is kept in step with the
+    // displayed frame whether or not it is visible, so toggling only changes
+    // its visibility.
+    var readoutEl = document.createElement("div");
+    readoutEl.className = "ggcube-orbit-readout";
+    readoutEl.style.display = "none";
+    el.appendChild(readoutEl);
 
     var loading = document.createElement("div");
     loading.className = "ggcube-orbit-loading";
@@ -51,6 +62,11 @@ HTMLWidgets.widget({
       if (idx === curIndex) return;
       curIndex = idx;
       imgEl.src = srcs[idx];
+      readoutEl.textContent = labels[idx] || "";
+    }
+
+    function showReadout() {
+      readoutEl.style.display = (ready && readoutVisible) ? "" : "none";
     }
 
     function setPos(nix, niy) {
@@ -136,6 +152,13 @@ HTMLWidgets.widget({
         setPos(ix, iy - 1); handled = true;
       } else if (ny > 1 && (e.key === "ArrowDown" || e.keyCode === 40)) {
         setPos(ix, iy + 1); handled = true;
+      } else if ((e.key === "r" || e.key === "R") &&
+                 !e.ctrlKey && !e.metaKey && !e.altKey) {
+        // Modifier combinations are left alone so that Ctrl/Cmd+R still
+        // reloads the page.
+        readoutVisible = !readoutVisible;
+        showReadout();
+        handled = true;
       }
       if (handled) {
         el.classList.remove("focus-from-pointer");
@@ -151,8 +174,12 @@ HTMLWidgets.widget({
         //   dims       : [nx] or [nx, ny]
         //   loop_flags : [loopX] or [loopX, loopY]
         //   start      : [ix] or [ix, iy]  (0-based initial cell)
+        //   labels     : array of readout strings, one per frame
+        //   readout    : whether the readout starts visible
         srcs = x.frames || [];
         n = srcs.length;
+        labels = x.labels || [];
+        readoutVisible = !!x.readout;
 
         var dims = x.dims || [n];
         nx = dims[0];
@@ -169,6 +196,7 @@ HTMLWidgets.widget({
         curIndex = -1;
         ready = false;
         loading.style.display = "";
+        showReadout();
 
         if (n === 0) return;
 
@@ -183,6 +211,7 @@ HTMLWidgets.widget({
                 ready = true;
                 loading.style.display = "none";
                 render();
+                showReadout();
               }
             };
             im.src = srcs[k];

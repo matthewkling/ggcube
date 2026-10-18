@@ -62,7 +62,11 @@ light(
   be non-zero. Values are automatically normalized, so magnitude doesn't
   matter, only sign and relative magnitude. Direction is specified in
   visual space (relative to the rendered cube's bounding box), not data
-  space. This argument is ignored if `position` is provided.
+  space. Use
+  [`direction()`](https://matthewkling.github.io/ggcube/reference/direction.md)
+  to build this vector from an azimuth and elevation instead of
+  components; the default corresponds to `direction(270, 63.43)`. This
+  argument is ignored if `position` is provided.
 
 - anchor:
 
