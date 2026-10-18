@@ -73,6 +73,11 @@ ggplot(mpg, aes(displ, hwy, drv, color = class)) +
             panel.foreground = element_rect(alpha = .1))
 ```
 
+Alternatively, `direction` gives the direction the plot is viewed from as a vector:
+`coord_3d(direction = c(1, 1, 1))` looks at the cube from its xmax-ymax-zmax corner.
+The `direction()` helper builds such vectors from an azimuth and an elevation, for both
+views and lights.
+
 Perspective projection is on by default, making distant objects appear smaller. The
 `dist` parameter controls the strength of this effect (larger values = less distortion),
 and `persp = FALSE` switches to orthographic projection where parallel lines stay
@@ -317,11 +322,14 @@ ggplot(iris, aes(Sepal.Length, Sepal.Width, Petal.Length,
 ```
 
 
-## Interactivity & animation
+## Animation & multiple views
 
 A major limitation of 3D figures is that you can't get a full view of the data from any 
-single angle. One way to mitigate this is by rotating the figure to view the data from 
-different directions. ggcube offers two options for rotating 3D plots. `animate_3d()`
+single angle. One way to mitigate this is by showing the data from several directions.
+The facets `facet_wrap_views()` and `facet_grid_views()` lay out a plot from several
+angles side by side, like `facet_wrap()` and `facet_grid()` but varying the viewing
+angle rather than the data: `p + facet_grid_views(roll ~ yaw)` crosses a range of tilts
+with a range of turns. ggcube also offers two options for rotating 3D plots. `animate_3d()`
 makes a gif or movie of a spinning plot across a specified sequence of rotation angles,
 while `orbit_3d()` produces an interactive HTML widget that you can drag to rotate. 
 Both functions take a pre-made plot and a range of rotation angles:
@@ -336,5 +344,5 @@ orbit_3d(p, yaw = c(360, 0), roll = c(-90, 0), n = c(24, 8),
          start = c(yaw = 300, roll = -60))
 ```
 
-See the [animation and interaction](https://matthewkling.github.io/ggcube/articles/animation.html) 
+See the [animation, orbits, and multiple views](https://matthewkling.github.io/ggcube/articles/animation.html) 
 article for more examples.

@@ -552,6 +552,18 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                                z = get_scale_info(scale_z, expand = self$expand, axis_name = "z")
                          )
 
+                         # Copies of the full scales, taken before their names are
+                         # blanked, so a facet can rebuild this panel's params for
+                         # a different view.
+                         # clone() resets a scale's trained range, so carry it over.
+                         keep_scale <- function(scale) {
+                               copy <- scale$clone()
+                               copy$range <- scale$range
+                               copy
+                         }
+                         panel_params$source_scales <- list(x = keep_scale(scale_x),
+                                                            y = keep_scale(scale_y))
+
                          # Blank out native scale names (prevents them from showing in standard ggplot2 rendering)
                          scale_x$name <- ""
                          scale_y$name <- ""
@@ -689,8 +701,25 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                          return(panel_params)
                    },
 
+                   # Panels normally share params when they share x and y
+                   # scales. A facet that shows each panel from its own view
+                   # marks the panels with a `.view` column, and each view
+                   # needs params of its own.
+                   setup_layout = function(self, layout, params) {
+                         layout <- ggproto_parent(CoordCartesian, self)$setup_layout(layout, params)
+                         if (".view" %in% names(layout)) {
+                               keys <- paste(layout$SCALE_X, layout$SCALE_Y, layout$.view)
+                               layout$COORD <- match(keys, unique(keys))
+                         }
+                         layout
+                   },
+
                    # Force 1:1 aspect ratio
                    aspect = function(self, ranges) {
+                         bounds <- ranges$plot_bounds
+                         if (!is.null(bounds)) {
+                               return(diff(bounds[3:4]) / diff(bounds[1:2]))
+                         }
                          if (!is.null(self$fixed_bounds)) {
                                return(diff(self$fixed_bounds[3:4]) / diff(self$fixed_bounds[1:2]))
                          }

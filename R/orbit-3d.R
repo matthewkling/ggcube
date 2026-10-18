@@ -136,7 +136,8 @@
 #' }
 #'
 #' @seealso [animate_3d()] for GIF/MP4 output.
-#'   [multiview_3d()] for a static figure showing the same views side by side.
+#'   [facet_wrap_views()] and [facet_grid_views()] for a static figure showing
+#'   several views side by side.
 #'   [orbit_3d-shiny] for including orbits in  Shiny apps.
 #' @export
 orbit_3d <- function(plot,
@@ -187,6 +188,11 @@ orbit_3d <- function(plot,
                                  light_azimuth = light_azimuth,
                                  light_elevation = light_elevation)
       ndim <- length(spec$axes)
+
+      check_view_facet_angles(plot, list(pitch = pitch, roll = roll, yaw = yaw,
+                                         light_azimuth = light_azimuth,
+                                         light_elevation = light_elevation),
+                              "orbit_3d")
 
       # --- Resolve the light to orbit, if any ---
       orbited <- resolve_light_angles(plot, light_azimuth, light_elevation)
@@ -435,29 +441,10 @@ build_param_grid <- function(coord, spec, n, loop, start = NULL,
       dims <- integer(length(axes))
 
       for (i in seq_along(axes)) {
-            rng <- spec$ranges[[axes[i]]]
-            count <- n[i]
-
-            # Determine whether this axis loops.
-            is_loop <- if (is.null(loop)) {
-                  angles_return_home(rng[1], rng[2])
-            } else {
-                  isTRUE(loop)
-            }
-
-            if (is_loop && count > 1L) {
-                  # Sample count + 1 inclusive points, drop the duplicate end,
-                  # leaving `count` unique points spanning the half-open range.
-                  vals <- seq(rng[1], rng[2], length.out = count + 1L)
-                  vals <- vals[-length(vals)]
-            } else {
-                  vals <- seq(rng[1], rng[2], length.out = count)
-                  is_loop <- is_loop && count > 1L
-            }
-
-            axis_values[[i]] <- vals
-            loop_flags[i] <- is_loop
-            dims[i] <- length(vals)
+            sampled <- sample_angle_range(spec$ranges[[axes[i]]], n[i], loop)
+            axis_values[[i]] <- sampled$values
+            loop_flags[i] <- sampled$loop
+            dims[i] <- length(sampled$values)
       }
 
       # Cross the axes row-major with x (axis 1) varying fastest.
@@ -614,6 +601,30 @@ orbit_start_cell <- function(axis_values, axes, start = NULL) {
             }
       }
       out
+}
+
+
+#' Sample evenly spaced angles across a range
+#'
+#' A range that returns to its starting view loops: it is sampled at `count`
+#' points spanning the half-open range, dropping the duplicate endpoint.
+#' Otherwise the range is sampled inclusively.
+#' @param rng Length-2 range \code{c(from, to)} in degrees.
+#' @param count Number of angles.
+#' @param loop \code{NULL} to detect looping, or a single logical to force it.
+#' @return A list with \code{values} and \code{loop}.
+#' @keywords internal
+#' @noRd
+sample_angle_range <- function(rng, count, loop = NULL) {
+      is_loop <- if (is.null(loop)) angles_return_home(rng[1], rng[2]) else isTRUE(loop)
+      if (is_loop && count > 1L) {
+            values <- seq(rng[1], rng[2], length.out = count + 1L)
+            values <- values[-length(values)]
+      } else {
+            values <- seq(rng[1], rng[2], length.out = count)
+            is_loop <- is_loop && count > 1L
+      }
+      list(values = values, loop = is_loop)
 }
 
 

@@ -200,6 +200,7 @@ orbit_3d(p, yaw = c(360, 0), n = 12,
 }
 \seealso{
 \code{\link[=animate_3d]{animate_3d()}} for GIF/MP4 output.
-\code{\link[=multiview_3d]{multiview_3d()}} for a static figure showing the same views side by side.
+\code{\link[=facet_wrap_views]{facet_wrap_views()}} and \code{\link[=facet_grid_views]{facet_grid_views()}} for a static figure showing
+several views side by side.
 \link{orbit_3d-shiny} for including orbits in  Shiny apps.
 }

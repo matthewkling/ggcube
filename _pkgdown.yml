@@ -6,6 +6,7 @@ reference:
 - title: 3D coordinates
 - contents:
   - coord_3d
+  - direction
   - aes
   - position_on_face
   - camera_facing
@@ -22,13 +23,14 @@ reference:
   - element_rect
   - grid_generation
   - sorting_methods
-- title: Interactivity & animation
+- title: Animation & multiple views
 - contents:
   - orbit_3d
   - contains("orbit")
   - animate_3d
   - contains("anim")
   - contains("renderer")
+  - facet_wrap_views
 - title: Z axis scales
 - contents:
   - scale_z_continuous

@@ -64,6 +64,49 @@ and an example combining them to achieve an arbitrary rotation (note this uses t
   plot_layout(nrow = 2)
 ```
 
+### Viewing direction
+
+Instead of rotation angles, you can give the `direction` the plot is viewed
+*from*, as a vector `c(x, y, z)` in the same orientation as the data axes. Only
+the direction of the vector matters, not its length, so `c(1, 1, 1)` and
+`c(2, 2, 2)` both view the cube from its xmax-ymax-zmax corner. The plot is turned
+so that the z axis points up the page, or, when looking straight down the z axis,
+so that the y axis does.
+
+```{r view-direction, fig.height = 6}
+(p + coord_3d(direction = c(0, 0, 1)) + ggtitle("c(0, 0, 1)")) +
+  (p + coord_3d(direction = c(1, 1, 1)) + ggtitle("c(1, 1, 1)")) +
+  (p + coord_3d(direction = c(-1, -1, 1)) + ggtitle("c(-1, -1, 1)")) +
+  (p + coord_3d(direction = c(0, -1, 0)) + ggtitle("c(0, -1, 0)")) +
+  (p + coord_3d(direction = c(1, 0, 0.5)) + ggtitle("c(1, 0, 0.5)")) +
+  (p + coord_3d(direction = c(1, -1, -1)) + ggtitle("c(1, -1, -1)")) +
+  plot_layout(nrow = 2)
+```
+
+If you'd rather think in angles, `direction()` builds the vector from an
+azimuth and an elevation in degrees. Azimuth is a compass bearing, measured
+clockwise from the positive y axis, and elevation is the angle above the xy
+plane. The default view, for example, is from an azimuth of 210 and an
+elevation of 30, so `coord_3d(direction = direction(210, 30))` gives the same
+plot as `coord_3d()`:
+
+```{r view-angles}
+direction(210, 30)
+```
+
+Because a direction only says where the viewer is, it can't express a view that
+is tilted sideways; use `pitch`, `roll`, and `yaw` for those. Supplying
+`direction` together with any of the rotation angles is an error.
+
+### Finding a view
+
+Choosing angles by trial and error can be slow. Two tools help: the facets
+`facet_wrap_views()` and `facet_grid_views()` lay out a grid of views side by
+side for comparison, and `orbit_3d()` lets you drag the plot around and read
+the angles of the current view off its corner, ready to copy into `coord_3d()`.
+See the [animation and multiple views](../articles/animation.html) article for
+both.
+
  
  
 ## Perspective and distance

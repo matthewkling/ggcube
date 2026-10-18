@@ -101,7 +101,8 @@
 #' @seealso [anim_save_3d()] for saving animations to file.
 #'   [gifski_renderer_3d()] and [file_renderer_3d()] for renderer options.
 #'   [orbit_3d()] for interactive drag-to-rotate ggcubes.
-#'   [multiview_3d()] for a static figure showing several views side by side.
+#'   [facet_wrap_views()] and [facet_grid_views()] for a static figure showing
+#'   several views side by side.
 #' @export
 animate_3d <- function(plot,
                        pitch = NULL,
@@ -142,6 +143,11 @@ animate_3d <- function(plot,
       timing <- resolve_timing(nframes, fps, duration)
       nframes <- timing$nframes
       fps <- timing$fps
+
+      check_view_facet_angles(plot, list(pitch = pitch, roll = roll, yaw = yaw,
+                                         light_azimuth = light_azimuth,
+                                         light_elevation = light_elevation),
+                              "animate_3d")
 
       # --- Resolve the light to animate, if any ---
       animated <- resolve_light_angles(plot, light_azimuth, light_elevation)
@@ -441,6 +447,34 @@ resolve_animated_light <- function(plot) {
       }
 
       base
+}
+
+
+#' Refuse to move angles that a view facet sets
+#'
+#' facet_wrap_views() and facet_grid_views() set the angles they vary, and any
+#' they fix, for each panel, overriding the coord. Moving one of those angles in
+#' an animation or orbit would silently do nothing.
+#' @param plot A ggplot object.
+#' @param args Named list of the angle arguments given to the caller.
+#' @param fun Name of the calling function, for the error message.
+#' @keywords internal
+#' @noRd
+check_view_facet_angles <- function(plot, args, fun) {
+      spec <- plot$facet$params$view_spec
+      if (is.null(spec)) return(invisible())
+      set_by_facet <- c(spec$angles, names(spec$fixed))
+      given <- names(args)[!vapply(args, is.null, logical(1))]
+      clash <- intersect(given, set_by_facet)
+      if (length(clash) > 0) {
+            stop(sprintf(paste0(
+                  "This plot's view facet sets %s, so %s() can't move %s. ",
+                  "Move angles the facet doesn't set, or remove the facet."),
+                  paste0("`", clash, "`", collapse = ", "), fun,
+                  if (length(clash) == 1) "it" else "them"),
+                 call. = FALSE)
+      }
+      invisible()
 }
 
 

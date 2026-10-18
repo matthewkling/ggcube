@@ -166,6 +166,30 @@ controls whether this direction is relative to the data axes or the camera:
       ggtitle('anchor = "camera"'))
 ```
 
+Directions can also be given as angles with `direction()`, which takes an
+azimuth (a compass bearing, measured clockwise from the positive y axis) and an
+elevation (degrees above the xy plane). This is often easier when you want to
+raise or lower a light without changing which side it comes from. Here the light
+comes from the negative x side (an azimuth of 270), low and then high:
+
+```{r direction-angles, fig.height = 3.5}
+(p + light("direct", direction = direction(270, 10)) + ggtitle("elevation 10")) +
+  (p + light("direct", direction = direction(270, 60)) + ggtitle("elevation 60"))
+```
+
+Printing a light shows its direction both ways, which can help in translating
+between the two:
+
+```{r print-light}
+light(direction = c(-0.5, 0, 1))
+```
+
+To compare light directions side by side, or to move the light around
+interactively, see the `light_azimuth` and `light_elevation` arguments of
+`orbit_3d()` and `animate_3d()`, and the view facets `facet_wrap_views()` and
+`facet_grid_views()`, covered in the
+[animation and multiple views](../articles/animation.html) article.
+
 
 ### Positional lighting
 
