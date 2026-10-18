@@ -30,7 +30,10 @@ GeomContour3D <- ggproto("GeomContour3D", GeomPolygon3D,
                                                        "linewidth", "linetype", "PANEL",
                                                        "cull_backfaces", "lighting_spec"))
 
-                               all_data <- split(data, data$group)
+                               # Groups repeat across facet panels, so each
+                               # panel's groups are contoured separately.
+                               all_data <- split(data, list(data$PANEL, data$group),
+                                                 drop = TRUE)
 
                                all_contour_data <- lapply(all_data, function(data){
 

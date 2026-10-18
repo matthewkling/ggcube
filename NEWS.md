@@ -1,6 +1,7 @@
 # ggcube (development version)
 
 * ggcube now requires ggplot2 4.0.0 or later.
+* `geom_contour_3d()` and `geom_ridgeline_3d()` now work with facets. They processed every panel's data together, so faceted plots mixed panels' contours and could leave panels empty.
 * ggcube now requires systemfonts 1.2.0 or later. Earlier versions lack the glyph outline functions ggcube uses, so loading ggcube against them failed.
 * New `direction()` builds the length-3 direction vectors used by `coord_3d()` and `light()` from an azimuth and an elevation in degrees, for cases where angles are easier to reason about than components. Azimuth is a compass bearing measured clockwise from the positive y axis, matching terrain shading conventions.
 * `coord_3d()` gains a `direction` argument: an alternative to `pitch`, `roll`, and `yaw` that specifies the direction the scene is viewed from, so `direction = c(1, 1, 1)` views the cube from its xmax-ymax-zmax corner. The z axis is kept pointing up the plot, and supplying `direction` alongside any of the Euler angles is an error. The default rotation corresponds to `direction(210, 30)`.

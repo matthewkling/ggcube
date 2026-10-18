@@ -48,13 +48,22 @@ GeomRidgeline3D <- ggproto("GeomRidgeline3D", GeomPolygon3D,
                                  # Cleanup
                                  if (".direction" %in% names(data)) data <- select(data, -.direction)
 
-                                 # Convert to ridgeline polygons
-                                 data <- points_to_ridgelines(
-                                       data,
-                                       direction = params$direction,
-                                       base = params$base,
-                                       group_prefix = "ridgeline__"
-                                 )
+                                 # Convert to ridgeline polygons, one facet panel
+                                 # at a time so panels don't merge.
+                                 to_ridgelines <- function(d) {
+                                       points_to_ridgelines(
+                                             d,
+                                             direction = params$direction,
+                                             base = params$base,
+                                             group_prefix = "ridgeline__"
+                                       )
+                                 }
+                                 data <- if ("PANEL" %in% names(data)) {
+                                       bind_rows(lapply(split(data, data$PANEL, drop = TRUE),
+                                                        to_ridgelines))
+                                 } else {
+                                       to_ridgelines(data)
+                                 }
 
                                  setup_annotations(data, params)
                            }
