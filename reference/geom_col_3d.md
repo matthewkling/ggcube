@@ -20,7 +20,7 @@ geom_col_3d(
   zmin = NULL,
   light = NULL,
   cull_backfaces = TRUE,
-  sort_method = NULL,
+  sort_method = deprecated(),
   scale_depth = TRUE,
   force_convex = FALSE,
   na.rm = FALSE,
@@ -39,7 +39,7 @@ stat_col_3d(
   zmin = NULL,
   light = NULL,
   cull_backfaces = TRUE,
-  sort_method = NULL,
+  sort_method = deprecated(),
   scale_depth = TRUE,
   force_convex = FALSE,
   na.rm = FALSE,
@@ -136,9 +136,9 @@ stat_col_3d(
 
 - sort_method:
 
-  Depth sorting algorithm. See
-  [sorting_methods](https://matthewkling.github.io/ggcube/reference/sorting_methods.md)
-  for details.
+  Deprecated. All 3D layers in a panel are now depth-sorted together,
+  pairwise, so this has no effect. See
+  [sorting_methods](https://matthewkling.github.io/ggcube/reference/sorting_methods.md).
 
 - scale_depth:
 
@@ -186,11 +186,6 @@ This is analogous to
 [`ggplot2::geom_col()`](https://ggplot2.tidyverse.org/reference/geom_bar.html)
 for 3D plots. For automatic counting or binning, see
 [`geom_bar_3d()`](https://matthewkling.github.io/ggcube/reference/geom_bar_3d.md).
-
-Note that column geometries often require pairwise depth sorting for
-correct rendering. This is the default for smaller data sets, but not
-for larger data sets due to compute speed; in those cases you may wish
-to manually specify `sort_method = "pairwise"` for good results.
 
 ## Aesthetics
 

@@ -17,7 +17,7 @@ geom_ridgeline_3d(
   direction = "x",
   base = NULL,
   cull_backfaces = FALSE,
-  sort_method = "pairwise",
+  sort_method = deprecated(),
   scale_depth = TRUE,
   force_convex = FALSE,
   light = NULL,
@@ -87,9 +87,9 @@ geom_ridgeline_3d(
 
 - sort_method:
 
-  Depth sorting algorithm. See
-  [sorting_methods](https://matthewkling.github.io/ggcube/reference/sorting_methods.md)
-  for details.
+  Deprecated. All 3D layers in a panel are now depth-sorted together,
+  pairwise, so this has no effect. See
+  [sorting_methods](https://matthewkling.github.io/ggcube/reference/sorting_methods.md).
 
 - scale_depth:
 

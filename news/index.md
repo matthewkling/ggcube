@@ -2,6 +2,52 @@
 
 ## ggcube (development version)
 
+### Depth sorting
+
+Changes to default behaviors, which alter the rendering of some plots
+relative to the prior version:
+
+- All ggcube layers in a panel are now depth-sorted together, as one
+  scene, so the geometry of one layer can pass in front of or behind
+  that of another: points behind a surface drawn by another layer are
+  hidden by it, a plane drawn by one layer cuts through segments drawn
+  by another, and so on. Previously each layer was sorted on its own and
+  drawn on top of the layers before it. Layers from other packages are
+  drawn as before, and separate the ggcube layers on either side of them
+  into separate scenes. Coplanar polygons from different layers are
+  drawn in layer order.
+- Depth sorting is now always pairwise: every pair of elements that
+  overlap on screen is ordered from their 3D geometry. The faster but
+  approximate `"painter"` method, and the `"auto"` choice between the
+  two, are gone, along with the `sort_method` argument of layer
+  functions, which is deprecated and has no effect. Plots of layers that
+  used painter sorting by default, such as
+  [`geom_point_3d()`](https://matthewkling.github.io/ggcube/reference/geom_point_3d.md),
+  [`geom_path_3d()`](https://matthewkling.github.io/ggcube/reference/geom_path_3d.md),
+  [`geom_segment_3d()`](https://matthewkling.github.io/ggcube/reference/geom_segment_3d.md),
+  and large surfaces, are now drawn correctly where their elements
+  overlap.
+- Point markers and lines are now ordered using their drawn size:
+  overlapping markers are drawn farther first, a marker overlapping the
+  edge of a polygon is ordered against it, and lines are ordered where
+  their drawn widths overlap. Previously markers were treated as points,
+  so two overlapping markers could be drawn in either order. Elements
+  are now ordered when the plot is drawn, since their drawn size depends
+  on the size of the panel.
+
+Performance:
+
+- Pairwise sorting has been rewritten in C++, and compares only elements
+  that overlap on screen rather than every pair, so its time and memory
+  grow with the number of overlapping pairs rather than the square of
+  the number of elements. Sorting is now about as fast as painter
+  sorting was: a scatterplot of 10,000 points, which previously took
+  minutes to sort pairwise, now renders in about two seconds, and a 100
+  x 100 surface, which previously ran out of memory, in about six.
+  ggcube now contains compiled code.
+
+### Other changes
+
 - ggcube now requires ggplot2 4.0.0 or later.
 
 - [`geom_contour_3d()`](https://matthewkling.github.io/ggcube/reference/geom_contour_3d.md)
@@ -114,10 +160,10 @@
   the line colour by default, as in ggplot2; previously they were drawn
   hollow.
 
-- Pairwise sorting now always draws points, segments, and text lying in
-  the plane of a planar polygon (e.g. a line drawn along a plane) on top
-  of it. Previously, especially under perspective projection, they were
-  often hidden behind it.
+- Points, segments, and text lying in the plane of a planar polygon
+  (e.g. a line drawn along a plane) are now always drawn on top of it.
+  Previously, especially under perspective projection, they were often
+  hidden behind it.
 
 - New `annotate_3d("plane")` draws planes clipped to the panel. Planes
   can be given as `xintercept`, `yintercept`, or `zintercept`
@@ -125,15 +171,14 @@
   (`z = intercept + slope_x * x + slope_y * y`, as from a linear model);
   or as general coefficients `a * x + b * y + c * z = d`. All forms are
   vectorized, so e.g. a linear system can be drawn in one call. Planes
-  are depth-sorted (and, with pairwise sorting, split where they
-  intersect) with the layer’s geometry, lit from the side facing the
-  viewer, never removed by back-face culling, and don’t expand the
-  plot’s axis ranges.
+  are depth-sorted with the layer’s geometry and split where they
+  intersect it, lit from the side facing the viewer, never removed by
+  back-face culling, and don’t expand the plot’s axis ranges.
 
 - Fixed an error when a
   [`geom_point_3d()`](https://matthewkling.github.io/ggcube/reference/geom_point_3d.md)
-  layer with pairwise sorting contained annotations. Pairwise sorting
-  now also treats the reference lines of point layers as segments rather
+  layer with pairwise sorting contained annotations. Depth sorting now
+  also treats the reference lines of point layers as segments rather
   than degenerate polygons.
 
 - New `annotate_3d("axes")` draws x, y, and z axis lines through an
@@ -159,13 +204,12 @@
   depth-scaled with the cube edges, under the `"border"` key of
   `coord_3d(scale_depth = )`.
 
-- Pairwise depth sorting (`sort_method = "pairwise"`, and `"auto"` for
-  small layers) now splits polygons that pass through one another, so
+- Depth sorting now splits polygons that pass through one another, so
   intersecting planes and surfaces render with correct occlusion along
   their line of intersection. Outlines are drawn only along original
   polygon edges, not along the cuts.
 
-- Pairwise sorting now determines the order of a polygon and any element
+- Depth sorting now determines the order of a polygon and any element
   overlapping it on screen (polygon, segment, point, or text) exactly
   from their 3D geometry where possible, rather than from sampled
   screen-space depths. This fixes misordering under perspective
@@ -176,15 +220,15 @@
   crossings went undetected and the rest were split at visibly wrong
   positions.
 
-- When pairwise sorting finds cyclic overlaps, it now drops only
+- When depth sorting finds cyclic overlaps, it now drops only
   constraints that are part of a cycle. Previously it could discard many
   unrelated constraints, and pairwise sorting of large layers is now
   considerably faster when cycles occur.
 
 - Fixed a spurious “Cycle breaking exceeded maximum iterations” warning
-  for pairwise-sorted layers containing a single element.
+  for layers containing a single element.
 
-- Fixed a bug where pairwise sorting never constrained the order of a
+- Fixed a bug where depth sorting never constrained the order of a
   segment relative to a polygon it overlapped on screen, so segments
   (e.g. residual lines and
   [`annotate_3d()`](https://matthewkling.github.io/ggcube/reference/annotate_3d.md)

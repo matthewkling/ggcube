@@ -64,7 +64,7 @@ a rectangular 3D column extending from a base level to the data value.</p>
 <span>  zmin <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  light <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  cull_backfaces <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  sort_method <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  sort_method <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  scale_depth <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  force_convex <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  na.rm <span class="op">=</span> <span class="cn">FALSE</span>,</span>
@@ -83,7 +83,7 @@ a rectangular 3D column extending from a base level to the data value.</p>
 <span>  zmin <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  light <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  cull_backfaces <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  sort_method <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  sort_method <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  scale_depth <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  force_convex <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  na.rm <span class="op">=</span> <span class="cn">FALSE</span>,</span>
@@ -165,7 +165,9 @@ or explicitly disabled).</p></dd>
 
 
 <dt id="arg-sort-method">sort_method<a class="anchor" aria-label="anchor" href="#arg-sort-method"></a></dt>
-<dd><p>Depth sorting algorithm. See <a href="sorting_methods.html">sorting_methods</a> for details.</p></dd>
+<dd><p>Deprecated. All 3D layers in a
+panel are now depth-sorted together, pairwise, so this has no effect. See
+<a href="sorting_methods.html">sorting_methods</a>.</p></dd>
 
 
 <dt id="arg-scale-depth">scale_depth<a class="anchor" aria-label="anchor" href="#arg-scale-depth"></a></dt>
@@ -209,9 +211,6 @@ voxels, FALSE is safe because polygons fill always be convex.</p></dd>
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>This is analogous to <code><a href="https://ggplot2.tidyverse.org/reference/geom_bar.html" class="external-link">ggplot2::geom_col()</a></code> for 3D plots. For automatic counting or
 binning, see <code><a href="geom_bar_3d.html">geom_bar_3d()</a></code>.</p>
-<p>Note that column geometries often require pairwise depth sorting for correct rendering.
-This is the default for smaller data sets, but not for larger data sets due to compute speed;
-in those cases you may wish to manually specify <code>sort_method = "pairwise"</code> for good results.</p>
     </div>
     <div class="section level2">
     <h2 id="aesthetics">Aesthetics<a class="anchor" aria-label="anchor" href="#aesthetics"></a></h2>

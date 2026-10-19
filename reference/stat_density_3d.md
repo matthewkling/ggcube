@@ -26,7 +26,7 @@ geom_density_3d(
   min_ndensity = 0,
   light = NULL,
   cull_backfaces = FALSE,
-  sort_method = NULL,
+  sort_method = deprecated(),
   force_convex = FALSE,
   scale_depth = TRUE,
   na.rm = FALSE,
@@ -50,7 +50,7 @@ stat_density_3d(
   min_ndensity = 0,
   light = NULL,
   cull_backfaces = FALSE,
-  sort_method = NULL,
+  sort_method = deprecated(),
   force_convex = FALSE,
   scale_depth = TRUE,
   na.rm = FALSE,
@@ -157,9 +157,9 @@ stat_density_3d(
 
 - sort_method:
 
-  Depth sorting algorithm. See
-  [sorting_methods](https://matthewkling.github.io/ggcube/reference/sorting_methods.md)
-  for details.
+  Deprecated. All 3D layers in a panel are now depth-sorted together,
+  pairwise, so this has no effect. See
+  [sorting_methods](https://matthewkling.github.io/ggcube/reference/sorting_methods.md).
 
 - force_convex:
 
@@ -292,8 +292,7 @@ p + geom_density_3d(adjust = 2, color = "white")   # Smoother
 
 # As contour plot instead of default surface plot
 p + stat_density_3d(geom = "contour_3d", light = "none",
-                    color = "black", bins = 25,
-                    sort_method = "pairwise")
+                    color = "black", bins = 25)
 
 
 # Multiple density surfaces by group,

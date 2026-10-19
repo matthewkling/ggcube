@@ -72,7 +72,7 @@ visualization of data concentration as peaks and valleys in 3D space.</p>
 <span>  min_ndensity <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  light <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  cull_backfaces <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  sort_method <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  sort_method <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  force_convex <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  scale_depth <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  na.rm <span class="op">=</span> <span class="cn">FALSE</span>,</span>
@@ -96,7 +96,7 @@ visualization of data concentration as peaks and valleys in 3D space.</p>
 <span>  min_ndensity <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  light <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  cull_backfaces <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  sort_method <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  sort_method <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  force_convex <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  scale_depth <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  na.rm <span class="op">=</span> <span class="cn">FALSE</span>,</span>
@@ -188,7 +188,9 @@ or explicitly disabled).</p></dd>
 
 
 <dt id="arg-sort-method">sort_method<a class="anchor" aria-label="anchor" href="#arg-sort-method"></a></dt>
-<dd><p>Depth sorting algorithm. See <a href="sorting_methods.html">sorting_methods</a> for details.</p></dd>
+<dd><p>Deprecated. All 3D layers in a
+panel are now depth-sorted together, pairwise, so this has no effect. See
+<a href="sorting_methods.html">sorting_methods</a>.</p></dd>
 
 
 <dt id="arg-force-convex">force_convex<a class="anchor" aria-label="anchor" href="#arg-force-convex"></a></dt>
@@ -302,8 +304,7 @@ surfaces from existing grid data, <code><a href="light.html">light()</a></code> 
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># As contour plot instead of default surface plot</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu">stat_density_3d</span><span class="op">(</span>geom <span class="op">=</span> <span class="st">"contour_3d"</span>, light <span class="op">=</span> <span class="st">"none"</span>,</span></span>
-<span class="r-in"><span>                    color <span class="op">=</span> <span class="st">"black"</span>, bins <span class="op">=</span> <span class="fl">25</span>,</span></span>
-<span class="r-in"><span>                    sort_method <span class="op">=</span> <span class="st">"pairwise"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>                    color <span class="op">=</span> <span class="st">"black"</span>, bins <span class="op">=</span> <span class="fl">25</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="stat_density_3d-6.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Multiple density surfaces by group,</span></span></span>

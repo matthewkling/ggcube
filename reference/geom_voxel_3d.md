@@ -18,7 +18,7 @@ geom_voxel_3d(
   faces = "all",
   light = NULL,
   cull_backfaces = TRUE,
-  sort_method = NULL,
+  sort_method = deprecated(),
   scale_depth = TRUE,
   force_convex = FALSE,
   na.rm = FALSE,
@@ -36,7 +36,7 @@ stat_voxel_3d(
   faces = "all",
   light = NULL,
   cull_backfaces = TRUE,
-  sort_method = NULL,
+  sort_method = deprecated(),
   scale_depth = TRUE,
   force_convex = FALSE,
   na.rm = FALSE,
@@ -127,9 +127,9 @@ stat_voxel_3d(
 
 - sort_method:
 
-  Depth sorting algorithm. See
-  [sorting_methods](https://matthewkling.github.io/ggcube/reference/sorting_methods.md)
-  for details.
+  Deprecated. All 3D layers in a panel are now depth-sorted together,
+  pairwise, so this has no effect. See
+  [sorting_methods](https://matthewkling.github.io/ggcube/reference/sorting_methods.md).
 
 - scale_depth:
 
@@ -170,13 +170,6 @@ stat_voxel_3d(
 ## Value
 
 A `Layer` object that can be added to a ggplot.
-
-## Details
-
-Note that voxel geometries sometimes require pairwise depth sorting for
-correct rendering. This is the default for smaller data sets, but not
-for larger data sets due to compute speed; in those cases you may wish
-to manually specify `sort_method = "pairwise"`.
 
 ## Aesthetics
 

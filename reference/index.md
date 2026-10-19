@@ -80,7 +80,7 @@
 - [`grid_generation`](https://matthewkling.github.io/ggcube/reference/grid_generation.md)
   : Grid generation
 - [`sorting_methods`](https://matthewkling.github.io/ggcube/reference/sorting_methods.md)
-  : Depth sorting method
+  : Depth sorting
 
 ## Animation & multiple views
 

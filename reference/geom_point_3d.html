@@ -66,7 +66,7 @@ in 2D.</p>
 <span>  <span class="va">...</span>,</span>
 <span>  annotate <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  na.rm <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  sort_method <span class="op">=</span> <span class="st">"painter"</span>,</span>
+<span>  sort_method <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  scale_depth <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  raw_points <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  ref_lines <span class="op">=</span> <span class="cn">FALSE</span>,</span>
@@ -97,7 +97,7 @@ in 2D.</p>
 <span>  position <span class="op">=</span> <span class="st">"identity"</span>,</span>
 <span>  <span class="va">...</span>,</span>
 <span>  na.rm <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  sort_method <span class="op">=</span> <span class="st">"painter"</span>,</span>
+<span>  sort_method <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  scale_depth <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  raw_points <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  ref_lines <span class="op">=</span> <span class="cn">FALSE</span>,</span>
@@ -158,7 +158,9 @@ own geometry, so they can pass in front of and behind it correctly.</p></dd>
 
 
 <dt id="arg-sort-method">sort_method<a class="anchor" aria-label="anchor" href="#arg-sort-method"></a></dt>
-<dd><p>Depth sorting algorithm. See <a href="sorting_methods.html">sorting_methods</a> for details.</p></dd>
+<dd><p>Deprecated. All 3D layers in a
+panel are now depth-sorted together, pairwise, so this has no effect. See
+<a href="sorting_methods.html">sorting_methods</a>.</p></dd>
 
 
 <dt id="arg-scale-depth">scale_depth<a class="anchor" aria-label="anchor" href="#arg-scale-depth"></a></dt>
