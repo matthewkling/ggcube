@@ -45,7 +45,7 @@ geom_smooth_3d(
   residual_alpha = 1,
   light = NULL,
   cull_backfaces = FALSE,
-  sort_method = NULL,
+  sort_method = deprecated(),
   force_convex = TRUE,
   scale_depth = TRUE,
   na.rm = FALSE,
@@ -92,7 +92,7 @@ stat_smooth_3d(
   residual_alpha = 1,
   light = NULL,
   cull_backfaces = FALSE,
-  sort_method = NULL,
+  sort_method = deprecated(),
   force_convex = TRUE,
   scale_depth = TRUE,
   na.rm = FALSE,
@@ -211,7 +211,9 @@ type: FALSE for open surface-type geometries, TRUE for solid objects (hulls,
 voxels, etc. where backfaces are generally hidden unless frontfaces are transparent
 or explicitly disabled).}
 
-\item{sort_method}{Depth sorting algorithm. See \link{sorting_methods} for details.}
+\item{sort_method}{Deprecated. All 3D layers in a
+panel are now depth-sorted together, pairwise, so this has no effect. See
+\link{sorting_methods}.}
 
 \item{force_convex}{Logical indicating whether to remove polygon vertices that are not part of the
 convex hull. Default value varies by geom. Specifying TRUE can help reduce artifacts in surfaces

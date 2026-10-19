@@ -15,7 +15,7 @@ GeomContour3D <- ggproto("GeomContour3D", GeomPolygon3D,
                          ),
 
                          extra_params = c("na.rm", "annotate", "bins", "binwidth", "breaks",
-                                          "cull_backfaces", "sort_method", "scale_depth", "force_convex"),
+                                          "cull_backfaces", "scale_depth", "force_convex"),
 
                          setup_params = function(data, params) {
                                params$bins <- params$bins %||% 10
@@ -255,8 +255,7 @@ points_to_contours <- function(data,
 #'
 #' # With stat_density_3d
 #' ggplot(faithful, aes(eruptions, waiting)) +
-#'   stat_density_3d(geom = "contour_3d",
-#'     sort_method = "pairwise") +
+#'   stat_density_3d(geom = "contour_3d") +
 #'   coord_3d()
 #'
 #' # With stat_function_3d
@@ -287,13 +286,14 @@ geom_contour_3d <- function(mapping = NULL, data = NULL,
                             binwidth = NULL,
                             breaks = NULL,
                             cull_backfaces = FALSE,
-                            sort_method = "pairwise",
+                            sort_method = deprecated(),
                             scale_depth = TRUE,
                             force_convex = FALSE,
                             light = NULL,
                             na.rm = FALSE,
                             show.legend = NA,
                             inherit.aes = TRUE) {
+      check_sort_method(sort_method, "geom_contour_3d")
 
       layer(
             data = data,
@@ -309,7 +309,6 @@ geom_contour_3d <- function(mapping = NULL, data = NULL,
                   binwidth = binwidth,
                   breaks = breaks,
                   cull_backfaces = cull_backfaces,
-                  sort_method = sort_method,
                   scale_depth = scale_depth,
                   force_convex = force_convex,
                   light = light,
@@ -329,13 +328,14 @@ stat_contour_3d <- function(mapping = NULL, data = NULL,
                             binwidth = NULL,
                             breaks = NULL,
                             cull_backfaces = FALSE,
-                            sort_method = "pairwise",
+                            sort_method = deprecated(),
                             scale_depth = TRUE,
                             force_convex = FALSE,
                             light = NULL,
                             na.rm = FALSE,
                             show.legend = NA,
                             inherit.aes = TRUE) {
+      check_sort_method(sort_method, "stat_contour_3d")
 
       layer(
             data = data,
@@ -350,7 +350,6 @@ stat_contour_3d <- function(mapping = NULL, data = NULL,
                   binwidth = binwidth,
                   breaks = breaks,
                   cull_backfaces = cull_backfaces,
-                  sort_method = sort_method,
                   scale_depth = scale_depth,
                   force_convex = force_convex,
                   light = light,

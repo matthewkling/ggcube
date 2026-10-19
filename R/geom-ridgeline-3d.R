@@ -13,15 +13,13 @@ GeomRidgeline3D <- ggproto("GeomRidgeline3D", GeomPolygon3D,
                            ),
 
                            extra_params = c("na.rm", "annotate", "direction", "base", "cull_backfaces",
-                                            "sort_method", "scale_depth", "force_convex"),
+                                            "scale_depth", "force_convex"),
 
                            setup_params = function(data, params) {
                                  if(is.null(params$direction) && ".direction" %in% names(data)) params$direction <- data$.direction[1]
                                  params$direction <- params$direction %||% "x"
                                  params$direction <- match.arg(params$direction, c("x", "y"))
 
-                                 # make pairwise the default, as painter is so often problematic for ridges
-                                 if(is.null(params$sort_method)) params$sort_method <- "pairwise"
                                  params
                            },
 
@@ -137,13 +135,14 @@ geom_ridgeline_3d <- function(mapping = NULL, data = NULL,
                               direction = "x",
                               base = NULL,
                               cull_backfaces = FALSE,
-                              sort_method = "pairwise",
+                              sort_method = deprecated(),
                               scale_depth = TRUE,
                               force_convex = FALSE,
                               light = NULL,
                               na.rm = FALSE,
                               show.legend = NA,
                               inherit.aes = TRUE) {
+      check_sort_method(sort_method, "geom_ridgeline_3d")
 
       layer(
             data = data,
@@ -158,7 +157,6 @@ geom_ridgeline_3d <- function(mapping = NULL, data = NULL,
                   direction = direction,
                   base = base,
                   cull_backfaces = cull_backfaces,
-                  sort_method = sort_method,
                   scale_depth = scale_depth,
                   force_convex = force_convex,
                   light = light,

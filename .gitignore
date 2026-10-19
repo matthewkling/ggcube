@@ -13,3 +13,7 @@ inst/doc
 CRAN-SUBMISSION
 Rplots.pdf
 .DS_Store
+dev/regression/out/
+src/*.o
+src/*.so
+src/*.dll

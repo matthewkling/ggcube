@@ -16,7 +16,7 @@ geom_voxel_3d(
   faces = "all",
   light = NULL,
   cull_backfaces = TRUE,
-  sort_method = NULL,
+  sort_method = deprecated(),
   scale_depth = TRUE,
   force_convex = FALSE,
   na.rm = FALSE,
@@ -34,7 +34,7 @@ stat_voxel_3d(
   faces = "all",
   light = NULL,
   cull_backfaces = TRUE,
-  sort_method = NULL,
+  sort_method = deprecated(),
   scale_depth = TRUE,
   force_convex = FALSE,
   na.rm = FALSE,
@@ -88,7 +88,9 @@ type: FALSE for open surface-type geometries, TRUE for solid objects (hulls,
 voxels, etc. where backfaces are generally hidden unless frontfaces are transparent
 or explicitly disabled).}
 
-\item{sort_method}{Depth sorting algorithm. See \link{sorting_methods} for details.}
+\item{sort_method}{Deprecated. All 3D layers in a
+panel are now depth-sorted together, pairwise, so this has no effect. See
+\link{sorting_methods}.}
 
 \item{scale_depth}{Controls whether polygon linewidths are scaled to make closer lines
 wider and farther lines narrower, based on the mean depth of a polygon. \code{TRUE}
@@ -118,11 +120,6 @@ A \code{Layer} object that can be added to a ggplot.
 Creates 3D voxel visualizations from sparse 3D point data.
 Each data point becomes a fixed-size cube centered on its coordinates.
 Useful for volumetric data and 3D pixel art.
-}
-\details{
-Note that voxel geometries sometimes require pairwise depth sorting for correct rendering.
-This is the default for smaller data sets, but not for larger data sets due to compute speed;
-in those cases you may wish to manually specify \code{sort_method = "pairwise"}.
 }
 \section{Aesthetics}{
 

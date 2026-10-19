@@ -3,38 +3,42 @@
 
 # sorting ----------------------------------------------------
 
-#' Depth sorting method
+#' Depth sorting
 #'
-#' The `sort_method` argument determines the order in which elements are rendered.
-#' This controls depth sorting for all geometry types within a layer, including
-#' polygons, points, segments, and text. Default varies by geometry type.
+#' ggcube draws 3D geometry with the painter's algorithm: elements are drawn
+#' back to front, so that nearer elements cover farther ones. All ggcube layers
+#' in a panel are sorted together, as one scene, so the geometry of one layer
+#' can pass in front of or behind that of another. (Layers from other
+#' packages, and the layers on either side of them, are sorted separately.)
 #'
-#' @section Options:
-#' \describe{
-#'   \item{\code{"painter"}}{Elements are sorted by the mean depth (distance from
-#'     viewer after rotation) of their vertices. This is fast, but can give incorrect
-#'     results when primitives overlap in screen space at different depths.}
-#'   \item{\code{"pairwise"}}{A more intensive sorting algorithm that compares every
-#'     pair of elements to determine occlusion order. Polygons that pass through
-#'     one another are first split along their line of intersection, and segments
-#'     that pass through polygons are split where they cross them. Wherever a
-#'     polygon and another element overlap on screen, their order is then
-#'     determined exactly from their 3D geometry where possible, and otherwise
-#'     estimated from depths sampled in the region of overlap. Points,
-#'     segments, and text lying in the plane of a planar polygon render on top
-#'     of it. Results are exact for planar polygons; non-planar polygons
-#'     (e.g. tiles of a curved surface on a rectangular grid) are treated as
-#'     approximately planar. Slower but more accurate.}
-#'   \item{\code{"auto"}}{Uses pairwise if the data has fewer than 500 rows, and
-#'     painter otherwise.}
-#' }
+#' Sorting compares every pair of elements that overlap on screen, including
+#' polygons, points, segments, and text. Polygons that pass through one
+#' another are first split along their line of intersection, and segments that
+#' pass through polygons are split where they cross them. Wherever a polygon
+#' and another element overlap, their order is determined exactly from their
+#' 3D geometry where possible, and otherwise estimated from depths sampled in
+#' the region of overlap. Point markers and lines are compared at their drawn
+#' size, so overlapping markers are drawn farther first. Points, segments, and
+#' text lying in the plane of a planar polygon are drawn on top of it, and
+#' coplanar polygons from different layers are drawn in layer order. Results
+#' are exact for planar polygons; non-planar polygons (e.g. tiles of a curved
+#' surface on a rectangular grid) are treated as approximately planar.
+#'
+#' Elements are ordered when the plot is drawn, since the drawn size of
+#' markers and lines depends on the size of the panel.
+#'
+#' Earlier versions sorted each layer separately, and offered a choice of
+#' sorting algorithms through layers' `sort_method` argument, which is now
+#' deprecated and has no effect.
 #'
 #' @name sorting_methods
 NULL
 
 #' Sorting parameters
 #'
-#' @param sort_method Depth sorting algorithm. See [sorting_methods] for details.
+#' @param sort_method Deprecated. All 3D layers in a
+#'   panel are now depth-sorted together, pairwise, so this has no effect. See
+#'   [sorting_methods].
 #' @name sort_params
 #' @keywords internal
 NULL
@@ -72,10 +76,12 @@ NULL
 
 #' Polygon rendering parameters
 #'
-#' Parameters controlling depth sorting, backface culling, depth scaling, and
-#' convexity enforcement for polygon-based 3D layers.
+#' Parameters controlling backface culling, depth scaling, and convexity
+#' enforcement for polygon-based 3D layers.
 #'
-#' @param sort_method Depth sorting algorithm. See [sorting_methods] for details.
+#' @param sort_method Deprecated. All 3D layers in a
+#'   panel are now depth-sorted together, pairwise, so this has no effect. See
+#'   [sorting_methods].
 #' @param cull_backfaces Logical indicating whether to remove back-facing polygons
 #'   from rendering. This is primarily for performance optimization but may be useful
 #'   for aesthetic reasons in some situations. Backfaces are determined using

@@ -28,7 +28,7 @@ data_direction <- function(p, axis) {
             hi[a] <- sc$transform(hi[a])
       }
       d <- data.frame(x = c(lo["x"], hi["x"]), y = c(lo["y"], hi["y"]), z = c(lo["z"], hi["z"]),
-                      group = 1:2, PANEL = 1, .prim = "point", .sort_method = "painter")
+                      group = 1:2, PANEL = 1, .prim = "point")
       tr <- b$plot$coordinates$transform(d, pp)
       tr <- tr[order(tr$group), ]
       c(diff(tr$x), diff(tr$y))

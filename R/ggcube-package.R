@@ -12,6 +12,8 @@
 "_PACKAGE"
 
 ## usethis namespace: start
+#' @useDynLib ggcube, .registration = TRUE
+#' @importFrom lifecycle deprecated
 #' @import dplyr
 #' @import ggplot2
 #' @importFrom ggplot2 resolution

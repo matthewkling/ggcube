@@ -238,23 +238,20 @@ test_that("pairwise ordering of a plane crossing a curved surface is correct und
 
 
 test_that("break_cycles does not warn for a single group", {
-      expect_no_warning(ggcube:::break_cycles(matrix(NA_real_, 1, 1)))
+      none <- data.frame(from = integer(), to = integer(), strength = numeric(), locked = logical())
+      expect_no_warning(ggcube:::break_cycles(none, 1))
+      expect_no_warning(ggcube:::topological_sort(1, none, 0))
 })
 
 
 test_that("break_cycles removes unlocked constraints before locked ones", {
       # 3-cycle: 1 behind 2, 2 behind 3, 3 behind 1. The locked edge is the
       # weakest, so it would be removed first without locking.
-      delta <- matrix(NA_real_, 3, 3)
-      delta[1, 2] <- 0.01; delta[2, 1] <- -0.01
-      delta[2, 3] <- 0.5;  delta[3, 2] <- -0.5
-      delta[3, 1] <- 0.2;  delta[1, 3] <- -0.2
-      locked <- matrix(FALSE, 3, 3)
-      locked[1, 2] <- locked[2, 1] <- TRUE
-
-      pruned <- ggcube:::break_cycles(delta, locked)
-      expect_equal(pruned[1, 2], 0.01)
-      expect_true(is.na(pruned[3, 1]))
+      e <- data.frame(from = c(1L, 2L, 3L), to = c(2L, 3L, 1L),
+                      strength = c(0.01, 0.5, 0.2), locked = c(TRUE, FALSE, FALSE))
+      pruned <- ggcube:::break_cycles(e, 3)
+      expect_true(any(pruned$from == 1 & pruned$to == 2))
+      expect_false(any(pruned$from == 3 & pruned$to == 1))
 })
 
 
@@ -286,16 +283,15 @@ test_that("intersecting planes in one layer split and sort without warnings", {
             data.frame(x = x, y = y, z = b[1] + b[2] * x + b[3] * y, group = id)
       }, planes, names(planes)))
       p <- ggplot(d, aes(x, y, z = z, group = group, fill = group)) +
-            geom_polygon_3d(sort_method = "pairwise", colour = "black") +
+            geom_polygon_3d(colour = "black") +
             coord_3d(scales = "fixed")
 
       b <- ggplot_build(p)
       ld <- b$data[[1]]
-      ld$.sort_method <- "pairwise"
       ld$.prim <- "polygon"
       expect_no_warning(tr <- b$plot$coordinates$transform(ld, b$layout$panel_params[[1]]))
       expect_gt(length(unique(tr$group)), 3)
       expect_true(any(tr$.cut_edge))
       expect_false(any(c(".x3d", ".y3d", ".z3d") %in% names(tr)))
-      expect_no_warning(ggplotGrob(p))
+      expect_no_warning(drawn_grob(p))
 })

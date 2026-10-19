@@ -501,11 +501,12 @@ geom_smooth_3d <- function(mapping = NULL, data = NULL, stat = StatSmooth3D,
                            residual_linetype = 1,
                            residual_alpha = 1,
                            light = NULL,
-                           cull_backfaces = FALSE, sort_method = NULL,
+                           cull_backfaces = FALSE, sort_method = deprecated(),
                            force_convex = TRUE, scale_depth = TRUE,
                            na.rm = FALSE,
                            show.legend = NA,
                            inherit.aes = TRUE) {
+      check_sort_method(sort_method, "geom_smooth_3d")
 
       # Resolve colour spellings (American -> British)
       se_colour <- se_colour %||% se_color
@@ -523,7 +524,7 @@ geom_smooth_3d <- function(mapping = NULL, data = NULL, stat = StatSmooth3D,
                           xlim = xlim, ylim = ylim, domain = domain, n = n, se = se, level = level,
                           grid = grid, direction = direction, trim = trim,
                           force_convex = force_convex, cull_backfaces = cull_backfaces,
-                          sort_method = sort_method, scale_depth = scale_depth,
+                          scale_depth = scale_depth,
                           se.fill = se_fill, se.colour = se_colour, se.alpha = se_alpha,
                           se.linewidth = se_linewidth,
                           points = points,
@@ -573,11 +574,12 @@ stat_smooth_3d <- function(mapping = NULL, data = NULL,
                            residual_linetype = 1,
                            residual_alpha = 1,
                            light = NULL,
-                           cull_backfaces = FALSE, sort_method = NULL,
+                           cull_backfaces = FALSE, sort_method = deprecated(),
                            force_convex = TRUE, scale_depth = TRUE,
                            na.rm = FALSE,
                            show.legend = NA,
                            inherit.aes = TRUE) {
+      check_sort_method(sort_method, "stat_smooth_3d")
 
       # Resolve colour spellings (American -> British)
       se_colour <- se_colour %||% se_color
@@ -594,7 +596,7 @@ stat_smooth_3d <- function(mapping = NULL, data = NULL,
                           xlim = xlim, ylim = ylim, domain = domain, n = n, se = se, level = level,
                           grid = grid, direction = direction, trim = trim,
                           force_convex = force_convex, cull_backfaces = cull_backfaces,
-                          sort_method = sort_method, scale_depth = scale_depth,
+                          scale_depth = scale_depth,
                           se.fill = se_fill, se.colour = se_colour, se.alpha = se_alpha,
                           se.linewidth = se_linewidth,
                           points = points,

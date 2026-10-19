@@ -1,283 +1,34 @@
 # Depth sorting for 3D rendering
 #
-# Implements back-to-front ordering of primitives for painter's algorithm
-# rendering. Supports mixed primitive types (polygon, point, segment, text)
-# identified by the `.prim` column.
+# Orders primitives back to front for painter's-algorithm rendering. Supports
+# mixed primitive types (polygon, point, segment, text) identified by the
+# `.prim` column. Polygons that pass through one another, and segments that
+# pass through polygons, are split first; primitives are then ordered from
+# pairwise occlusion constraints between those that overlap on screen.
 #
-# Two sorting modes:
-#   - "painter": Fast approximate sort by mean depth per group, with
-#     hierarchical support for `__`-separated group names.
-#   - "pairwise": Accurate O(k^2) sort that compares every pair of groups
-#     using type-specific geometric tests to determine occlusion order.
-#     Segments that interpenetrate polygons in 3D are automatically split
-#     at the crossing point before sorting.
+# The pairwise comparisons and constraint graph are computed in C++
+# (src/pairwise.cpp, src/graph.cpp). Candidate pairs are those whose screen
+# bounding boxes overlap, so cost grows with the number of overlapping
+# pairs rather than with the square of the number of primitives.
 #
 # Pairwise comparison coverage:
-#   polygon-polygon: SAT overlap test, depth interpolation at intersection centroid
-#   polygon-point:   point-in-polygon test, depth interpolation at point xy
-#   polygon-segment: polyclip intersection, depth interpolation at clipped midpoint
-#   segment-segment: line intersection, depth interpolation at crossing point
+#   polygon-polygon: separating axis test, depth interpolated at the centroid
+#                    of their screen intersection
+#   polygon-point:   point-in-polygon test, depth interpolated at the point
+#   polygon-segment: segment clipped to the polygon, depth interpolated at the
+#                    midpoint of the clipped portion
+#   segment-segment: depths interpolated at their screen crossing
 #   point-segment:   bbox proximity test, depth at closest point on segment
-#   point-point:     no constraint (painter fallback, zero-area overlap)
+#   point-point:     no constraint
 #
-# When primitives are coplanar (depth delta ~ 0), a tiebreaker renders
-# smaller primitives on top: point > segment > polygon.
-
-interpolate_z <- function(train, new, beta = NULL) {
-      if (!is.null(beta)) {
-            return(beta[1] + beta[2] * new[1] + beta[3] * new[2])
-      }
-      train <- as.matrix(train)
-      if(nrow(unique(train)) >= 3) {
-            x <- cbind(1, as.matrix(train[,1:2]))
-            beta <- tryCatch(
-                  solve(crossprod(x), crossprod(x, train[,3])),
-                  error = function(e) NULL
-            )
-            if (!is.null(beta)) {
-                  return(beta[1] + beta[2] * new[1] + beta[3] * new[2])
-            }
-      }
-      # Fallback: inverse-distance-weighted interpolation
-      # for degenerate polygons (e.g. collinear vertices from face projection,
-      # zero-height pillar faces)
-      weights <- 1 / sqrt((train[,1] - new[1])^2 + (train[,2] - new[2])^2)
-      z <- weighted.mean(train[,3], weights)
-      return(z)
-}
-
-# Test if graph is acyclic using topological sort
-is_acyclic <- function(adj_logical) {
-      n <- nrow(adj_logical)
-      in_degree <- colSums(adj_logical, na.rm = TRUE)
-      queue <- which(in_degree == 0)
-      processed <- 0
-
-      while (length(queue) > 0) {
-            current <- queue[1]
-            queue <- queue[-1]
-            processed <- processed + 1
-
-            # Remove edges from current node
-            neighbors <- which(adj_logical[current, ])
-            for (neighbor in neighbors) {
-                  in_degree[neighbor] <- in_degree[neighbor] - 1
-                  if (in_degree[neighbor] == 0) {
-                        queue <- c(queue, neighbor)
-                  }
-            }
-      }
-
-      return(processed == n)
-}
-
-# Break cycles by removing weakest constraints
-#
-# Only constraints that lie on a cycle (i.e. join two members of the same
-# strongly connected component) are candidates for removal; the weakest
-# candidate is removed and components are recomputed until none remain.
-# Constraints flagged in `locked` (exact geometric results) are removed only
-# when a cycle consists entirely of locked constraints.
-break_cycles <- function(delta_matrix, locked = NULL) {
-      n <- nrow(delta_matrix)
-      if (n < 2) return(delta_matrix)
-      if (is.null(locked)) locked <- matrix(FALSE, n, n)
-
-      max_iterations <- n^2  # Safety limit
-      iteration <- 0
-
-      while (iteration < max_iterations) {
-            iteration <- iteration + 1
-
-            adj_logical <- (delta_matrix > 0) & !is.na(delta_matrix)
-            comp <- strongly_connected_components(adj_logical)
-            if (!anyDuplicated(comp)) break
-
-            # Constraints between members of the same component lie on a cycle
-            on_cycle <- adj_logical & outer(comp, comp, "==")
-            if (!any(on_cycle)) break
-
-            strength <- abs(delta_matrix)
-            strength[!on_cycle] <- Inf
-            if (any(locked & on_cycle)) {
-                  strength[locked] <- strength[locked] + max(abs(delta_matrix[on_cycle])) + 1
-            }
-
-            weakest <- which(strength == min(strength), arr.ind = TRUE)[1, ]
-            delta_matrix[weakest[1], weakest[2]] <- NA
-            delta_matrix[weakest[2], weakest[1]] <- NA
-      }
-
-      if (iteration >= max_iterations &&
-          !is_acyclic((delta_matrix > 0) & !is.na(delta_matrix))) {
-            warning("Cycle breaking exceeded maximum iterations")
-      }
-
-      return(delta_matrix)
-}
+# Where a polygon is involved, the sign of each constraint is settled exactly
+# from 3D geometry where possible (plane-side tests, primitives lying in a
+# polygon's plane, and exact lines of sight). When primitives are coplanar
+# (depth delta ~ 0), smaller primitives render on top: point > segment >
+# polygon.
 
 
-# Strongly connected components of a directed graph (Kosaraju's algorithm,
-# iterative). Returns an integer component id per node.
-strongly_connected_components <- function(adj_logical) {
-      n <- nrow(adj_logical)
-      out_nbrs <- lapply(seq_len(n), function(i) which(adj_logical[i, ]))
-      in_nbrs <- lapply(seq_len(n), function(i) which(adj_logical[, i]))
-
-      # Pass 1: finishing order on the forward graph
-      visited <- logical(n)
-      ptr <- integer(n)
-      finish <- integer(0)
-      for (s in seq_len(n)) {
-            if (visited[s]) next
-            stack <- s
-            visited[s] <- TRUE
-            while (length(stack) > 0) {
-                  u <- stack[length(stack)]
-                  nb <- out_nbrs[[u]]
-                  ptr[u] <- ptr[u] + 1L
-                  if (ptr[u] <= length(nb)) {
-                        v <- nb[ptr[u]]
-                        if (!visited[v]) {
-                              visited[v] <- TRUE
-                              stack <- c(stack, v)
-                        }
-                  } else {
-                        finish <- c(finish, u)
-                        stack <- stack[-length(stack)]
-                  }
-            }
-      }
-
-      # Pass 2: components on the reverse graph, in reverse finishing order
-      comp <- integer(n)
-      id <- 0L
-      for (s in rev(finish)) {
-            if (comp[s] != 0L) next
-            id <- id + 1L
-            stack <- s
-            comp[s] <- id
-            while (length(stack) > 0) {
-                  u <- stack[length(stack)]
-                  stack <- stack[-length(stack)]
-                  for (v in in_nbrs[[u]]) {
-                        if (comp[v] == 0L) {
-                              comp[v] <- id
-                              stack <- c(stack, v)
-                        }
-                  }
-            }
-      }
-      comp
-}
-
-
-topological_sort <- function(adj_matrix, depths = NULL) {
-      n <- nrow(adj_matrix)
-      in_degree <- colSums(adj_matrix)
-      queue <- which(in_degree == 0)
-      result <- integer(0)
-
-      # Sort initial queue by depth (farthest first) if depths provided
-      if (!is.null(depths) && length(queue) > 1) {
-            queue <- queue[order(-depths[queue])]
-      }
-
-      while (length(queue) > 0) {
-            # Process node with no dependencies
-            current <- queue[1]
-            queue <- queue[-1]
-            result <- c(result, current)
-
-            # Remove edges from current node
-            neighbors <- which(adj_matrix[current, ])
-            new_free <- integer(0)
-            for (neighbor in neighbors) {
-                  in_degree[neighbor] <- in_degree[neighbor] - 1
-                  if (in_degree[neighbor] == 0) {
-                        new_free <- c(new_free, neighbor)
-                  }
-            }
-
-            # Insert newly freed nodes into queue, sorted by depth
-            if (length(new_free) > 0) {
-                  if (!is.null(depths) && length(new_free) > 1) {
-                        new_free <- new_free[order(-depths[new_free])]
-                  }
-                  # Merge into queue maintaining depth order
-                  if (length(queue) == 0 || is.null(depths)) {
-                        queue <- c(queue, new_free)
-                  } else {
-                        combined <- c(queue, new_free)
-                        queue <- combined[order(-depths[combined])]
-                  }
-            }
-      }
-
-      # If we couldn't sort all nodes, there's a cycle (shouldn't happen after break_cycles)
-      if (length(result) < n) {
-            warning("Topological sort failed - remaining cycles detected")
-            remaining <- setdiff(1:n, result)
-            result <- c(result, remaining)
-      }
-
-      return(result)
-}
-
-# calculate edge normals
-calculate_normals <- function(polygon_vertices) {
-      # Input: polygon_vertices is a matrix where each row is a vertex (x, y)
-      # Example: matrix(c(0,0, 1,0, 1,1, 0,1), ncol=2, byrow=TRUE) for a square
-
-      num_vertices <- nrow(polygon_vertices)
-      edge_vectors <- polygon_vertices[c(2:num_vertices, 1), ] - polygon_vertices
-      normals <- cbind(-edge_vectors[, 2], edge_vectors[, 1])
-      norm_values <- sqrt(rowSums(normals^2))
-      normalized_normals <- normals / norm_values
-
-      return(normalized_normals)
-}
-
-# Project vertices onto an axis
-project_onto_axis <- function(vertices, axis) {
-      # Input: vertices is a matrix of polygon vertices (x, y)
-      #        axis is a 1x2 vector representing the separating axis
-
-      # Project each vertex onto the axis using the dot product
-      # Matrix multiplication is efficient for this
-      projections <- vertices %*% axis
-
-      # Find the minimum and maximum projection values
-      min_projection <- min(projections)
-      max_projection <- max(projections)
-
-      return(list(min = min_projection, max = max_projection))
-}
-
-# separating axis theorem test for overlap
-sat_overlap <- function(poly1, poly2, tol = 1e-9) {
-
-      for(v in 1:2){
-            if(v == 1){
-                  v1 <- poly1
-                  v2 <- poly2
-            }else{
-                  v1 <- poly2
-                  v2 <- poly1
-            }
-
-            axes <- na.omit(calculate_normals(v1))
-            for (i in 1:nrow(axes)) {
-                  proj1 <- project_onto_axis(v1, axes[i,])
-                  proj2 <- project_onto_axis(v2, axes[i,])
-                  if (proj1$max <= proj2$min + tol || proj2$max <= proj1$min + tol) {
-                        return(FALSE) # found separating axis, polygons don't touch
-                  }
-            }
-      }
-
-      return(TRUE) # no separating axis found, polygons overlap
-}
+# Screen polygon helpers -----------------------------------------------------------
 
 get_centroid <- function(p) {
       x <- p$x
@@ -291,30 +42,27 @@ get_centroid <- function(p) {
             n <- n + 1
       }
 
-      # Pre-calculate the cross products
       i <- 1:(n - 1)
       cross_prod <- x[i] * y[i+1] - x[i+1] * y[i]
-
-      # Calculate Area
       area <- sum(cross_prod) / 2
-
-      # Calculate Centroid Coordinates
       cx <- sum((x[i] + x[i+1]) * cross_prod) / (6 * area)
       cy <- sum((y[i] + y[i+1]) * cross_prod) / (6 * area)
 
       return(c(x = cx, y = cy))
 }
 
-# Get centroid of polygon intersection
+# A representative point of the screen intersection of two polygons, or NULL
+# if they don't intersect: the centroid of its largest part, or if that falls
+# outside the part, a point inside it. Used for pairs of non-convex polygons,
+# which the C++ comparison hands back to R.
 intersection_centroid <- function(poly1, poly2) {
       clipped <- polyclip::polyclip(list(as.data.frame(poly1)),
                                     list(as.data.frame(poly2)))
-      if(length(clipped) == 0) return(NULL) # non-intersecting polygons
+      if(length(clipped) == 0) return(NULL)
 
-      centroids <- do.call("rbind", lapply(clipped, get_centroid))
-
-      # if multiple intersection polys, average their centroids
-      return(colMeans(centroids))
+      area <- vapply(clipped, function(p) abs(sum(p$x * c(p$y[-1], p$y[1]) - c(p$x[-1], p$x[1]) * p$y)), numeric(1))
+      part <- clipped[[which.max(area)]]
+      interior_point_cpp(part$x, part$y)
 }
 
 
@@ -335,522 +83,272 @@ point_in_polygon <- function(px, py, poly_x, poly_y) {
 }
 
 
-# Pre-compute plane coefficients for polygon depth interpolation ---------------
+# Pairwise render order --------------------------------------------------------------
 
-#' Compute least-squares plane betas for all polygon groups
+.prim_codes <- c(polygon = 0L, point = 1L, segment = 2L, text = 3L)
+
+#' Pairwise render order with mixed-geometry support
 #'
-#' Returns a list parallel to grp_data where polygon entries contain a
-#' length-3 numeric vector (intercept, x_coef, y_coef) and non-polygon
-#' entries are NULL.
+#' Splits interpenetrating polygons and segments, derives occlusion
+#' constraints between primitives that overlap on screen, breaks any cycles,
+#' and orders primitives topologically, drawing the farthest available
+#' primitive first.
 #'
-#' @param grp_data List of per-group matrices (x, y, z, bbox...).
-#' @param prim_lookup Named character vector of primitive types per group.
-#' @return List of beta vectors (or NULL for non-polygons / degenerate cases).
+#' @param data Sort-stage data, as handed to `sort_by_depth()`.
+#' @param depth_var Name of the depth column.
+#' @param proj,plot_bounds Projection parameters and plot bounds; needed for
+#'   splitting and for exact ordering, which are skipped without them.
+#' @return List with `data` (after splitting) and `render_order`, the draw
+#'   position of each row's group.
 #' @keywords internal
 #' @noRd
-compute_poly_betas <- function(grp_data, prim_lookup) {
-      betas <- vector("list", length(grp_data))
-      for (i in seq_along(grp_data)) {
-            if (prim_lookup[i] != "polygon") next
-            m <- grp_data[[i]]
-            if (nrow(m) < 3) next
-            xmat <- cbind(1, m[, 1], m[, 2])
-            betas[[i]] <- tryCatch(
-                  solve(crossprod(xmat), crossprod(xmat, m[, 3])),
-                  error = function(e) NULL
-            )
-      }
-      betas
-}
-
-
-# Pairwise comparison modules -------------------------------------------------
-# Each returns a depth delta (positive = i behind j, i.e. i is drawn first)
-# or NA (no constraint)
-
-# Compare two polygon groups
-pw_compare_poly_poly <- function(di, dj, bbi, bbj, beta_i = NULL, beta_j = NULL) {
-      # Bounding box overlap check
-      if(bbi[1] >= bbj[2]) return(NA)
-      if(bbi[2] <= bbj[1]) return(NA)
-      if(bbi[3] >= bbj[4]) return(NA)
-      if(bbi[4] <= bbj[3]) return(NA)
-      if(!sat_overlap(di[,1:2], dj[,1:2])) return(NA)
-
-      # xy overlap but no z overlap: standard depth precedence
-      if(bbi[5] >= bbj[6] | bbj[5] >= bbi[6]){
-            return(mean(bbi[5:6]) - mean(bbj[5:6]))
-      }
-
-      # Overlapping in all dimensions: sample depth at intersection centroid
-      int <- intersection_centroid(di[, 1:2], dj[, 1:2])
-      if(is.null(int)) return(NA)
-      zi <- interpolate_z(di[, 1:3], int, beta = beta_i)
-      zj <- interpolate_z(dj[, 1:3], int, beta = beta_j)
-      zi - zj
-}
-
-# Compare a polygon group with a point group
-pw_compare_poly_point <- function(poly_data, point_data, poly_beta = NULL) {
-      px <- point_data[1, 1]
-      py <- point_data[1, 2]
-      pz <- point_data[1, 3]
-
-      # Check if point falls within polygon's bounding box
-      poly_bb <- poly_data[1, 4:9]
-      if (px < poly_bb[1] || px > poly_bb[2] ||
-          py < poly_bb[3] || py > poly_bb[4]) {
-            return(NA)
-      }
-
-      # Point-in-polygon test
-      if (!point_in_polygon(px, py, poly_data[, 1], poly_data[, 2])) {
-            return(NA)
-      }
-
-      # Point is inside polygon's xy projection: interpolate polygon depth at point location
-      poly_z <- interpolate_z(poly_data[, 1:3], c(px, py), beta = poly_beta)
-      poly_z - pz
-}
-
-# Compare a polygon group with a segment group
-# Uses polyclip to find the segment's intersection with the polygon,
-# then samples depth at the midpoint of the clipped portion.
-pw_compare_poly_segment <- function(poly_data, seg_data, poly_beta = NULL) {
-      seg_x <- seg_data[, 1]
-      seg_y <- seg_data[, 2]
-
-      poly_bb <- poly_data[1, 4:9]
-
-      # Quick bounding box check
-      seg_xmin <- min(seg_x); seg_xmax <- max(seg_x)
-      seg_ymin <- min(seg_y); seg_ymax <- max(seg_y)
-
-      if (seg_xmin >= poly_bb[2] || seg_xmax <= poly_bb[1] ||
-          seg_ymin >= poly_bb[4] || seg_ymax <= poly_bb[3]) {
-            return(NA)
-      }
-
-      # Clip segment against polygon to find overlap region
-      seg_line <- list(list(x = seg_x, y = seg_y))
-      poly_clip <- list(list(x = poly_data[, 1], y = poly_data[, 2]))
-      clipped <- tryCatch(
-            polyclip::polyclip(seg_line, poly_clip, op = "intersection", closed = FALSE),
-            error = function(e) list()
-      )
-
-      if (length(clipped) == 0) return(NA)
-
-      # Compute midpoint of the clipped portion(s)
-      all_x <- unlist(lapply(clipped, `[[`, "x"))
-      all_y <- unlist(lapply(clipped, `[[`, "y"))
-      if (length(all_x) == 0) return(NA)
-
-      sample_xy <- c(mean(all_x), mean(all_y))
-
-      # Interpolate depths at sample point
-      poly_z <- interpolate_z(poly_data[, 1:3], sample_xy, beta = poly_beta)
-      seg_z <- interpolate_z_on_segment(seg_data[, 1:3], sample_xy)
-
-      poly_z - seg_z
-}
-
-# Compare two segment groups
-# Finds xy intersection point, interpolates depth of each segment there.
-pw_compare_seg_seg <- function(seg_i, seg_j) {
-      int <- segment_intersection(
-            seg_i[1, 1], seg_i[1, 2], seg_i[2, 1], seg_i[2, 2],
-            seg_j[1, 1], seg_j[1, 2], seg_j[2, 1], seg_j[2, 2]
-      )
-      if (is.null(int)) return(NA)
-
-      zi <- interpolate_z_on_segment(seg_i[, 1:3], int)
-      zj <- interpolate_z_on_segment(seg_j[, 1:3], int)
-      zi - zj
-}
-
-# Compare a point group with a segment group
-# Triggers when point is within segment's bounding box; compares depths
-# at the point on the segment closest to the point center.
-pw_compare_point_seg <- function(point_data, seg_data) {
-      px <- point_data[1, 1]
-      py <- point_data[1, 2]
-      pz <- point_data[1, 3]
-
-      # Bounding box check
-      seg_xmin <- min(seg_data[, 1]); seg_xmax <- max(seg_data[, 1])
-      seg_ymin <- min(seg_data[, 2]); seg_ymax <- max(seg_data[, 2])
-
-      if (px < seg_xmin || px > seg_xmax ||
-          py < seg_ymin || py > seg_ymax) {
-            return(NA)
-      }
-
-      # Project point onto segment axis, clamp to endpoints
-      closest <- closest_point_on_segment(
-            px, py,
-            seg_data[1, 1], seg_data[1, 2],
-            seg_data[2, 1], seg_data[2, 2]
-      )
-
-      # Interpolate segment depth at the closest point
-      seg_z <- interpolate_z_on_segment(seg_data[, 1:3], closest)
-      seg_z - pz
-}
-
-
-# Geometry helpers for pairwise comparisons ------------------------------------
-
-# Interpolate depth along a segment at a given xy point
-# Uses linear interpolation based on projection parameter t
-interpolate_z_on_segment <- function(seg_xyz, xy) {
-      dx <- seg_xyz[2, 1] - seg_xyz[1, 1]
-      dy <- seg_xyz[2, 2] - seg_xyz[1, 2]
-      len_sq <- dx^2 + dy^2
-
-      if (len_sq < 1e-20) {
-            # Degenerate segment (zero length): return mean depth
-            return(mean(seg_xyz[, 3]))
-      }
-
-      t <- ((xy[1] - seg_xyz[1, 1]) * dx + (xy[2] - seg_xyz[1, 2]) * dy) / len_sq
-      t <- max(0, min(1, t))
-      seg_xyz[1, 3] + t * (seg_xyz[2, 3] - seg_xyz[1, 3])
-}
-
-# Find intersection point of two line segments in 2D
-# Returns c(x, y) or NULL if segments don't intersect
-segment_intersection <- function(x1, y1, x2, y2, x3, y3, x4, y4) {
-      dx1 <- x2 - x1; dy1 <- y2 - y1
-      dx2 <- x4 - x3; dy2 <- y4 - y3
-
-      denom <- dx1 * dy2 - dy1 * dx2
-      if (abs(denom) < 1e-12) return(NULL)  # Parallel or collinear
-
-      t <- ((x3 - x1) * dy2 - (y3 - y1) * dx2) / denom
-      u <- ((x3 - x1) * dy1 - (y3 - y1) * dx1) / denom
-
-      # Check that intersection is within both segments
-      if (t < 0 || t > 1 || u < 0 || u > 1) return(NULL)
-
-      c(x1 + t * dx1, y1 + t * dy1)
-}
-
-# Find closest point on a line segment to a given point
-# Returns c(x, y) of the closest point, clamped to segment endpoints
-closest_point_on_segment <- function(px, py, x1, y1, x2, y2) {
-      dx <- x2 - x1; dy <- y2 - y1
-      len_sq <- dx^2 + dy^2
-
-      if (len_sq < 1e-20) return(c(x1, y1))  # Degenerate segment
-
-      t <- ((px - x1) * dx + (py - y1) * dy) / len_sq
-      t <- max(0, min(1, t))
-      c(x1 + t * dx, y1 + t * dy)
-}
-
-
-# Primitive type priority for coplanar tiebreaking (higher = renders on top)
-.prim_priority <- c(polygon = 1, segment = 2, point = 3, text = 3)
-
-# Coplanar tiebreaker tolerance
-.coplanar_tol <- 1e-8
-
-# Dispatch pairwise comparison based on primitive types.
-# Returns depth delta (positive = i behind j) or NA (no constraint).
-# When primitives are coplanar (delta ~ 0), smaller primitives render on top.
-pw_compare_pair <- function(di, dj, type_i, type_j, beta_i = NULL, beta_j = NULL) {
-
-      dlt <- pw_compare_pair_raw(di, dj, type_i, type_j, beta_i, beta_j)
-
-      # Coplanar tiebreaker: smaller primitives on top
-      if (!is.na(dlt) && abs(dlt) < .coplanar_tol) {
-            pi <- .prim_priority[type_i] %||% 1
-            pj <- .prim_priority[type_j] %||% 1
-            if (pi != pj) return(pj - pi)  # higher priority j => positive => i behind j
-      }
-
-      dlt
-}
-
-# Raw pairwise comparison without tiebreaker
-pw_compare_pair_raw <- function(di, dj, type_i, type_j, beta_i = NULL, beta_j = NULL) {
-
-      # Polygon vs polygon
-      if (type_i == "polygon" && type_j == "polygon") {
-            bbi <- di[1, 4:9]
-            bbj <- dj[1, 4:9]
-            return(pw_compare_poly_poly(di, dj, bbi, bbj, beta_i = beta_i, beta_j = beta_j))
-      }
-
-      # Polygon vs point/text
-      if (type_i == "polygon" && type_j %in% c("point", "text")) {
-            return(pw_compare_poly_point(di, dj, poly_beta = beta_i))
-      }
-      if (type_j == "polygon" && type_i %in% c("point", "text")) {
-            dlt <- pw_compare_poly_point(dj, di, poly_beta = beta_j)
-            if (!is.na(dlt)) return(-dlt) else return(NA)
-      }
-
-      # Polygon vs segment
-      if (type_i == "polygon" && type_j == "segment") {
-            return(pw_compare_poly_segment(di, dj, poly_beta = beta_i))
-      }
-      if (type_j == "polygon" && type_i == "segment") {
-            dlt <- pw_compare_poly_segment(dj, di, poly_beta = beta_j)
-            if (!is.na(dlt)) return(-dlt) else return(NA)
-      }
-
-      # Segment vs segment
-      if (type_i == "segment" && type_j == "segment") {
-            return(pw_compare_seg_seg(di, dj))
-      }
-
-      # Point/text vs segment
-      if (type_i %in% c("point", "text") && type_j == "segment") {
-            return(pw_compare_point_seg(di, dj))
-      }
-      if (type_j %in% c("point", "text") && type_i == "segment") {
-            dlt <- pw_compare_point_seg(dj, di)
-            if (!is.na(dlt)) return(-dlt) else return(NA)
-      }
-
-      # Point vs point: no geometric constraint
-      NA
-}
-
-
-# Pairwise render order with mixed-geometry support ----------------------------
-# Uses base R for performance in the hot path.
-
 pw_render_order <- function(data,
                             depth_var = "depth",
                             proj = NULL,
                             plot_bounds = NULL
 ){
-      # Split polygons that pass through one another, then segments that pass
-      # through polygons, so that every remaining pair has a consistent
-      # occlusion order
-      data <- split_intersecting_polygons(data, proj, plot_bounds)
-      data <- split_interpenetrating_segments(data, proj, plot_bounds)
+      data <- split_for_sorting(data, proj, plot_bounds)
+      list(data = data, render_order = pw_order(data, depth_var, proj, plot_bounds))
+}
 
-      has_prim <- ".prim" %in% names(data)
+#' Pairwise draw order of already-split primitives
+#'
+#' @inheritParams order_by_depth
+#' @return The draw position of each row's group.
+#' @keywords internal
+#' @noRd
+pw_order <- function(data, depth_var = "depth", proj = NULL, plot_bounds = NULL, panel_pt = NULL) {
+      scene <- pw_scene(data, depth_var, proj, plot_bounds, panel_pt)
+      cons <- pw_constraints(scene)
+      edges <- break_cycles(cons$edges, scene$k)
+      ord <- topological_sort(scene$k, edges, cons$depth)
+      match(data$group, scene$groups[ord])
+}
 
+
+#' Flatten sort-stage data into the arrays the C++ sorter takes
+#'
+#' Groups are numbered in order of first appearance, with each group's rows
+#' contiguous and in their original order.
+#'
+#' @return List of arguments for `pw_constraints_cpp()`, plus `groups`
+#'   (group names), `k` (number of groups), and `order` (row permutation).
+#' @keywords internal
+#' @noRd
+pw_scene <- function(data, depth_var = "depth", proj = NULL, plot_bounds = NULL, panel_pt = NULL) {
       grp <- data$group
-      x <- data$x
-      y <- data$y
-      z <- data[[depth_var]]
-
-      ugrp <- unique(grp)
-      grp_idx <- split(seq_along(grp), grp)
-      grp_idx <- grp_idx[ugrp]
+      groups <- unique(grp)
+      k <- length(groups)
+      gi <- match(grp, groups)
+      ord <- order(gi)
+      offsets <- c(0L, cumsum(tabulate(gi, k)))
+      first <- ord[offsets[-(k + 1)] + 1L]
 
       # Primitive type per group. Groups without one (e.g. in point layers,
       # whose types are assigned only when rendering) are typed by their
       # vertex count: 1 = point, 2 = segment, 3+ = polygon.
-      prim_lookup <- if (has_prim) {
-            vapply(grp_idx, function(idx) data$.prim[idx[1]], character(1))
-      } else {
-            setNames(rep(NA_character_, length(ugrp)), ugrp)
-      }
-      untyped <- is.na(prim_lookup)
+      prim <- if (".prim" %in% names(data)) as.character(data$.prim[first]) else rep(NA_character_, k)
+      untyped <- is.na(prim)
       if (any(untyped)) {
-            n_vert <- lengths(grp_idx)[untyped]
-            prim_lookup[untyped] <- ifelse(n_vert == 1, "point",
-                                           ifelse(n_vert == 2, "segment", "polygon"))
+            n_vert <- diff(offsets)[untyped]
+            prim[untyped] <- ifelse(n_vert == 1, "point", ifelse(n_vert == 2, "segment", "polygon"))
       }
-
-      grp_data <- lapply(grp_idx, function(idx) {
-            gx <- x[idx]; gy <- y[idx]; gz <- z[idx]
-            bb <- c(min(gx), max(gx), min(gy), max(gy), min(gz), max(gz))
-            m <- cbind(x = gx, y = gy, z = gz)
-            cbind(m, matrix(bb, nrow = nrow(m), ncol = 6, byrow = TRUE))
-      })
-
-      poly_betas <- compute_poly_betas(grp_data, prim_lookup)
-
-      k <- length(grp_data)
-      delta <- matrix(NA_real_, k, k)
-      locked <- matrix(FALSE, k, k)
-      groups <- names(grp_data)
+      type <- unname(.prim_codes[prim])
+      type[is.na(type)] <- 4L
 
       # Pieces cut from the same polygon are coplanar and only share edges,
       # so they impose no ordering constraint on one another
-      cut_parent <- ifelse(grepl("__cut[0-9]+$", groups),
-                           sub("__cut[0-9]+$", "", groups), NA_character_)
+      gname <- as.character(groups)
+      is_cut <- grepl("__cut[0-9]+$", gname)
+      parent <- sub("__cut[0-9]+$", "", gname)
+      cut_parent <- ifelse(is_cut, match(parent, unique(parent[is_cut])) - 1L, -1L)
 
-      # Exact 3D geometry for each group, used to settle the sign of any
-      # constraint involving a polygon (see plane_side_order())
+      has3d <- all(c(".x3d", ".y3d", ".z3d") %in% names(data))
+      num <- function(v) as.numeric(v[ord])
+
+      list(x = num(data$x), y = num(data$y), d = num(data[[depth_var]]),
+           x3 = if (has3d) num(data$.x3d) else numeric(0),
+           y3 = if (has3d) num(data$.y3d) else numeric(0),
+           z3 = if (has3d) num(data$.z3d) else numeric(0),
+           offsets = as.integer(offsets), type = as.integer(type),
+           cut_parent = as.integer(cut_parent),
+           eye = eye_vector(proj), proj = proj_vector(proj, plot_bounds),
+           marks = list(panel = as.numeric(panel_pt %||% numeric(0)),
+                        radius = group_value(data, ".radius_pt", first),
+                        halfwidth = group_value(data, ".halfwidth_pt", first),
+                        layer = as.integer(group_value(data, ".layer", first))),
+           groups = groups, k = k, order = ord)
+}
+
+# A column's value at each group's first row, or empty if absent
+group_value <- function(data, col, first) {
+      if (col %in% names(data)) as.numeric(data[[col]][first]) else numeric(0)
+}
+
+eye_vector <- function(proj) {
       eye <- eye_in_cube_space(proj)
-      geom_3d <- group_geometry_3d(data, groups, prim_lookup)
+      if (is.null(eye)) numeric(0) else c(as.numeric(eye$persp), eye$v)
+}
 
-      for (i in 1:k) {
-            for (j in 1:k) {
-                  if (i >= j) next
-                  if (!is.na(cut_parent[i]) && identical(cut_parent[i], cut_parent[j])) next
-
-                  di <- grp_data[[i]]
-                  dj <- grp_data[[j]]
-
-                  ti <- prim_lookup[i]
-                  tj <- prim_lookup[j]
-
-                  dlt <- pw_compare_pair(di, dj, ti, tj,
-                                         beta_i = poly_betas[[i]],
-                                         beta_j = poly_betas[[j]])
-
-                  if (is.na(dlt)) next
-
-                  if (!is.null(eye) && !is.null(geom_3d[[i]]) && !is.null(geom_3d[[j]])) {
-                        exact <- plane_side_order(geom_3d[[i]], geom_3d[[j]], eye)
-                        if (is.na(exact)) {
-                              exact <- coplanar_order(geom_3d[[i]], geom_3d[[j]], ti, tj)
-                        }
-                        if (is.na(exact)) {
-                              exact <- ray_sample_order(geom_3d[[i]], geom_3d[[j]], di, dj,
-                                                        ti, tj, proj, plot_bounds)
-                        }
-                        if (!is.na(exact)) {
-                              dlt <- exact * max(abs(dlt), .coplanar_tol)
-                              locked[i, j] <- locked[j, i] <- TRUE
-                        }
-                  }
-
-                  delta[i, j] <- dlt
-                  delta[j, i] <- -dlt
-            }
-      }
-
-      delta_pruned <- break_cycles(delta, locked)
-      adj_logical <- (delta_pruned > 0) & !is.na(delta_pruned)
-
-      grp_depths <- vapply(grp_data, function(m) mean(m[, 3]), numeric(1))
-
-      render_order <- groups[topological_sort(adj_logical, grp_depths)]
-      list(data = data, render_order = match(data$group, render_order))
+proj_vector <- function(proj, plot_bounds) {
+      if (is.null(proj) || is.null(plot_bounds)) return(numeric(0))
+      rot <- rotate_3d(diag(3), proj$pitch, proj$roll, proj$yaw)
+      c(as.numeric(isTRUE(proj$persp)), proj$dist %||% 2, as.vector(rot), plot_bounds)
 }
 
 
-# Hierarchical depth sorting with mixed-geometry support
-#
-# Sorts data back-to-front for painter's algorithm rendering, supporting
-# mixed primitive types (polygon, point, segment, text) via the `.prim`
-# column. Preserves vertex order within multi-vertex groups (polygons).
-#
-# Sort hierarchy for groups with `__` separators:
-#   level1 (e.g. "col1") sorted by max depth across all child groups
-#   level2 (e.g. "col1__zmax") sorted by representative depth
-#
-# Pairwise sorting handles all primitive types via type-specific comparison
-# modules. When primitives are coplanar, smaller types render on top.
-#
-# `proj` and `plot_bounds` are needed only to project the new vertices created
-# when pairwise sorting splits interpenetrating polygons; without them, that
-# splitting is skipped.
-sort_by_depth <- function(data, proj = NULL, plot_bounds = NULL) {
+#' Occlusion constraints between overlapping primitives
+#'
+#' @param scene Output of `pw_scene()`.
+#' @return List with `edges`, a data frame of constraints (`from` behind
+#'   `to`, 1-based group indices, with `strength` and `locked`), and `depth`,
+#'   each group's mean depth.
+#' @keywords internal
+#' @noRd
+pw_constraints <- function(scene) {
+      args <- scene[c("x", "y", "d", "x3", "y3", "z3", "offsets", "type", "cut_parent", "eye", "proj", "marks")]
+      res <- do.call(pw_constraints_cpp, args)
+      edges <- data.frame(from = res$from, to = res$to, strength = res$strength, locked = res$locked)
 
-      if(".sort_method" %in% names(data)){
-            method <- data$.sort_method[1]
-            if(method == "auto"){
-                  method <- if(nrow(data) <= 500) "pairwise" else "painter"
+      # Pairs of non-convex polygons whose screen intersection is needed are
+      # finished with intersections from polyclip
+      if (length(res$deferred_i) > 0) {
+            ring <- function(g) {
+                  idx <- (scene$offsets[g + 1] + 1L):scene$offsets[g + 2]
+                  cbind(x = scene$x[idx], y = scene$y[idx])
             }
-      }else{
-            method <- "painter"
+            xy <- t(mapply(function(i, j) {
+                  ctr <- intersection_centroid(ring(i), ring(j))
+                  if (is.null(ctr)) c(NaN, NaN) else unname(ctr)
+            }, res$deferred_i, res$deferred_j))
+            fin <- do.call(pw_finish_pairs_cpp, c(args, list(pi = res$deferred_i, pj = res$deferred_j,
+                                                              cx = xy[, 1], cy = xy[, 2])))
+            edges <- rbind(edges, data.frame(from = fin$from, to = fin$to,
+                                             strength = fin$strength, locked = fin$locked))
       }
+      edges$from <- edges$from + 1L
+      edges$to <- edges$to + 1L
+      list(edges = edges, depth = res$depth, n_candidates = res$n_candidates)
+}
 
-      # Elements flagged `.on_top` (e.g. text annotations with `on_top = TRUE`)
-      # aren't sorted against the rest: they're drawn after everything else,
-      # in depth order among themselves
+
+# Constraint graph ---------------------------------------------------------------
+# Edges are data frames with 1-based `from` (drawn first) and `to`, plus
+# `strength` and `locked` where needed.
+
+#' Remove the weakest constraints that lie on cycles
+#'
+#' Only constraints joining two members of the same strongly connected
+#' component lie on a cycle and are candidates for removal. Unlocked
+#' constraints (from sampled depths) are removed before locked ones (exact
+#' geometric results), and weaker before stronger, until no cycles remain.
+#'
+#' @param edges Constraint data frame.
+#' @param n Number of nodes.
+#' @return The constraints kept.
+#' @keywords internal
+#' @noRd
+break_cycles <- function(edges, n) {
+      if (nrow(edges) == 0) return(edges)
+      keep <- break_cycles_cpp(as.integer(n), edges$from - 1L, edges$to - 1L,
+                               as.numeric(edges$strength), as.logical(edges$locked))
+      edges[keep, , drop = FALSE]
+}
+
+#' Strongly connected components (integer component id per node)
+#' @keywords internal
+#' @noRd
+strongly_connected_components <- function(n, edges) {
+      scc_cpp(as.integer(n), edges$from - 1L, edges$to - 1L)
+}
+
+#' Whether a constraint graph has no cycles
+#' @keywords internal
+#' @noRd
+is_acyclic <- function(n, edges) {
+      topological_sort_cpp(as.integer(n), edges$from - 1L, edges$to - 1L, numeric(n))$complete
+}
+
+#' Topological order, drawing the farthest available node first
+#'
+#' Ties in depth go to the node that became available first.
+#'
+#' @param n Number of nodes.
+#' @param edges Constraint data frame.
+#' @param depths Depth per node (larger is farther).
+#' @return 1-based node order.
+#' @keywords internal
+#' @noRd
+topological_sort <- function(n, edges, depths = numeric(n)) {
+      res <- topological_sort_cpp(as.integer(n), edges$from - 1L, edges$to - 1L, as.numeric(depths))
+      if (!res$complete) warning("Topological sort failed - remaining cycles detected")
+      res$order + 1L
+}
+
+
+#' Depth-sort primitives back to front
+#'
+#' Splits polygons and segments that pass through one another, then orders
+#' primitives from pairwise occlusion constraints (see `order_by_depth()`).
+#' Rows of each group keep their order (preserving polygon winding).
+#'
+#' @param data Sort-stage data: projected rows with `group`, `depth`,
+#'   optionally `.prim`, and cube-space `.x3d`/`.y3d`/`.z3d`.
+#' @param proj,plot_bounds Projection parameters and plot bounds, needed to
+#'   split primitives and to order them exactly; both are skipped without
+#'   them.
+#' @return `data` with rows in drawing order.
+#' @keywords internal
+#' @noRd
+sort_by_depth <- function(data, proj = NULL, plot_bounds = NULL) {
+      data <- split_for_sorting(data, proj, plot_bounds)
+      order_by_depth(data, proj, plot_bounds)
+}
+
+#' Split polygons that pass through one another, then segments that pass
+#' through polygons, so that every pair has a consistent occlusion order
+#' @keywords internal
+#' @noRd
+split_for_sorting <- function(data, proj, plot_bounds) {
+      data <- split_intersecting_polygons(data, proj, plot_bounds)
+      split_interpenetrating_segments(data, proj, plot_bounds)
+}
+
+#' Order (already split) primitives back to front
+#'
+#' Elements flagged `.on_top` (e.g. text annotations with `on_top = TRUE`)
+#' aren't sorted against the rest: they're drawn after everything else, in
+#' depth order among themselves.
+#'
+#' @param data Split sort-stage data. Optional columns `.radius_pt` and
+#'   `.halfwidth_pt` give the drawn extents of point markers and lines, and
+#'   `.layer` each row's layer.
+#' @param panel_pt Panel width and height in points, if known; marker and
+#'   line extents are used only when given.
+#' @return `data` with rows in drawing order.
+#' @keywords internal
+#' @noRd
+order_by_depth <- function(data, proj = NULL, plot_bounds = NULL, panel_pt = NULL) {
+      if (nrow(data) == 0) return(data)
+
       top <- if (".on_top" %in% names(data)) data$.on_top %in% TRUE else FALSE
       if (any(top) && !all(top)) {
-            front <- data[top, , drop = FALSE]
-            front$.on_top <- FALSE
-            front$.sort_method <- "painter"
-            front <- sort_by_depth(front, proj, plot_bounds)
-            front$.on_top <- TRUE
-            rest <- sort_by_depth(data[!top, , drop = FALSE], proj, plot_bounds)
+            front <- order_by_mean_depth(data[top, , drop = FALSE])
+            rest <- order_by_depth(data[!top, , drop = FALSE], proj, plot_bounds, panel_pt)
             return(dplyr::bind_rows(rest, front[intersect(names(front), names(rest))]))
       }
 
-      if (method == "painter") {
-            data <- subdivide_segments_for_painter(data, proj, plot_bounds)
-      }
-
-      # Vertex order within each group (preserves polygon winding)
-      data <- data %>%
-            group_by(group) %>%
-            mutate(.vertex_order = row_number()) %>%
-            ungroup()
-
-      # Compute per-group representative depth
-      data <- compute_prim_depth(data)
-
-      if (method == "pairwise") {
-            result <- pw_render_order(data, "depth", proj = proj,
-                                      plot_bounds = plot_bounds)
-            data <- result$data
-            # Recompute .vertex_order and .prim_depth for any split rows
-            data <- data %>%
-                  group_by(group) %>%
-                  mutate(.vertex_order = row_number(),
-                         .prim_depth = mean(depth, na.rm = TRUE)) %>%
-                  ungroup()
-            data$.render_order <- result$render_order
-            data <- data %>%
-                  arrange(.render_order, .vertex_order) %>%
-                  select(-.render_order)
-
-      } else if(any(grepl("__", data$group))) {
-
-            has_mixed_prims <- ".prim" %in% names(data) &&
-                  length(unique(data$.prim[!is.na(data$.prim)])) > 1
-
-            if (has_mixed_prims) {
-                  # Mixed primitive types: flat sort by per-group depth to allow
-                  # interleaving (hierarchical sort would block by level1)
-                  data <- data %>%
-                        arrange(desc(.prim_depth), group, .vertex_order)
-            } else {
-                  # Single primitive type: hierarchical sort preserves object grouping
-                  data <- data %>%
-                        tidyr::separate(group, c("level1", "level2"), sep = "__",
-                                        remove = FALSE, extra = "merge") %>%
-                        group_by(level1) %>% mutate(depth1 = max(depth)) %>%
-                        ungroup() %>%
-                        arrange(desc(depth1), desc(.prim_depth), group, .vertex_order) %>%
-                        select(-level1, -level2, -depth1)
-            }
-
-      } else {
-            # Simple painter sorting
-            data <- data %>%
-                  arrange(desc(.prim_depth), group, .vertex_order)
-      }
-
-      data <- data %>% select(-.vertex_order, -.prim_depth,
-                              -any_of(c(".x3d", ".y3d", ".z3d")))
-      return(data)
+      vertex_order <- stats::ave(seq_len(nrow(data)), data$group, FUN = seq_along)
+      render_order <- pw_order(data, "depth", proj, plot_bounds, panel_pt)
+      data[order(render_order, vertex_order), , drop = FALSE]
 }
 
-
-#' Compute per-group representative depth for sorting
-#'
-#' Uses mean depth of all vertices in each group, which works correctly
-#' for all primitive types (polygon, point, segment, text).
-#'
-#' @param data Data frame with `group`, `depth`, and optionally `.prim`.
-#' @return Data frame with `.prim_depth` column added.
-#' @keywords internal
-#' @noRd
-compute_prim_depth <- function(data) {
-      depth_col <- if("depth_3d" %in% names(data)) "depth_3d" else "depth"
-
-      data <- data %>%
-            group_by(group) %>%
-            mutate(.prim_depth = mean(.data[[depth_col]], na.rm = TRUE)) %>%
-            ungroup()
-
-      return(data)
+# Farthest first, by mean depth per group
+order_by_mean_depth <- function(data) {
+      depth <- if ("depth_3d" %in% names(data)) data$depth_3d else data$depth
+      prim_depth <- stats::ave(depth, data$group, FUN = function(v) mean(v, na.rm = TRUE))
+      vertex_order <- stats::ave(seq_len(nrow(data)), data$group, FUN = seq_along)
+      data[order(-prim_depth, data$group, vertex_order), , drop = FALSE]
 }
 
 
@@ -901,221 +399,80 @@ split_interpenetrating_segments <- function(data, proj, plot_bounds) {
       if (length(seg_ids) == 0 || length(poly_ids) == 0) return(data)
 
       xyz <- cbind(data$.x3d, data$.y3d, data$.z3d)
+      poly_rows <- unlist(grp_idx[poly_ids], use.names = FALSE)
+      poly_off <- c(0L, cumsum(lengths(grp_idx[poly_ids])))
+      ends <- vapply(grp_idx[seg_ids], function(idx) seg_endpoint_rows(data, idx), integer(2))
 
-      # Polygon planes, 3D bounding boxes, and screen footprints
-      polys <- lapply(poly_ids, function(g) {
-            idx <- grp_idx[[g]]
-            p <- xyz[idx, , drop = FALSE]
-            pl <- polygon_plane(p)
-            if (is.null(pl)) return(NULL)
-            list(plane = pl, lo = apply(p, 2, min), hi = apply(p, 2, max),
-                 sx = data$x[idx], sy = data$y[idx])
-      })
-      polys <- polys[!vapply(polys, is.null, logical(1))]
-      if (length(polys) == 0) return(data)
-      lo <- do.call(rbind, lapply(polys, `[[`, "lo"))
-      hi <- do.call(rbind, lapply(polys, `[[`, "hi"))
-
-      # Candidate crossings: (segment, polygon, t, 3D crossing point)
-      cand <- list()
-      for (s in seg_ids) {
-            idx <- seg_endpoint_rows(data, grp_idx[[s]])
-            a <- xyz[idx[1], ]
-            b <- xyz[idx[2], ]
-            slo <- pmin(a, b); shi <- pmax(a, b)
-            near <- which(colSums(t(lo) <= shi + .split_tol) == 3 &
-                                colSums(t(hi) >= slo - .split_tol) == 3)
-            for (pi in near) {
-                  pl <- polys[[pi]]$plane
-                  eps <- .split_tol + pl$warp
-                  da <- sum(a * pl$normal) - pl$offset
-                  db <- sum(b * pl$normal) - pl$offset
-                  if (da * db >= 0 || min(abs(da), abs(db)) < eps) next
-                  t <- da / (da - db)
-                  cand <- c(cand, list(list(s = s, pi = pi, t = t, p = a + t * (b - a))))
-            }
-      }
-      if (length(cand) == 0) return(data)
+      # Candidate crossings (segment, polygon, t, 3D crossing point)
+      cr <- segment_crossings_cpp(xyz[ends[1, ], 1], xyz[ends[1, ], 2], xyz[ends[1, ], 3],
+                                  xyz[ends[2, ], 1], xyz[ends[2, ], 2], xyz[ends[2, ], 3],
+                                  xyz[poly_rows, 1], xyz[poly_rows, 2], xyz[poly_rows, 3],
+                                  as.integer(poly_off), .split_tol)
+      if (length(cr$t) == 0) return(data)
 
       # Keep crossings that fall inside the polygon's footprint
-      pts <- do.call(rbind, lapply(cand, `[[`, "p"))
       scr <- scale_to_npc_coordinates(
-            transform_3d_standard(data.frame(x = pts[, 1], y = pts[, 2], z = pts[, 3]), proj),
+            transform_3d_standard(data.frame(x = cr$x, y = cr$y, z = cr$z), proj),
             plot_bounds = plot_bounds)
-      inside <- vapply(seq_along(cand), function(k) {
-            pg <- polys[[cand[[k]]$pi]]
-            point_in_polygon(scr$x[k], scr$y[k], pg$sx, pg$sy)
-      }, logical(1))
-      cand <- cand[inside]
-      if (length(cand) == 0) return(data)
+      inside <- points_in_polygons_cpp(scr$x, scr$y, cr$poly, data$x[poly_rows], data$y[poly_rows],
+                                       as.integer(poly_off))
+      if (!any(inside)) return(data)
 
-      split_ts <- split(vapply(cand, `[[`, numeric(1), "t"),
-                        vapply(cand, `[[`, numeric(1), "s"))
+      # Crossing parameters per split segment, well inside its ends
+      split_ts <- split(cr$t[inside], cr$seg[inside] + 1L)
+      split_ts <- lapply(split_ts, function(ts) {
+            ts <- sort(unique(ts))
+            ts[ts > 1e-3 & ts < 1 - 1e-3]
+      })
+      split_ts <- split_ts[lengths(split_ts) > 0]
+      if (length(split_ts) == 0) return(data)
 
-      # Build sub-segments
+      # Build sub-segments: piece k of a segment runs between consecutive
+      # breaks, as a start row and an end row
       data$group <- as.character(data$group)
-      has_seg_id <- "segment_id" %in% names(data)
-      rows_to_drop <- integer(0)
-      new_rows <- list()
+      which_seg <- as.integer(names(split_ts))
+      n_piece <- lengths(split_ts) + 1L
+      piece_seg <- rep(which_seg, n_piece)
+      piece_k <- sequence(n_piece)
+      piece_n <- rep(n_piece, n_piece)
+      breaks <- lapply(split_ts, function(ts) c(0, ts, 1))
+      t0 <- unlist(lapply(breaks, function(br) br[-length(br)]), use.names = FALSE)
+      t1 <- unlist(lapply(breaks, function(br) br[-1]), use.names = FALSE)
 
-      for (s_chr in names(split_ts)) {
-            s <- as.integer(s_chr)
-            ts <- sort(unique(split_ts[[s_chr]]))
-            ts <- ts[ts > 1e-3 & ts < 1 - 1e-3]
-            if (length(ts) == 0) next
-
-            idx <- seg_endpoint_rows(data, grp_idx[[s]])
-            start_row <- data[idx[1], , drop = FALSE]
-            end_row <- data[idx[2], , drop = FALSE]
-            a <- xyz[idx[1], ]
-            b <- xyz[idx[2], ]
-            breaks <- c(0, ts, 1)
-
-            for (k in seq_len(length(breaks) - 1)) {
-                  piece <- rbind(start_row, end_row)
-                  t01 <- breaks[k + 0:1]
-                  p3 <- rbind(a + t01[1] * (b - a), a + t01[2] * (b - a))
-                  piece$.x3d <- p3[, 1]
-                  piece$.y3d <- p3[, 2]
-                  piece$.z3d <- p3[, 3]
-                  piece$.new_vertex <- c(t01[1] > 0, t01[2] < 1)
-                  piece$group <- paste0(start_row$group, "__split", k)
-                  # Which pieces hold the original segment's ends, so that
-                  # arrowheads are drawn only there (see render_segments())
-                  piece$.seg_first <- k == 1
-                  piece$.seg_last <- k == length(breaks) - 1
-                  if (has_seg_id && !is.na(start_row$segment_id)) {
-                        piece$segment_id <- start_row$segment_id + (k - 1) * 0.01
-                  }
-                  new_rows <- c(new_rows, list(piece))
-            }
-            rows_to_drop <- c(rows_to_drop, idx)
+      start_idx <- ends[1, piece_seg]
+      end_idx <- ends[2, piece_seg]
+      row_idx <- as.vector(rbind(start_idx, end_idx))
+      row_t <- as.vector(rbind(t0, t1))
+      row_piece <- rep(seq_along(piece_seg), each = 2)
+      new_rows <- data[row_idx, , drop = FALSE]
+      a <- xyz[rep(start_idx, each = 2), , drop = FALSE]
+      b <- xyz[rep(end_idx, each = 2), , drop = FALSE]
+      p3 <- a + row_t * (b - a)
+      new_rows$.x3d <- p3[, 1]
+      new_rows$.y3d <- p3[, 2]
+      new_rows$.z3d <- p3[, 3]
+      new_rows$.new_vertex <- as.vector(rbind(t0 > 0, t1 < 1))
+      new_rows$group <- paste0(data$group[start_idx], "__split", piece_k)[row_piece]
+      # Which pieces hold the original segment's ends, so that arrowheads are
+      # drawn only there (see render_segments())
+      new_rows$.seg_first <- (piece_k == 1)[row_piece]
+      new_rows$.seg_last <- (piece_k == piece_n)[row_piece]
+      if ("segment_id" %in% names(data)) {
+            # Pieces of a numbered segment share its number, offset by piece
+            sid <- data$segment_id[start_idx][row_piece]
+            new_rows$segment_id <- ifelse(is.na(sid), new_rows$segment_id,
+                                          sid + (piece_k[row_piece] - 1) * 0.01)
       }
+      rows_to_drop <- as.vector(ends[, which_seg])
 
-      if (length(new_rows) == 0) return(data)
-
-      new_rows <- do.call(rbind, new_rows)
       new_rows <- project_new_vertices(new_rows, proj, plot_bounds)
       new_rows$.new_vertex <- NULL
+      rownames(new_rows) <- NULL
 
       kept <- data[-rows_to_drop, , drop = FALSE]
       kept$.seg_first <- rep(NA, nrow(kept))
       kept$.seg_last <- rep(NA, nrow(kept))
       rbind(kept, new_rows)
-}
-
-
-#' Cut segments into short pieces for painter sorting
-#'
-#' Painter sorting places each element by its mean depth, so a long segment
-#' running through a surface (such as an axis line) is drawn entirely in front
-#' of or behind every polygon. When a layer mixes segments and polygons, this
-#' cuts each segment into pieces about as long on screen as a typical polygon,
-#' so that each piece is placed by its own depth. This isn't exact, but makes
-#' segments interleave plausibly with surfaces at little cost. Runs of pieces
-#' that don't overlap any polygon on screen are merged back together, since
-#' cutting there gains nothing and the joints can show faint seams.
-#'
-#' Pieces are cut in cube space and projected with the same functions as
-#' `coord_3d()`. Like the pieces made by `split_interpenetrating_segments()`,
-#' they are flagged with `.seg_first` and `.seg_last` so that arrowheads stay
-#' at the segment's original ends.
-#'
-#' @param data Data frame with projected coordinates, `.x3d`/`.y3d`/`.z3d`,
-#'   `group`, and `.prim`.
-#' @param proj Projection parameters.
-#' @param plot_bounds Plot bounds used for NPC scaling.
-#' @param max_pieces Maximum number of pieces per segment.
-#' @return Data frame with long segments replaced by pieces (groups suffixed
-#'   `__piece1`, `__piece2`, ...). Other rows are unchanged.
-#' @keywords internal
-#' @noRd
-subdivide_segments_for_painter <- function(data, proj, plot_bounds, max_pieces = 100) {
-
-      if (is.null(proj) || is.null(plot_bounds)) return(data)
-      if (!all(c(".x3d", ".y3d", ".z3d", ".prim") %in% names(data))) return(data)
-
-      grp <- as.character(data$group)
-      ugrp <- unique(grp)
-      grp_idx <- split(seq_along(grp), factor(grp, levels = ugrp))
-      prim <- vapply(grp_idx, function(idx) data$.prim[idx[1]], character(1))
-
-      seg_ids <- which(prim %in% "segment" & lengths(grp_idx) == 2)
-      poly_ids <- which(prim %in% "polygon" & lengths(grp_idx) >= 3)
-      if (length(seg_ids) == 0 || length(poly_ids) == 0) return(data)
-
-      # Polygon screen bounding boxes, and their typical size
-      pbox <- t(vapply(poly_ids, function(g) {
-            idx <- grp_idx[[g]]
-            c(range(data$x[idx]), range(data$y[idx]))
-      }, numeric(4)))
-      poly_size <- stats::median(sqrt((pbox[, 2] - pbox[, 1])^2 + (pbox[, 4] - pbox[, 3])^2))
-      if (!is.finite(poly_size) || poly_size <= 0) return(data)
-      overlaps_poly <- function(x0, x1, y0, y1) {
-            any(pbox[, 1] <= x1 & pbox[, 2] >= x0 & pbox[, 3] <= y1 & pbox[, 4] >= y0)
-      }
-
-      xyz <- cbind(data$.x3d, data$.y3d, data$.z3d)
-      data$group <- grp
-      has_seg_id <- "segment_id" %in% names(data)
-      rows_to_drop <- integer(0)
-      new_rows <- list()
-
-      for (s in seg_ids) {
-            idx <- seg_endpoint_rows(data, grp_idx[[s]])
-            len <- sqrt(diff(data$x[idx])^2 + diff(data$y[idx])^2)
-            k <- min(max_pieces, ceiling(len / poly_size))
-            if (!is.finite(k) || k <= 1) next
-
-            start_row <- data[idx[1], , drop = FALSE]
-            end_row <- data[idx[2], , drop = FALSE]
-            a <- xyz[idx[1], ]
-            b <- xyz[idx[2], ]
-            breaks <- seq(0, 1, length.out = k + 1)
-
-            # Keep only the cuts that separate pieces overlapping a polygon
-            bp <- outer(breaks, b - a) + rep(a, each = k + 1)
-            scr <- scale_to_npc_coordinates(
-                  transform_3d_standard(data.frame(x = bp[, 1], y = bp[, 2], z = bp[, 3]), proj),
-                  plot_bounds = plot_bounds)
-            busy <- vapply(seq_len(k), function(j) {
-                  overlaps_poly(min(scr$x[j + 0:1]), max(scr$x[j + 0:1]),
-                                min(scr$y[j + 0:1]), max(scr$y[j + 0:1]))
-            }, logical(1))
-            keep_cut <- busy[-1] | busy[-k]
-            breaks <- c(0, breaks[2:k][keep_cut], 1)
-            k <- length(breaks) - 1
-            if (k <= 1) next
-
-            for (j in seq_len(k)) {
-                  piece <- rbind(start_row, end_row)
-                  t01 <- breaks[j + 0:1]
-                  p3 <- rbind(a + t01[1] * (b - a), a + t01[2] * (b - a))
-                  piece$.x3d <- p3[, 1]
-                  piece$.y3d <- p3[, 2]
-                  piece$.z3d <- p3[, 3]
-                  piece$.new_vertex <- c(j > 1, j < k)
-                  piece$group <- paste0(start_row$group, "__piece", j)
-                  piece$.seg_first <- j == 1
-                  piece$.seg_last <- j == k
-                  if (has_seg_id && !is.na(start_row$segment_id)) {
-                        piece$segment_id <- start_row$segment_id + (j - 1) / (k + 1)
-                  }
-                  new_rows <- c(new_rows, list(piece))
-            }
-            rows_to_drop <- c(rows_to_drop, idx)
-      }
-
-      if (length(new_rows) == 0) return(data)
-
-      new_rows <- do.call(rbind, new_rows)
-      new_rows <- project_new_vertices(new_rows, proj, plot_bounds)
-      new_rows$.new_vertex <- NULL
-
-      kept <- data[-rows_to_drop, , drop = FALSE]
-      if (!".seg_first" %in% names(kept)) kept$.seg_first <- rep(NA, nrow(kept))
-      if (!".seg_last" %in% names(kept)) kept$.seg_last <- rep(NA, nrow(kept))
-      rbind(kept, new_rows[names(kept)])
 }
 
 
@@ -1198,109 +555,38 @@ split_intersecting_polygons <- function(data, proj, plot_bounds, tol = 1e-6) {
       if (sum(is_poly) < 2) return(data)
 
       sg_col <- intersect(c(".subgroup", "subgroup"), names(data))
-      xyz <- cbind(data$.x3d, data$.y3d, data$.z3d)
-
-      # Per-polygon plane geometry
       poly_ids <- which(is_poly)
-      info <- lapply(poly_ids, function(g) {
-            idx <- grp_idx[[g]]
-            p <- xyz[idx, , drop = FALSE]
-            pl <- polygon_plane(p)
-            if (is.null(pl)) return(NULL)
-            has_holes <- length(sg_col) > 0 &&
-                  length(unique(data[[sg_col[1]]][idx])) > 1
-            c(pl, list(cuttable = !has_holes,
-                       lo = apply(p, 2, min), hi = apply(p, 2, max)))
-      })
-      keep <- !vapply(info, is.null, logical(1))
-      poly_ids <- poly_ids[keep]
-      info <- info[keep]
-      n_poly <- length(info)
-      if (n_poly < 2) return(data)
+      poly_rows <- unlist(grp_idx[poly_ids], use.names = FALSE)
+      poly_off <- c(0L, cumsum(lengths(grp_idx[poly_ids])))
 
-      # Candidate pairs: overlapping 3D bounding boxes
-      lo <- do.call(rbind, lapply(info, `[[`, "lo"))
-      hi <- do.call(rbind, lapply(info, `[[`, "hi"))
-      ov <- matrix(TRUE, n_poly, n_poly)
-      for (a in 1:3) {
-            ov <- ov & outer(lo[, a], hi[, a], "<") & outer(hi[, a], lo[, a], ">")
-      }
-      ov[lower.tri(ov, diag = TRUE)] <- FALSE
-      pairs <- which(ov, arr.ind = TRUE)
-      if (nrow(pairs) == 0) return(data)
-
-      # Collect cutting planes for each polygon to be cut
-      cuts <- vector("list", n_poly)
-
-      for (r in seq_len(nrow(pairs))) {
-            i <- pairs[r, 1]
-            j <- pairs[r, 2]
-            pi_ <- info[[i]]
-            pj <- info[[j]]
-
-            ok_cut_i <- pi_$cuttable && pj$planar
-            ok_cut_j <- pj$cuttable && pi_$planar
-            if (!ok_cut_i && !ok_cut_j) next
-
-            pts_i <- xyz[grp_idx[[poly_ids[i]]], , drop = FALSE]
-            pts_j <- xyz[grp_idx[[poly_ids[j]]], , drop = FALSE]
-
-            if (!polygons_interpenetrate(pts_i, pi_, pts_j, pj, tol)) next
-
-            cut_i <- if (ok_cut_i && ok_cut_j) pi_$area <= pj$area else ok_cut_i
-            if (cut_i) {
-                  cuts[[i]] <- c(cuts[[i]], list(pj[c("normal", "offset")]))
-            } else {
-                  cuts[[j]] <- c(cuts[[j]], list(pi_[c("normal", "offset")]))
-            }
+      # Polygons with holes (several subgroups) are never cut
+      cuttable <- if (length(sg_col)) {
+            vapply(grp_idx[poly_ids], function(idx) length(unique(data[[sg_col[1]]][idx])) <= 1, logical(1))
+      } else {
+            rep(TRUE, length(poly_ids))
       }
 
-      cut_which <- which(!vapply(cuts, is.null, logical(1)))
-      if (length(cut_which) == 0) return(data)
+      pc <- split_polygons_cpp(data$.x3d[poly_rows], data$.y3d[poly_rows], data$.z3d[poly_rows],
+                               as.integer(poly_off), cuttable, tol)
+      if (length(pc$poly) == 0) return(data)
 
-      # Apply cuts
+      # Assemble the pieces, copying each new vertex's other columns from the
+      # vertex it was cut from
       data$group <- as.character(data$group)
       data$.cut_edge <- FALSE
-      rows_to_drop <- integer(0)
-      new_rows <- list()
+      new_rows <- data[poly_rows[pc$src + 1L], , drop = FALSE]
+      new_rows$.x3d <- pc$x3
+      new_rows$.y3d <- pc$y3
+      new_rows$.z3d <- pc$z3
+      orig_group <- data$group[poly_rows[poly_off[pc$poly + 1L] + 1L]]
+      new_rows$group <- paste0(orig_group, "__cut", pc$piece)
+      new_rows$.cut_edge <- pc$cut_edge
+      new_rows$.new_vertex <- pc$is_new
+      rows_to_drop <- unlist(grp_idx[poly_ids[unique(pc$poly) + 1L]], use.names = FALSE)
 
-      for (w in cut_which) {
-            idx <- grp_idx[[poly_ids[w]]]
-            pieces <- list(list(p = xyz[idx, , drop = FALSE],
-                                src = idx,
-                                is_new = rep(FALSE, length(idx)),
-                                flag = rep(FALSE, length(idx))))
-            for (cp in cuts[[w]]) {
-                  pieces <- unlist(lapply(pieces, split_ring_by_plane,
-                                          normal = cp$normal, offset = cp$offset,
-                                          tol = tol),
-                                   recursive = FALSE)
-            }
-            if (length(pieces) < 2) next
-
-            orig_group <- data$group[idx[1]]
-            for (k in seq_along(pieces)) {
-                  pc <- pieces[[k]]
-                  rows <- data[pc$src, , drop = FALSE]
-                  rows$.x3d <- pc$p[, 1]
-                  rows$.y3d <- pc$p[, 2]
-                  rows$.z3d <- pc$p[, 3]
-                  rows$group <- paste0(orig_group, "__cut", k)
-                  rows$.cut_edge <- pc$flag
-                  rows$.new_vertex <- pc$is_new
-                  new_rows <- c(new_rows, list(rows))
-            }
-            rows_to_drop <- c(rows_to_drop, idx)
-      }
-
-      if (length(new_rows) == 0) {
-            data$.cut_edge <- NULL
-            return(data)
-      }
-
-      new_rows <- do.call(rbind, new_rows)
       new_rows <- project_new_vertices(new_rows, proj, plot_bounds)
       new_rows$.new_vertex <- NULL
+      rownames(new_rows) <- NULL
 
       rbind(data[-rows_to_drop, , drop = FALSE], new_rows)
 }
@@ -1498,8 +784,7 @@ project_new_vertices <- function(rows, proj, plot_bounds) {
       rows
 }
 
-
-# Exact plane-side ordering ----------------------------------------------------
+# Exact ordering ------------------------------------------------------------------
 
 #' Viewer location in standardized cube space
 #'
@@ -1520,204 +805,97 @@ eye_in_cube_space <- function(proj) {
 }
 
 
-#' Per-group 3D vertices, plane fits, and touch tolerances
-#'
-#' @param data Data frame with `.x3d`, `.y3d`, `.z3d`, and `group`.
-#' @param groups Character vector of group names, in comparison order.
-#' @param prim_lookup Primitive type per group, aligned with `groups`.
-#' @return List aligned with `groups`, each a list with `pts` (vertex
-#'   matrix), `plane` (from `polygon_plane()` for polygons with a valid fit,
-#'   otherwise NULL), and `touch` (see `plane_side_order()`). All NULL if
-#'   cube-space coordinates are unavailable.
-#' @keywords internal
-#' @noRd
-group_geometry_3d <- function(data, groups, prim_lookup) {
-      out <- vector("list", length(groups))
-      if (!all(c(".x3d", ".y3d", ".z3d") %in% names(data))) return(out)
+# R entry points to the individual steps of the C++ pairwise comparison. The
+# sorter itself doesn't use these; they expose each step for testing.
 
-      idx <- split(seq_len(nrow(data)), factor(as.character(data$group), levels = groups))
-      for (g in seq_along(groups)) {
-            rows <- idx[[g]]
-            if (length(rows) == 0) next
-            pts <- cbind(data$.x3d[rows], data$.y3d[rows], data$.z3d[rows])
-            if (anyNA(pts)) next
-            is_poly <- prim_lookup[g] == "polygon"
-            out[[g]] <- list(
-                  pts = pts,
-                  plane = if (is_poly && length(rows) >= 3) polygon_plane(pts),
-                  touch = if (prim_lookup[g] == "segment") .split_tol else 0
-            )
-      }
-      out
+# Two-group scene from screen matrices (x, y, depth columns) and optional
+# cube-space vertex matrices
+pair_scene <- function(si, sj, ti, tj, pi = NULL, pj = NULL, eye = NULL, proj = numeric(0)) {
+      if (is.null(si)) si <- matrix(0, nrow(pi), 3)
+      if (is.null(sj)) sj <- matrix(0, nrow(pj), 3)
+      has3d <- !is.null(pi) && !is.null(pj)
+      list(x = c(si[, 1], sj[, 1]), y = c(si[, 2], sj[, 2]), d = c(si[, 3], sj[, 3]),
+           x3 = if (has3d) c(pi[, 1], pj[, 1]) else numeric(0),
+           y3 = if (has3d) c(pi[, 2], pj[, 2]) else numeric(0),
+           z3 = if (has3d) c(pi[, 3], pj[, 3]) else numeric(0),
+           offsets = as.integer(c(0, nrow(si), nrow(si) + nrow(sj))),
+           type = unname(.prim_codes[c(ti, tj)]),
+           eye = if (is.null(eye)) numeric(0) else c(as.numeric(eye$persp), eye$v),
+           proj = proj)
 }
 
+geometry_type <- function(g) {
+      if (!is.null(g$plane)) "polygon" else if (nrow(g$pts) == 2) "segment" else "point"
+}
+
+#' Screen-space depth delta between two primitives
+#'
+#' @param di,dj Screen matrices (x, y, depth in the first three columns).
+#' @param type_i,type_j Primitive types.
+#' @return Depth delta (positive: i behind j), or NA for no constraint.
+#' @keywords internal
+#' @noRd
+pw_compare_pair <- function(di, dj, type_i, type_j) {
+      res <- do.call(pair_order_cpp, pair_scene(di, dj, type_i, type_j))
+      res$screen
+}
 
 #' Exact occlusion order of two primitives from plane-side tests
 #'
-#' A polygon lies within a band of half-width `warp` around its best-fit plane
-#' (zero for planar polygons). If another primitive lies entirely beyond that
-#' band on one side, every line of sight meets the two in a fixed order:
-#' whichever is on the viewer's side is in front wherever they overlap on
-#' screen. This holds under both perspective and orthographic projection.
-#'
-#' The other primitive may reach back into the band by its `touch` tolerance,
-#' so that a segment starting on a polygon it belongs to (e.g. a residual line
-#' on its surface) is ordered as lying on its far side.
-#'
-#' @param gi,gj Group geometry from `group_geometry_3d()`.
+#' @param gi,gj Lists with `pts` (cube-space vertex matrix) and, for
+#'   polygons, `plane`.
 #' @param eye Viewer from `eye_in_cube_space()`.
-#' @param tol Absolute distance tolerance in cube units.
-#' @return 1 if i is behind j, -1 if i is in front of j, or NA if neither
-#'   test is decisive (e.g. coplanar, straddling, or no polygon involved).
+#' @return 1 if i is behind j, -1 if in front, or NA if undecided.
 #' @keywords internal
 #' @noRd
-plane_side_order <- function(gi, gj, eye, tol = 1e-6) {
-      if (!is.null(gi$plane)) {
-            s <- side_of_plane(gj$pts, gi$plane, tol, gj$touch %||% 0)
-            e <- eye_side_of_plane(gi$plane, eye)
-            if (!is.na(s) && e != 0) return(if (s == e) 1 else -1)
-      }
-      if (!is.null(gj$plane)) {
-            s <- side_of_plane(gi$pts, gj$plane, tol, gi$touch %||% 0)
-            e <- eye_side_of_plane(gj$plane, eye)
-            if (!is.na(s) && e != 0) return(if (s == e) -1 else 1)
-      }
-      NA
+plane_side_order <- function(gi, gj, eye) {
+      res <- do.call(pair_order_cpp, pair_scene(NULL, NULL, geometry_type(gi), geometry_type(gj),
+                                                gi$pts, gj$pts, eye))
+      res$plane_side
 }
-
 
 #' Order of a polygon and a smaller primitive lying in its plane
 #'
-#' A point, segment, or text label lying exactly in a planar polygon's plane
-#' (such as a line drawn along a plane) has no geometric depth order with it,
-#' and comparing sampled depths gives an arbitrary result. Such primitives are
-#' drawn on top of the polygon.
+#' Points, segments, and text lying exactly in a planar polygon's plane are
+#' drawn on top of it.
 #'
-#' @param gi,gj Group geometry from `group_geometry_3d()`.
+#' @param gi,gj Lists with `pts` and, for polygons, `plane`.
 #' @param ti,tj Primitive types.
-#' @param tol Absolute distance tolerance in cube units.
-#' @return 1 if i is the polygon (drawn behind j), -1 if j is, or NA if the
-#'   pair isn't a planar polygon and a primitive lying in its plane.
+#' @return 1 if i is the polygon (drawn behind j), -1 if j is, or NA.
 #' @keywords internal
 #' @noRd
-coplanar_order <- function(gi, gj, ti, tj, tol = 1e-6) {
-      in_plane <- function(poly, other, other_type) {
-            !is.null(poly$plane) && isTRUE(poly$plane$planar) &&
-                  other_type %in% c("point", "segment", "text") &&
-                  all(abs(as.vector(other$pts %*% poly$plane$normal - poly$plane$offset)) <= tol)
-      }
-      if (ti == "polygon" && in_plane(gi, gj, tj)) return(1)
-      if (tj == "polygon" && in_plane(gj, gi, ti)) return(-1)
-      NA
+coplanar_order <- function(gi, gj, ti, tj) {
+      res <- do.call(pair_order_cpp, pair_scene(NULL, NULL, ti, tj, gi$pts, gj$pts))
+      res$coplanar
 }
-
-
-#' Which side of a polygon's plane band a set of points lies on
-#'
-#' @param pts Vertex matrix (n x 3).
-#' @param plane Plane info from `polygon_plane()`; the polygon lies within
-#'   `plane$warp` of the plane.
-#' @param tol Distance tolerance.
-#' @param touch Additional distance the points may reach back into the band.
-#' @return 1 or -1 if the points lie beyond the band on that side, with at
-#'   least one strictly beyond it; otherwise NA.
-#' @keywords internal
-#' @noRd
-side_of_plane <- function(pts, plane, tol, touch = 0) {
-      d <- as.vector(pts %*% plane$normal - plane$offset)
-      w <- plane$warp
-      lo <- min(d); hi <- max(d)
-      if (hi >= -lo) {
-            if (lo >= w - tol - touch && hi > w + tol) return(1)
-      } else {
-            if (hi <= -w + tol + touch && lo < -w - tol) return(-1)
-      }
-      NA
-}
-
-
-#' Which side of a polygon's plane band the viewer is on
-#'
-#' @return 1, -1, or 0 when the viewer is within the band (perspective) or
-#'   the plane is viewed edge-on (orthographic).
-#' @keywords internal
-#' @noRd
-eye_side_of_plane <- function(plane, eye) {
-      if (eye$persp) {
-            s <- sum(plane$normal * eye$v) - plane$offset
-            if (abs(s) <= plane$warp + 1e-9) 0 else sign(s)
-      } else {
-            s <- sum(plane$normal * eye$v)
-            if (abs(s) < 1e-9) 0 else sign(s)
-      }
-}
-
-
-# Exact ray sampling ------------------------------------------------------------
 
 #' Exact occlusion order of two disjoint primitives from one line of sight
 #'
-#' For a planar polygon and a polygon or segment that straddle each other's
-#' planes without intersecting (intersecting pairs are split beforehand), the
-#' depth order is the same along every line of sight through their screen
-#' overlap. This casts one exact ray through a point in that overlap and
-#' compares where it meets each primitive in 3D.
-#'
-#' Pairs involving non-planar polygons, points, or text return NA.
-#'
-#' @param gi,gj Group geometry from `group_geometry_3d()`.
-#' @param di,dj Screen-space group matrices, as compared in `pw_render_order()`.
+#' @param gi,gj Lists with `pts` and, for polygons, `plane`.
+#' @param di,dj Screen matrices.
 #' @param ti,tj Primitive types.
-#' @param proj Projection parameters.
-#' @param plot_bounds Plot bounds used for NPC scaling.
-#' @return 1 if i is behind j, -1 if i is in front of j, or NA.
+#' @param proj,plot_bounds Projection parameters and plot bounds.
+#' @return 1 if i is behind j, -1 if in front, or NA.
 #' @keywords internal
 #' @noRd
 ray_sample_order <- function(gi, gj, di, dj, ti, tj, proj, plot_bounds) {
-      if (is.null(proj) || is.null(plot_bounds)) return(NA)
-      exact_ok <- function(g, type) {
-            (type == "polygon" && !is.null(g$plane) && g$plane$planar) ||
-                  (type == "segment" && nrow(g$pts) == 2)
-      }
-      if (!(exact_ok(gi, ti) && exact_ok(gj, tj))) return(NA)
-      if (ti != "polygon" && tj != "polygon") return(NA)
-
-      xy <- if (ti == "polygon" && tj == "polygon") {
-            intersection_centroid(di[, 1:2], dj[, 1:2])
-      } else if (ti == "polygon") {
-            segment_overlap_midpoint(di, dj)
-      } else {
-            segment_overlap_midpoint(dj, di)
-      }
-      if (is.null(xy)) return(NA)
-
-      ray <- screen_ray(xy[1], xy[2], proj, plot_bounds)
-      li <- ray_depth(ray, gi, ti)
-      lj <- ray_depth(ray, gj, tj)
-      if (!is.finite(li) || !is.finite(lj)) return(NA)
-      if (abs(li - lj) <= 1e-9 * max(1, abs(li), abs(lj))) return(NA)
-      if (li > lj) 1 else -1
+      res <- do.call(pair_order_cpp, pair_scene(di, dj, ti, tj, gi$pts, gj$pts,
+                                                eye_in_cube_space(proj),
+                                                proj_vector(proj, plot_bounds)))
+      res$ray
 }
-
 
 #' Midpoint of the portion of a segment overlapping a polygon on screen
 #'
-#' @param poly_data,seg_data Screen-space group matrices.
+#' @param poly_data,seg_data Screen matrices.
 #' @return Numeric `c(x, y)`, or NULL if they do not overlap.
 #' @keywords internal
 #' @noRd
 segment_overlap_midpoint <- function(poly_data, seg_data) {
-      clipped <- tryCatch(
-            polyclip::polyclip(list(list(x = seg_data[, 1], y = seg_data[, 2])),
-                               list(list(x = poly_data[, 1], y = poly_data[, 2])),
-                               op = "intersection", closed = FALSE),
-            error = function(e) list()
-      )
-      if (length(clipped) == 0) return(NULL)
-      c(mean(unlist(lapply(clipped, `[[`, "x"))),
-        mean(unlist(lapply(clipped, `[[`, "y"))))
+      out <- segment_overlap_midpoint_cpp(poly_data[, 1], poly_data[, 2],
+                                          seg_data[1:2, 1], seg_data[1:2, 2])
+      if (length(out) == 0) NULL else out
 }
-
 
 #' Line of sight through a screen point, in standardized cube space
 #'
@@ -1732,43 +910,5 @@ segment_overlap_midpoint <- function(poly_data, seg_data) {
 #' @keywords internal
 #' @noRd
 screen_ray <- function(sx, sy, proj, plot_bounds) {
-      xt <- plot_bounds[1] + sx * (plot_bounds[2] - plot_bounds[1])
-      yt <- plot_bounds[3] + sy * (plot_bounds[4] - plot_bounds[3])
-      rot <- rotate_3d(diag(3), proj$pitch, proj$roll, proj$yaw)
-      to_cube <- function(v) {
-            f <- as.vector(v %*% t(rot))
-            c(f[1], f[2], -f[3])
-      }
-      p0 <- to_cube(c(xt, yt, 0))
-      if (isTRUE(proj$persp)) {
-            eye <- to_cube(c(0, 0, -proj$dist))
-            list(o = eye, d = p0 - eye)
-      } else {
-            list(o = p0, d = to_cube(c(0, 0, 1)))
-      }
-}
-
-
-#' Ray parameter where a ray meets a planar polygon or a segment
-#'
-#' @param ray Ray from `screen_ray()`.
-#' @param g Group geometry from `group_geometry_3d()`.
-#' @param type Primitive type, `"polygon"` or `"segment"`.
-#' @return Numeric ray parameter (NA if parallel).
-#' @keywords internal
-#' @noRd
-ray_depth <- function(ray, g, type) {
-      if (type == "polygon") {
-            den <- sum(g$plane$normal * ray$d)
-            if (abs(den) < 1e-12) return(NA_real_)
-            return((g$plane$offset - sum(g$plane$normal * ray$o)) / den)
-      }
-      # Segment: closest approach between the ray and the segment's line
-      a <- g$pts[1, ]
-      e <- g$pts[2, ] - a
-      w <- a - ray$o
-      dd <- sum(ray$d * ray$d); de <- sum(ray$d * e); ee <- sum(e * e)
-      den <- dd * ee - de^2
-      if (abs(den) < 1e-14) return(NA_real_)
-      (sum(ray$d * w) * ee - de * sum(e * w)) / den
+      screen_ray_cpp(sx, sy, proj_vector(proj, plot_bounds))
 }

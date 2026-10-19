@@ -12,7 +12,7 @@ geom_path_3d(
   position = "identity",
   ...,
   annotate = NULL,
-  sort_method = "painter",
+  sort_method = deprecated(),
   scale_depth = TRUE,
   arrow = NULL,
   arrow.fill = NULL,
@@ -28,7 +28,7 @@ stat_path_3d(
   geom = GeomSegment3D,
   position = "identity",
   ...,
-  sort_method = "painter",
+  sort_method = deprecated(),
   scale_depth = TRUE,
   arrow = NULL,
   arrow.fill = NULL,
@@ -54,7 +54,9 @@ coordinates. Grouping aesthetics determine separate paths.}
 within this layer. Annotations are depth-sorted together with the layer's
 own geometry, so they can pass in front of and behind it correctly.}
 
-\item{sort_method}{Depth sorting algorithm. See \link{sorting_methods} for details.}
+\item{sort_method}{Deprecated. All 3D layers in a
+panel are now depth-sorted together, pairwise, so this has no effect. See
+\link{sorting_methods}.}
 
 \item{scale_depth}{Controls depth-based scaling, drawing closer elements
 larger or thicker and farther ones smaller or thinner. \code{TRUE} (the default)

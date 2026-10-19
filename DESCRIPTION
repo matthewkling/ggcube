@@ -31,6 +31,8 @@ Imports:
     isoband,
     systemfonts (>= 1.2.0),
     htmlwidgets
+LinkingTo:
+    cpp11
 Roxygen: list(markdown = TRUE)
 Suggests: 
     alphashape3d,

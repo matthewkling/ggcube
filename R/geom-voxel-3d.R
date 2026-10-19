@@ -192,10 +192,6 @@ convert_to_numeric <- function(data) {
 #' Each data point becomes a fixed-size cube centered on its coordinates.
 #' Useful for volumetric data and 3D pixel art.
 #'
-#' Note that voxel geometries sometimes require pairwise depth sorting for correct rendering.
-#' This is the default for smaller data sets, but not for larger data sets due to compute speed;
-#' in those cases you may wish to manually specify `sort_method = "pairwise"`.
-#'
 #' @param mapping Set of aesthetic mappings created by [aes()].
 #' @param data The data to be displayed in this layer.
 #' @param stat The statistical transformation to use on the data. Defaults to `StatVoxel3D`.
@@ -252,15 +248,16 @@ geom_voxel_3d <- function(mapping = NULL, data = NULL,
                           annotate = NULL,
                           width = 1.0, faces = "all",
                           light = NULL,
-                          cull_backfaces = TRUE, sort_method = NULL,
+                          cull_backfaces = TRUE, sort_method = deprecated(),
                           scale_depth = TRUE, force_convex = FALSE,
                           na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
+      check_sort_method(sort_method, "geom_voxel_3d")
 
       layer(data = data, mapping = mapping, stat = get_proto(stat, "stat"), geom = GeomPolygon3D,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(annotate = annotate, na.rm = na.rm, width = width, faces = faces, light = light,
                           force_convex = force_convex, cull_backfaces = cull_backfaces,
-                          sort_method = sort_method, scale_depth = scale_depth,
+                          scale_depth = scale_depth,
                           ...)
       )
 }
@@ -273,15 +270,16 @@ stat_voxel_3d <- function(mapping = NULL, data = NULL,
                           ...,
                           width = 1.0, faces = "all",
                           light = NULL,
-                          cull_backfaces = TRUE, sort_method = NULL,
+                          cull_backfaces = TRUE, sort_method = deprecated(),
                           scale_depth = TRUE, force_convex = FALSE,
                           na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
+      check_sort_method(sort_method, "stat_voxel_3d")
 
       layer(data = data, mapping = mapping, stat = StatVoxel3D, geom = get_proto(geom, "geom"),
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(na.rm = na.rm, width = width, faces = faces, light = light,
                           force_convex = force_convex, cull_backfaces = cull_backfaces,
-                          sort_method = sort_method, scale_depth = scale_depth,
+                          scale_depth = scale_depth,
                           ...)
       )
 }

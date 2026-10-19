@@ -437,7 +437,7 @@ test_that("a plot carrying `+ light()` can be rendered more than once", {
       # build time and is the consumer of the resolved light.
       p <- light_test_plot()
       invisible(ggplotGrob(p))
-      expect_no_error(invisible(ggplotGrob(p)))
+      expect_no_error(drawn_grob(p))
       expect_true(inherits(p$coordinates$light, "waiver"))
 })
 
@@ -477,7 +477,7 @@ test_that("`coord_3d(light = NULL)` disables lighting", {
       pp <- ggplot_build(p)$layout$panel_params[[1]]
 
       expect_null(pp$light)
-      expect_no_error(invisible(ggplotGrob(p)))
+      expect_no_error(drawn_grob(p))
 })
 
 test_that("unspecified lighting resolves to the package default", {
@@ -515,5 +515,5 @@ test_that("shaded guides find plot-level lighting from an untouched coord", {
       # resolved panel_params, so it must handle a coord whose light is still
       # a waiver and a spec still stashed on the plot.
       p <- light_test_plot() + guides(fill = guide_colorbar_3d())
-      expect_no_error(invisible(ggplotGrob(p)))
+      expect_no_error(drawn_grob(p))
 })

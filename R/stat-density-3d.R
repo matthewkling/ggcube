@@ -221,8 +221,7 @@ kde2d <- function(x, y, eval_x, eval_y, h) {
 #'
 #' # As contour plot instead of default surface plot
 #' p + stat_density_3d(geom = "contour_3d", light = "none",
-#'                     color = "black", bins = 25,
-#'                     sort_method = "pairwise")
+#'                     color = "black", bins = 25)
 #'
 #' # Multiple density surfaces by group,
 #' # using normalized density to equalize peak heights
@@ -257,15 +256,16 @@ geom_density_3d <- function(mapping = NULL, data = NULL,
                             pad = 0.1,
                             min_ndensity = 0,
                             light = NULL,
-                            cull_backfaces = FALSE, sort_method = NULL,
+                            cull_backfaces = FALSE, sort_method = deprecated(),
                             force_convex = FALSE, scale_depth = TRUE,
                             na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
+      check_sort_method(sort_method, "geom_density_3d")
 
       layer(data = data, mapping = mapping, stat = get_proto(stat, "stat"), geom = GeomSurface3D,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(annotate = annotate, n = n, grid = grid, direction = direction, trim = trim,
                           force_convex = force_convex, cull_backfaces = cull_backfaces,
-                          sort_method = sort_method, scale_depth = scale_depth,
+                          scale_depth = scale_depth,
                           h = h, adjust = adjust, pad = pad, min_ndensity = min_ndensity,
                           light = light, na.rm = na.rm, ...)
       )
@@ -282,15 +282,16 @@ stat_density_3d <- function(mapping = NULL, data = NULL,
                             pad = 0.1,
                             min_ndensity = 0,
                             light = NULL,
-                            cull_backfaces = FALSE, sort_method = NULL,
+                            cull_backfaces = FALSE, sort_method = deprecated(),
                             force_convex = FALSE, scale_depth = TRUE,
                             na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
+      check_sort_method(sort_method, "stat_density_3d")
 
       layer(data = data, mapping = mapping, stat = StatDensity3D, geom = get_proto(geom, "geom"),
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(n = n, grid = grid, direction = direction, trim = trim,
                           force_convex = force_convex, cull_backfaces = cull_backfaces,
-                          sort_method = sort_method, scale_depth = scale_depth,
+                          scale_depth = scale_depth,
                           h = h, adjust = adjust, pad = pad, min_ndensity = min_ndensity,
                           light = light, na.rm = na.rm, ...)
       )

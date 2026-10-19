@@ -124,12 +124,8 @@ plot's axis ranges. They are lit like the layer's other polygons, from
 whichever side faces the viewer, and are never removed by back-face
 culling. A plane that misses the panel entirely is skipped with a warning.
 
-Planes are large, so they rarely sort correctly by average depth alone.
-Use pairwise sorting (\code{sort_method = "pairwise"}, or \code{"auto"} for small
-layers) to split planes where they intersect each other or the layer's
-polygons, and to hide the elements they pass in front of. Layers that
-default to painter sorting, such as \code{\link[=geom_point_3d]{geom_point_3d()}}, need this set
-explicitly.
+Planes are split where they intersect each other or other polygons, and
+hide the elements they pass in front of (see \link{sorting_methods}).
 }
 
 \subsection{Coordinates}{
@@ -141,7 +137,7 @@ log10 values.
 
 \subsection{Coincident elements}{
 
-With pairwise sorting, a point, segment, line, or text label lying exactly
+A point, segment, line, or text label lying exactly
 in the plane of a polygon (such as a line drawn along a plane, or along
 the intersection of two planes) is drawn on top of that polygon.
 }
@@ -177,7 +173,7 @@ p + geom_surface_3d(
 # which the first two planes intersect
 A <- rbind(c(1, 1, 1), c(1, -1, 0), c(0, 1, -1))
 ggplot(data.frame(x = 1/3, y = 1/3, z = 1/3), aes(x, y, z)) +
-  geom_point_3d(size = 3, sort_method = "pairwise",
+  geom_point_3d(size = 3,
                 annotate = list(
                   annotate_3d("plane", a = A[, 1], b = A[, 2],
                               c = A[, 3], d = c(1, 0, 0),
@@ -191,7 +187,7 @@ ggplot(data.frame(x = 1/3, y = 1/3, z = 1/3), aes(x, y, z)) +
 fit <- lm(mpg ~ wt + hp, data = mtcars)
 b <- coef(fit)
 ggplot(mtcars, aes(wt, hp, mpg)) +
-  geom_point_3d(sort_method = "pairwise", annotate = list(
+  geom_point_3d(annotate = list(
     annotate_3d("plane", intercept = b[1], slope_x = b["wt"], slope_y = b["hp"],
                 fill = "steelblue"),
     annotate_3d("plane", zintercept = 20, alpha = 0.3))) +
@@ -203,7 +199,6 @@ ggplot(data.frame(x = 0, y = 0, z = 0, xend = c(u[1], v[1]),
                   yend = c(u[2], v[2]), zend = c(u[3], v[3])),
        aes(x, y, z, xend = xend, yend = yend, zend = zend)) +
   geom_segment_3d(arrow = arrow(type = "closed", length = unit(8, "pt")),
-                  sort_method = "pairwise",
                   annotate = annotate_3d("polygon", x = c(0, u[1], v[1]),
                                          y = c(0, u[2], v[2]), z = c(0, u[3], v[3]),
                                          fill = "steelblue")) +
@@ -213,7 +208,6 @@ ggplot(data.frame(x = 0, y = 0, z = 0, xend = c(u[1], v[1]),
 ggplot() +
   geom_function_3d(fun = function(x, y) (x^2 - y^2) / 2,
                    xlim = c(-1, 1), ylim = c(-1, 1), n = 20,
-                   sort_method = "pairwise",
                    annotate = annotate_3d("axes", linewidth = 0.8)) +
   coord_3d(panels = "none") +
   theme_void()

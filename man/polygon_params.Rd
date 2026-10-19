@@ -4,7 +4,9 @@
 \alias{polygon_params}
 \title{Polygon rendering parameters}
 \arguments{
-\item{sort_method}{Depth sorting algorithm. See \link{sorting_methods} for details.}
+\item{sort_method}{Deprecated. All 3D layers in a
+panel are now depth-sorted together, pairwise, so this has no effect. See
+\link{sorting_methods}.}
 
 \item{cull_backfaces}{Logical indicating whether to remove back-facing polygons
 from rendering. This is primarily for performance optimization but may be useful
@@ -37,7 +39,7 @@ voxels, FALSE is safe because polygons fill always be convex.}
 aesthetics like \code{colour}, \code{fill}, \code{linewidth}, \code{annotate = annotate_3d(...)}, etc.}
 }
 \description{
-Parameters controlling depth sorting, backface culling, depth scaling, and
-convexity enforcement for polygon-based 3D layers.
+Parameters controlling backface culling, depth scaling, and convexity
+enforcement for polygon-based 3D layers.
 }
 \keyword{internal}

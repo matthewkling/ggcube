@@ -7,6 +7,16 @@ screen_group <- function(x, y, depth) {
       cbind(x = x, y = y, z = depth, matrix(bb, nrow = length(x), ncol = 6, byrow = TRUE))
 }
 
+# Constraint edge list: `from` is drawn before (behind) `to`
+edges <- function(from, to, strength = 1, locked = FALSE) {
+      data.frame(from = as.integer(from), to = as.integer(to), strength = strength, locked = locked)
+}
+
+# Which side of a polygon's plane the viewer is on
+eye_side <- function(plane, eye) {
+      if (eye$persp) sign(sum(plane$normal * eye$v) - plane$offset) else sign(sum(plane$normal * eye$v))
+}
+
 test_that("polygon-segment comparison constrains a segment overlapping a polygon on screen", {
       square <- screen_group(c(0, 1, 1, 0), c(0, 0, 1, 1), c(1, 1, 1, 1))
       near <- screen_group(c(0.2, 0.8), c(0.5, 0.5), c(0, 0))
@@ -118,7 +128,7 @@ test_that("pairwise sorting orders segments and points against a plane exactly",
             ord <- unique(out$group[order(res$render_order)])
             expect_equal(sum(grepl("__split", ord)), 2 * nrow(dirs))
             pos <- setNames(seq_along(ord), ord)
-            eye_side <- ggcube:::eye_side_of_plane(pl, ggcube:::eye_in_cube_space(proj))
+            side_eye <- eye_side(pl, ggcube:::eye_in_cube_space(proj))
             plane_scr <- out[out$group == "plane", ]
 
             n_checked <- 0
@@ -128,7 +138,7 @@ test_that("pairwise sorting orders segments and points against a plane exactly",
                   dist <- plane_dist(cbind(r$.x3d, r$.y3d, r$.z3d), pl)
                   side <- sign(dist[which.max(abs(dist))])
                   n_checked <- n_checked + 1
-                  expect_equal(pos[[g]] > pos[["plane"]], side == eye_side, info = paste(g, proj$persp))
+                  expect_equal(pos[[g]] > pos[["plane"]], side == side_eye, info = paste(g, proj$persp))
             }
             expect_gt(n_checked, 30)
       }
@@ -187,29 +197,46 @@ test_that("ray_sample_order resolves disjoint primitives that straddle each othe
 
 test_that("cycle breaking only removes constraints that lie on a cycle", {
       # Locked 3-cycle among 1, 2, 3, plus a weak unlocked constraint 4 -> 5
-      delta <- matrix(NA_real_, 5, 5)
-      set_edge <- function(i, j, v) { delta[i, j] <<- v; delta[j, i] <<- -v }
-      set_edge(1, 2, 0.3); set_edge(2, 3, 0.2); set_edge(3, 1, 0.5)
-      set_edge(4, 5, 0.001)
-      locked <- !is.na(delta); locked[4:5, 4:5] <- FALSE
+      e <- rbind(edges(c(1, 2, 3), c(2, 3, 1), c(0.3, 0.2, 0.5), locked = TRUE),
+                 edges(4, 5, 0.001, locked = FALSE))
 
-      pruned <- ggcube:::break_cycles(delta, locked)
-      expect_equal(pruned[4, 5], 0.001)
-      expect_true(is.na(pruned[2, 3]))
-      expect_equal(pruned[1, 2], 0.3)
-      expect_true(ggcube:::is_acyclic((pruned > 0) & !is.na(pruned)))
+      pruned <- ggcube:::break_cycles(e, 5)
+      expect_true(any(pruned$from == 4 & pruned$to == 5))
+      expect_false(any(pruned$from == 2 & pruned$to == 3))
+      expect_true(any(pruned$from == 1 & pruned$to == 2))
+      expect_equal(nrow(pruned), 3)
+      expect_true(ggcube:::is_acyclic(5, pruned))
+      expect_false(ggcube:::is_acyclic(5, e))
+})
+
+
+test_that("cycle breaking handles separate cycles independently", {
+      # Two disjoint 3-cycles; each loses only its own weakest edge
+      e <- rbind(edges(c(1, 2, 3), c(2, 3, 1), c(0.3, 0.1, 0.5)),
+                 edges(c(4, 5, 6), c(5, 6, 4), c(0.05, 0.4, 0.2)))
+      pruned <- ggcube:::break_cycles(e, 6)
+      removed <- e[!do.call(paste, e[1:2]) %in% do.call(paste, pruned[1:2]), ]
+      expect_equal(removed$from, c(2, 4))
+      expect_equal(removed$to, c(3, 5))
 })
 
 
 test_that("strongly_connected_components groups mutually reachable nodes", {
-      adj <- matrix(FALSE, 6, 6)
-      adj[1, 2] <- adj[2, 3] <- adj[3, 1] <- TRUE        # cycle {1,2,3}
-      adj[3, 4] <- TRUE
-      adj[4, 5] <- adj[5, 4] <- TRUE                     # cycle {4,5}
-      comp <- ggcube:::strongly_connected_components(adj)
+      e <- edges(c(1, 2, 3, 3, 4, 5), c(2, 3, 1, 4, 5, 4))   # cycles {1,2,3} and {4,5}
+      comp <- ggcube:::strongly_connected_components(6, e)
       expect_length(unique(comp[1:3]), 1)
       expect_length(unique(comp[4:5]), 1)
       expect_length(unique(comp), 3)
+})
+
+
+test_that("topological sort draws the farthest available node first, ties in arrival order", {
+      # 1 must precede 2; otherwise farthest first. Nodes 3 and 4 tie in depth.
+      e <- edges(1, 2)
+      expect_equal(ggcube:::topological_sort(4, e, c(1, 5, 3, 3)), c(3, 4, 1, 2))
+      # A node freed later goes after an equally deep node already waiting
+      e <- edges(c(1, 1), c(2, 3))
+      expect_equal(ggcube:::topological_sort(4, e, c(9, 2, 2, 2)), c(1, 4, 2, 3))
 })
 
 
@@ -285,10 +312,10 @@ test_that("pairwise sorting types untyped groups by vertex count", {
       # Point layers assign primitive types only when rendering, so their
       # groups reach the sort untyped, alongside typed annotation rows
       p <- ggplot(data.frame(x = 1:3, y = 1:3, z = 1:3), aes(x, y, z)) +
-            geom_point_3d(sort_method = "pairwise", ref_lines = TRUE,
+            geom_point_3d(ref_lines = TRUE,
                           annotate = annotate_3d("point", x = 2, y = 2, z = 2.5)) +
             coord_3d()
-      expect_no_error(ggplotGrob(p))
+      expect_no_error(drawn_grob(p))
 
       d <- data.frame(x = c(0, 0, 1, 0, 1, 1), y = c(0, 0, 0, 1, 0, 1), depth = 1,
                       group = c("p", "s", "s", "g", "g", "g"))
@@ -297,54 +324,29 @@ test_that("pairwise sorting types untyped groups by vertex count", {
 })
 
 
-# Painter sorting of segments through polygons --------------------------------
+# Segments through surfaces ---------------------------------------------------
 
-painter_tile_scene <- function(seg, persp = TRUE) {
+tile_scene <- function(seg, persp = TRUE) {
       g <- expand.grid(i = 1:10, j = 1:10)
       tiles <- do.call(rbind, lapply(seq_len(nrow(g)), function(k) {
             x0 <- -1 + (g$i[k] - 1) * 0.2; y0 <- -1 + (g$j[k] - 1) * 0.2
             data.frame(x = x0 + c(0, 0.2, 0.2, 0), y = y0 + c(0, 0, 0.2, 0.2), z = 0, tile = k)
       }))
       p <- ggplot(tiles, aes(x, y, z, group = tile)) +
-            geom_polygon_3d(sort_method = "painter", annotate = seg) +
+            geom_polygon_3d(annotate = seg) +
             zlim(-1, 1) + coord_3d(persp = persp)
       b <- ggplot_build(p)
       d <- b$data[[1]]
       d$.prim[is.na(d$.prim)] <- "polygon"   # as geom_polygon_3d's draw_panel does
-      d$.sort_method <- "painter"
       b$plot$coordinates$transform(d, b$layout$panel_params[[1]])
 }
 
 
-test_that("painter sorting cuts segments mixed with polygons into pieces", {
-      seg <- annotate_3d("segment", x = 0.1, y = 0.1, z = -0.8, xend = 0.1, yend = 0.1, zend = 0.8,
-                         arrow = grid::arrow())
-      out <- painter_tile_scene(seg)
-      pieces <- out[out$.prim %in% "segment", ]
-      ids <- unique(pieces$group)
-      expect_gt(length(ids), 2)
-
-      # Arrowheads stay at the original ends
-      starts <- pieces[pieces$point_type == "start", ]
-      expect_equal(sum(starts$.seg_first), 1)
-      expect_equal(sum(starts$.seg_last), 1)
-
-      # Without polygons, segments are left whole
-      p <- ggplot(data.frame(x = 0:1, y = 0:1, z = 0:1), aes(x, y, z)) +
-            geom_point_3d(annotate = seg) + coord_3d()
-      b <- ggplot_build(p)
-      rows <- b$data[[1]][b$data[[1]]$.prim %in% "segment", ]
-      rows$.x3d <- rows$x; rows$.y3d <- rows$y; rows$.z3d <- rows$z
-      pp <- b$layout$panel_params[[1]]
-      expect_identical(subdivide_segments_for_painter(rows, pp$proj, pp$plot_bounds), rows)
-})
-
-
-test_that("with painter sorting, segments above a surface stay in front of it and those below behind", {
+test_that("segments above a surface stay in front of it and those below behind", {
       for (persp in c(TRUE, FALSE)) {
             for (zz in c(0.3, -0.3)) {
                   seg <- annotate_3d("segment", x = -0.9, y = -0.6, z = zz, xend = 0.9, yend = 0.7, zend = zz)
-                  out <- painter_tile_scene(seg, persp)
+                  out <- tile_scene(seg, persp)
                   tiles <- unique(out$group[out$.prim %in% "polygon"])
                   for (id in unique(out$group[out$.prim %in% "segment"])) {
                         r <- which(out$group == id)
@@ -361,4 +363,123 @@ test_that("with painter sorting, segments above a surface stay in front of it an
                   }
             }
       }
+})
+
+
+# Scaling ------------------------------------------------------------------------
+
+test_that("pairwise sorting compares only primitives that overlap on screen", {
+      # A grid of small separated squares facing the viewer, plus one large
+      # polygon behind part of them
+      sq <- function(cx, cy, h = 0.01) cbind(cx + c(-h, h, h, -h), cy + c(-h, -h, h, h))
+      ctr <- expand.grid(x = seq(0.05, 0.95, length.out = 20), y = seq(0.05, 0.95, length.out = 20))
+      polys <- lapply(seq_len(nrow(ctr)), function(k) sq(ctr$x[k], ctr$y[k]))
+      polys <- c(polys, list(cbind(c(0, 0.5, 0.5, 0), c(0, 0, 0.5, 0.5))))
+      d <- do.call(rbind, lapply(seq_along(polys), function(k) {
+            data.frame(x = polys[[k]][, 1], y = polys[[k]][, 2],
+                       depth = if (k == length(polys)) 2 else 1,
+                       group = paste0("g", k), .prim = "polygon")
+      }))
+      scene <- ggcube:::pw_scene(d, "depth")
+      cons <- ggcube:::pw_constraints(scene)
+
+      # Only squares overlapping the large polygon are candidates (100 of 400)
+      expect_equal(cons$n_candidates, 100)
+      expect_equal(nrow(cons$edges), 100)
+      expect_true(all(cons$edges$from == length(polys)))
+})
+
+
+test_that("pairwise sorting handles large layers", {
+      skip_on_cran()
+      set.seed(1)
+      n <- 20000
+      P <- matrix(runif(3 * n, -0.45, 0.45), ncol = 3)
+      plane <- cbind(c(-0.5, 0.5, 0.5, -0.5), c(-0.5, -0.5, 0.5, 0.5), 0)
+      scr <- project_cube(P, proj_p)
+      pts <- data.frame(x = scr$x, y = scr$y, z = scr$z, depth = scr$depth, depth_scale = scr$depth_scale,
+                        group = paste0("p", seq_len(n)), .prim = "point", point_type = NA_character_,
+                        segment_id = NA_real_, .x3d = P[, 1], .y3d = P[, 2], .z3d = P[, 3])
+      d <- rbind(scene_rows(plane, "plane", "polygon", proj_p), pts)
+
+      t <- system.time(res <- ggcube:::pw_render_order(d, "depth", proj_p, pb))[["elapsed"]]
+      expect_lt(t, 30)
+
+      # Points over the plane on screen are drawn after it exactly when they
+      # are on the viewer's side of it
+      ord <- unique(res$data$group[order(res$render_order)])
+      after <- match(pts$group, ord) > match("plane", ord)
+      pl <- ggcube:::polygon_plane(plane)
+      viewer_side <- sign(P[, 3]) == eye_side(pl, ggcube:::eye_in_cube_space(proj_p))
+      plane_scr <- d[d$group == "plane", ]
+      over <- ggcube:::points_in_polygons_cpp(pts$x, pts$y, rep(0L, n), plane_scr$x, plane_scr$y, c(0L, 4L))
+      expect_gt(sum(over), n / 2)
+      expect_equal(after[over], viewer_side[over])
+})
+
+
+test_that("overlaps with non-convex polygons are sampled inside the overlap", {
+      # A U-shaped polygon and a segment crossing both of its arms: the
+      # segment's inside pieces are separated by the notch, so the mean of
+      # their end points falls in the notch, outside the polygon
+      u <- cbind(c(0, 1, 1, 0.7, 0.7, 0.3, 0.3, 0), c(0, 0, 1, 1, 0.2, 0.2, 1, 1))
+      seg <- cbind(c(-0.1, 1.1), c(0.6, 0.6))
+      mid <- ggcube:::segment_overlap_midpoint(u, seg)
+      expect_true(ggcube:::point_in_polygon(mid[1], mid[2], u[, 1], u[, 2]))
+
+      # The same for two polygons: a bar across both arms of the U
+      bar <- cbind(c(-0.1, 1.1, 1.1, -0.1), c(0.5, 0.5, 0.7, 0.7))
+      ctr <- ggcube:::interior_point_cpp(c(0, 0.3, 0.3, 0), c(0.5, 0.5, 0.7, 0.7))
+      expect_true(ggcube:::point_in_polygon(ctr[1], ctr[2], u[, 1], u[, 2]))
+      xy <- ggcube:::intersection_centroid(cbind(x = u[, 1], y = u[, 2]), cbind(x = bar[, 1], y = bar[, 2]))
+      expect_true(ggcube:::point_in_polygon(xy[1], xy[2], u[, 1], u[, 2]))
+      expect_true(ggcube:::point_in_polygon(xy[1], xy[2], bar[, 1], bar[, 2]))
+})
+
+
+# Marker and line extents --------------------------------------------------------
+
+# Screen-only sort data: a polygon Q spanning x = 0.1 to 0.5 whose depth
+# varies linearly in x, plus points with given positions, depths, and radii
+marker_scene <- function(q_depth, pts) {
+      q <- data.frame(x = c(0.1, 0.5, 0.5, 0.1), y = c(0.4, 0.4, 0.6, 0.6),
+                      depth = c(q_depth[1], q_depth[2], q_depth[2], q_depth[1]),
+                      group = "Q", .prim = "polygon", .radius_pt = 0)
+      p <- data.frame(x = pts$x, y = 0.5, depth = pts$depth, group = pts$group,
+                      .prim = "point", .radius_pt = pts$r)
+      rbind(q, p)
+}
+drawn_groups <- function(d, panel_pt) unique(ggcube:::order_by_depth(d, panel_pt = panel_pt)$group)
+
+test_that("overlapping markers are drawn farther first, even when a constraint delays the farther", {
+      # F (far) is over Q, which is behind it there, so F must wait for Q,
+      # whose mean depth is nearer than N's; N (near) overlaps F but not Q
+      d <- marker_scene(c(-2, 3), data.frame(x = c(0.49, 0.505), depth = c(2, 1),
+                                                group = c("F", "N"), r = c(5, 1.5)))
+      expect_equal(drawn_groups(d, c(400, 400)), c("Q", "F", "N"))
+      # Without the panel size, markers are treated as points and N comes first
+      expect_equal(drawn_groups(d, NULL), c("N", "Q", "F"))
+})
+
+test_that("markers overlapping a polygon's edge are ordered against it", {
+      # P's centre is just outside Q, but its marker reaches over Q's edge,
+      # where Q is in front of it
+      d <- marker_scene(c(5, 1), data.frame(x = 0.505, depth = 2, group = "P", r = 5))
+      expect_equal(drawn_groups(d, c(400, 400)), c("P", "Q"))
+      expect_equal(drawn_groups(d, NULL), c("Q", "P"))
+})
+
+test_that("coplanar primitives of different layers are drawn in layer order", {
+      sq <- function(x0) data.frame(x = x0 + c(0, 1, 1, 0), y = c(0, 0, 1, 1), z = 0)
+      drawn_fill <- function(first, second) {
+            p <- ggplot() +
+                  geom_polygon_3d(data = sq(0), aes(x, y, z), fill = first) +
+                  geom_polygon_3d(data = sq(0.5), aes(x, y, z), fill = second) +
+                  coord_3d(light = "none")
+            polys <- find_grobs(drawn_grob(p), "polygon")
+            fills <- unname(unlist(lapply(polys, function(g) g$gp$fill)))
+            fills[fills %in% c(first, second)]
+      }
+      expect_equal(drawn_fill("red", "blue"), c("red", "blue"))
+      expect_equal(drawn_fill("blue", "red"), c("blue", "red"))
 })

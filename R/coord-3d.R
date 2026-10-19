@@ -747,7 +747,11 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                          render_cube(self, panel_params, theme, layer = "background")
                    },
 
-                   transform = function(self, data, panel_params) {
+                   # Projects data into the panel. With `sort = TRUE` (as when
+                   # called by ggplot2), also depth-sorts it as a single layer;
+                   # ggcube geoms project without sorting and are sorted
+                   # together at draw time (see R/scene.R).
+                   transform = function(self, data, panel_params, sort = TRUE) {
 
                          # Add light specs if applicable
                          data <- attach_light(data, panel_params$light)
@@ -801,14 +805,24 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                          # Backface culling and light modification
                          result <- process_backfaces(result)
 
+                         if (!sort) return(result)
+
                          # Hierarchical depth sorting
                          result <- sort_by_depth(result, proj = panel_params$proj,
                                                  plot_bounds = panel_params$plot_bounds)
+                         result <- result[setdiff(names(result), c(".x3d", ".y3d", ".z3d"))]
 
                          # convert group to integer to prevent downstream rendering errors
                          result$group <- as.integer(factor(result$group))
 
                          return(result)
+                   },
+
+                   # Merges each run of consecutive ggcube layers into one scene,
+                   # depth-sorted together when drawn
+                   draw_panel = function(self, panel, params, theme) {
+                         panel <- group_scene_layers(panel)
+                         ggproto_parent(CoordCartesian, self)$draw_panel(panel, params, theme)
                    },
 
                    render_fg = function(self, panel_params, theme) {

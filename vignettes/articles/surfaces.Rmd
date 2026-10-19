@@ -123,7 +123,7 @@ pts <- data.frame(x = runif(200, -2, 2), y = runif(200, -2, 2))
 pts$z <- with(pts, sin(x) * cos(y))
 
 ggplot(pts, aes(x, y, z = z, fill = z)) +
-  stat_surface_3d(sort_method = "pairwise") +
+  stat_surface_3d() +
   scale_fill_viridis_c() +
   coord_3d(light = "none")
 ```

@@ -528,13 +528,14 @@ geom_hull_3d <- function(mapping = NULL, data = NULL,
                          ...,
                          annotate = NULL,
                          method = "convex", radius = NULL, singular = FALSE, light = NULL,
-                         cull_backfaces = TRUE, sort_method = NULL, scale_depth = TRUE,
+                         cull_backfaces = TRUE, sort_method = deprecated(), scale_depth = TRUE,
                          inherit.aes = TRUE, show.legend = TRUE) {
+      check_sort_method(sort_method, "geom_hull_3d")
 
       layer(data = data, mapping = mapping, stat = get_proto(stat, "stat"), geom = GeomPolygon3D,
             position = position, inherit.aes = inherit.aes, show.legend = show.legend,
             params = list(annotate = annotate, method = method, radius = radius, singular = singular, light = light,
-                          cull_backfaces = cull_backfaces, sort_method = sort_method, scale_depth = scale_depth,
+                          cull_backfaces = cull_backfaces, scale_depth = scale_depth,
                           ...)
       )
 }
@@ -546,13 +547,14 @@ stat_hull_3d <- function(mapping = NULL, data = NULL,
                          position = "identity",
                          ...,
                          method = "convex", radius = NULL, singular = FALSE, light = NULL,
-                         cull_backfaces = TRUE, sort_method = NULL, scale_depth = TRUE,
+                         cull_backfaces = TRUE, sort_method = deprecated(), scale_depth = TRUE,
                          inherit.aes = TRUE, show.legend = TRUE) {
+      check_sort_method(sort_method, "stat_hull_3d")
 
       layer(data = data, mapping = mapping, stat = StatHull3D, geom = get_proto(geom, "geom"),
             position = position, inherit.aes = inherit.aes, show.legend = show.legend,
             params = list(method = method, radius = radius, singular = singular, light = light,
-                          cull_backfaces = cull_backfaces, sort_method = sort_method, scale_depth = scale_depth,
+                          cull_backfaces = cull_backfaces, scale_depth = scale_depth,
                           ...)
       )
 }

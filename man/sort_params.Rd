@@ -4,7 +4,9 @@
 \alias{sort_params}
 \title{Sorting parameters}
 \arguments{
-\item{sort_method}{Depth sorting algorithm. See \link{sorting_methods} for details.}
+\item{sort_method}{Deprecated. All 3D layers in a
+panel are now depth-sorted together, pairwise, so this has no effect. See
+\link{sorting_methods}.}
 }
 \description{
 Sorting parameters

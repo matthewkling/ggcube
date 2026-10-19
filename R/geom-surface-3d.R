@@ -13,7 +13,7 @@ GeomSurface3D <- ggproto("GeomSurface3D", GeomPolygon3D,
                          ),
 
                          extra_params = c("na.rm", "annotate", "method", "grid", "cull_backfaces",
-                                          "sort_method", "scale_depth", "force_convex"),
+                                          "scale_depth", "force_convex"),
 
                          setup_params = function(data, params) {
                                params$method <- params$method %||% "auto"

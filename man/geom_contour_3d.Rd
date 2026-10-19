@@ -16,7 +16,7 @@ geom_contour_3d(
   binwidth = NULL,
   breaks = NULL,
   cull_backfaces = FALSE,
-  sort_method = "pairwise",
+  sort_method = deprecated(),
   scale_depth = TRUE,
   force_convex = FALSE,
   light = NULL,
@@ -35,7 +35,7 @@ stat_contour_3d(
   binwidth = NULL,
   breaks = NULL,
   cull_backfaces = FALSE,
-  sort_method = "pairwise",
+  sort_method = deprecated(),
   scale_depth = TRUE,
   force_convex = FALSE,
   light = NULL,
@@ -75,7 +75,9 @@ type: FALSE for open surface-type geometries, TRUE for solid objects (hulls,
 voxels, etc. where backfaces are generally hidden unless frontfaces are transparent
 or explicitly disabled).}
 
-\item{sort_method}{Depth sorting algorithm. See \link{sorting_methods} for details.}
+\item{sort_method}{Deprecated. All 3D layers in a
+panel are now depth-sorted together, pairwise, so this has no effect. See
+\link{sorting_methods}.}
 
 \item{scale_depth}{Controls whether polygon linewidths are scaled to make closer lines
 wider and farther lines narrower, based on the mean depth of a polygon. \code{TRUE}
@@ -160,8 +162,7 @@ ggplot(mountain, aes(x, y, z, fill = after_stat(z))) +
 
 # With stat_density_3d
 ggplot(faithful, aes(eruptions, waiting)) +
-  stat_density_3d(geom = "contour_3d",
-    sort_method = "pairwise") +
+  stat_density_3d(geom = "contour_3d") +
   coord_3d()
 
 # With stat_function_3d

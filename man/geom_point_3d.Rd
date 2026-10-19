@@ -13,7 +13,7 @@ geom_point_3d(
   ...,
   annotate = NULL,
   na.rm = FALSE,
-  sort_method = "painter",
+  sort_method = deprecated(),
   scale_depth = TRUE,
   raw_points = TRUE,
   ref_lines = FALSE,
@@ -44,7 +44,7 @@ stat_point_3d(
   position = "identity",
   ...,
   na.rm = FALSE,
-  sort_method = "painter",
+  sort_method = deprecated(),
   scale_depth = TRUE,
   raw_points = TRUE,
   ref_lines = FALSE,
@@ -86,7 +86,9 @@ own geometry, so they can pass in front of and behind it correctly.}
 
 \item{na.rm}{If \code{FALSE}, missing values are removed with a warning.}
 
-\item{sort_method}{Depth sorting algorithm. See \link{sorting_methods} for details.}
+\item{sort_method}{Deprecated. All 3D layers in a
+panel are now depth-sorted together, pairwise, so this has no effect. See
+\link{sorting_methods}.}
 
 \item{scale_depth}{Controls depth-based scaling, drawing closer elements
 larger or thicker and farther ones smaller or thinner. \code{TRUE} (the default)

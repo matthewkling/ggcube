@@ -241,8 +241,8 @@ test_that("layer arrows are filled with the segment colour unless arrow.fill is 
                   aes(x, y, z, xend = xend, yend = yend, zend = zend)) +
             geom_segment_3d(colour = "#00FF00", arrow = closed, arrow.fill = "#0000FF") +
             coord_3d()
-      b <- ggplot_build(p)
-      g <- b$plot$layers[[1]]$draw_geom(b$data[[1]], b$layout)[[1]]
+      layer <- find_grobs(drawn_grob(p), "ggcube_layer")[[1]]
+      g <- find_grobs(layer, "segments")[[1]]
       expect_equal(g$gp$fill, "#0000FF")
       expect_equal(substr(g$gp$col, 1, 7), "#00FF00")
 })
@@ -254,12 +254,11 @@ test_that("an annotation's own arrow overrides the layer's, and its heads stay a
       ann <- annotate_3d("segment", x = 0.1, y = 0.1, z = -1, xend = 0.1, yend = 0.1, zend = 1,
                          colour = "red", arrow = grid::arrow(type = "closed"))
       p <- ggplot(g, aes(x, y, z)) +
-            geom_surface_3d(grid = "right2", sort_method = "pairwise", annotate = ann) + coord_3d()
+            geom_surface_3d(grid = "right2", annotate = ann) + coord_3d()
 
       b <- ggplot_build(p)
       pp <- b$layout$panel_params[[1]]
       ld <- b$data[[1]]
-      ld$.sort_method <- "pairwise"
       ld$.prim[is.na(ld$.prim)] <- "polygon"                       # as draw_panel() does
       coords <- b$plot$coordinates$transform(ld, pp)
       segs <- coords[coords$.prim %in% "segment", ]
@@ -478,7 +477,6 @@ test_that("planes are never culled as back faces", {
             ld <- b$data[[1]]
             ld <- prepare_annotations(ld, pp, ann)
             ld$.prim[is.na(ld$.prim)] <- "polygon"
-            ld$.sort_method <- "painter"
             out <- b$plot$coordinates$transform(ld, pp)
             expect_true(any(out$.ann %in% TRUE), info = paste("yaw", yaw))
       }
@@ -494,7 +492,6 @@ test_that("annotation planes are lit from the side facing the viewer", {
             pp <- b$layout$panel_params[[1]]
             ld <- prepare_annotations(b$data[[1]], pp, ann)
             ld$.prim[is.na(ld$.prim)] <- "polygon"
-            ld$.sort_method <- "painter"
             out <- b$plot$coordinates$transform(ld, pp)
             plane <- out[out$.ann %in% TRUE, ]
             expect_false(anyNA(plane$light), info = paste("yaw", yaw))
@@ -511,12 +508,11 @@ test_that("intersecting plane annotations are split along their intersection", {
       ann <- annotate_3d("plane", a = c(1, 0), b = c(0, 1), c = c(1, 1), d = c(0, 0))
       p <- ggplot(data.frame(x = c(-1, 1, 1), y = c(-1, 1, -1), z = c(-1, 1, 0), g = 1),
                   aes(x, y, z, group = g)) +
-            geom_polygon_3d(sort_method = "pairwise", annotate = ann) + coord_3d()
+            geom_polygon_3d(annotate = ann) + coord_3d()
       b <- ggplot_build(p)
       pp <- b$layout$panel_params[[1]]
       ld <- prepare_annotations(b$data[[1]], pp, ann)
       ld$.prim[is.na(ld$.prim)] <- "polygon"
-      ld$.sort_method <- "pairwise"
       out <- b$plot$coordinates$transform(ld, pp)
       # Group names are integer-coded by the coord, so count the pieces instead
       expect_gt(length(unique(out$group[out$.ann %in% TRUE])), 2)
@@ -562,10 +558,9 @@ test_that("polygon annotations expand the axis ranges and are drawn per group", 
       expect_true(8 <= max(lim$z$limits))
       fills <- function(g) {
             own <- if (inherits(g, "grob") && !is.null(g$gp$fill)) g$gp$fill else character(0)
-            kids <- if (inherits(g, "gtable")) g$grobs else if (inherits(g, "gTree")) g$children else list()
-            c(own, unlist(lapply(kids, fills)))
+            c(own, unlist(lapply(grob_kids(g), fills)))
       }
-      expect_true(any(substr(toupper(fills(ggplotGrob(p))), 1, 7) == "#FF00FF"))
+      expect_true(any(substr(toupper(fills(drawn_grob(p))), 1, 7) == "#FF00FF"))
 })
 
 
@@ -636,30 +631,24 @@ test_that("lines are clipped to the panel and don't affect the axis ranges", {
 test_that("lines and segments lying in a plane are drawn on top of it", {
       drawn_order <- function(ann, persp, yaw) {
             p <- ggplot(data.frame(x = c(-1, 1), y = c(-1, 1), z = c(-1, 1)), aes(x, y, z)) +
-                  geom_point_3d(sort_method = "pairwise", annotate = ann) +
+                  geom_point_3d(annotate = ann) +
                   coord_3d(persp = persp, yaw = yaw)
-            b <- ggplot_build(p)
-            g <- b$plot$layers[[1]]$draw_geom(b$data[[1]], b$layout)[[1]]
-            flat <- function(g) {
-                  if (inherits(g, "gTree") && !inherits(g, c("polygon", "segments"))) {
-                        unlist(lapply(g$children, flat))
-                  } else {
-                        class(g)[1]
-                  }
-            }
-            flat(g)
+            layer <- find_grobs(drawn_grob(p), "ggcube_layer")[[1]]
+            prims <- find_grobs(layer, c("polygon", "segments", "text", "points"))
+            vapply(prims, function(g) class(g)[1], character(1))
       }
       for (ann in list(annotate_3d("segment", x = -0.8, y = -0.5, z = 0, xend = 0.7, yend = 0.6, zend = 0),
                        annotate_3d("line", y = 0.2, dx = 1, dy = 0.5))) {
             for (persp in c(TRUE, FALSE)) {
                   for (yaw in c(-30, 60, 150, 240)) {
                         cl <- drawn_order(list(annotate_3d("plane", zintercept = 0), ann), persp, yaw)
+                        expect_true(any(cl == "segments") && any(cl == "polygon"))
                         expect_gt(min(which(cl == "segments")), max(which(cl == "polygon")))
                   }
             }
       }
 
-      g_plane <- list(plane = list(normal = c(0, 0, 1), offset = 0, warp = 0, planar = TRUE))
+      g_plane <- list(pts = rbind(c(-1, -1, 0), c(2, -1, 0), c(2, 2, 0), c(-1, 2, 0)))
       g_seg <- list(pts = rbind(c(0, 0, 0), c(1, 1, 0)))
       g_off <- list(pts = rbind(c(0, 0, 0), c(1, 1, 0.1)))
       expect_equal(coplanar_order(g_plane, g_seg, "polygon", "segment"), 1)
@@ -683,31 +672,25 @@ test_that("on_top is validated and recorded on text rows", {
 
 
 test_that("on_top labels are drawn after everything else, in depth order", {
-      drawn <- function(on_top, sort_method) {
+      drawn <- function(on_top) {
             ann <- list(annotate_3d("plane", zintercept = 0, alpha = 1),
                         annotate_3d("text", x = c(0, 0.5), y = c(0, 0.5), z = c(-0.5, -0.8),
                                     label = c("near", "far"), on_top = on_top))
             p <- ggplot(data.frame(x = c(-1, 1), y = c(-1, 1), z = c(-1, 1)), aes(x, y, z)) +
-                  geom_point_3d(sort_method = sort_method, annotate = ann) + coord_3d()
-            b <- ggplot_build(p)
-            g <- b$plot$layers[[1]]$draw_geom(b$data[[1]], b$layout)[[1]]
-            flat <- function(g) {
-                  if (inherits(g, "gTree") && !inherits(g, c("polygon", "segments"))) {
-                        do.call(rbind, lapply(g$children, flat))
-                  } else {
-                        data.frame(cls = class(g)[1], label = if (inherits(g, "text")) g$label else NA)
-                  }
-            }
-            flat(g)
+                  geom_point_3d(annotate = ann) + coord_3d()
+            # Only the layer's own grobs (the panel's axis furniture comes first)
+            layer <- find_grobs(drawn_grob(p), "ggcube_layer")[[1]]
+            prims <- find_grobs(layer, c("polygon", "segments", "text", "points"))
+            data.frame(cls = vapply(prims, function(g) class(g)[1], character(1)),
+                       label = vapply(prims, function(g) if (inherits(g, "text")) g$label else NA_character_,
+                                      character(1)))
       }
-      for (sm in c("pairwise", "painter")) {
-            # Labels under an opaque plane, seen from above, are drawn before it ...
-            out <- drawn(FALSE, sm)
-            expect_lt(max(which(out$cls == "text")), max(which(out$cls == "polygon")))
+      # Labels under an opaque plane, seen from above, are drawn before it ...
+      out <- drawn(FALSE)
+      expect_lt(max(which(out$cls == "text")), max(which(out$cls == "polygon")))
 
-            # ... unless they're on top, in which case they come last, far before near
-            out <- drawn(TRUE, sm)
-            expect_gt(min(which(out$cls == "text")), max(which(out$cls != "text")))
-            expect_equal(out$label[out$cls == "text"], c("far", "near"))
-      }
+      # ... unless they're on top, in which case they come last, far before near
+      out <- drawn(TRUE)
+      expect_gt(min(which(out$cls == "text")), max(which(out$cls != "text")))
+      expect_equal(out$label[out$cls == "text"], c("far", "near"))
 })

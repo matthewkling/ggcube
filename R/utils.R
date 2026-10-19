@@ -166,3 +166,26 @@ find_build_plot <- function(max_frames = 40) {
       })
       found
 }
+
+
+#' Warn that a layer's `sort_method` is deprecated
+#'
+#' All ggcube layers in a panel are depth-sorted together, pairwise, so a
+#' layer's `sort_method` has no effect.
+#'
+#' @param sort_method The layer function's `sort_method` argument.
+#' @param fn Name of the layer function.
+#' @param user_env Environment of the user's call to the layer function.
+#' @keywords internal
+#' @noRd
+check_sort_method <- function(sort_method, fn, user_env = rlang::caller_env(2)) {
+      if (lifecycle::is_present(sort_method)) {
+            lifecycle::deprecate_warn(
+                  "0.4.0", paste0(fn, "(sort_method)"),
+                  details = paste("All 3D layers in a panel are now depth-sorted together,",
+                                  "pairwise, so `sort_method` has no effect."),
+                  user_env = user_env
+            )
+      }
+      invisible()
+}

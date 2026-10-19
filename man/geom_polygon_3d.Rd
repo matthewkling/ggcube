@@ -12,7 +12,7 @@ geom_polygon_3d(
   ...,
   annotate = NULL,
   rule = "evenodd",
-  sort_method = "auto",
+  sort_method = deprecated(),
   scale_depth = TRUE,
   force_convex = FALSE,
   cull_backfaces = FALSE,
@@ -45,7 +45,9 @@ own geometry, so they can pass in front of and behind it correctly.}
 being drawn (using the \code{subgroup} aesthetic) this argument defines how the
 hole coordinates are interpreted. See \code{\link[ggplot2:geom_polygon]{ggplot2::geom_polygon()}} for reference.}
 
-\item{sort_method}{Depth sorting algorithm. See \link{sorting_methods} for details.}
+\item{sort_method}{Deprecated. All 3D layers in a
+panel are now depth-sorted together, pairwise, so this has no effect. See
+\link{sorting_methods}.}
 
 \item{scale_depth}{Controls whether polygon linewidths are scaled to make closer lines
 wider and farther lines narrower, based on the mean depth of a polygon. \code{TRUE}
@@ -126,7 +128,8 @@ ggplot(triangles, aes(x, y, z, fill = shape)) +
   geom_polygon_3d(color = "black") +
   coord_3d()
 
-# Use `sort_method` to choose between depth sorting algorithms
+# Overlapping polygons are drawn in the correct order, even where no
+# ordering by average depth would be correct
 d <- data.frame(group = rep(letters[1:3], each = 4),
                 x = c(1, 1, 2, 2,   1, 1, 3, 3,   2, 2, 3, 3),
                 y = rep(c(1, 2, 2, 1), 3),
@@ -135,13 +138,6 @@ p <- ggplot(d, aes(x, y, z, group = group, fill = group)) +
       coord_3d(pitch = 50, roll = 20, yaw = 0,
                scales = "fixed", light = "none") +
       theme_light()
-
-# fast, but rendering order is incorrect in this particular example
-p + geom_polygon_3d(color = "black", linewidth = 1, alpha = .75,
-      sort_method = "painter")
-
-# correct rendering order (but slower for large data sets)
-p + geom_polygon_3d(color = "black", linewidth = 1, alpha = .75,
-      sort_method = "pairwise")
+p + geom_polygon_3d(color = "black", linewidth = 1, alpha = .75)
 
 }

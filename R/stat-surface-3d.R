@@ -142,8 +142,7 @@ StatSurface3D <- ggproto("StatSurface3D", Stat,
 #' # elevation contours with geom_contour_3d
 #' ggplot(mountain, aes(x, y, z, fill = z)) +
 #'   stat_surface_3d(geom = "contour_3d", light = "none",
-#'                   bins = 25, sort_method = "pairwise",
-#'                   color = "black") +
+#'                   bins = 25, color = "black") +
 #'       coord_3d(ratio = c(1, 1.5, .75), yaw = 45) +
 #'       scale_fill_viridis_c(option = "B")
 #'
@@ -155,7 +154,7 @@ StatSurface3D <- ggproto("StatSurface3D", Stat,
 #' pts$z <- with(pts, sin(x) * cos(y))
 #'
 #' ggplot(pts, aes(x, y, z = z, fill = z)) +
-#'   stat_surface_3d(sort_method = "pairwise") +
+#'   stat_surface_3d() +
 #'   scale_fill_viridis_c() +
 #'   coord_3d(light = "none")
 #'
@@ -205,13 +204,14 @@ geom_surface_3d <- function(mapping = NULL, data = NULL,
                             method = "auto",
                             grid = NULL,
                             cull_backfaces = FALSE,
-                            sort_method = "auto",
+                            sort_method = deprecated(),
                             scale_depth = TRUE,
                             force_convex = TRUE,
                             light = NULL,
                             na.rm = FALSE,
                             show.legend = NA,
                             inherit.aes = TRUE) {
+      check_sort_method(sort_method, "geom_surface_3d")
 
       layer(
             data = data,
@@ -226,7 +226,6 @@ geom_surface_3d <- function(mapping = NULL, data = NULL,
                   method = method,
                   grid = grid,
                   cull_backfaces = cull_backfaces,
-                  sort_method = sort_method,
                   scale_depth = scale_depth,
                   force_convex = force_convex,
                   light = light,

@@ -75,17 +75,17 @@ geom_path_3d <- function(mapping = NULL, data = NULL,
                          stat = StatPath3D, position = "identity",
                          ...,
                          annotate = NULL,
-                         sort_method = "painter",
+                         sort_method = deprecated(),
                          scale_depth = TRUE, arrow = NULL, arrow.fill = NULL,
                          lineend = "butt",
                          na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
+      check_sort_method(sort_method, "geom_path_3d")
 
       layer(data = data, mapping = mapping, stat = get_proto(stat, "stat"), geom = GeomSegment3D,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(
                   annotate = annotate,
                   na.rm = na.rm,
-                  sort_method = sort_method,
                   scale_depth = scale_depth,
                   arrow = arrow,
                   arrow.fill = arrow.fill,
@@ -100,16 +100,16 @@ geom_path_3d <- function(mapping = NULL, data = NULL,
 stat_path_3d <- function(mapping = NULL, data = NULL,
                          geom = GeomSegment3D, position = "identity",
                          ...,
-                         sort_method = "painter",
+                         sort_method = deprecated(),
                          scale_depth = TRUE, arrow = NULL, arrow.fill = NULL,
                          lineend = "butt",
                          na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
+      check_sort_method(sort_method, "stat_path_3d")
 
       layer(data = data, mapping = mapping, stat = StatPath3D, geom = get_proto(geom, "geom"),
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(
                   na.rm = na.rm,
-                  sort_method = sort_method,
                   scale_depth = scale_depth,
                   arrow = arrow,
                   arrow.fill = arrow.fill,

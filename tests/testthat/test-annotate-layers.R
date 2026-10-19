@@ -42,8 +42,7 @@ grob_uses_colour <- function(g, colour) {
           any(substr(toupper(g$gp$col), 1, 7) %in% toupper(colour))) {
             return(TRUE)
       }
-      kids <- if (inherits(g, "gtable")) g$grobs else if (inherits(g, "gTree")) g$children else list()
-      any(vapply(kids, grob_uses_colour, logical(1), colour = colour))
+      any(vapply(grob_kids(g), grob_uses_colour, logical(1), colour = colour))
 }
 
 
@@ -88,7 +87,7 @@ test_that("every layer draws annotations of each type", {
                   }
                   warnings <- character(0)
                   g <- withCallingHandlers(
-                        ggplotGrob(p),
+                        drawn_grob(p),
                         warning = function(w) {
                               warnings <<- c(warnings, conditionMessage(w))
                               invokeRestart("muffleWarning")
@@ -109,7 +108,7 @@ test_that("billboard text labels are sized by their own depth", {
       b <- ggplot_build(p)
       pp <- b$layout$panel_params[[1]]
       g <- b$plot$layers[[1]]$geom$draw_panel(b$data[[1]], pp, b$plot$coordinates)
-      kids <- if (inherits(g, "gTree")) g$children else list(g)
+      kids <- find_grobs(drawn_grob(g), "text")
       drawn <- data.frame(x = vapply(kids, function(k) as.numeric(k$x), 1),
                           y = vapply(kids, function(k) as.numeric(k$y), 1),
                           fontsize = vapply(kids, function(k) k$gp$fontsize, 1))
@@ -140,5 +139,5 @@ test_that("named and numeric font faces can be mixed across a layer and its anno
                   annotate_3d("text", x = 1.5, y = 1.5, z = 1.5, label = "c", fontface = "bold"),
                   annotate_3d("axes"))) +
             coord_3d()
-      expect_no_error(ggplotGrob(p))
+      expect_no_error(drawn_grob(p))
 })

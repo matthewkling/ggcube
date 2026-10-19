@@ -10,7 +10,6 @@ GeomPoint3D <- ggproto("GeomPoint3D", GeomPoint,
 
                        draw_panel = function(data, panel_params, coord, na.rm = FALSE,
                                              annotate = NULL,
-                                             sort_method = "painter",
                                              scale_depth = TRUE,
                                              ref_line_colour = NULL, ref_line_linewidth = 0.25, ref_line_linetype = NULL, ref_line_alpha = NULL,
                                              ref_point_colour = NULL, ref_point_fill = NULL, ref_point_alpha = NULL, ref_point_size = NULL, ref_point_stroke = NULL, ref_point_shape = NULL) {
@@ -35,53 +34,49 @@ GeomPoint3D <- ggproto("GeomPoint3D", GeomPoint,
 
                              # Point-specific preprocessing
                              data$ref_circle_radius <- data$ref_circle_radius / 100
-                             sort_method <- match.arg(sort_method, c("auto", "pairwise", "painter"))
-                             data$.sort_method <- sort_method
-                             coords <- coord$transform(data, panel_params)
+                             coords <- coord$transform(data, panel_params, sort = FALSE)
 
-                             # Scale points, strokes, linewidths by depth
-                             if(!"linewidth" %in% names(coords)) coords$linewidth <- 0.5
-                             coords <- apply_depth_scaling(coords, scale_depth)
+                             finish <- function(coords) {
+                                   # Scale points, strokes, linewidths by depth
+                                   if(!"linewidth" %in% names(coords)) coords$linewidth <- 0.5
+                                   coords <- apply_depth_scaling(coords, scale_depth)
 
-                             if (nrow(coords) == 0) {
-                                   return(grid::nullGrob())
-                             }
-
-                             # Save annotation .prim values (resolve_point_aesthetics
-                             # overwrites .prim based on element_type)
-                             ann_prim <- NULL
-                             if (".ann" %in% names(coords)) {
-                                   ann_idx <- which(!is.na(coords$.ann) & coords$.ann)
-                                   if (length(ann_idx) > 0) {
-                                         ann_prim <- coords$.prim[ann_idx]
+                                   # Save annotation .prim values (resolve_point_aesthetics
+                                   # overwrites .prim based on element_type)
+                                   ann_prim <- NULL
+                                   if (".ann" %in% names(coords)) {
+                                         ann_idx <- which(!is.na(coords$.ann) & coords$.ann)
+                                         if (length(ann_idx) > 0) {
+                                               ann_prim <- coords$.prim[ann_idx]
+                                         }
                                    }
+
+                                   # Resolve ref_* styling and assign .prim types
+                                   coords <- resolve_point_aesthetics(
+                                         coords,
+                                         ref_line_colour = ref_line_colour,
+                                         ref_line_linewidth = ref_line_linewidth,
+                                         ref_line_linetype = ref_line_linetype,
+                                         ref_line_alpha = ref_line_alpha,
+                                         ref_point_colour = ref_point_colour,
+                                         ref_point_fill = ref_point_fill,
+                                         ref_point_alpha = ref_point_alpha,
+                                         ref_point_size = ref_point_size,
+                                         ref_point_stroke = ref_point_stroke,
+                                         ref_point_shape = ref_point_shape
+                                   )
+
+                                   # Restore annotation .prim values
+                                   if (!is.null(ann_prim)) {
+                                         coords$.prim[ann_idx] <- ann_prim
+                                   }
+
+                                   # Apply annotate_3d styles (overrides resolve_point_aesthetics
+                                   # for annotation rows only)
+                                   apply_annotation_styles(coords)
                              }
 
-                             # Resolve ref_* styling and assign .prim types
-                             coords <- resolve_point_aesthetics(
-                                   coords,
-                                   ref_line_colour = ref_line_colour,
-                                   ref_line_linewidth = ref_line_linewidth,
-                                   ref_line_linetype = ref_line_linetype,
-                                   ref_line_alpha = ref_line_alpha,
-                                   ref_point_colour = ref_point_colour,
-                                   ref_point_fill = ref_point_fill,
-                                   ref_point_alpha = ref_point_alpha,
-                                   ref_point_size = ref_point_size,
-                                   ref_point_stroke = ref_point_stroke,
-                                   ref_point_shape = ref_point_shape
-                             )
-
-                             # Restore annotation .prim values
-                             if (!is.null(ann_prim)) {
-                                   coords$.prim[ann_idx] <- ann_prim
-                             }
-
-                             # Apply annotate_3d styles (overrides resolve_point_aesthetics
-                             # for annotation rows only)
-                             coords <- apply_annotation_styles(coords)
-
-                             render_mixed_grobs(coords)
+                             layer_scene_grob(coords, panel_params, finish)
                        }
 )
 
@@ -498,7 +493,7 @@ geom_point_3d <- function(mapping = NULL, data = NULL,
                           ...,
                           annotate = NULL,
                           na.rm = FALSE,
-                          sort_method = "painter",
+                          sort_method = deprecated(),
                           scale_depth = TRUE,
                           raw_points = TRUE,
                           ref_lines = FALSE,
@@ -518,6 +513,7 @@ geom_point_3d <- function(mapping = NULL, data = NULL,
                           ref_point_shape = NULL,
                           inherit.aes = TRUE,
                           show.legend = NA) {
+      check_sort_method(sort_method, "geom_point_3d")
 
       # Handle both American and British spellings
       if (!is.null(ref_line_colour) && is.null(ref_line_color)) {
@@ -533,7 +529,6 @@ geom_point_3d <- function(mapping = NULL, data = NULL,
             params = list(
                   annotate = annotate,
                   na.rm = na.rm,
-                  sort_method = sort_method,
                   scale_depth = scale_depth,
                   raw_points = raw_points,
                   ref_lines = ref_lines,
@@ -562,7 +557,7 @@ stat_point_3d <- function(mapping = NULL, data = NULL,
                           geom = GeomPoint3D, position = "identity",
                           ...,
                           na.rm = FALSE,
-                          sort_method = "painter",
+                          sort_method = deprecated(),
                           scale_depth = TRUE,
                           raw_points = TRUE,
                           ref_lines = FALSE,
@@ -582,6 +577,7 @@ stat_point_3d <- function(mapping = NULL, data = NULL,
                           ref_point_shape = NULL,
                           inherit.aes = TRUE,
                           show.legend = NA) {
+      check_sort_method(sort_method, "stat_point_3d")
 
       # Handle both American and British spellings
       if (!is.null(ref_line_colour) && is.null(ref_line_color)) {
@@ -596,7 +592,6 @@ stat_point_3d <- function(mapping = NULL, data = NULL,
             position = position,  show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(
                   na.rm = na.rm,
-                  sort_method = sort_method,
                   scale_depth = scale_depth,
                   raw_points = raw_points,
                   ref_lines = ref_lines,

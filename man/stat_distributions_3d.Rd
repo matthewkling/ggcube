@@ -23,7 +23,7 @@ stat_distributions_3d(
   base = 0,
   light = NULL,
   cull_backfaces = FALSE,
-  sort_method = NULL,
+  sort_method = deprecated(),
   scale_depth = TRUE,
   force_convex = FALSE,
   na.rm = FALSE,
@@ -50,7 +50,7 @@ geom_distributions_3d(
   base = 0,
   light = NULL,
   cull_backfaces = FALSE,
-  sort_method = NULL,
+  sort_method = deprecated(),
   scale_depth = TRUE,
   force_convex = FALSE,
   na.rm = FALSE,
@@ -137,7 +137,9 @@ type: FALSE for open surface-type geometries, TRUE for solid objects (hulls,
 voxels, etc. where backfaces are generally hidden unless frontfaces are transparent
 or explicitly disabled).}
 
-\item{sort_method}{Depth sorting algorithm. See \link{sorting_methods} for details.}
+\item{sort_method}{Deprecated. All 3D layers in a
+panel are now depth-sorted together, pairwise, so this has no effect. See
+\link{sorting_methods}.}
 
 \item{scale_depth}{Controls whether polygon linewidths are scaled to make closer lines
 wider and farther lines narrower, based on the mean depth of a polygon. \code{TRUE}

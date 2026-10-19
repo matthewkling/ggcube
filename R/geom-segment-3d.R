@@ -58,17 +58,17 @@ geom_segment_3d <- function(mapping = NULL, data = NULL,
                             stat = StatSegment3D, position = "identity",
                             ...,
                             annotate = NULL,
-                            sort_method = "painter",
+                            sort_method = deprecated(),
                             scale_depth = TRUE, arrow = NULL, arrow.fill = NULL,
                             lineend = "butt",
                             na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
+      check_sort_method(sort_method, "geom_segment_3d")
 
       layer(data = data, mapping = mapping, stat = get_proto(stat, "stat"), geom = GeomSegment3D,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(
                   annotate = annotate,
                   na.rm = na.rm,
-                  sort_method = sort_method,
                   scale_depth = scale_depth,
                   arrow = arrow,
                   arrow.fill = arrow.fill,
@@ -83,16 +83,16 @@ geom_segment_3d <- function(mapping = NULL, data = NULL,
 stat_segment_3d <- function(mapping = NULL, data = NULL,
                             geom = GeomSegment3D, position = "identity",
                             ...,
-                            sort_method = "painter",
+                            sort_method = deprecated(),
                             scale_depth = TRUE, arrow = NULL, arrow.fill = NULL,
                             lineend = "butt",
                             na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
+      check_sort_method(sort_method, "stat_segment_3d")
 
       layer(data = data, mapping = mapping, stat = StatSegment3D, geom = get_proto(geom, "geom"),
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(
                   na.rm = na.rm,
-                  sort_method = sort_method,
                   scale_depth = scale_depth,
                   arrow = arrow,
                   arrow.fill = arrow.fill,
@@ -225,7 +225,6 @@ GeomSegment3D <- ggproto("GeomSegment3D", Geom,
 
                          draw_panel = function(data, panel_params, coord,
                                                annotate = NULL,
-                                               sort_method = "painter",
                                                scale_depth = TRUE,
                                                arrow = NULL, arrow.fill = NULL,
                                                lineend = "butt", na.rm = FALSE) {
@@ -238,24 +237,16 @@ GeomSegment3D <- ggproto("GeomSegment3D", Geom,
 
                                data <- prepare_annotations(data, panel_params, annotate)
 
-                               sort_method <- match.arg(sort_method, c("auto", "pairwise", "painter"))
-                               data$.sort_method <- sort_method
 
-                               # Transform all points together (handles depth sorting)
-                               coords <- coord$transform(data, panel_params)
+                               coords <- coord$transform(data, panel_params, sort = FALSE)
 
-                               # Apply annotate_3d styles
-                               coords <- apply_annotation_styles(coords)
-
-                               # Apply depth scaling to linewidth
-                               coords <- apply_depth_scaling(coords, scale_depth)
-
-                               if (nrow(coords) == 0) {
-                                     return(grid::nullGrob())
+                               finish <- function(coords) {
+                                     coords <- apply_annotation_styles(coords)
+                                     apply_depth_scaling(coords, scale_depth)
                                }
 
-                               render_mixed_grobs(coords, arrow = arrow, arrow.fill = arrow.fill,
-                                                  lineend = lineend)
+                               layer_scene_grob(coords, panel_params, finish,
+                                                list(arrow = arrow, arrow.fill = arrow.fill, lineend = lineend))
                          },
 
                          draw_key = draw_key_path

@@ -514,16 +514,17 @@ geom_bar_3d <- function(mapping = NULL, data = NULL,
                         bins = 10, binwidth = NULL, drop = TRUE,
                         width = 1.0, faces = "all",
                         light = NULL,
-                        cull_backfaces = TRUE, sort_method = NULL,
+                        cull_backfaces = TRUE, sort_method = deprecated(),
                         scale_depth = TRUE, force_convex = FALSE,
                         na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
+      check_sort_method(sort_method, "geom_bar_3d")
 
       layer(data = data, mapping = mapping, stat = get_proto(stat, "stat"), geom = GeomPolygon3D,
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(annotate = annotate, na.rm = na.rm, bins = bins, binwidth = binwidth, drop = drop,
                           width = width, faces = faces, light = light,
                           force_convex = force_convex, cull_backfaces = cull_backfaces,
-                          sort_method = sort_method, scale_depth = scale_depth,
+                          scale_depth = scale_depth,
                           ...)
       )
 }
@@ -538,16 +539,17 @@ stat_bar_3d <- function(mapping = NULL, data = NULL,
                         bins = 10, binwidth = NULL, drop = TRUE,
                         width = 1.0, faces = "all",
                         light = NULL,
-                        cull_backfaces = TRUE, sort_method = NULL,
+                        cull_backfaces = TRUE, sort_method = deprecated(),
                         scale_depth = TRUE, force_convex = FALSE,
                         na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
+      check_sort_method(sort_method, "stat_bar_3d")
 
       layer(data = data, mapping = mapping, stat = StatBar3D, geom = get_proto(geom, "geom"),
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(na.rm = na.rm, bins = bins, binwidth = binwidth, drop = drop,
                           width = width, faces = faces, light = light,
                           force_convex = force_convex, cull_backfaces = cull_backfaces,
-                          sort_method = sort_method, scale_depth = scale_depth,
+                          scale_depth = scale_depth,
                           ...)
       )
 }

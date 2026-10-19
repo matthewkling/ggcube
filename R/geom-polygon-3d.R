@@ -15,7 +15,6 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                          },
 
                          draw_panel = function(data, panel_params, coord,
-                                               sort_method = "auto",
                                                scale_depth = TRUE,
                                                force_convex = FALSE,
                                                rule = "evenodd",
@@ -33,68 +32,64 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                                data <- prepare_annotations(data, panel_params, annotate)
 
                                # Transform data
-                               sort_method <- match.arg(sort_method, c("auto", "pairwise", "painter"))
-                               data$.sort_method <- sort_method
                                if (!".prim" %in% names(data)) {
                                      data$.prim <- "polygon"
                                } else {
                                      data$.prim[is.na(data$.prim)] <- "polygon"
                                }
-                               coords <- coord$transform(data, panel_params)
+                               coords <- coord$transform(data, panel_params, sort = FALSE)
 
-                               # Enforce convexity if requested (polygons only)
-                               coords <- drop_nonconvex_vertices(coords, force_convex)
+                               finish <- function(coords) {
+                                     # Enforce convexity if requested (polygons only)
+                                     coords <- drop_nonconvex_vertices(coords, force_convex)
 
-                               # Apply smooth overlay point styling (post-transform, pre-depth-scale).
-                               # Values come from geom_smooth_3d point.* params.
-                               # Only applied when params are non-NULL (i.e. when smooth overlay
-                               # is active). Annotation points are styled separately via
-                               # apply_annotation_styles().
-                               if (".prim" %in% names(coords) && any(coords$.prim == "point", na.rm = TRUE)) {
-                                     pt_mask <- coords$.prim == "point" & !is.na(coords$.prim)
+                                     # Apply smooth overlay point styling (post-transform, pre-depth-scale).
+                                     # Values come from geom_smooth_3d point.* params.
+                                     # Only applied when params are non-NULL (i.e. when smooth overlay
+                                     # is active). Annotation points are styled separately via
+                                     # apply_annotation_styles().
+                                     if (".prim" %in% names(coords) && any(coords$.prim == "point", na.rm = TRUE)) {
+                                           pt_mask <- coords$.prim == "point" & !is.na(coords$.prim)
 
-                                     # Initialize point-specific columns if they don't exist
-                                     for (col in c("size", "shape", "stroke")) {
-                                           if (!col %in% names(coords)) coords[[col]] <- NA_real_
+                                           # Initialize point-specific columns if they don't exist
+                                           for (col in c("size", "shape", "stroke")) {
+                                                 if (!col %in% names(coords)) coords[[col]] <- NA_real_
+                                           }
+
+                                           if (!is.null(point.colour)) coords$colour[pt_mask] <- point.colour
+                                           if (!is.null(point.fill))   coords$fill[pt_mask]   <- point.fill
+                                           if (!is.null(point.size))   coords$size[pt_mask]   <- point.size
+                                           if (!is.null(point.shape))  coords$shape[pt_mask]  <- point.shape
+                                           if (!is.null(point.alpha))  coords$alpha[pt_mask]  <- point.alpha
+                                           if (!is.null(point.stroke)) coords$stroke[pt_mask] <- point.stroke
                                      }
 
-                                     if (!is.null(point.colour)) coords$colour[pt_mask] <- point.colour
-                                     if (!is.null(point.fill))   coords$fill[pt_mask]   <- point.fill
-                                     if (!is.null(point.size))   coords$size[pt_mask]   <- point.size
-                                     if (!is.null(point.shape))  coords$shape[pt_mask]  <- point.shape
-                                     if (!is.null(point.alpha))  coords$alpha[pt_mask]  <- point.alpha
-                                     if (!is.null(point.stroke)) coords$stroke[pt_mask] <- point.stroke
+                                     # Apply smooth overlay segment styling (residual lines)
+                                     if (".prim" %in% names(coords) && any(coords$.prim == "segment", na.rm = TRUE)) {
+                                           seg_mask <- coords$.prim == "segment" & !is.na(coords$.prim)
+
+                                           if (!is.null(residual.colour))    coords$colour[seg_mask]    <- residual.colour
+                                           if (!is.null(residual.alpha))     coords$alpha[seg_mask]     <- residual.alpha
+                                           if (!is.null(residual.linewidth)) coords$linewidth[seg_mask] <- residual.linewidth
+                                           if (!is.null(residual.linetype))  coords$linetype[seg_mask]  <- residual.linetype
+                                     }
+
+                                     # Apply annotate_3d styles (overrides blanket smooth overlay styling above for annotate_3d rows only)
+                                     coords <- apply_annotation_styles(coords)
+
+                                     # Scale linewidths/sizes by depth
+                                     coords <- apply_depth_scaling(coords, scale_depth)
+
+                                     # Apply light blending to colors
+                                     blend_light(coords)
                                }
-
-                               # Apply smooth overlay segment styling (residual lines)
-                               if (".prim" %in% names(coords) && any(coords$.prim == "segment", na.rm = TRUE)) {
-                                     seg_mask <- coords$.prim == "segment" & !is.na(coords$.prim)
-
-                                     if (!is.null(residual.colour))    coords$colour[seg_mask]    <- residual.colour
-                                     if (!is.null(residual.alpha))     coords$alpha[seg_mask]     <- residual.alpha
-                                     if (!is.null(residual.linewidth)) coords$linewidth[seg_mask] <- residual.linewidth
-                                     if (!is.null(residual.linetype))  coords$linetype[seg_mask]  <- residual.linetype
-                               }
-
-                               # Apply annotate_3d styles (overrides blanket smooth overlay styling above for annotate_3d rows only)
-                               coords <- apply_annotation_styles(coords)
-
-                               # Scale linewidths/sizes by depth
-                               coords <- apply_depth_scaling(coords, scale_depth)
-
-                               # Apply light blending to colors
-                               coords <- blend_light(coords)
 
                                if (!"group" %in% names(coords)) {
                                      warning("No group column found in polygon data")
                                      return(grid::nullGrob())
                                }
 
-                               if (nrow(coords) == 0) {
-                                     return(grid::nullGrob())
-                               }
-
-                               render_mixed_grobs(coords, rule = rule)
+                               layer_scene_grob(coords, panel_params, finish, list(rule = rule))
                          },
 
                          draw_key = draw_key_polygon
@@ -152,7 +147,8 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
 #'   geom_polygon_3d(color = "black") +
 #'   coord_3d()
 #'
-#' # Use `sort_method` to choose between depth sorting algorithms
+#' # Overlapping polygons are drawn in the correct order, even where no
+#' # ordering by average depth would be correct
 #' d <- data.frame(group = rep(letters[1:3], each = 4),
 #'                 x = c(1, 1, 2, 2,   1, 1, 3, 3,   2, 2, 3, 3),
 #'                 y = rep(c(1, 2, 2, 1), 3),
@@ -161,14 +157,7 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
 #'       coord_3d(pitch = 50, roll = 20, yaw = 0,
 #'                scales = "fixed", light = "none") +
 #'       theme_light()
-#'
-#' # fast, but rendering order is incorrect in this particular example
-#' p + geom_polygon_3d(color = "black", linewidth = 1, alpha = .75,
-#'       sort_method = "painter")
-#'
-#' # correct rendering order (but slower for large data sets)
-#' p + geom_polygon_3d(color = "black", linewidth = 1, alpha = .75,
-#'       sort_method = "pairwise")
+#' p + geom_polygon_3d(color = "black", linewidth = 1, alpha = .75)
 #'
 #' @return A `Layer` object that can be added to a ggplot.
 #' @export
@@ -177,16 +166,16 @@ geom_polygon_3d <- function(mapping = NULL, data = NULL, stat = StatIdentity3D,
                             ...,
                             annotate = NULL,
                             rule = "evenodd",
-                            sort_method = "auto", scale_depth = TRUE, force_convex = FALSE,
+                            sort_method = deprecated(), scale_depth = TRUE, force_convex = FALSE,
                             cull_backfaces = FALSE,
                             light = NULL,
                             na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
+      check_sort_method(sort_method, "geom_polygon_3d")
 
       layer(
             geom = GeomPolygon3D, mapping = mapping, data = data, stat = get_proto(stat, "stat"),
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(annotate = annotate, rule = rule,
-                          sort_method = sort_method,
                           scale_depth = scale_depth,
                           force_convex = force_convex,
                           cull_backfaces = cull_backfaces,

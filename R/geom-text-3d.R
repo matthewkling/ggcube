@@ -960,13 +960,14 @@ GeomText3DBillboard <- ggproto("GeomText3DBillboard", Geom,
                                      data$group <- as.character(data$group)
                                      data$group[!is_ann] <- sprintf("text__%08d", seq_len(sum(!is_ann)))
 
-                                     # Transform through coord (3D -> 2D projection), sorted back to front
-                                     coords <- coord$transform(data, panel_params)
+                                     coords <- coord$transform(data, panel_params, sort = FALSE)
 
-                                     coords <- apply_annotation_styles(coords)
-                                     coords <- apply_depth_scaling(coords, scale_depth)
+                                     finish <- function(coords) {
+                                           coords <- apply_annotation_styles(coords)
+                                           apply_depth_scaling(coords, scale_depth)
+                                     }
 
-                                     render_mixed_grobs(coords)
+                                     layer_scene_grob(coords, panel_params, finish)
                                },
 
                                draw_key = ggplot2::draw_key_text
@@ -1272,7 +1273,6 @@ geom_text_3d <- function(mapping = NULL, data = NULL,
                         spacing = spacing,
                         tolerance = tolerance,
                         scale_depth = scale_depth,
-                        sort_method = "pairwise",
                         force_convex = FALSE,
                         na.rm = na.rm,
                         ...
@@ -1394,7 +1394,6 @@ stat_text_3d <- function(mapping = NULL, data = NULL,
                         spacing = spacing,
                         tolerance = tolerance,
                         scale_depth = scale_depth,
-                        sort_method = "pairwise",
                         force_convex = FALSE,
                         na.rm = na.rm,
                         ...
