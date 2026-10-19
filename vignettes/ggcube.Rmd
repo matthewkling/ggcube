@@ -286,21 +286,21 @@ article.
 
 ## Annotations
 
-`annotate_3d()` adds reference geometry --- points, text labels, segments, axis lines,
-or planes --- to any 3D layer. Unlike adding a separate layer, annotations are embedded within
-the host layer so they participate in the same depth sorting:
+`annotate_3d()` adds reference geometry --- points, text labels, segments, polygons,
+axes, reference lines, or planes --- at positions given as parameters, like ggplot2's
+`annotate()`. All 3D layers in a panel are depth-sorted together, so annotations pass in
+front of and behind the plot's other geometry correctly. Planes, reference lines, and axes
+are also available as the layer functions `geom_plane_3d()`, `geom_refline_3d()`, and
+`geom_axes_3d()`.
 
 ```{r annotate, eval = FALSE}
 summit <- filter(mountain, z == max(z))
 ggplot(mountain, aes(x, y, z)) +
-      geom_contour_3d(
-            annotate = list(
-                  annotate_3d("plane", a = 0, b = 1, c = 0, d = .5, fill = "blue", alpha = .25),
-                  annotate_3d("point", x = summit$x, y = summit$y, z = summit$z, color = "red"),
-                  annotate_3d("text", x = summit$x, y = summit$y, z = summit$z, color = "red",
-                              label = "Summit", fontface = "bold", vjust = -1)
-            ), fill = "black"
-      ) +
+      geom_contour_3d(fill = "black") +
+      annotate_3d("plane", yintercept = .5, fill = "blue", alpha = .25) +
+      annotate_3d("point", x = summit$x, y = summit$y, z = summit$z, color = "red") +
+      annotate_3d("text", x = summit$x, y = summit$y, z = summit$z, color = "red",
+                  label = "Summit", fontface = "bold", vjust = -1) +
       coord_3d(ratio = c(2, 3, 1.5), light = "none")
 ```
 

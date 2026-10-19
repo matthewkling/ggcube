@@ -273,7 +273,7 @@ geom_col_3d <- function(mapping = NULL, data = NULL,
                         stat = StatCol3D,
                         position = "identity",
                         ...,
-                        annotate = NULL,
+                        annotate = deprecated(),
                         width = 1.0, faces = "all", zmin = NULL,
                         light = NULL,
                         cull_backfaces = TRUE, sort_method = deprecated(),
@@ -281,13 +281,14 @@ geom_col_3d <- function(mapping = NULL, data = NULL,
                         na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
       check_sort_method(sort_method, "geom_col_3d")
 
-      layer(data = data, mapping = mapping, stat = get_proto(stat, "stat"), geom = GeomPolygon3D,
-            position = position, show.legend = show.legend, inherit.aes = inherit.aes,
-            params = list(annotate = annotate, na.rm = na.rm, width = width, faces = faces, light = light, zmin = zmin,
-                          force_convex = force_convex, cull_backfaces = cull_backfaces,
-                          scale_depth = scale_depth,
-                          ...)
+      out <- layer(data = data, mapping = mapping, stat = get_proto(stat, "stat"), geom = GeomPolygon3D,
+                   position = position, show.legend = show.legend, inherit.aes = inherit.aes,
+                   params = list(na.rm = na.rm, width = width, faces = faces, light = light, zmin = zmin,
+                                 force_convex = force_convex, cull_backfaces = cull_backfaces,
+                                 scale_depth = scale_depth,
+                                 ...)
       )
+      with_annotations(out, annotate, "geom_col_3d")
 }
 
 

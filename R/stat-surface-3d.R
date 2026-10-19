@@ -200,7 +200,7 @@ stat_surface_3d <- function(mapping = NULL, data = NULL,
 geom_surface_3d <- function(mapping = NULL, data = NULL,
                             stat = "surface_3d", position = "identity",
                             ...,
-                            annotate = NULL,
+                            annotate = deprecated(),
                             method = "auto",
                             grid = NULL,
                             cull_backfaces = FALSE,
@@ -213,7 +213,7 @@ geom_surface_3d <- function(mapping = NULL, data = NULL,
                             inherit.aes = TRUE) {
       check_sort_method(sort_method, "geom_surface_3d")
 
-      layer(
+      out <- layer(
             data = data,
             mapping = mapping,
             stat = get_proto(stat, "stat"),
@@ -222,7 +222,6 @@ geom_surface_3d <- function(mapping = NULL, data = NULL,
             show.legend = show.legend,
             inherit.aes = inherit.aes,
             params = list(
-                  annotate = annotate,
                   method = method,
                   grid = grid,
                   cull_backfaces = cull_backfaces,
@@ -233,4 +232,5 @@ geom_surface_3d <- function(mapping = NULL, data = NULL,
                   ...
             )
       )
+      with_annotations(out, annotate, "geom_surface_3d")
 }

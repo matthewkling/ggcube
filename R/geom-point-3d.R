@@ -2,35 +2,12 @@
 
 GeomPoint3D <- ggproto("GeomPoint3D", GeomPoint,
 
-                       extra_params = c("na.rm", "annotate"),
-
-                       setup_data = function(data, params) {
-                             setup_annotations(data, params)
-                       },
-
                        draw_panel = function(data, panel_params, coord, na.rm = FALSE,
-                                             annotate = NULL,
-                                             scale_depth = TRUE,
+                                             scale_depth = TRUE, on_top = FALSE,
                                              ref_line_colour = NULL, ref_line_linewidth = 0.25, ref_line_linetype = NULL, ref_line_alpha = NULL,
                                              ref_point_colour = NULL, ref_point_fill = NULL, ref_point_alpha = NULL, ref_point_size = NULL, ref_point_stroke = NULL, ref_point_shape = NULL) {
 
                              validate_coord3d(coord)
-
-                             data <- prepare_annotations(data, panel_params, annotate)
-
-                             # Seed annotation rows with columns the point pipeline expects
-                             # (coord$transform calls points_to_circles which needs these)
-                             if (".ann" %in% names(data) && any(!is.na(data$.ann) & data$.ann)) {
-                                   ann_mask <- !is.na(data$.ann) & data$.ann
-                                   if (!"element_type" %in% names(data)) data$element_type <- NA_character_
-                                   if (!"ref_circle_radius" %in% names(data)) data$ref_circle_radius <- NA_real_
-                                   if (!"ref_circle_vertices" %in% names(data)) data$ref_circle_vertices <- NA_integer_
-                                   if (!"project_to_face" %in% names(data)) data$project_to_face <- NA_character_
-                                   data$element_type[ann_mask] <- "raw_point"
-                                   data$ref_circle_radius[ann_mask] <- 0
-                                   data$ref_circle_vertices[ann_mask] <- 0L
-                                   data$project_to_face[ann_mask] <- NA_character_
-                             }
 
                              # Point-specific preprocessing
                              data$ref_circle_radius <- data$ref_circle_radius / 100
@@ -41,18 +18,8 @@ GeomPoint3D <- ggproto("GeomPoint3D", GeomPoint,
                                    if(!"linewidth" %in% names(coords)) coords$linewidth <- 0.5
                                    coords <- apply_depth_scaling(coords, scale_depth)
 
-                                   # Save annotation .prim values (resolve_point_aesthetics
-                                   # overwrites .prim based on element_type)
-                                   ann_prim <- NULL
-                                   if (".ann" %in% names(coords)) {
-                                         ann_idx <- which(!is.na(coords$.ann) & coords$.ann)
-                                         if (length(ann_idx) > 0) {
-                                               ann_prim <- coords$.prim[ann_idx]
-                                         }
-                                   }
-
                                    # Resolve ref_* styling and assign .prim types
-                                   coords <- resolve_point_aesthetics(
+                                   resolve_point_aesthetics(
                                          coords,
                                          ref_line_colour = ref_line_colour,
                                          ref_line_linewidth = ref_line_linewidth,
@@ -65,18 +32,9 @@ GeomPoint3D <- ggproto("GeomPoint3D", GeomPoint,
                                          ref_point_stroke = ref_point_stroke,
                                          ref_point_shape = ref_point_shape
                                    )
-
-                                   # Restore annotation .prim values
-                                   if (!is.null(ann_prim)) {
-                                         coords$.prim[ann_idx] <- ann_prim
-                                   }
-
-                                   # Apply annotate_3d styles (overrides resolve_point_aesthetics
-                                   # for annotation rows only)
-                                   apply_annotation_styles(coords)
                              }
 
-                             layer_scene_grob(coords, panel_params, finish)
+                             layer_scene_grob(coords, panel_params, finish, on_top = on_top)
                        }
 )
 
@@ -391,6 +349,7 @@ generate_point_elements <- function(data, raw_points,
 #' @param inherit.aes If `FALSE`, overrides the default aesthetics.
 #' @inheritParams sort_params
 #' @inheritParams depth_params
+#' @inheritParams on_top_param
 #' @inheritParams annotate_params
 #' @param raw_points Logical indicating whether to show the original 3D points.
 #'   Default is `TRUE`.
@@ -491,10 +450,10 @@ generate_point_elements <- function(data, raw_points,
 geom_point_3d <- function(mapping = NULL, data = NULL,
                           stat = StatPoint3D, position = "identity",
                           ...,
-                          annotate = NULL,
+                          annotate = deprecated(),
                           na.rm = FALSE,
                           sort_method = deprecated(),
-                          scale_depth = TRUE,
+                          scale_depth = TRUE, on_top = FALSE,
                           raw_points = TRUE,
                           ref_lines = FALSE,
                           ref_points = FALSE,
@@ -514,6 +473,7 @@ geom_point_3d <- function(mapping = NULL, data = NULL,
                           inherit.aes = TRUE,
                           show.legend = NA) {
       check_sort_method(sort_method, "geom_point_3d")
+      check_on_top(on_top)
 
       # Handle both American and British spellings
       if (!is.null(ref_line_colour) && is.null(ref_line_color)) {
@@ -523,13 +483,12 @@ geom_point_3d <- function(mapping = NULL, data = NULL,
             ref_point_color <- ref_point_colour
       }
 
-      layer(
+      out <- layer(
             data = data, mapping = mapping, stat = get_proto(stat, "stat"), geom = GeomPoint3D,
             position = position,  show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(
-                  annotate = annotate,
                   na.rm = na.rm,
-                  scale_depth = scale_depth,
+                  scale_depth = scale_depth, on_top = on_top,
                   raw_points = raw_points,
                   ref_lines = ref_lines,
                   ref_points = ref_points,
@@ -549,6 +508,7 @@ geom_point_3d <- function(mapping = NULL, data = NULL,
                   ...
             )
       )
+      with_annotations(out, annotate, "geom_point_3d")
 }
 
 #' @rdname geom_point_3d

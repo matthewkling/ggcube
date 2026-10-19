@@ -386,7 +386,7 @@ geom_distributions_3d <- function(mapping = NULL, data = NULL,
                                   stat = "distributions_3d",
                                   position = "identity",
                                   ...,
-                                  annotate = NULL,
+                                  annotate = deprecated(),
                                   direction = NULL,
                                   bw = "nrd0",
                                   adjust = 1,
@@ -407,7 +407,7 @@ geom_distributions_3d <- function(mapping = NULL, data = NULL,
                                   inherit.aes = TRUE) {
       check_sort_method(sort_method, "geom_distributions_3d")
 
-      layer(
+      out <- layer(
             data = data,
             mapping = mapping,
             stat = get_proto(stat, "stat"),
@@ -416,7 +416,6 @@ geom_distributions_3d <- function(mapping = NULL, data = NULL,
             show.legend = show.legend,
             inherit.aes = inherit.aes,
             params = list(
-                  annotate = annotate,
                   direction = direction,
                   bw = bw,
                   adjust = adjust,
@@ -435,4 +434,5 @@ geom_distributions_3d <- function(mapping = NULL, data = NULL,
                   ...
             )
       )
+      with_annotations(out, annotate, "geom_distributions_3d")
 }

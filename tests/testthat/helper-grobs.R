@@ -12,10 +12,11 @@ drawn_grob <- function(x, width = 6, height = 5) {
       grid::grid.grab(wrap.grobs = FALSE)
 }
 
-# Children of a grob in a drawn tree (forced gtables keep their built
-# children in `children`)
+# Children of a grob (forced gtables in a drawn tree keep their built
+# children in `children`, and undrawn gtables in `grobs`)
 grob_kids <- function(g) {
-      if (inherits(g, "gTree")) g$children else if (inherits(g, "gtable")) g$grobs else list()
+      if (inherits(g, "gtable") && length(g$children) == 0) return(g$grobs)
+      if (inherits(g, "gTree")) g$children else list()
 }
 
 # All grobs of a given class in a drawn tree, in drawing order

@@ -46,10 +46,22 @@ NULL
 
 #' Annotation parameter
 #'
-#' @param annotate An [annotate_3d()] specification, or a list of them, to draw
-#'   within this layer. Annotations are depth-sorted together with the layer's
-#'   own geometry, so they can pass in front of and behind it correctly.
+#' @param annotate Deprecated. Add annotations to the
+#'   plot with `+ annotate_3d()` instead. All 3D layers in a panel are
+#'   depth-sorted together, so annotations no longer need to be embedded in a
+#'   layer.
 #' @name annotate_params
+#' @keywords internal
+NULL
+
+
+#' On-top parameter
+#'
+#' @param on_top If `TRUE`, the layer is drawn on top of the rest of the
+#'   scene instead of being depth-sorted with it, so other geometry never
+#'   hides or cuts it, e.g. to keep labels legible. The layers drawn on top
+#'   are depth-sorted among themselves. Default `FALSE`.
+#' @name on_top_param
 #' @keywords internal
 NULL
 
@@ -104,7 +116,7 @@ NULL
 #' @param show.legend Logical indicating whether this layer should be included in legends.
 #' @param inherit.aes If `FALSE`, overrides the default aesthetics.
 #' @param ... Other arguments passed on to the layer function (typically GeomPolygon3D), such as
-#'   aesthetics like `colour`, `fill`, `linewidth`, `annotate = annotate_3d(...)`, etc.
+#'   aesthetics like `colour`, `fill`, `linewidth`, etc.
 #' @name polygon_params
 #' @keywords internal
 NULL

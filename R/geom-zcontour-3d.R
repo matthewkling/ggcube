@@ -14,7 +14,7 @@ GeomContour3D <- ggproto("GeomContour3D", GeomPolygon3D,
                                alpha = NA
                          ),
 
-                         extra_params = c("na.rm", "annotate", "bins", "binwidth", "breaks",
+                         extra_params = c("na.rm", "bins", "binwidth", "breaks",
                                           "cull_backfaces", "scale_depth", "force_convex"),
 
                          setup_params = function(data, params) {
@@ -35,7 +35,7 @@ GeomContour3D <- ggproto("GeomContour3D", GeomPolygon3D,
                                all_data <- split(data, list(data$PANEL, data$group),
                                                  drop = TRUE)
 
-                               all_contour_data <- lapply(all_data, function(data){
+                               lapply(all_data, function(data){
 
                                      # Validate grid structure
                                      n_unique_x <- length(unique(round(data$x, 10)))
@@ -74,8 +74,6 @@ GeomContour3D <- ggproto("GeomContour3D", GeomPolygon3D,
                                      bind_rows() %>%
                                      mutate(group = gsub("__", "_", group),
                                             group = paste0("contour__layer", group))
-
-                               setup_annotations(all_contour_data, params)
                          }
 )
 
@@ -281,7 +279,7 @@ points_to_contours <- function(data,
 geom_contour_3d <- function(mapping = NULL, data = NULL,
                             stat = "surface_3d", position = "identity",
                             ...,
-                            annotate = NULL,
+                            annotate = deprecated(),
                             bins = 20,
                             binwidth = NULL,
                             breaks = NULL,
@@ -295,7 +293,7 @@ geom_contour_3d <- function(mapping = NULL, data = NULL,
                             inherit.aes = TRUE) {
       check_sort_method(sort_method, "geom_contour_3d")
 
-      layer(
+      out <- layer(
             data = data,
             mapping = mapping,
             stat = get_proto(stat, "stat"),
@@ -304,7 +302,6 @@ geom_contour_3d <- function(mapping = NULL, data = NULL,
             show.legend = show.legend,
             inherit.aes = inherit.aes,
             params = list(
-                  annotate = annotate,
                   bins = bins,
                   binwidth = binwidth,
                   breaks = breaks,
@@ -316,6 +313,7 @@ geom_contour_3d <- function(mapping = NULL, data = NULL,
                   ...
             )
       )
+      with_annotations(out, annotate, "geom_contour_3d")
 }
 
 

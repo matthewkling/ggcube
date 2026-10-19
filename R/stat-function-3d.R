@@ -188,7 +188,7 @@ stat_function_3d <- function(mapping = NULL, data = ensure_nonempty_data,
 geom_function_3d <- function(mapping = NULL, data = ensure_nonempty_data,
                              stat = "function_3d", position = "identity",
                              ...,
-                             annotate = NULL,
+                             annotate = deprecated(),
                              fun = NULL,
                              xlim = NULL, ylim = NULL,
                              grid = "rectangle", n = 40, direction = "x", trim = TRUE,
@@ -198,7 +198,7 @@ geom_function_3d <- function(mapping = NULL, data = ensure_nonempty_data,
                              show.legend = NA,
                              inherit.aes = TRUE) {
 
-      layer(
+      out <- layer(
             data = data,
             mapping = mapping,
             stat = get_proto(stat, "stat"),
@@ -207,7 +207,6 @@ geom_function_3d <- function(mapping = NULL, data = ensure_nonempty_data,
             show.legend = show.legend,
             inherit.aes = inherit.aes,
             params = list(
-                  annotate = annotate,
                   fun = fun,
                   xlim = xlim, ylim = ylim,
                   grid = grid, n = n, direction = direction, trim = trim,
@@ -217,6 +216,7 @@ geom_function_3d <- function(mapping = NULL, data = ensure_nonempty_data,
                   ...
             )
       )
+      with_annotations(out, annotate, "geom_function_3d")
 }
 
 

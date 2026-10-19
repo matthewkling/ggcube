@@ -11,7 +11,7 @@ geom_hull_3d(
   stat = StatHull3D,
   position = "identity",
   ...,
-  annotate = NULL,
+  annotate = deprecated(),
   method = "convex",
   radius = NULL,
   singular = FALSE,
@@ -53,11 +53,12 @@ variables with \code{\link[ggplot2:after_stat]{ggplot2::after_stat()}}.}
 onto one 2D surface, use \code{position_on_face()}.}
 
 \item{...}{Other arguments passed on to the layer function (typically GeomPolygon3D), such as
-aesthetics like \code{colour}, \code{fill}, \code{linewidth}, \code{annotate = annotate_3d(...)}, etc.}
+aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc.}
 
-\item{annotate}{An \code{\link[=annotate_3d]{annotate_3d()}} specification, or a list of them, to draw
-within this layer. Annotations are depth-sorted together with the layer's
-own geometry, so they can pass in front of and behind it correctly.}
+\item{annotate}{Deprecated. Add annotations to the
+plot with \code{+ annotate_3d()} instead. All 3D layers in a panel are
+depth-sorted together, so annotations no longer need to be embedded in a
+layer.}
 
 \item{method}{Triangulation method. Either:
 \itemize{

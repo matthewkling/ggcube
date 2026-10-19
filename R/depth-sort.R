@@ -316,10 +316,6 @@ split_for_sorting <- function(data, proj, plot_bounds) {
 
 #' Order (already split) primitives back to front
 #'
-#' Elements flagged `.on_top` (e.g. text annotations with `on_top = TRUE`)
-#' aren't sorted against the rest: they're drawn after everything else, in
-#' depth order among themselves.
-#'
 #' @param data Split sort-stage data. Optional columns `.radius_pt` and
 #'   `.halfwidth_pt` give the drawn extents of point markers and lines, and
 #'   `.layer` each row's layer.
@@ -331,24 +327,9 @@ split_for_sorting <- function(data, proj, plot_bounds) {
 order_by_depth <- function(data, proj = NULL, plot_bounds = NULL, panel_pt = NULL) {
       if (nrow(data) == 0) return(data)
 
-      top <- if (".on_top" %in% names(data)) data$.on_top %in% TRUE else FALSE
-      if (any(top) && !all(top)) {
-            front <- order_by_mean_depth(data[top, , drop = FALSE])
-            rest <- order_by_depth(data[!top, , drop = FALSE], proj, plot_bounds, panel_pt)
-            return(dplyr::bind_rows(rest, front[intersect(names(front), names(rest))]))
-      }
-
       vertex_order <- stats::ave(seq_len(nrow(data)), data$group, FUN = seq_along)
       render_order <- pw_order(data, "depth", proj, plot_bounds, panel_pt)
       data[order(render_order, vertex_order), , drop = FALSE]
-}
-
-# Farthest first, by mean depth per group
-order_by_mean_depth <- function(data) {
-      depth <- if ("depth_3d" %in% names(data)) data$depth_3d else data$depth
-      prim_depth <- stats::ave(depth, data$group, FUN = function(v) mean(v, na.rm = TRUE))
-      vertex_order <- stats::ave(seq_len(nrow(data)), data$group, FUN = seq_along)
-      data[order(-prim_depth, data$group, vertex_order), , drop = FALSE]
 }
 
 

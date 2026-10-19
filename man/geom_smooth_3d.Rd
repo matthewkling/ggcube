@@ -11,7 +11,7 @@ geom_smooth_3d(
   stat = StatSmooth3D,
   position = "identity",
   ...,
-  annotate = NULL,
+  annotate = deprecated(),
   method = "loess",
   formula = NULL,
   method.args = list(),
@@ -113,11 +113,12 @@ mapped to \code{after_stat(fitted)}.}
 onto one 2D surface, use \code{position_on_face()}.}
 
 \item{...}{Other arguments passed on to the layer function (typically GeomPolygon3D), such as
-aesthetics like \code{colour}, \code{fill}, \code{linewidth}, \code{annotate = annotate_3d(...)}, etc.}
+aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc.}
 
-\item{annotate}{An \code{\link[=annotate_3d]{annotate_3d()}} specification, or a list of them, to draw
-within this layer. Annotations are depth-sorted together with the layer's
-own geometry, so they can pass in front of and behind it correctly.}
+\item{annotate}{Deprecated. Add annotations to the
+plot with \code{+ annotate_3d()} instead. All 3D layers in a panel are
+depth-sorted together, so annotations no longer need to be embedded in a
+layer.}
 
 \item{method}{Smoothing method to use. Currently supported:
 \itemize{
@@ -168,7 +169,7 @@ inherits from the main surface \code{linewidth} aesthetic.}
 on the fitted surface. Points are depth-sorted together with the surface
 polygons for proper 3D rendering. Point styling is controlled via the
 \verb{point_*} parameters; mapped aesthetics from the layer are not inherited
-by annotation points. Default is \code{FALSE}.}
+by these points. Default is \code{FALSE}.}
 
 \item{point_colour, point_color}{Color for data points. Defaults to \code{"black"}.}
 
@@ -185,9 +186,7 @@ Defaults to \code{NA} (transparent).}
 
 \item{residuals}{Logical indicating whether to draw residual lines connecting
 data points to the fitted surface. Default is \code{FALSE}. Residual styling is
-controlled via the \verb{residual_*} parameters. Note: residual lines may render
-incorrectly when combined with \code{se = TRUE}, as the lines intersect the
-confidence interval surfaces and cannot be split at intersection points.}
+controlled via the \verb{residual_*} parameters.}
 
 \item{residual_colour, residual_color}{Color for residual lines.}
 

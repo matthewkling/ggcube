@@ -3,7 +3,7 @@
 #'
 #' Takes raw data points and prepares them for inclusion alongside polygon
 #' surfaces in a mixed-geometry layer. Assigns unique group IDs and sets
-#' `.prim = "point"`. Aesthetic columns are stripped so that annotation
+#' `.prim = "point"`. Aesthetic columns are stripped so that overlay
 #' points don't contaminate scale training; styling is applied at render
 #' time in the geom's `draw_panel` via override parameters.
 #'
@@ -17,7 +17,7 @@ make_point_rows <- function(data, group_prefix = "data_point") {
       n <- nrow(data)
 
       # Keep only positional and structural columns — strip mapped aesthetics
-      # so annotation points don't contaminate scale training
+      # so overlay points don't contaminate scale training
       keep_cols <- intersect(names(data),
                              c("x", "y", "z", "fitted", "se", "level"))
       pt_data <- data[, keep_cols, drop = FALSE]
@@ -34,7 +34,7 @@ make_point_rows <- function(data, group_prefix = "data_point") {
 #' For each data point at (x, y, z), creates a two-row segment group
 #' connecting the point to the surface at (x, y, fitted). Used for
 #' residual lines in geom_smooth_3d. Aesthetic columns are stripped so
-#' annotations don't contaminate scale training; styling is applied at
+#' overlays don't contaminate scale training; styling is applied at
 #' render time via override parameters.
 #'
 #' @param data Data frame with x, y, z columns (raw data points).

@@ -1419,10 +1419,10 @@ process_backfaces <- function(data) {
                   ungroup()
       }
 
-      # Annotation polygons (e.g. planes) are sheets rather than closed solids,
-      # so they are never culled or shaded as back faces
-      if (".ann" %in% names(data)) {
-            data$.backface[data$.ann %in% TRUE] <- FALSE
+      # Two-sided polygons (planes) are sheets rather than closed solids, so
+      # they are never culled or shaded as back faces
+      if (".two_sided" %in% names(data)) {
+            data$.backface[data$.two_sided %in% TRUE] <- FALSE
       }
 
       # Apply culling if requested

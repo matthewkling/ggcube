@@ -11,7 +11,7 @@ geom_col_3d(
   stat = StatCol3D,
   position = "identity",
   ...,
-  annotate = NULL,
+  annotate = deprecated(),
   width = 1,
   faces = "all",
   zmin = NULL,
@@ -55,11 +55,12 @@ stat_col_3d(
 onto one 2D surface, use \code{position_on_face()}.}
 
 \item{...}{Other arguments passed on to the layer function (typically GeomPolygon3D), such as
-aesthetics like \code{colour}, \code{fill}, \code{linewidth}, \code{annotate = annotate_3d(...)}, etc.}
+aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc.}
 
-\item{annotate}{An \code{\link[=annotate_3d]{annotate_3d()}} specification, or a list of them, to draw
-within this layer. Annotations are depth-sorted together with the layer's
-own geometry, so they can pass in front of and behind it correctly.}
+\item{annotate}{Deprecated. Add annotations to the
+plot with \code{+ annotate_3d()} instead. All 3D layers in a panel are
+depth-sorted together, so annotations no longer need to be embedded in a
+layer.}
 
 \item{width}{Numeric value controlling box width as a fraction of grid spacing.
 Default is 1.0 (volumes touch each other). Use 0.8 for small gaps, 1.2 for overlap.

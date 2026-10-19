@@ -17,6 +17,7 @@
 #' @param inherit.aes If `FALSE`, overrides the default aesthetics.
 #' @inheritParams sort_params
 #' @inheritParams depth_params
+#' @inheritParams on_top_param
 #' @inheritParams annotate_params
 #' @param arrow Specification for arrow heads, created by [arrow()].
 #' @param arrow.fill Fill colour for closed arrowheads. Defaults to the
@@ -74,25 +75,26 @@
 geom_path_3d <- function(mapping = NULL, data = NULL,
                          stat = StatPath3D, position = "identity",
                          ...,
-                         annotate = NULL,
+                         annotate = deprecated(),
                          sort_method = deprecated(),
-                         scale_depth = TRUE, arrow = NULL, arrow.fill = NULL,
+                         scale_depth = TRUE, on_top = FALSE, arrow = NULL, arrow.fill = NULL,
                          lineend = "butt",
                          na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
       check_sort_method(sort_method, "geom_path_3d")
+      check_on_top(on_top)
 
-      layer(data = data, mapping = mapping, stat = get_proto(stat, "stat"), geom = GeomSegment3D,
-            position = position, show.legend = show.legend, inherit.aes = inherit.aes,
-            params = list(
-                  annotate = annotate,
-                  na.rm = na.rm,
-                  scale_depth = scale_depth,
-                  arrow = arrow,
-                  arrow.fill = arrow.fill,
-                  lineend = lineend,
-                  ...
-            )
+      out <- layer(data = data, mapping = mapping, stat = get_proto(stat, "stat"), geom = GeomSegment3D,
+                   position = position, show.legend = show.legend, inherit.aes = inherit.aes,
+                   params = list(
+                         na.rm = na.rm,
+                         scale_depth = scale_depth, on_top = on_top,
+                         arrow = arrow,
+                         arrow.fill = arrow.fill,
+                         lineend = lineend,
+                         ...
+                   )
       )
+      with_annotations(out, annotate, "geom_path_3d")
 }
 
 #' @rdname geom_path_3d

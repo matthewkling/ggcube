@@ -517,3 +517,33 @@ test_that("shaded guides find plot-level lighting from an untouched coord", {
       p <- light_test_plot() + guides(fill = guide_colorbar_3d())
       expect_no_error(drawn_grob(p))
 })
+
+test_that("polygons are lit by their own plane, the same whatever their winding", {
+      squares <- list(
+            ccw = data.frame(x = c(0, 1, 1, 0), y = c(0, 0, 1, 1), z = 0.5),
+            cw = data.frame(x = c(0, 0, 1, 1), y = c(0, 1, 1, 0), z = 0.5),
+            vertical = data.frame(x = c(0, 1, 1, 0), y = 0.5, z = c(0, 0, 1, 1))
+      )
+      views <- list(above = c(0.3, -0.4, 1), below = c(0.3, -0.4, -1),
+                    front = c(0.3, -1, 0.4), back = c(0.3, 1, 0.4))
+      fill <- function(square, view) {
+            p <- ggplot(square, aes(x, y, z)) +
+                  geom_polygon_3d(fill = "steelblue") +
+                  lims(x = c(0, 1), y = c(0, 1)) + zlim(0, 1) +
+                  coord_3d(direction = views[[view]])
+            polys <- find_grobs(find_grobs(drawn_grob(p), "ggcube_layer")[[1]], "polygon")
+            polys[[1]]$gp$fill
+      }
+      lit <- lapply(squares, function(sq) vapply(names(views), fill, character(1), square = sq))
+
+      # Horizontal squares are lit alike whichever way they're wound: lit
+      # from above, and dark from below, as the light comes from above
+      expect_equal(lit$cw, lit$ccw)
+      expect_false(lit$ccw[["above"]] == lit$ccw[["below"]])
+      expect_equal(lit$ccw[["front"]], lit$ccw[["above"]])
+
+      # A vertical square parallel to the default light (which has no y
+      # component) is lit evenly from either side
+      expect_equal(unname(lit$vertical), rep(lit$vertical[[1]], 4))
+      expect_equal(toupper(lit$vertical[[1]]), "#4682B4")              # steelblue, unshaded
+})

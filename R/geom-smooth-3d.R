@@ -358,7 +358,7 @@ gam_model <- function(){
 #'   on the fitted surface. Points are depth-sorted together with the surface
 #'   polygons for proper 3D rendering. Point styling is controlled via the
 #'   `point_*` parameters; mapped aesthetics from the layer are not inherited
-#'   by annotation points. Default is `FALSE`.
+#'   by these points. Default is `FALSE`.
 #' @param point_colour,point_color Color for data points. Defaults to `"black"`.
 #' @param point_fill Fill color for data points (only relevant for shapes 21-25).
 #'   Defaults to `NA` (transparent).
@@ -368,9 +368,7 @@ gam_model <- function(){
 #' @param point_stroke Stroke width for data points.
 #' @param residuals Logical indicating whether to draw residual lines connecting
 #'   data points to the fitted surface. Default is `FALSE`. Residual styling is
-#'   controlled via the `residual_*` parameters. Note: residual lines may render
-#'   incorrectly when combined with `se = TRUE`, as the lines intersect the
-#'   confidence interval surfaces and cannot be split at intersection points.
+#'   controlled via the `residual_*` parameters.
 #' @param residual_colour,residual_color Color for residual lines.
 #' @param residual_linewidth Line width for residual lines.
 #' @param residual_linetype Line type for residual lines.
@@ -473,7 +471,7 @@ gam_model <- function(){
 geom_smooth_3d <- function(mapping = NULL, data = NULL, stat = StatSmooth3D,
                            position = "identity",
                            ...,
-                           annotate = NULL,
+                           annotate = deprecated(),
                            method = "loess",
                            formula = NULL,
                            method.args = list(),
@@ -517,10 +515,10 @@ geom_smooth_3d <- function(mapping = NULL, data = NULL, stat = StatSmooth3D,
 
       # Convert underscore param names to periods for layer internals
       # (avoids ggplot2 aesthetic name standardization on stat params)
-      layer(
+      out <- layer(
             geom = GeomPolygon3D, mapping = mapping, data = data, stat = get_proto(stat, "stat"),
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
-            params = list(annotate = annotate, method = method, formula = formula, method.args = method.args,
+            params = list(method = method, formula = formula, method.args = method.args,
                           xlim = xlim, ylim = ylim, domain = domain, n = n, se = se, level = level,
                           grid = grid, direction = direction, trim = trim,
                           force_convex = force_convex, cull_backfaces = cull_backfaces,
@@ -539,6 +537,7 @@ geom_smooth_3d <- function(mapping = NULL, data = NULL, stat = StatSmooth3D,
                           residual.alpha = residual_alpha,
                           light = light, na.rm = na.rm, ...)
       )
+      with_annotations(out, annotate, "geom_smooth_3d")
 }
 
 #' @rdname geom_smooth_3d

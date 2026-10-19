@@ -1,4 +1,5 @@
-# Annotations are supported by every ggcube layer function.
+# Every layer function still accepts its deprecated `annotate` argument,
+# drawing the annotations as layers of their own.
 
 annotation_layer_plots <- function(ann) {
       set.seed(1)
@@ -46,45 +47,31 @@ grob_uses_colour <- function(g, colour) {
 }
 
 
-test_that("every geom function exposes a documented annotate argument", {
-      geoms <- grep("^geom_.*_3d$", getNamespaceExports("ggcube"), value = TRUE)
-      expect_gte(length(geoms), 16)
-      for (fn in geoms) {
-            expect_true("annotate" %in% names(formals(get(fn, envir = asNamespace("ggcube")))), info = fn)
+test_that("every layer function with an annotate argument has it deprecated", {
+      fns <- grep("^geom_.*_3d$", getNamespaceExports("ggcube"), value = TRUE)
+      fns <- setdiff(fns, c("geom_plane_3d", "geom_refline_3d", "geom_axes_3d"))
+      expect_gte(length(fns), 16)
+      for (fn in fns) {
+            f <- formals(get(fn, envir = asNamespace("ggcube")))
+            expect_true("annotate" %in% names(f), info = fn)
+            expect_identical(f$annotate, quote(deprecated()), info = fn)
       }
 })
 
 
-test_that("every layer draws annotations of each type", {
+test_that("every layer function's annotate argument draws its annotations", {
       anns <- list(
             point = annotate_3d("point", x = 0.5, y = 0.5, z = 0.5, colour = "#FF00FF", size = 4),
             segment = annotate_3d("segment", x = 0, y = 0, z = 0, xend = 0.5, yend = 0.5, zend = 0.5,
                                   colour = "#FF00FF"),
             text = annotate_3d("text", x = 0.5, y = 0.5, z = 0.5, label = "ann", colour = "#FF00FF"),
-            axes = annotate_3d("axes", colour = "#FF00FF"),
-            plane = NULL,
-            line = NULL,
-            polygon = NULL
+            axes = annotate_3d("axes", colour = "#FF00FF")
       )
       for (type in names(anns)) {
-            plots <- annotation_layer_plots(anns[[type]])
+            plots <- suppressWarnings(annotation_layer_plots(anns[[type]]))
             for (nm in names(plots)) {
                   p <- plots[[nm]] + coord_3d()
-                  if (type %in% c("plane", "line", "polygon")) {
-                        # Placed through the middle of this panel
-                        info <- ggplot_build(p)$layout$panel_params[[1]]$scale_info
-                        lim <- lapply(info[c("x", "y", "z")], function(s) range(s$limits))
-                        mid <- vapply(lim, mean, numeric(1))
-                        step <- vapply(lim, diff, numeric(1)) / 10
-                        p$layers[[1]]$geom_params$annotate <- switch(type,
-                              plane = annotate_3d("plane", zintercept = mid[["z"]], colour = "#FF00FF"),
-                              line = annotate_3d("line", x = mid[["x"]], y = mid[["y"]], z = mid[["z"]],
-                                                 dx = 1, dy = 1, dz = 1, colour = "#FF00FF"),
-                              polygon = annotate_3d("polygon", x = mid[["x"]] + c(0, step[["x"]], 0),
-                                                    y = mid[["y"]] + c(0, 0, step[["y"]]),
-                                                    z = mid[["z"]] + c(0, step[["z"]], step[["z"]]),
-                                                    colour = "#FF00FF"))
-                  }
+                  expect_length(p$layers, 2)
                   warnings <- character(0)
                   g <- withCallingHandlers(
                         drawn_grob(p),
@@ -98,6 +85,14 @@ test_that("every layer draws annotations of each type", {
                   expect_true(grob_uses_colour(g, "#FF00FF"), info = paste(nm, type))
             }
       }
+})
+
+
+test_that("the deprecation warning names the layer function", {
+      rlang::local_options(lifecycle_verbosity = "warning")
+      ann <- annotate_3d("point", x = 0, y = 0, z = 0)
+      expect_warning(geom_surface_3d(annotate = ann), "`annotate` argument of `geom_surface_3d\\(\\)`")
+      expect_warning(geom_text_3d(annotate = ann, method = "polygon"), "`annotate` argument of `geom_text_3d\\(\\)`")
 })
 
 
@@ -124,20 +119,24 @@ test_that("billboard text labels are sized by their own depth", {
 test_that("billboard text still drops data rows with missing labels", {
       d <- data.frame(x = 1:3, y = 1:3, z = 1:3, label = c("a", NA, "c"))
       p <- ggplot(d, aes(x, y, z, label = label)) +
-            geom_text_3d(annotate = annotate_3d("point", x = 2, y = 2, z = 2)) + coord_3d()
+            geom_text_3d() + annotate_3d("point", x = 2, y = 2, z = 2) + coord_3d()
       expect_warning(ggplotGrob(p), "Removed 1 row")
 })
 
 
-test_that("named and numeric font faces can be mixed across a layer and its annotations", {
+test_that("named and numeric font faces can be mixed across layers and within one", {
       expect_equal(as_fontface(c(1, 2, 3, 4)), c("plain", "bold", "italic", "bold.italic"))
       expect_equal(as_fontface(c("1", "bold", "italic")), c("plain", "bold", "italic"))
 
       d <- data.frame(x = 1:2, y = 1:2, z = 1:2, label = c("a", "b"))
       p <- ggplot(d, aes(x, y, z, label = label)) +
-            geom_text_3d(annotate = list(
-                  annotate_3d("text", x = 1.5, y = 1.5, z = 1.5, label = "c", fontface = "bold"),
-                  annotate_3d("axes"))) +
+            geom_text_3d() +
+            annotate_3d("text", x = 1.5, y = 1.5, z = c(1.5, 1.7), label = c("c", "d"),
+                        fontface = c("bold", "plain")) +
+            annotate_3d("axes", x = 1.5, y = 1.5, z = 1.5) +
             coord_3d()
-      expect_no_error(drawn_grob(p))
+      texts <- find_grobs(drawn_grob(p), "text")
+      faces <- vapply(Filter(function(g) g$label %in% c("c", "d"), texts),
+                      function(g) paste(g$label, g$gp$font), character(1))
+      expect_setequal(faces, c("c 2", "d 1"))
 })

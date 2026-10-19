@@ -16,8 +16,8 @@ matlib_diagram <- function() {
       tri <- data.frame(x = c(1, 0, 0.6), y = c(0, 1, 0.6), z = c(0, 0, 1))
       labs <- transform(vecs, x = xend * 1.1, y = yend * 1.1, z = zend * 1.1)
       ggplot() +
-            geom_polygon_3d(data = tri, aes(x, y, z), fill = "gold",
-                            annotate = annotate_3d("plane", zintercept = 0.4, alpha = 0.5)) +
+            geom_polygon_3d(data = tri, aes(x, y, z), fill = "gold") +
+            annotate_3d("plane", zintercept = 0.4, alpha = 0.5) +
             geom_segment_3d(data = vecs, aes(x, y, z, xend = xend, yend = yend, zend = zend),
                             arrow = grid::arrow(type = "closed")) +
             geom_text_3d(data = labs, aes(x, y, z, label = v)) +
@@ -28,14 +28,14 @@ matlib_diagram <- function() {
 test_that("primitives of different layers are depth-sorted together", {
       sc <- scene_of(matlib_diagram())
       rows <- sc$rows
-      expect_setequal(unique(rows$.layer), 1:3)
+      expect_setequal(unique(rows$.layer), 1:4)
 
-      # The plane (an annotation in layer 1) cuts vector c (layer 2) where it
-      # passes through z = 0.4: the piece below is drawn before the plane, the
-      # piece above after it, as the viewer looks down on the plane
-      plane_pos <- range(which(rows$.layer == 1 & rows$.ann %in% TRUE))
+      # The plane (layer 2) cuts vector c (layer 3) where it passes through
+      # z = 0.4: the piece below is drawn before the plane, the piece above
+      # after it, as the viewer looks down on the plane
+      plane_pos <- range(which(rows$.layer == 2))
       # Vector c is the one segment along x = y that rises in z
-      seg <- which(rows$.layer == 2)
+      seg <- which(rows$.layer == 3)
       by_group <- split(seg, rows$group[seg])
       is_c <- vapply(by_group, function(i) all(abs(rows$.x3d[i] - rows$.y3d[i]) < 1e-9) &&
                            diff(range(rows$.z3d[i])) > 0, logical(1))
@@ -46,8 +46,8 @@ test_that("primitives of different layers are depth-sorted together", {
       expect_lt(max(below), plane_pos[1])
       expect_gt(min(above), plane_pos[2])
 
-      # Labels (layer 3) are interleaved with the other layers, not all drawn last
-      expect_false(all(which(rows$.layer == 3) > max(which(rows$.layer != 3))) &&
+      # Labels (layer 4) are interleaved with the other layers, not all drawn last
+      expect_false(all(which(rows$.layer == 4) > max(which(rows$.layer != 4))) &&
                          all(diff(rows$.layer) >= 0))
 })
 
@@ -123,4 +123,20 @@ test_that("layers' sort_method is deprecated", {
       lifecycle::expect_deprecated(geom_surface_3d(sort_method = "painter"))
       lifecycle::expect_deprecated(stat_density_3d(sort_method = "auto"))
       expect_silent(geom_point_3d())
+})
+
+
+test_that("layers whose columns differ in type are drawn together, each with its own values", {
+      d <- data.frame(x = 0, y = 0, z = 0, xend = 1, yend = 1, zend = 1)
+      p <- ggplot(d, aes(x, y, z, xend = xend, yend = yend, zend = zend)) +
+            geom_segment_3d() +                                   # numeric line type
+            geom_refline_3d(dx = 1, dy = -1, linetype = "dashed") +
+            geom_point_3d(aes(x, y, z), inherit.aes = FALSE, ref_lines = TRUE,
+                          data = data.frame(x = 0.5, y = 0.5, z = 0.5)) +
+            coord_3d()
+      segs <- find_grobs(drawn_grob(p), "segments")
+      ltys <- unlist(lapply(segs, function(s) s$gp$lty))
+      expect_true("dashed" %in% ltys)
+      expect_true(any(ltys %in% c(1, "1", "solid")))
+      expect_false(anyNA(ltys))
 })

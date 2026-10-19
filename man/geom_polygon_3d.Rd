@@ -10,10 +10,11 @@ geom_polygon_3d(
   stat = StatIdentity3D,
   position = "identity",
   ...,
-  annotate = NULL,
+  annotate = deprecated(),
   rule = "evenodd",
   sort_method = deprecated(),
   scale_depth = TRUE,
+  on_top = FALSE,
   force_convex = FALSE,
   cull_backfaces = FALSE,
   light = NULL,
@@ -27,7 +28,10 @@ geom_polygon_3d(
 
 \item{data}{The data to be displayed in this layer. Note that if you specify \code{light} or
 \code{cull_backfaces}, behavior will depend on the "winding order" of polygon vertices, with
-the counter-clockwise face considered the "front".}
+the counter-clockwise face considered the "front". Each polygon is lit using the normal
+of its own plane; with the default \code{backface_scale = -1} in \code{\link[=light]{light()}}, which lights a back
+face as the reverse side of its front face, this lights polygons the same way whatever
+their winding order.}
 
 \item{stat}{The statistical transformation to use on the data. Defaults to \code{"identity_3d"}.}
 
@@ -35,11 +39,12 @@ the counter-clockwise face considered the "front".}
 onto one 2D surface, use \code{position_on_face()}.}
 
 \item{...}{Other arguments passed on to the layer function (typically GeomPolygon3D), such as
-aesthetics like \code{colour}, \code{fill}, \code{linewidth}, \code{annotate = annotate_3d(...)}, etc.}
+aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc.}
 
-\item{annotate}{An \code{\link[=annotate_3d]{annotate_3d()}} specification, or a list of them, to draw
-within this layer. Annotations are depth-sorted together with the layer's
-own geometry, so they can pass in front of and behind it correctly.}
+\item{annotate}{Deprecated. Add annotations to the
+plot with \code{+ annotate_3d()} instead. All 3D layers in a panel are
+depth-sorted together, so annotations no longer need to be embedded in a
+layer.}
 
 \item{rule}{Either \code{"evenodd"} or \code{"winding"}. If polygons with holes are
 being drawn (using the \code{subgroup} aesthetic) this argument defines how the
@@ -56,6 +61,11 @@ strength directly, where \code{1} matches \code{TRUE}, \code{0} matches \code{FA
 1 subdue the effect and values above 1 exaggerate it. This affects the layer
 only; use \code{coord_3d(scale_depth = )} for gridlines, cube borders, axis ticks,
 and axis text.}
+
+\item{on_top}{If \code{TRUE}, the layer is drawn on top of the rest of the
+scene instead of being depth-sorted with it, so other geometry never
+hides or cuts it, e.g. to keep labels legible. The layers drawn on top
+are depth-sorted among themselves. Default \code{FALSE}.}
 
 \item{force_convex}{Logical indicating whether to remove polygon vertices that are not part of the
 convex hull. Default value varies by geom. Specifying TRUE can help reduce artifacts in surfaces

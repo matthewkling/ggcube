@@ -11,9 +11,10 @@ geom_segment_3d(
   stat = StatSegment3D,
   position = "identity",
   ...,
-  annotate = NULL,
+  annotate = deprecated(),
   sort_method = deprecated(),
   scale_depth = TRUE,
+  on_top = FALSE,
   arrow = NULL,
   arrow.fill = NULL,
   lineend = "butt",
@@ -50,9 +51,10 @@ for start coordinates and xend, yend, zend for end coordinates.}
 
 \item{...}{Other arguments passed on to \code{\link[ggplot2:layer]{ggplot2::layer()}}.}
 
-\item{annotate}{An \code{\link[=annotate_3d]{annotate_3d()}} specification, or a list of them, to draw
-within this layer. Annotations are depth-sorted together with the layer's
-own geometry, so they can pass in front of and behind it correctly.}
+\item{annotate}{Deprecated. Add annotations to the
+plot with \code{+ annotate_3d()} instead. All 3D layers in a panel are
+depth-sorted together, so annotations no longer need to be embedded in a
+layer.}
 
 \item{sort_method}{Deprecated. All 3D layers in a
 panel are now depth-sorted together, pairwise, so this has no effect. See
@@ -64,6 +66,11 @@ applies full scaling and \code{FALSE} disables it; a number sets the strength
 directly, where \code{1} matches \code{TRUE}, \code{0} matches \code{FALSE}, values below 1
 subdue the effect and values above 1 exaggerate it. This affects the layer
 only; use \code{coord_3d(scale_depth = )} for panel and axis components.}
+
+\item{on_top}{If \code{TRUE}, the layer is drawn on top of the rest of the
+scene instead of being depth-sorted with it, so other geometry never
+hides or cuts it, e.g. to keep labels legible. The layers drawn on top
+are depth-sorted among themselves. Default \code{FALSE}.}
 
 \item{arrow}{Specification for arrow heads, created by \code{\link[=arrow]{arrow()}}.}
 

@@ -11,7 +11,7 @@ geom_contour_3d(
   stat = "surface_3d",
   position = "identity",
   ...,
-  annotate = NULL,
+  annotate = deprecated(),
   bins = 20,
   binwidth = NULL,
   breaks = NULL,
@@ -55,9 +55,10 @@ stat_contour_3d(
 
 \item{...}{Other arguments passed to the layer.}
 
-\item{annotate}{An \code{\link[=annotate_3d]{annotate_3d()}} specification, or a list of them, to draw
-within this layer. Annotations are depth-sorted together with the layer's
-own geometry, so they can pass in front of and behind it correctly.}
+\item{annotate}{Deprecated. Add annotations to the
+plot with \code{+ annotate_3d()} instead. All 3D layers in a panel are
+depth-sorted together, so annotations no longer need to be embedded in a
+layer.}
 
 \item{bins}{Number of contour levels. Default is 20. Ignored if \code{breaks} or
 \code{binwidth} is provided.}

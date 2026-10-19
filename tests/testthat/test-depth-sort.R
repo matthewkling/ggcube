@@ -310,10 +310,10 @@ test_that("per-piece arrow runs preserve drawing order", {
 
 test_that("pairwise sorting types untyped groups by vertex count", {
       # Point layers assign primitive types only when rendering, so their
-      # groups reach the sort untyped, alongside typed annotation rows
+      # groups reach the sort untyped, alongside other layers' typed rows
       p <- ggplot(data.frame(x = 1:3, y = 1:3, z = 1:3), aes(x, y, z)) +
-            geom_point_3d(ref_lines = TRUE,
-                          annotate = annotate_3d("point", x = 2, y = 2, z = 2.5)) +
+            geom_point_3d(ref_lines = TRUE) +
+            annotate_3d("segment", x = 2, y = 2, z = 2.5, xend = 3, yend = 2, zend = 2.5) +
             coord_3d()
       expect_no_error(drawn_grob(p))
 
@@ -333,12 +333,11 @@ tile_scene <- function(seg, persp = TRUE) {
             data.frame(x = x0 + c(0, 0.2, 0.2, 0), y = y0 + c(0, 0, 0.2, 0.2), z = 0, tile = k)
       }))
       p <- ggplot(tiles, aes(x, y, z, group = tile)) +
-            geom_polygon_3d(annotate = seg) +
+            geom_polygon_3d() + seg +
             zlim(-1, 1) + coord_3d(persp = persp)
-      b <- ggplot_build(p)
-      d <- b$data[[1]]
-      d$.prim[is.na(d$.prim)] <- "polygon"   # as geom_polygon_3d's draw_panel does
-      b$plot$coordinates$transform(d, b$layout$panel_params[[1]])
+      out <- ggcube:::validation_scene(p)$panels[[1]]$rows
+      out$group <- paste(out$.layer, out$group)      # groups are numbered per layer
+      out
 }
 
 

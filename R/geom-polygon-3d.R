@@ -4,21 +4,15 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
 
                          optional_aes = c("subgroup"),
 
-                         extra_params = c("na.rm", "annotate"),
-
                          default_aes = aes(
                                fill = "grey50", colour = "grey50", linewidth = 0.1, linetype = 1, alpha = 1
                          ),
-
-                         setup_data = function(data, params) {
-                               setup_annotations(data, params)
-                         },
 
                          draw_panel = function(data, panel_params, coord,
                                                scale_depth = TRUE,
                                                force_convex = FALSE,
                                                rule = "evenodd",
-                                               annotate = NULL,
+                                               on_top = FALSE,
                                                point.colour = NULL, point.fill = NULL,
                                                point.size = NULL, point.shape = NULL,
                                                point.alpha = NULL, point.stroke = NULL,
@@ -27,9 +21,6 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
 
                                # Parameter validation
                                validate_coord3d(coord)
-
-                               # Add annotations that span the panel (built from its limits)
-                               data <- prepare_annotations(data, panel_params, annotate)
 
                                # Transform data
                                if (!".prim" %in% names(data)) {
@@ -46,8 +37,7 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                                      # Apply smooth overlay point styling (post-transform, pre-depth-scale).
                                      # Values come from geom_smooth_3d point.* params.
                                      # Only applied when params are non-NULL (i.e. when smooth overlay
-                                     # is active). Annotation points are styled separately via
-                                     # apply_annotation_styles().
+                                     # is active).
                                      if (".prim" %in% names(coords) && any(coords$.prim == "point", na.rm = TRUE)) {
                                            pt_mask <- coords$.prim == "point" & !is.na(coords$.prim)
 
@@ -74,9 +64,6 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                                            if (!is.null(residual.linetype))  coords$linetype[seg_mask]  <- residual.linetype
                                      }
 
-                                     # Apply annotate_3d styles (overrides blanket smooth overlay styling above for annotate_3d rows only)
-                                     coords <- apply_annotation_styles(coords)
-
                                      # Scale linewidths/sizes by depth
                                      coords <- apply_depth_scaling(coords, scale_depth)
 
@@ -89,7 +76,7 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                                      return(grid::nullGrob())
                                }
 
-                               layer_scene_grob(coords, panel_params, finish, list(rule = rule))
+                               layer_scene_grob(coords, panel_params, finish, list(rule = rule), on_top = on_top)
                          },
 
                          draw_key = draw_key_polygon
@@ -105,7 +92,10 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
 #' @param mapping Set of aesthetic mappings created by [aes()].
 #' @param data The data to be displayed in this layer. Note that if you specify `light` or
 #'   `cull_backfaces`, behavior will depend on the "winding order" of polygon vertices, with
-#'   the counter-clockwise face considered the "front".
+#'   the counter-clockwise face considered the "front". Each polygon is lit using the normal
+#'   of its own plane; with the default `backface_scale = -1` in [light()], which lights a back
+#'   face as the reverse side of its front face, this lights polygons the same way whatever
+#'   their winding order.
 #' @param stat The statistical transformation to use on the data. Defaults to `"identity_3d"`.
 #' @param rule Either `"evenodd"` or `"winding"`. If polygons with holes are
 #'   being drawn (using the `subgroup` aesthetic) this argument defines how the
@@ -113,6 +103,7 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
 #' @inheritParams polygon_params
 #' @inheritParams light_param
 #' @inheritParams position_param
+#' @inheritParams on_top_param
 #' @inheritParams annotate_params
 #'
 #' @section Aesthetics:
@@ -164,24 +155,26 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
 geom_polygon_3d <- function(mapping = NULL, data = NULL, stat = StatIdentity3D,
                             position = "identity",
                             ...,
-                            annotate = NULL,
+                            annotate = deprecated(),
                             rule = "evenodd",
-                            sort_method = deprecated(), scale_depth = TRUE, force_convex = FALSE,
+                            sort_method = deprecated(), scale_depth = TRUE, on_top = FALSE, force_convex = FALSE,
                             cull_backfaces = FALSE,
                             light = NULL,
                             na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
       check_sort_method(sort_method, "geom_polygon_3d")
+      check_on_top(on_top)
 
-      layer(
+      out <- layer(
             geom = GeomPolygon3D, mapping = mapping, data = data, stat = get_proto(stat, "stat"),
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
-            params = list(annotate = annotate, rule = rule,
-                          scale_depth = scale_depth,
+            params = list(rule = rule,
+                          scale_depth = scale_depth, on_top = on_top,
                           force_convex = force_convex,
                           cull_backfaces = cull_backfaces,
                           light = light,
                           na.rm = na.rm, ...)
       )
+      with_annotations(out, annotate, "geom_polygon_3d")
 }
 
 # force polygons to be convex, to prevent artifacts in surfaces that wrap beyond visible horizon

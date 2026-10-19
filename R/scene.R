@@ -22,14 +22,28 @@
 #'   styled for rendering (row order preserved).
 #' @param render Named list of arguments for `render_mixed_grobs()` (`rule`,
 #'   `arrow`, `arrow.fill`, `lineend`).
+#' @param on_top Whether the layer is drawn on top of the rest of its scene
+#'   rather than sorted with it.
 #' @return A `ggcube_layer` gTree, or a null grob for empty layers.
 #' @keywords internal
 #' @noRd
-layer_scene_grob <- function(rows, panel_params, finish = identity, render = list()) {
+layer_scene_grob <- function(rows, panel_params, finish = identity, render = list(),
+                             on_top = FALSE) {
       if (is.null(rows) || nrow(rows) == 0) return(grid::nullGrob())
-      grid::gTree(rows = rows, finish = finish, render = render,
+      check_on_top(on_top)
+      grid::gTree(rows = rows, finish = finish, render = render, on_top = on_top,
                   proj = panel_params$proj, plot_bounds = panel_params$plot_bounds,
                   cache = new.env(parent = emptyenv()), cl = "ggcube_layer")
+}
+
+#' Check a layer's `on_top` argument
+#' @keywords internal
+#' @noRd
+check_on_top <- function(on_top, call = rlang::caller_env()) {
+      if (!is.logical(on_top) || length(on_top) != 1 || is.na(on_top)) {
+            rlang::abort("`on_top` must be `TRUE` or `FALSE`.", call = call)
+      }
+      invisible()
 }
 
 #' @export
@@ -92,8 +106,8 @@ makeContent.ggcube_scene <- function(x) {
 # Columns that depth sorting reads or writes; all other columns of a row are
 # carried through sorting by row reference
 .sort_columns <- c("x", "y", "z", "depth", "depth_scale", "depth_3d", "group", ".prim",
-                   ".x3d", ".y3d", ".z3d", "point_type", "segment_id", ".on_top",
-                   ".sort_method", ".subgroup", "subgroup")
+                   ".x3d", ".y3d", ".z3d", "point_type", "segment_id",
+                   ".subgroup", "subgroup")
 
 #' Sort, style, and render the layers of a scene
 #'
@@ -120,8 +134,10 @@ scene_children <- function(layers, cache = NULL) {
             for (r in unique(run)) {
                   sel <- run == r
                   layer <- layers[[rows$.layer[sel][1]]]
-                  grobs[[length(grobs) + 1]] <- do.call(render_mixed_grobs,
-                                                        c(list(rows[sel, , drop = FALSE]), layer$render))
+                  # The layer's own rows, as it styled them
+                  own <- attr(rows, "layer_rows")[[as.character(rows$.layer[sel][1])]]
+                  own <- own[match(rows$.key[sel], own$.key), , drop = FALSE]
+                  grobs[[length(grobs) + 1]] <- do.call(render_mixed_grobs, c(list(own), layer$render))
             }
       }
       grobs <- grobs[!vapply(grobs, inherits, logical(1), "null")]
@@ -138,12 +154,15 @@ scene_children <- function(layers, cache = NULL) {
 #' Primitives of all layers are split where they pass through one another,
 #' each layer's rows are styled by its `finish` function, and all primitives
 #' are then depth-sorted together, using the drawn sizes of point markers and
-#' lines.
+#' lines. Layers drawn `on_top` are split and sorted among themselves, and
+#' drawn after the rest.
 #'
 #' @param layers List of `ggcube_layer` grobs.
 #' @param panel_pt Panel width and height in points, or NULL if unknown.
 #' @return Data frame of rows in drawing order, with `.layer` giving each
-#'   row's layer.
+#'   row's layer and `.key` identifying it. Columns whose types differ between
+#'   layers are converted to character, so its attribute `layer_rows` keeps
+#'   each layer's styled rows as the layer made them, for rendering.
 #' @keywords internal
 #' @noRd
 scene_rows <- function(layers, panel_pt = NULL) {
@@ -164,8 +183,15 @@ scene_rows <- function(layers, panel_pt = NULL) {
             }
             f
       })
-      merged <- if (multi) dplyr::bind_rows(frames) else frames[[1]]
-      split <- split_for_sorting(merged, proj, plot_bounds)
+      merged <- if (multi) bind_layer_rows(frames) else frames[[1]]
+      on_top <- vapply(layers, function(l) isTRUE(l$on_top), logical(1))
+      top <- on_top[merged$.layer]
+      split <- if (any(top) && !all(top)) {
+            dplyr::bind_rows(split_for_sorting(merged[!top, , drop = FALSE], proj, plot_bounds),
+                             split_for_sorting(merged[top, , drop = FALSE], proj, plot_bounds))
+      } else {
+            split_for_sorting(merged, proj, plot_bounds)
+      }
       split$.key <- seq_len(nrow(split))
 
       # Restore each layer's full rows, with the columns splitting changed,
@@ -183,19 +209,68 @@ scene_rows <- function(layers, panel_pt = NULL) {
             rownames(full) <- NULL
             layers[[i]]$finish(full)
       })
-      styled <- dplyr::bind_rows(styled[!vapply(styled, is.null, logical(1))])
-      if (nrow(styled) == 0) return(styled)
+      styled <- styled[!vapply(styled, is.null, logical(1))]
+      if (length(styled) == 0) return(data.frame())
+      names(styled) <- vapply(styled, function(d) as.character(d$.layer[1]), character(1))
 
       # Drawn extents of point markers and lines, then the order
-      ext <- drawn_extents(styled)
-      at <- match(split$.key, styled$.key)
+      ext <- dplyr::bind_rows(lapply(styled, function(d) {
+            e <- drawn_extents(d)
+            data.frame(.key = d$.key, radius = e$radius, halfwidth = e$halfwidth)
+      }))
+      at <- match(split$.key, ext$.key)
       split$.radius_pt <- ext$radius[at]
       split$.halfwidth_pt <- ext$halfwidth[at]
-      ordered <- order_by_depth(split, proj, plot_bounds, panel_pt)
+      top <- on_top[split$.layer]
+      ordered <- if (any(top) && !all(top)) {
+            dplyr::bind_rows(order_by_depth(split[!top, , drop = FALSE], proj, plot_bounds, panel_pt),
+                             order_by_depth(split[top, , drop = FALSE], proj, plot_bounds, panel_pt))
+      } else {
+            order_by_depth(split, proj, plot_bounds, panel_pt)
+      }
 
-      out <- styled[stats::na.omit(match(ordered$.key, styled$.key)), , drop = FALSE]
+      merged <- if (length(styled) > 1) bind_layer_rows(styled) else styled[[1]]
+      out <- merged[stats::na.omit(match(ordered$.key, merged$.key)), , drop = FALSE]
       rownames(out) <- NULL
+      attr(out, "layer_rows") <- styled
       out
+}
+
+#' Bind rows of several layers
+#'
+#' Columns whose types differ between layers (e.g. a line type given as a
+#' number in one layer and a name in another) are converted to character.
+#'
+#' @param frames List of data frames.
+#' @return One data frame.
+#' @keywords internal
+#' @noRd
+bind_layer_rows <- function(frames) {
+      frames <- lapply(frames, function(f) {
+            if (inherits(f, "tbl_df")) f <- as.data.frame(f)
+            f
+      })
+      kind <- function(v) {
+            if (is.numeric(v) && !inherits(v, "AsIs")) "number"
+            else if (is.logical(v) && all(is.na(v))) "missing"
+            else paste(class(v), collapse = "/")
+      }
+      cols <- unique(unlist(lapply(frames, names)))
+      for (col in cols) {
+            kinds <- unique(unlist(lapply(frames, function(f) if (col %in% names(f)) kind(f[[col]]))))
+            kinds <- setdiff(kinds, "missing")
+            is_list <- any(vapply(frames, function(f) col %in% names(f) && is.list(f[[col]]), logical(1)))
+            if (length(kinds) > 1 && !is_list) {
+                  frames <- lapply(frames, function(f) {
+                        if (col %in% names(f)) {
+                              v <- f[[col]]
+                              f[[col]] <- if (is.factor(v)) as.character(v) else as.character(unclass(v))
+                        }
+                        f
+                  })
+            }
+      }
+      dplyr::bind_rows(frames)
 }
 
 #' Drawn extents of styled rows, in points

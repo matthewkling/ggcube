@@ -12,7 +12,7 @@ GeomRidgeline3D <- ggproto("GeomRidgeline3D", GeomPolygon3D,
                                  alpha = NA
                            ),
 
-                           extra_params = c("na.rm", "annotate", "direction", "base", "cull_backfaces",
+                           extra_params = c("na.rm", "direction", "base", "cull_backfaces",
                                             "scale_depth", "force_convex"),
 
                            setup_params = function(data, params) {
@@ -56,14 +56,12 @@ GeomRidgeline3D <- ggproto("GeomRidgeline3D", GeomPolygon3D,
                                              group_prefix = "ridgeline__"
                                        )
                                  }
-                                 data <- if ("PANEL" %in% names(data)) {
+                                 if ("PANEL" %in% names(data)) {
                                        bind_rows(lapply(split(data, data$PANEL, drop = TRUE),
                                                         to_ridgelines))
                                  } else {
                                        to_ridgelines(data)
                                  }
-
-                                 setup_annotations(data, params)
                            }
 
                            # draw_panel inherited from GeomPolygon3D
@@ -131,7 +129,7 @@ GeomRidgeline3D <- ggproto("GeomRidgeline3D", GeomPolygon3D,
 geom_ridgeline_3d <- function(mapping = NULL, data = NULL,
                               stat = "identity_3d", position = "identity",
                               ...,
-                              annotate = NULL,
+                              annotate = deprecated(),
                               direction = "x",
                               base = NULL,
                               cull_backfaces = FALSE,
@@ -144,7 +142,7 @@ geom_ridgeline_3d <- function(mapping = NULL, data = NULL,
                               inherit.aes = TRUE) {
       check_sort_method(sort_method, "geom_ridgeline_3d")
 
-      layer(
+      out <- layer(
             data = data,
             mapping = mapping,
             stat = get_proto(stat, "stat"),
@@ -153,7 +151,6 @@ geom_ridgeline_3d <- function(mapping = NULL, data = NULL,
             show.legend = show.legend,
             inherit.aes = inherit.aes,
             params = list(
-                  annotate = annotate,
                   direction = direction,
                   base = base,
                   cull_backfaces = cull_backfaces,
@@ -164,4 +161,5 @@ geom_ridgeline_3d <- function(mapping = NULL, data = NULL,
                   ...
             )
       )
+      with_annotations(out, annotate, "geom_ridgeline_3d")
 }

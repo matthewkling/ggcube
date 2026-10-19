@@ -391,9 +391,9 @@ edge_chains <- function(x, y, keep) {
 
 #' Normalize a font face to a form grid accepts
 #'
-#' Font faces arrive as numbers (1-4) or names, and binding annotation rows
-#' onto layer data can coerce numbers to strings such as `"1"`, which grid
-#' rejects. Numeric values, including numeric strings, are mapped to names.
+#' Font faces arrive as numbers (1-4), names, or numeric strings such as
+#' `"1"`, which grid rejects. Numeric values, including numeric strings, are
+#' mapped to names.
 #'
 #' @param x Font face value(s).
 #' @return Character vector of font face names.
@@ -486,8 +486,8 @@ render_points <- function(data) {
 #'   Each group must have exactly 2 rows with `point_type` "start"/"end",
 #'   or simply two rows in order.
 #' @param arrow Arrow specification.
-#' @param arrow.fill Fill colour for closed arrowheads on the layer's own
-#'   segments; `NULL` uses each segment's colour.
+#' @param arrow.fill Fill colour for closed arrowheads; `NULL` uses each
+#'   segment's colour.
 #' @param lineend Line end style.
 #' @return A segmentsGrob.
 #' @keywords internal
@@ -498,7 +498,7 @@ render_segments <- function(data, arrow = NULL, arrow.fill = NULL, lineend = "bu
       # Segments are stored as two rows per group: start and end
       # Identify start/end using point_type column if present,
       # otherwise use first/second row of each group
-      if ("point_type" %in% names(data)) {
+      if ("point_type" %in% names(data) && !anyNA(data$point_type)) {
             start_rows <- data[data$point_type == "start", ]
             end_rows <- data[data$point_type == "end", ]
             # Match end rows to start rows by group, preserving start row order
@@ -525,14 +525,12 @@ render_segments <- function(data, arrow = NULL, arrow.fill = NULL, lineend = "bu
       lty <- if ("linetype" %in% names(start_rows)) start_rows$linetype else 1
       lty <- rep_len(lty, nrow(start_rows))
 
-      arrows <- segment_arrows(start_rows, arrow)
-      ends <- segment_arrow_ends(start_rows, arrows$arrows)
+      ends <- segment_arrow_ends(start_rows, arrow)
       fill <- rep_len(arrow.fill %||% start_rows$colour, nrow(start_rows))
-      fill[arrows$own] <- start_rows$colour[arrows$own]
 
       draw <- function(i) {
             k <- i[1]
-            arrow_i <- if (ends[k] == "none") NULL else arrow_with_ends(arrows$arrows[[k]], ends[k])
+            arrow_i <- if (ends[k] == "none") NULL else arrow_with_ends(arrow, ends[k])
             gp <- grid::gpar(
                   col = start_rows$colour[i],
                   lwd = start_rows$linewidth[i] * .pt,
@@ -550,51 +548,14 @@ render_segments <- function(data, arrow = NULL, arrow.fill = NULL, lineend = "bu
             )
       }
 
-      # Segments can differ in their arrows (an annotation's own arrow, or
-      # pieces of a split segment carrying only some of its arrowheads). Draw
-      # each run of consecutive segments sharing an arrow configuration as one
-      # grob, so the depth-sorted drawing order is preserved.
-      key <- vapply(seq_along(ends), function(k) {
-            if (ends[k] == "none") return("none")
-            a <- arrows$arrows[[k]]
-            paste(ends[k], a$angle, format(a$length), a$type)
-      }, character(1))
+      # Pieces of a split segment can carry only some of its arrowheads. Draw
+      # each run of consecutive segments sharing arrow ends as one grob, so
+      # the depth-sorted drawing order is preserved.
+      if (length(unique(ends)) == 1) return(draw(seq_along(ends)))
 
-      if (length(unique(key)) == 1) return(draw(seq_along(key)))
-
-      run <- cumsum(c(TRUE, key[-1] != key[-length(key)]))
-      grobs <- lapply(split(seq_along(key), run), draw)
+      run <- cumsum(c(TRUE, ends[-1] != ends[-length(ends)]))
+      grobs <- lapply(split(seq_along(ends), run), draw)
       do.call(grid::grobTree, unname(grobs))
-}
-
-
-#' Arrow for each segment
-#'
-#' The layer's arrow applies to the layer's own segments. Annotation segments
-#' carry their own arrow, if any, in `.arrow_*` columns (see
-#' `add_arrow_columns()`), and never take the layer's.
-#'
-#' @param start_rows Start rows of the segments, one per segment.
-#' @param arrow The layer's arrow from [grid::arrow()], or NULL.
-#' @return List with `arrows` (an arrow or NULL per segment) and logical
-#'   `own`, marking segments that carry their own arrow.
-#' @keywords internal
-#' @noRd
-segment_arrows <- function(start_rows, arrow) {
-      n <- nrow(start_rows)
-      own <- if (".arrow_type" %in% names(start_rows)) !is.na(start_rows$.arrow_type) else rep(FALSE, n)
-      arrows <- rep(list(arrow), n)
-      ann <- if (".ann" %in% names(start_rows)) start_rows$.ann %in% TRUE else rep(FALSE, n)
-      arrows[ann & !own] <- list(NULL)
-      for (k in which(own)) {
-            arrows[[k]] <- grid::arrow(
-                  angle = start_rows$.arrow_angle[k],
-                  length = grid::unit(start_rows$.arrow_length[k], start_rows$.arrow_unit[k]),
-                  ends = c("first", "last", "both")[start_rows$.arrow_ends[k]],
-                  type = c("open", "closed")[start_rows$.arrow_type[k]]
-            )
-      }
-      list(arrows = arrows, own = own)
 }
 
 
@@ -606,12 +567,12 @@ segment_arrows <- function(start_rows, arrow) {
 #' last piece (`.seg_last`). Unsplit segments keep their arrow as given.
 #'
 #' @param start_rows Start rows of the segments, one per segment.
-#' @param arrows List of arrows (or NULL) per segment, from `segment_arrows()`.
+#' @param arrow The layer's arrow, or NULL.
 #' @return Character vector of `"first"`, `"last"`, `"both"`, or `"none"`.
 #' @keywords internal
 #' @noRd
-segment_arrow_ends <- function(start_rows, arrows) {
-      code <- vapply(arrows, function(a) if (is.null(a)) 0L else as.integer(a$ends[1]), integer(1))
+segment_arrow_ends <- function(start_rows, arrow) {
+      code <- rep(if (is.null(arrow)) 0L else as.integer(arrow$ends[1]), nrow(start_rows))
       first <- code %in% c(1L, 3L)                     # 1 = first, 2 = last, 3 = both
       last <- code %in% c(2L, 3L)
 

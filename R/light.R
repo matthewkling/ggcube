@@ -554,23 +554,22 @@ compute_light_in_coord <- function(data, standardized_coords, scale_ranges, scal
       # meaningful surface normals and should not receive lighting
       has_prim <- ".prim" %in% names(data)
 
-      # Annotation polygons (e.g. planes) don't share the layer's geometry, so
-      # they get normals from their own vertices rather than the layer's
-      # normal method, and are lit separately
-      ann_poly <- has_prim && ".ann" %in% names(data)
-      if (ann_poly) {
-            ann_poly <- data$.ann %in% TRUE & (is.na(data$.prim) | data$.prim == "polygon")
-            if (any(ann_poly)) {
-                  ann_lit <- light_annotation_polygons(
-                        data[ann_poly, , drop = FALSE],
-                        standardized_coords[ann_poly, , drop = FALSE],
+      # Two-sided polygons (planes) are sheets, lit from whichever side faces
+      # the viewer
+      if (".two_sided" %in% names(data)) {
+            two_sided <- data$.two_sided %in% TRUE
+            if (has_prim) two_sided <- two_sided & (is.na(data$.prim) | data$.prim == "polygon")
+            if (any(two_sided)) {
+                  lit <- light_two_sided_polygons(
+                        data[two_sided, , drop = FALSE],
+                        standardized_coords[two_sided, , drop = FALSE],
                         light, camera_directional, proj)
-                  if (all(ann_poly)) return(ann_lit)
-                  rest <- compute_light_in_coord(data[!ann_poly, , drop = FALSE],
-                                                 standardized_coords[!ann_poly, , drop = FALSE],
+                  if (all(two_sided)) return(lit)
+                  rest <- compute_light_in_coord(data[!two_sided, , drop = FALSE],
+                                                 standardized_coords[!two_sided, , drop = FALSE],
                                                  scale_ranges, scales, ratio, proj)
-                  out <- bind_rows(rest, ann_lit)
-                  return(out[order(c(which(!ann_poly), which(ann_poly))), , drop = FALSE])
+                  out <- bind_rows(rest, lit)
+                  return(out[order(c(which(!two_sided), which(two_sided))), , drop = FALSE])
             }
       }
 
@@ -617,6 +616,12 @@ compute_light_in_coord <- function(data, standardized_coords, scale_ranges, scal
       } else if ("face_type" %in% names(faces)) {
             # Voxel/column data: axis-aligned normals (scene space)
             normals <- compute_axis_aligned_normals(faces)
+            if (camera_directional) normals <- rotate_normals_to_camera(normals, proj)
+      } else if (grepl("__group$", faces$group[1])) {
+            # Polygons given directly (stat_identity_3d): the normal of each
+            # polygon's own plane, facing the side from which its vertices
+            # run counter-clockwise, consistent with back-face detection
+            normals <- compute_polygon_normals(poly_data, faces$group)
             if (camera_directional) normals <- rotate_normals_to_camera(normals, proj)
       } else {
             # Surface-like data: normals from fitted plane gradients. The gradient fit
@@ -752,14 +757,14 @@ compute_surface_gradients_from_vertices <- function(data) {
 }
 
 
-#' Light annotation polygons
+#' Light two-sided polygons
 #'
-#' Annotation polygons such as planes are flat sheets, so they are lit from
+#' Two-sided polygons such as planes are flat sheets, so they are lit from
 #' whichever side faces the viewer: each face's normal comes from its own
 #' vertices (Newell's method, in scene space) and is flipped toward the
-#' viewer before the layer's lighting model is applied.
+#' viewer before the lighting model is applied.
 #'
-#' @param data Annotation polygon rows.
+#' @param data Two-sided polygon rows.
 #' @param standardized_coords Their standardized (scene-space) coordinates.
 #' @param light Resolved lighting specification.
 #' @param camera_directional Whether lighting is camera-anchored directional.
@@ -767,8 +772,8 @@ compute_surface_gradients_from_vertices <- function(data) {
 #' @return `data` with lighting columns added.
 #' @keywords internal
 #' @noRd
-light_annotation_polygons <- function(data, standardized_coords, light,
-                                      camera_directional, proj) {
+light_two_sided_polygons <- function(data, standardized_coords, light,
+                                     camera_directional, proj) {
       poly_data <- data
       poly_data$x <- standardized_coords$x
       poly_data$y <- standardized_coords$y
@@ -801,6 +806,39 @@ light_annotation_polygons <- function(data, standardized_coords, light,
       out$shade_mode <- light$shade_mode
       out$lighting_method <- light$method
       out
+}
+
+
+#' Plane normals of polygons from their vertices
+#'
+#' Newell's method, summed over each polygon's rings (subgroups), gives the
+#' normal of the polygon's best-fit plane, pointing toward the side from
+#' which its vertices run counter-clockwise.
+#'
+#' @param poly_data Polygon vertex rows with scene-space x, y, z, in ring
+#'   order within each group (and subgroup).
+#' @param groups Groups of the faces whose normals are wanted.
+#' @return Matrix with 3 columns of unit normals, one row per group (`c(0, 0,
+#'   1)` for degenerate polygons).
+#' @keywords internal
+#' @noRd
+compute_polygon_normals <- function(poly_data, groups) {
+      ring <- if ("subgroup" %in% names(poly_data)) {
+            paste(poly_data$group, poly_data$subgroup, sep = "\r")
+      } else {
+            poly_data$group
+      }
+      idx <- seq_len(nrow(poly_data))
+      nxt <- stats::ave(idx, ring, FUN = function(i) c(i[-1], i[1]))
+      x <- poly_data$x; y <- poly_data$y; z <- poly_data$z
+      terms <- cbind((y - y[nxt]) * (z + z[nxt]),
+                     (z - z[nxt]) * (x + x[nxt]),
+                     (x - x[nxt]) * (y + y[nxt]))
+      sums <- rowsum(terms, as.character(poly_data$group))[as.character(groups), , drop = FALSE]
+      len <- sqrt(rowSums(sums^2))
+      normals <- sums / len
+      normals[!is.finite(len) | len < 1e-12, ] <- rep(c(0, 0, 1), each = sum(!is.finite(len) | len < 1e-12))
+      unname(normals)
 }
 
 

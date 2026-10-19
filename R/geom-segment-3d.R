@@ -17,6 +17,7 @@
 #' @param inherit.aes If `FALSE`, overrides the default aesthetics.
 #' @inheritParams sort_params
 #' @inheritParams depth_params
+#' @inheritParams on_top_param
 #' @inheritParams annotate_params
 #' @param arrow Specification for arrow heads, created by [arrow()].
 #' @param arrow.fill Fill colour for closed arrowheads. Defaults to the
@@ -57,25 +58,26 @@
 geom_segment_3d <- function(mapping = NULL, data = NULL,
                             stat = StatSegment3D, position = "identity",
                             ...,
-                            annotate = NULL,
+                            annotate = deprecated(),
                             sort_method = deprecated(),
-                            scale_depth = TRUE, arrow = NULL, arrow.fill = NULL,
+                            scale_depth = TRUE, on_top = FALSE, arrow = NULL, arrow.fill = NULL,
                             lineend = "butt",
                             na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
       check_sort_method(sort_method, "geom_segment_3d")
+      check_on_top(on_top)
 
-      layer(data = data, mapping = mapping, stat = get_proto(stat, "stat"), geom = GeomSegment3D,
-            position = position, show.legend = show.legend, inherit.aes = inherit.aes,
-            params = list(
-                  annotate = annotate,
-                  na.rm = na.rm,
-                  scale_depth = scale_depth,
-                  arrow = arrow,
-                  arrow.fill = arrow.fill,
-                  lineend = lineend,
-                  ...
-            )
+      out <- layer(data = data, mapping = mapping, stat = get_proto(stat, "stat"), geom = GeomSegment3D,
+                   position = position, show.legend = show.legend, inherit.aes = inherit.aes,
+                   params = list(
+                         na.rm = na.rm,
+                         scale_depth = scale_depth, on_top = on_top,
+                         arrow = arrow,
+                         arrow.fill = arrow.fill,
+                         lineend = lineend,
+                         ...
+                   )
       )
+      with_annotations(out, annotate, "geom_segment_3d")
 }
 
 #' @rdname geom_segment_3d
@@ -180,8 +182,6 @@ GeomSegment3D <- ggproto("GeomSegment3D", Geom,
                                colour = "black", linewidth = 0.5, linetype = 1, alpha = 1
                          ),
 
-                         extra_params = c("na.rm", "annotate"),
-
                          setup_data = function(data, params) {
                                # Convert from wide format (x/y/z + xend/yend/zend) to
                                # long format (two rows per segment) for the rendering
@@ -219,13 +219,11 @@ GeomSegment3D <- ggproto("GeomSegment3D", Geom,
 
                                long_data <- rbind(start_data, end_data)
                                long_data$.prim <- "segment"
-
-                               setup_annotations(long_data, params)
+                               long_data
                          },
 
                          draw_panel = function(data, panel_params, coord,
-                                               annotate = NULL,
-                                               scale_depth = TRUE,
+                                               scale_depth = TRUE, on_top = FALSE,
                                                arrow = NULL, arrow.fill = NULL,
                                                lineend = "butt", na.rm = FALSE) {
 
@@ -235,18 +233,12 @@ GeomSegment3D <- ggproto("GeomSegment3D", Geom,
                                      return(grid::nullGrob())
                                }
 
-                               data <- prepare_annotations(data, panel_params, annotate)
-
-
                                coords <- coord$transform(data, panel_params, sort = FALSE)
-
-                               finish <- function(coords) {
-                                     coords <- apply_annotation_styles(coords)
-                                     apply_depth_scaling(coords, scale_depth)
-                               }
+                               finish <- function(coords) apply_depth_scaling(coords, scale_depth)
 
                                layer_scene_grob(coords, panel_params, finish,
-                                                list(arrow = arrow, arrow.fill = arrow.fill, lineend = lineend))
+                                                list(arrow = arrow, arrow.fill = arrow.fill, lineend = lineend),
+                                                on_top = on_top)
                          },
 
                          draw_key = draw_key_path

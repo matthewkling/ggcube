@@ -3,8 +3,9 @@
 # Each case is a function returning a ggplot, so that plots are constructed
 # with whichever version of ggcube is loaded when they are rendered. Every
 # case sets its own seed. Cases use only API available in the baseline
-# version; arguments that later versions deprecate (e.g. a layer's
-# `sort_method`, `annotate =`) are kept so that diffs show their effect.
+# version (except those tagged `new`); arguments that later versions
+# deprecate (e.g. a layer's `sort_method`, `annotate =`) are kept so that
+# diffs show their effect.
 #
 # Tags group cases for review:
 #   single  - one ggcube layer (expected pixel-identical unless sorting is
@@ -12,6 +13,7 @@
 #   multi   - several ggcube layers (scene sorting changes these by design)
 #   sort    - exercises depth sorting directly
 #   ann     - uses annotate_3d()
+#   new     - uses API added after the baseline (errors in older versions)
 
 regression_cases <- function() {
 
@@ -20,6 +22,11 @@ regression_cases <- function() {
             d <- expand.grid(x = seq(-2, 2, length.out = n), y = seq(-2, 2, length.out = n))
             d$z <- with(d, sin(x * 1.3) * cos(y))
             d
+      }
+      # Reference lines were annotate_3d("line") before 0.4.0
+      ann_line <- function(...) {
+            type <- if (exists("geom_refline_3d", asNamespace("ggcube"))) "refline" else "line"
+            annotate_3d(type, ...)
       }
       cloud <- function(n, seed = 1) {
             set.seed(seed)
@@ -237,6 +244,17 @@ regression_cases <- function() {
                         coord_3d(scales = "fixed")
             }),
 
+            polygon_winding_lighting = list(tags = c("single"), plot = function() {
+                  sq <- function(x, y, z, g) data.frame(x = x, y = y, z = z, g = g)
+                  d <- rbind(sq(c(0, 1, 1, 0), c(0, 0, 1, 1), 0, "ccw"),
+                             sq(c(1.5, 1.5, 2.5, 2.5), c(0, 1, 1, 0), 0, "cw"),
+                             sq(c(0, 1, 1, 0), 1.5, c(0, 0, 1, 1), "vertical"),
+                             sq(c(1.5, 2.5, 2.5, 1.5), c(1.5, 1.5, 2.5, 2.5), c(0, .5, 1, .5), "slanted"))
+                  ggplot(d, aes(x, y, z, group = g)) +
+                        geom_polygon_3d(fill = "steelblue", colour = "black") +
+                        coord_3d()
+            }),
+
             # Annotations ------------------------------------------------------
 
             annotation_mix_surface = list(tags = c("single", "ann"), plot = function() {
@@ -272,8 +290,7 @@ regression_cases <- function() {
                         geom_point_3d(size = 1.5, sort_method = "pairwise",
                                       annotate = list(
                                             annotate_3d("axes"),
-                                            annotate_3d("line", dx = 1, dy = 1, dz = 0.5,
-                                                        colour = "purple"),
+                                            ann_line(dx = 1, dy = 1, dz = 0.5, colour = "purple"),
                                             annotate_3d("segment", x = -.4, y = -.4, z = -.4,
                                                         xend = .4, yend = .4, zend = .4,
                                                         colour = "darkgreen", linewidth = 1,
@@ -281,6 +298,19 @@ regression_cases <- function() {
                                                                             length = grid::unit(8, "pt"))),
                                             annotate_3d("text", x = 0, y = 0, z = .45,
                                                         label = "on top", on_top = TRUE))) +
+                        coord_3d()
+            }),
+
+            annotation_layers_new_api = list(tags = c("multi", "ann", "new"), plot = function() {
+                  planes <- data.frame(slope_x = c(-0.4, 0.4), model = c("a", "b"))
+                  ggplot(cloud(60, 12), aes(x - .5, y - .5, z - .5)) +
+                        geom_point_3d(size = 1.5) +
+                        geom_plane_3d(aes(slope_x = slope_x, fill = model), data = planes) +
+                        geom_refline_3d(dx = c(1, 0), dy = c(0, 1), dz = 0.3, colour = "purple") +
+                        geom_axes_3d(colour = c("red", "darkgreen", "blue")) +
+                        annotate_3d("polygon", x = c(-.4, .4, 0), y = c(-.4, -.4, .4), z = .3,
+                                    fill = "gold") +
+                        annotate_3d("text", x = 0, y = 0, z = .45, label = "on top", on_top = TRUE) +
                         coord_3d()
             }),
 

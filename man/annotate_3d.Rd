@@ -2,130 +2,103 @@
 % Please edit documentation in R/annotate-3d.R
 \name{annotate_3d}
 \alias{annotate_3d}
-\title{Create a 3D annotation specification}
+\title{Create a 3D annotation layer}
 \usage{
 annotate_3d(type, ...)
 }
 \arguments{
 \item{type}{Character string specifying the annotation type. One of
-\code{"point"}, \code{"text"}, \code{"segment"}, \code{"polygon"}, \code{"axes"}, \code{"line"}, or
+\code{"point"}, \code{"text"}, \code{"segment"}, \code{"polygon"}, \code{"axes"}, \code{"refline"}, or
 \code{"plane"}.}
 
-\item{...}{Type-specific parameters. See Details.}
+\item{...}{Type-specific parameters, described below, along with parameters
+of the layer function the type uses, such as \code{scale_depth}, \code{on_top}, or
+\code{light}.}
 }
 \value{
-An S3 object of class \code{"annotate_3d"}.
+A ggplot2 layer.
 }
 \description{
-Defines fixed-position annotations to be embedded within a 3D layer.
-Annotations are depth-sorted together with the primary geometry, unlike
-ggplot2's \code{annotate()} which creates a separate layer.
+\code{annotate_3d()} adds annotations to a plot: points, text labels, segments,
+polygons, axes, reference lines, or planes, at positions given as
+parameters rather than mapped from data. It works like
+\code{\link[ggplot2:annotate]{ggplot2::annotate()}}, but builds a ggcube layer, which is depth-sorted
+together with the plot's other 3D layers, so annotations pass in front of
+and behind the plot's geometry correctly.
 }
 \details{
-Parameters can be vectors to create multiple annotations of the same type
-in one call, with scalar values recycled as needed (matching
-\code{ggplot2::annotate()} behaviour).
+Parameters can be vectors to create several annotations of the same type
+in one call, with values of length 1 recycled. Annotations never inherit
+the plot's aesthetics or appear in legends.
+
+Each type builds a layer with a ggcube layer function, and takes that
+function's parameters:
 \subsection{Point annotations}{
 
-Requires \code{x}, \code{y}, \code{z}. Optional styling: \code{colour}/\code{color}, \code{fill}, \code{size},
-\code{shape}, \code{alpha}, \code{stroke}.
+Uses \code{\link[=geom_point_3d]{geom_point_3d()}}. Requires \code{x}, \code{y}, \code{z}. Optional styling:
+\code{colour}/\code{color} (default \code{"black"}), \code{fill}, \code{size} (default \code{2}),
+\code{shape} (default \code{19}), \code{alpha}, \code{stroke}.
 }
 
 \subsection{Text annotations}{
 
-Requires \code{x}, \code{y}, \code{z}, \code{label}. Optional styling: \code{colour}/\code{color}, \code{size},
-\code{alpha}, \code{family}, \code{fontface}, \code{hjust}, \code{vjust}, \code{angle}, \code{lineheight}.
-
-By default, labels are depth-sorted with the rest of the layer, so geometry
-in front of a label hides it. Set \code{on_top = TRUE} to draw labels on top of
-everything else in the layer instead, keeping them legible wherever they
-fall (e.g. labels in a diagram). \code{on_top} can be a vector, to set it per
-label.
+Uses \code{\link[=geom_text_3d]{geom_text_3d()}}. Requires \code{x}, \code{y}, \code{z}, \code{label}. Optional styling:
+\code{colour}/\code{color}, \code{size}, \code{alpha}, \code{family}, \code{fontface}, \code{hjust}, \code{vjust},
+\code{angle}, \code{lineheight}. Labels are depth-sorted with the rest of the scene,
+so geometry in front of a label hides it; use \code{on_top = TRUE} to draw
+labels on top of everything else instead, keeping them legible wherever
+they fall.
 }
 
 \subsection{Segment annotations}{
 
-Requires \code{x}, \code{y}, \code{z}, \code{xend}, \code{yend}, \code{zend}. Optional styling:
-\code{colour}/\code{color}, \code{linewidth}, \code{linetype}, \code{alpha}, and \code{arrow}, an arrow
-specification created by \code{\link[grid:arrow]{grid::arrow()}} that applies to every segment in
-the call. Closed arrowheads are filled with the segment colour. When a
-segment passes through a polygon and is split, its arrowheads stay at the
-segment's original ends.
+Uses \code{\link[=geom_segment_3d]{geom_segment_3d()}}. Requires \code{x}, \code{y}, \code{z}, \code{xend}, \code{yend}, \code{zend}.
+Optional styling: \code{colour}/\code{color}, \code{linewidth}, \code{linetype}, \code{alpha}, and
+\code{arrow}, an arrow specification created by \code{\link[grid:arrow]{grid::arrow()}}. Closed
+arrowheads are filled with the segment colour, unless \code{arrow.fill} is
+given. When a segment passes through a polygon and is split, its
+arrowheads stay at the segment's original ends.
 }
 
 \subsection{Polygon annotations}{
 
-Requires \code{x}, \code{y}, \code{z} giving the polygon's vertices in order. To draw
-several polygons in one call, give \code{group}, with one value per vertex;
-vertices sharing a value form one polygon. Each polygon needs at least 3
-vertices. Optional styling: \code{fill} (default \code{"grey60"}), \code{alpha} (default
-\code{0.5}), \code{colour}/\code{color} for the outline (default \code{"grey30"}), \code{linewidth},
-\code{linetype}. Styling values apply per polygon, so they must have length 1 or
-one value per polygon, in the order the groups first appear.
-
-Like planes, polygons are lit from whichever side faces the viewer and are
-never removed by back-face culling. Unlike planes, they are placed in data
-space, so they expand the plot's axis ranges to fit.
+Uses \code{\link[=geom_polygon_3d]{geom_polygon_3d()}}. Requires \code{x}, \code{y}, \code{z} giving the polygon's
+vertices in order. To draw several polygons in one call, give \code{group}, with
+one value per vertex; vertices sharing a value form one polygon. Each
+polygon needs at least 3 vertices. Optional styling: \code{fill} (default
+\code{"grey60"}), \code{alpha} (default \code{0.5}), \code{colour}/\code{color} for the outline
+(default \code{"grey30"}), \code{linewidth} (default \code{0.5}), \code{linetype}. Styling
+values apply per polygon, so they must have length 1 or one value per
+polygon, in the order the groups first appear.
 }
 
 \subsection{Axes annotations}{
 
-Draws a line along each of the x, y, and z axes through an origin given by
-\code{x}, \code{y}, \code{z} (default \code{0}), each spanning the panel's full range along its
-axis, with an arrowhead and a label at its high end. Optional: \code{labels}
-(a length-3 vector, default \code{c("x", "y", "z")}, or \code{NULL} for none),
-\code{arrow} (default a closed 6pt arrowhead, or \code{NULL} for none), line styling
-\code{colour}/\code{color}, \code{linewidth}, \code{linetype}, \code{alpha}, and label styling
-\code{size}, \code{family}, \code{fontface}. Styling values can have length 3 to style
-each axis separately.
-
-Axes are built from the panel's limits when the plot is drawn, so unlike
-other annotations they don't expand the plot's axis ranges.
+Uses \code{\link[=geom_axes_3d]{geom_axes_3d()}}, which draws a line along each of the x, y, and z
+axes through an origin \code{x}, \code{y}, \code{z} (default \code{0}), spanning the panel,
+with arrowheads and labels at their high ends. See \code{\link[=geom_axes_3d]{geom_axes_3d()}} for its
+parameters.
 }
 
-\subsection{Line annotations}{
+\subsection{Reference line annotations}{
 
-Draws infinite lines, clipped to the panel. Each line passes through the
-point \code{x}, \code{y}, \code{z} (each defaulting to \code{0}) in the direction \code{dx}, \code{dy},
-\code{dz} (each defaulting to \code{0}, but not all zero). For example, the line
-spanned by a vector \code{v} is \code{annotate_3d("line", dx = v[1], dy = v[2], dz = v[3])}, and the vertical line at \code{x = 1}, \code{y = 2} is
-\code{annotate_3d("line", x = 1, y = 2, dz = 1)}. All values can be vectors to
-draw several lines. Optional styling: \code{colour}/\code{color}, \code{linewidth},
-\code{linetype}, \code{alpha}.
-
-Like axes and planes, lines are built from the panel's limits and don't
-expand the plot's axis ranges. A line that misses the panel entirely is
-skipped with a warning.
+Uses \code{\link[=geom_refline_3d]{geom_refline_3d()}}, which draws infinite lines through the point
+\code{x}, \code{y}, \code{z} (default \code{0}) in the direction \code{dx}, \code{dy}, \code{dz}, clipped to
+the panel. For example, the line spanned by a vector \code{v} is
+\code{annotate_3d("refline", dx = v[1], dy = v[2], dz = v[3])}, and the vertical
+line at \code{x = 1}, \code{y = 2} is \code{annotate_3d("refline", x = 1, y = 2, dz = 1)}.
 }
 
 \subsection{Plane annotations}{
 
-Draws planes, clipped to the panel. Each call gives its planes in one of
-three forms:
-\itemize{
-\item \code{xintercept}, \code{yintercept}, or \code{zintercept}: planes perpendicular to an
-axis, e.g. \code{yintercept = 2} for the plane \code{y = 2}. Only one of the three
-can be used per call.
-\item \code{intercept}, \code{slope_x}, \code{slope_y}: the plane
-\code{z = intercept + slope_x * x + slope_y * y}, as from a linear model.
-Any of the three left out defaults to \code{0}.
-\item \code{a}, \code{b}, \code{c}, \code{d}: the general form \code{a * x + b * y + c * z = d}.
-Requires \code{a}, \code{b}, \code{c} (not all zero); \code{d} defaults to \code{0}.
-}
+Uses \code{\link[=geom_plane_3d]{geom_plane_3d()}}, which draws planes clipped to the panel, given as
+\code{xintercept}, \code{yintercept}, or \code{zintercept}; as \code{intercept}, \code{slope_x},
+and \code{slope_y}; or as general coefficients \code{a}, \code{b}, \code{c}, \code{d}. See
+\code{\link[=geom_plane_3d]{geom_plane_3d()}} for details.
 
-Values can be vectors to draw several planes. In the general form, for
-example, \code{a}, \code{b}, \code{c} can be the columns of a matrix \code{A} and \code{d} the
-right-hand side of the linear system \verb{A x = d}. To combine forms, use
-separate \code{annotate_3d()} calls. Optional styling: \code{fill} (default \code{"grey60"}), \code{alpha} (default \code{0.5}),
-\code{colour}/\code{color} for the outline (default none), \code{linewidth}, \code{linetype}.
-
-Like axes, planes are built from the panel's limits and don't expand the
-plot's axis ranges. They are lit like the layer's other polygons, from
-whichever side faces the viewer, and are never removed by back-face
-culling. A plane that misses the panel entirely is skipped with a warning.
-
-Planes are split where they intersect each other or other polygons, and
-hide the elements they pass in front of (see \link{sorting_methods}).
+Axes, reference lines, and planes are built from the panel's limits when
+the plot is drawn, so unlike the other types, they don't expand the plot's
+axis ranges.
 }
 
 \subsection{Coordinates}{
@@ -137,78 +110,59 @@ log10 values.
 
 \subsection{Coincident elements}{
 
-A point, segment, line, or text label lying exactly
-in the plane of a polygon (such as a line drawn along a plane, or along
-the intersection of two planes) is drawn on top of that polygon.
+A point, segment, line, or text label lying exactly in the plane of a
+polygon (such as a line drawn along a plane, or along the intersection of
+two planes) is drawn on top of that polygon.
 }
 }
 \examples{
 p <- ggplot(mountain, aes(x, y, z)) +
+  geom_surface_3d() +
   coord_3d(ratio = c(2, 3, 1),
            light = light(mode = "hsl", direction = c(-1, 0, 0)))
 
-# Basic point annotation
-p + geom_surface_3d(
-  annotate = annotate_3d("point", x = .5, y = .25, z = 100,
-                         color = "red", size = 3))
+# A point, depth-sorted with the surface
+p + annotate_3d("point", x = .5, y = .25, z = 100, color = "red", size = 3)
 
-# Vectorized: multiple points in one call
-p + geom_surface_3d(
-  annotate = annotate_3d("point", x = .5, y = .25, z = seq(50, 100, 5),
-                         color = "red", size = 3))
+# Vectorized: several points in one call
+p + annotate_3d("point", x = .5, y = .25, z = seq(50, 100, 5),
+                color = "red", size = 3)
 
-# Multiple annotation types
-p + geom_surface_3d(
-  annotate = list(
-    annotate_3d("point", x = .5, y = .25, z = 100,
-                color = "red", size = 3),
-    annotate_3d("text", x = .5, y = .25, z = 100,
-                color = "red", label = "Look here!",
-                vjust = -1, fontface = "bold"),
-    annotate_3d("segment", x = .5, y = .25, z = 100,
-                xend = .5, yend = .25, zend = 50,
-                color = "red", size = 3)))
+# Several annotation types
+p +
+  annotate_3d("segment", x = .5, y = .25, z = 100,
+              xend = .5, yend = .25, zend = 50, color = "red") +
+  annotate_3d("point", x = .5, y = .25, z = 100, color = "red", size = 3) +
+  annotate_3d("text", x = .5, y = .25, z = 100, label = "Look here!",
+              color = "red", vjust = -1, fontface = "bold", on_top = TRUE)
 
 # Planes of a linear system, meeting at its solution, and the line along
 # which the first two planes intersect
 A <- rbind(c(1, 1, 1), c(1, -1, 0), c(0, 1, -1))
 ggplot(data.frame(x = 1/3, y = 1/3, z = 1/3), aes(x, y, z)) +
-  geom_point_3d(size = 3,
-                annotate = list(
-                  annotate_3d("plane", a = A[, 1], b = A[, 2],
-                              c = A[, 3], d = c(1, 0, 0),
-                              fill = c("tomato", "seagreen", "steelblue")),
-                  annotate_3d("line", x = 1/3, y = 1/3, z = 1/3,
-                              dx = 1, dy = 1, dz = -2, linewidth = 1))) +
+  geom_point_3d(size = 3) +
+  annotate_3d("plane", a = A[, 1], b = A[, 2], c = A[, 3], d = c(1, 0, 0),
+              fill = c("tomato", "seagreen", "steelblue")) +
+  annotate_3d("refline", x = 1/3, y = 1/3, z = 1/3,
+              dx = 1, dy = 1, dz = -2, linewidth = 1) +
   lims(x = c(-1, 1), y = c(-1, 1)) + zlim(-1, 1) +
   coord_3d()
-
-# A fitted regression plane, with a horizontal reference plane
-fit <- lm(mpg ~ wt + hp, data = mtcars)
-b <- coef(fit)
-ggplot(mtcars, aes(wt, hp, mpg)) +
-  geom_point_3d(annotate = list(
-    annotate_3d("plane", intercept = b[1], slope_x = b["wt"], slope_y = b["hp"],
-                fill = "steelblue"),
-    annotate_3d("plane", zintercept = 20, alpha = 0.3))) +
-  coord_3d(yaw = 120)
 
 # A polygon: the triangle spanned by two vectors and the origin
 u <- c(1, 0.2, 0.5); v <- c(0.3, 1, 0.8)
 ggplot(data.frame(x = 0, y = 0, z = 0, xend = c(u[1], v[1]),
                   yend = c(u[2], v[2]), zend = c(u[3], v[3])),
        aes(x, y, z, xend = xend, yend = yend, zend = zend)) +
-  geom_segment_3d(arrow = arrow(type = "closed", length = unit(8, "pt")),
-                  annotate = annotate_3d("polygon", x = c(0, u[1], v[1]),
-                                         y = c(0, u[2], v[2]), z = c(0, u[3], v[3]),
-                                         fill = "steelblue")) +
+  geom_segment_3d(arrow = arrow(type = "closed", length = unit(8, "pt"))) +
+  annotate_3d("polygon", x = c(0, u[1], v[1]), y = c(0, u[2], v[2]),
+              z = c(0, u[3], v[3]), fill = "steelblue") +
   coord_3d()
 
 # Axes through the origin, depth-sorted with a surface
 ggplot() +
   geom_function_3d(fun = function(x, y) (x^2 - y^2) / 2,
-                   xlim = c(-1, 1), ylim = c(-1, 1), n = 20,
-                   annotate = annotate_3d("axes", linewidth = 0.8)) +
+                   xlim = c(-1, 1), ylim = c(-1, 1), n = 20) +
+  annotate_3d("axes", linewidth = 0.8) +
   coord_3d(panels = "none") +
   theme_void()
 

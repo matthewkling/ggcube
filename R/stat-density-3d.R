@@ -250,7 +250,7 @@ geom_density_3d <- function(mapping = NULL, data = NULL,
                             stat = "density_3d",
                             position = "identity",
                             ...,
-                            annotate = NULL,
+                            annotate = deprecated(),
                             grid = "rectangle", n = 40, direction = "x", trim = TRUE,
                             h = NULL, adjust = 1,
                             pad = 0.1,
@@ -261,14 +261,15 @@ geom_density_3d <- function(mapping = NULL, data = NULL,
                             na.rm = FALSE, show.legend = NA, inherit.aes = TRUE) {
       check_sort_method(sort_method, "geom_density_3d")
 
-      layer(data = data, mapping = mapping, stat = get_proto(stat, "stat"), geom = GeomSurface3D,
-            position = position, show.legend = show.legend, inherit.aes = inherit.aes,
-            params = list(annotate = annotate, n = n, grid = grid, direction = direction, trim = trim,
-                          force_convex = force_convex, cull_backfaces = cull_backfaces,
-                          scale_depth = scale_depth,
-                          h = h, adjust = adjust, pad = pad, min_ndensity = min_ndensity,
-                          light = light, na.rm = na.rm, ...)
+      out <- layer(data = data, mapping = mapping, stat = get_proto(stat, "stat"), geom = GeomSurface3D,
+                   position = position, show.legend = show.legend, inherit.aes = inherit.aes,
+                   params = list(n = n, grid = grid, direction = direction, trim = trim,
+                                 force_convex = force_convex, cull_backfaces = cull_backfaces,
+                                 scale_depth = scale_depth,
+                                 h = h, adjust = adjust, pad = pad, min_ndensity = min_ndensity,
+                                 light = light, na.rm = na.rm, ...)
       )
+      with_annotations(out, annotate, "geom_density_3d")
 }
 
 #' @rdname stat_density_3d

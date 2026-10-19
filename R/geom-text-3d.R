@@ -924,22 +924,8 @@ GeomText3DBillboard <- ggproto("GeomText3DBillboard", Geom,
                                      lineheight = 1.2
                                ),
 
-                               setup_data = function(data, params) {
-                                     setup_annotations(data, params)
-                               },
-
-                               # Annotation rows other than text have no label, so they are
-                               # exempt from the missing-value check on required aesthetics
-                               handle_na = function(self, data, params) {
-                                     is_ann <- if (".ann" %in% names(data)) data$.ann %in% TRUE else rep(FALSE, nrow(data))
-                                     if (!any(is_ann)) return(ggproto_parent(Geom, self)$handle_na(data, params))
-                                     kept <- ggproto_parent(Geom, self)$handle_na(data[!is_ann, , drop = FALSE], params)
-                                     dplyr::bind_rows(kept, data[is_ann, , drop = FALSE])
-                               },
-
                                draw_panel = function(data, panel_params, coord,
-                                                     annotate = NULL,
-                                                     scale_depth = TRUE,
+                                                     scale_depth = TRUE, on_top = FALSE,
                                                      na.rm = FALSE) {
 
                                      # Validate coord
@@ -949,25 +935,15 @@ GeomText3DBillboard <- ggproto("GeomText3DBillboard", Geom,
                                            return(grid::nullGrob())
                                      }
 
-                                     data <- prepare_annotations(data, panel_params, annotate)
-
                                      # Each label is its own primitive, numbered in data order
-                                     # so that depth ties keep their original order. Annotation
-                                     # rows keep their own types and groups.
-                                     is_ann <- if (".ann" %in% names(data)) data$.ann %in% TRUE else rep(FALSE, nrow(data))
-                                     if (!".prim" %in% names(data)) data$.prim <- NA_character_
-                                     data$.prim[!is_ann] <- "text"
-                                     data$group <- as.character(data$group)
-                                     data$group[!is_ann] <- sprintf("text__%08d", seq_len(sum(!is_ann)))
+                                     # so that depth ties keep their original order
+                                     data$.prim <- "text"
+                                     data$group <- sprintf("text__%08d", seq_len(nrow(data)))
 
                                      coords <- coord$transform(data, panel_params, sort = FALSE)
+                                     finish <- function(coords) apply_depth_scaling(coords, scale_depth)
 
-                                     finish <- function(coords) {
-                                           coords <- apply_annotation_styles(coords)
-                                           apply_depth_scaling(coords, scale_depth)
-                                     }
-
-                                     layer_scene_grob(coords, panel_params, finish)
+                                     layer_scene_grob(coords, panel_params, finish, on_top = on_top)
                                },
 
                                draw_key = ggplot2::draw_key_text
@@ -1096,6 +1072,7 @@ GeomText3DBillboard <- ggproto("GeomText3DBillboard", Geom,
 #' @param tolerance (Polygon method only) Bezier curve tolerance for text
 #'   outlines. Lower values give smoother curves but more vertices.
 #' @inheritParams depth_params
+#' @inheritParams on_top_param
 #' @inheritParams annotate_params
 #' @param na.rm If TRUE, silently remove missing values.
 #' @param show.legend Logical. Should this layer be included in the legends?
@@ -1165,7 +1142,7 @@ GeomText3DBillboard <- ggproto("GeomText3DBillboard", Geom,
 geom_text_3d <- function(mapping = NULL, data = NULL,
                          position = "identity",
                          ...,
-                         annotate = NULL,
+                         annotate = deprecated(),
                          method = c("billboard", "polygon"),
                          # Polygon parameters
                          facing = "zmax",
@@ -1182,6 +1159,7 @@ geom_text_3d <- function(mapping = NULL, data = NULL,
                          vjust = 0.5,
                          lineheight = 1.2,
                          scale_depth = TRUE,
+                         on_top = FALSE,
                          # Polygon-only parameters
                          family = "sans",
                          weight = "normal",
@@ -1195,6 +1173,7 @@ geom_text_3d <- function(mapping = NULL, data = NULL,
                          inherit.aes = TRUE) {
 
       method <- match.arg(method)
+      check_on_top(on_top)
 
       if (method == "billboard") {
             # Warn if polygon-specific parameters are non-default
@@ -1213,12 +1192,11 @@ geom_text_3d <- function(mapping = NULL, data = NULL,
             }
 
             # Convert fontface string to numeric if needed
-            fontface_num <- switch(as.character(fontface),
-                                   "plain" = 1, "bold" = 2,
-                                   "italic" = 3, "bold.italic" = 4,
-                                   as.numeric(fontface))
+            fontface_num <- match(fontface, c("plain", "bold", "italic", "bold.italic"))
+            fontface_num <- ifelse(is.na(fontface_num), suppressWarnings(as.numeric(fontface)),
+                                   fontface_num)
 
-            layer(
+            out <- layer(
                   data = data,
                   mapping = mapping,
                   stat = StatText3DBillboard,
@@ -1227,7 +1205,6 @@ geom_text_3d <- function(mapping = NULL, data = NULL,
                   show.legend = show.legend,
                   inherit.aes = inherit.aes,
                   params = list(
-                        annotate = annotate,
                         nudge_x = nudge_x,
                         nudge_y = nudge_y,
                         nudge_z = nudge_z,
@@ -1239,13 +1216,15 @@ geom_text_3d <- function(mapping = NULL, data = NULL,
                         family = family,
                         fontface = fontface_num,
                         scale_depth = scale_depth,
+                        on_top = on_top,
                         na.rm = na.rm,
                         ...
                   )
             )
+            with_annotations(out, annotate, "geom_text_3d")
       } else {
             # Polygon method
-            layer(
+            out <- layer(
                   data = data,
                   mapping = mapping,
                   stat = StatText3DPolygon,
@@ -1254,7 +1233,6 @@ geom_text_3d <- function(mapping = NULL, data = NULL,
                   show.legend = show.legend,
                   inherit.aes = inherit.aes,
                   params = list(
-                        annotate = annotate,
                         facing = facing,
                         coord = coord,
                         aspect_adjust = aspect_adjust,
@@ -1273,11 +1251,13 @@ geom_text_3d <- function(mapping = NULL, data = NULL,
                         spacing = spacing,
                         tolerance = tolerance,
                         scale_depth = scale_depth,
+                        on_top = on_top,
                         force_convex = FALSE,
                         na.rm = na.rm,
                         ...
                   )
             )
+            with_annotations(out, annotate, "geom_text_3d")
       }
 }
 
