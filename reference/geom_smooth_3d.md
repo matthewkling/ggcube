@@ -33,14 +33,14 @@ geom_smooth_3d(
   se_color = NULL,
   se_alpha = 0.5,
   se_linewidth = NULL,
-  points = FALSE,
-  point_colour = "black",
-  point_color = NULL,
-  point_fill = NA,
-  point_size = 1.5,
-  point_shape = 19,
-  point_alpha = 1,
-  point_stroke = 0.5,
+  points = deprecated(),
+  point_colour = deprecated(),
+  point_color = deprecated(),
+  point_fill = deprecated(),
+  point_size = deprecated(),
+  point_shape = deprecated(),
+  point_alpha = deprecated(),
+  point_stroke = deprecated(),
   residuals = FALSE,
   residual_colour = "black",
   residual_color = NULL,
@@ -80,14 +80,14 @@ stat_smooth_3d(
   se_color = NULL,
   se_alpha = 0.5,
   se_linewidth = NULL,
-  points = FALSE,
-  point_colour = "black",
-  point_color = NULL,
-  point_fill = NA,
-  point_size = 1.5,
-  point_shape = 19,
-  point_alpha = 1,
-  point_stroke = 0.5,
+  points = deprecated(),
+  point_colour = deprecated(),
+  point_color = deprecated(),
+  point_fill = deprecated(),
+  point_size = deprecated(),
+  point_shape = deprecated(),
+  point_alpha = deprecated(),
+  point_stroke = deprecated(),
   residuals = FALSE,
   residual_colour = "black",
   residual_color = NULL,
@@ -216,38 +216,11 @@ stat_smooth_3d(
   Line width for confidence interval band borders. If `NULL`, inherits
   from the main surface `linewidth` aesthetic.
 
-- points:
+- points, point_colour, point_color, point_fill, point_size,
+  point_shape, point_alpha, point_stroke:
 
-  Logical indicating whether to overlay the original data points on the
-  fitted surface. Points are depth-sorted together with the surface
-  polygons for proper 3D rendering. Point styling is controlled via the
-  `point_*` parameters; mapped aesthetics from the layer are not
-  inherited by these points. Default is `FALSE`.
-
-- point_colour, point_color:
-
-  Color for data points. Defaults to `"black"`.
-
-- point_fill:
-
-  Fill color for data points (only relevant for shapes 21-25). Defaults
-  to `NA` (transparent).
-
-- point_size:
-
-  Size of data points.
-
-- point_shape:
-
-  Shape of data points.
-
-- point_alpha:
-
-  Alpha transparency for data points.
-
-- point_stroke:
-
-  Stroke width for data points.
+  Deprecated. Draw the data points with a separate layer instead, e.g.
+  `+ geom_point_3d()`.
 
 - residuals:
 
@@ -402,13 +375,13 @@ p + geom_smooth_3d()
 
 # \donttest{
 
-# Show data points
-p + geom_smooth_3d(points = TRUE)
+# Show data points, depth-sorted with the surface
+p + geom_smooth_3d() + geom_point_3d()
 
 
 # Show data points with residual lines
-p + geom_smooth_3d(points = TRUE, residuals = TRUE,
-      point_color = "red", alpha = .8)
+p + geom_smooth_3d(residuals = TRUE, alpha = .8) +
+      geom_point_3d(color = "red")
 
 
 # Linear model surface with 90% confidence intervals

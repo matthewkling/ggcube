@@ -99,7 +99,7 @@ faces.
 # 3D point layer in raw 3D form, and projected onto 2D face
 ggplot(sphere_points, aes(x, y, z)) +
   geom_point_3d(position = position_on_face("zmin"), color = "red") +
-  geom_point_3d(color = "black") + # add this layer last so it appears on top
+  geom_point_3d(color = "black") +
   coord_3d()
 
 

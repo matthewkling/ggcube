@@ -97,6 +97,42 @@ Performance:
   other geometry never hides or cuts it. This keeps labels legible
   wherever they fall, as in `annotate_3d("text", ..., on_top = TRUE)`.
 
+### Reference elements
+
+- New
+  [`geom_dropline_3d()`](https://matthewkling.github.io/ggcube/reference/geom_dropline_3d.md)
+  draws lines from points to their projections on faces of the panel,
+  given by `faces` (default `"zmin"`, the floor).
+- [`geom_point_3d()`](https://matthewkling.github.io/ggcube/reference/geom_point_3d.md)
+  gains a `flat` argument: with `flat = TRUE`, points placed on a face
+  of the panel by
+  [`position_on_face()`](https://matthewkling.github.io/ggcube/reference/position_on_face.md)
+  are drawn as markers lying flat in that face, like shadows, rather
+  than as symbols facing the viewer. Flat markers can be open, solid, or
+  filled circles, squares, diamonds, or triangles, match the size of
+  ordinary markers at the centre of the panel, and are drawn in true
+  perspective, outlines included, regardless of `scale_depth`. With
+  `position_on_face(c("3D", "zmin"))`, one layer draws the points and
+  their shadows.
+- The reference element arguments of
+  [`geom_point_3d()`](https://matthewkling.github.io/ggcube/reference/geom_point_3d.md)
+  and
+  [`stat_point_3d()`](https://matthewkling.github.io/ggcube/reference/geom_point_3d.md)
+  (`raw_points`, and those starting `ref_`) are deprecated in favour of
+  separate layers: drop lines with
+  [`geom_dropline_3d()`](https://matthewkling.github.io/ggcube/reference/geom_dropline_3d.md),
+  and reference points with
+  `geom_point_3d(position = position_on_face())`, adding `flat = TRUE`
+  for circles. They still work, with a warning.
+- The `points` argument of
+  [`geom_smooth_3d()`](https://matthewkling.github.io/ggcube/reference/geom_smooth_3d.md)
+  and
+  [`stat_smooth_3d()`](https://matthewkling.github.io/ggcube/reference/geom_smooth_3d.md),
+  and the `point_*` arguments that style the points, are deprecated.
+  Draw the data points with a separate layer, e.g. `+ geom_point_3d()`;
+  points requested through `points = TRUE` are now added as such a
+  layer.
+
 ### Other changes
 
 - ggcube now requires ggplot2 4.0.0 or later.

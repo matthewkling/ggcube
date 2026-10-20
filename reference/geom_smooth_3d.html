@@ -79,14 +79,14 @@ The fitted statistical model is evaluated on a regular grid and rendered as a
 <span>  se_color <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  se_alpha <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>  se_linewidth <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  points <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  point_colour <span class="op">=</span> <span class="st">"black"</span>,</span>
-<span>  point_color <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  point_fill <span class="op">=</span> <span class="cn">NA</span>,</span>
-<span>  point_size <span class="op">=</span> <span class="fl">1.5</span>,</span>
-<span>  point_shape <span class="op">=</span> <span class="fl">19</span>,</span>
-<span>  point_alpha <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  point_stroke <span class="op">=</span> <span class="fl">0.5</span>,</span>
+<span>  points <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  point_colour <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  point_color <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  point_fill <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  point_size <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  point_shape <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  point_alpha <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  point_stroke <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  residuals <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  residual_colour <span class="op">=</span> <span class="st">"black"</span>,</span>
 <span>  residual_color <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -126,14 +126,14 @@ The fitted statistical model is evaluated on a regular grid and rendered as a
 <span>  se_color <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  se_alpha <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>  se_linewidth <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  points <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  point_colour <span class="op">=</span> <span class="st">"black"</span>,</span>
-<span>  point_color <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  point_fill <span class="op">=</span> <span class="cn">NA</span>,</span>
-<span>  point_size <span class="op">=</span> <span class="fl">1.5</span>,</span>
-<span>  point_shape <span class="op">=</span> <span class="fl">19</span>,</span>
-<span>  point_alpha <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  point_stroke <span class="op">=</span> <span class="fl">0.5</span>,</span>
+<span>  points <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  point_colour <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  point_color <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  point_fill <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  point_size <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  point_shape <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  point_alpha <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  point_stroke <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  residuals <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  residual_colour <span class="op">=</span> <span class="st">"black"</span>,</span>
 <span>  residual_color <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -253,37 +253,9 @@ inherits from the main surface <code>color</code> aesthetic.</p></dd>
 inherits from the main surface <code>linewidth</code> aesthetic.</p></dd>
 
 
-<dt id="arg-points">points<a class="anchor" aria-label="anchor" href="#arg-points"></a></dt>
-<dd><p>Logical indicating whether to overlay the original data points
-on the fitted surface. Points are depth-sorted together with the surface
-polygons for proper 3D rendering. Point styling is controlled via the
-<code>point_*</code> parameters; mapped aesthetics from the layer are not inherited
-by these points. Default is <code>FALSE</code>.</p></dd>
-
-
-<dt id="arg-point-colour-point-color">point_colour, point_color<a class="anchor" aria-label="anchor" href="#arg-point-colour-point-color"></a></dt>
-<dd><p>Color for data points. Defaults to <code>"black"</code>.</p></dd>
-
-
-<dt id="arg-point-fill">point_fill<a class="anchor" aria-label="anchor" href="#arg-point-fill"></a></dt>
-<dd><p>Fill color for data points (only relevant for shapes 21-25).
-Defaults to <code>NA</code> (transparent).</p></dd>
-
-
-<dt id="arg-point-size">point_size<a class="anchor" aria-label="anchor" href="#arg-point-size"></a></dt>
-<dd><p>Size of data points.</p></dd>
-
-
-<dt id="arg-point-shape">point_shape<a class="anchor" aria-label="anchor" href="#arg-point-shape"></a></dt>
-<dd><p>Shape of data points.</p></dd>
-
-
-<dt id="arg-point-alpha">point_alpha<a class="anchor" aria-label="anchor" href="#arg-point-alpha"></a></dt>
-<dd><p>Alpha transparency for data points.</p></dd>
-
-
-<dt id="arg-point-stroke">point_stroke<a class="anchor" aria-label="anchor" href="#arg-point-stroke"></a></dt>
-<dd><p>Stroke width for data points.</p></dd>
+<dt id="arg-points-point-colour-point-color-point-fill-point-size-point-shape-point-alpha-point-stroke">points, point_colour, point_color, point_fill, point_size, point_shape, point_alpha, point_stroke<a class="anchor" aria-label="anchor" href="#arg-points-point-colour-point-color-point-fill-point-size-point-shape-point-alpha-point-stroke"></a></dt>
+<dd><p>Deprecated. Draw the data points with a separate layer instead, e.g.
+<code>+ geom_point_3d()</code>.</p></dd>
 
 
 <dt id="arg-residuals">residuals<a class="anchor" aria-label="anchor" href="#arg-residuals"></a></dt>
@@ -422,13 +394,13 @@ and axis text.</p></dd>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Show data points</span></span></span>
-<span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu">geom_smooth_3d</span><span class="op">(</span>points <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># Show data points, depth-sorted with the surface</span></span></span>
+<span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu">geom_smooth_3d</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="geom_point_3d.html">geom_point_3d</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="geom_smooth_3d-2.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Show data points with residual lines</span></span></span>
-<span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu">geom_smooth_3d</span><span class="op">(</span>points <span class="op">=</span> <span class="cn">TRUE</span>, residuals <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
-<span class="r-in"><span>      point_color <span class="op">=</span> <span class="st">"red"</span>, alpha <span class="op">=</span> <span class="fl">.8</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu">geom_smooth_3d</span><span class="op">(</span>residuals <span class="op">=</span> <span class="cn">TRUE</span>, alpha <span class="op">=</span> <span class="fl">.8</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span>      <span class="fu"><a href="geom_point_3d.html">geom_point_3d</a></span><span class="op">(</span>color <span class="op">=</span> <span class="st">"red"</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="geom_smooth_3d-3.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Linear model surface with 90% confidence intervals</span></span></span>

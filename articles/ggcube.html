@@ -97,15 +97,6 @@ creates a 3D plot:</p>
 <p>Some standard ggplot2 layers like <code><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point()</a></code> work in
 3D automatically. ggcube also provides 3D-specific layer functions for
 surfaces, paths, volumes, and text, described below.</p>
-<p>Because ggcube works within ggplot2’s 2D graphics engine, there are
-some important things to understand about how rendering works. Each 3D
-layer projects its geometry onto a 2D plane, with depth sorting to
-determine which elements appear in front of others. This sorting happens
-<em>within</em> each layer, but not <em>across</em> layers — just as in
-standard ggplot2, later layers are drawn on top of earlier ones
-regardless of their 3D depth. This means that layer order in your code
-matters, and complex multi-layer scenes may require some thought about
-stacking.</p>
 </div>
 <div class="section level2">
 <h2 id="controlling-the-view">Controlling the view<a class="anchor" aria-label="anchor" href="#controlling-the-view"></a>
@@ -179,13 +170,18 @@ surfaces</a> article for more detail on surface plotting options.</p>
 <h3 id="points">Points<a class="anchor" aria-label="anchor" href="#points"></a>
 </h3>
 <p><code><a href="../reference/geom_point_3d.html">geom_point_3d()</a></code> extends scatter plots with depth-scaled
-point sizes (closer points shown larger), proper depth sorting (closer
-points plotted on top), and optional reference lines and points that
-project onto cube faces:</p>
+point sizes (closer points shown larger) and proper depth sorting
+(closer points plotted on top). To show where points lie in 3D, add drop
+lines to cube faces with <code><a href="../reference/geom_dropline_3d.html">geom_dropline_3d()</a></code>, and project
+the points onto those faces with <code><a href="../reference/position_on_face.html">position_on_face()</a></code>,
+drawing them as markers lying flat on the faces with
+<code>flat = TRUE</code>:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mpg</span>, <span class="fu"><a href="../reference/aes.html">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">displ</span>, y <span class="op">=</span> <span class="va">hwy</span>, z <span class="op">=</span> <span class="va">drv</span>, fill <span class="op">=</span> <span class="va">class</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>      <span class="fu"><a href="../reference/geom_point_3d.html">geom_point_3d</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">3</span>, shape <span class="op">=</span> <span class="fl">21</span>, color <span class="op">=</span> <span class="st">"black"</span>, stroke <span class="op">=</span> <span class="fl">.1</span>,</span>
-<span>                    ref_lines <span class="op">=</span> <span class="cn">TRUE</span>, ref_faces <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ymax"</span>, <span class="st">"xmax"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>      <span class="fu"><a href="../reference/geom_dropline_3d.html">geom_dropline_3d</a></span><span class="op">(</span>faces <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ymax"</span>, <span class="st">"xmax"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>      <span class="fu"><a href="../reference/geom_point_3d.html">geom_point_3d</a></span><span class="op">(</span>position <span class="op">=</span> <span class="fu"><a href="../reference/position_on_face.html">position_on_face</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ymax"</span>, <span class="st">"xmax"</span><span class="op">)</span><span class="op">)</span>, flat <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>                    size <span class="op">=</span> <span class="fl">3</span>, shape <span class="op">=</span> <span class="fl">21</span>, stroke <span class="op">=</span> <span class="fl">.1</span>, alpha <span class="op">=</span> <span class="fl">.5</span>, show.legend <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">+</span></span>
+<span>      <span class="fu"><a href="../reference/geom_point_3d.html">geom_point_3d</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">3</span>, shape <span class="op">=</span> <span class="fl">21</span>, color <span class="op">=</span> <span class="st">"black"</span>, stroke <span class="op">=</span> <span class="fl">.1</span><span class="op">)</span> <span class="op">+</span></span>
 <span>      <span class="fu"><a href="../reference/coord_3d.html">coord_3d</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p><img src="ggcube_files/figure-html/points-1.png" class="r-plt" alt="" width="1050"></p>
 </div>

@@ -7,10 +7,13 @@ using familiar ggplot2 syntax with `aes(x, y, z)` and
 
 The package provides a variety of 3D-specific `geoms` to render
 surfaces, prisms, points, paths, and text in 3D; it also works with some
-standard ggplot2 layer functions. You can control plot geometry with 3D
-projection parameters, apply a range of 3D lighting models, and mix 3D
-layers with 2D layers rendered on cube faces. Standard ggplot2 features
-like faceting, themes, scales, and legends work as expected.
+standard ggplot2 layer functions. All 3D layers in a panel are
+depth-sorted together, so surfaces, points, lines, and text from
+different layers occlude each other correctly. You can control plot
+geometry with 3D projection parameters, apply a range of 3D lighting
+models, and mix 3D layers with 2D layers rendered on cube faces.
+Standard ggplot2 features like faceting, themes, scales, and legends
+work as expected.
 
 3D plots are wonderful for exploration, storytelling, and data art. But
 note that for precise quantitative communication, where occlusion and
@@ -90,14 +93,14 @@ ggplot(mpg, aes(displ, hwy, drv, color = class)) +
   renders surfaces as a series of cross-sections
 - [`geom_contour_3d()`](https://matthewkling.github.io/ggcube/reference/geom_contour_3d.md)
   renders surfaces as layer cakes of stacked contours
-- [`stat_function()`](https://ggplot2.tidyverse.org/reference/geom_function.html)
+- [`geom_function_3d()`](https://matthewkling.github.io/ggcube/reference/stat_function_3d.md)
   visualizes mathematical functions
-- [`stat_smooth_3d()`](https://matthewkling.github.io/ggcube/reference/geom_smooth_3d.md)
+- [`geom_smooth_3d()`](https://matthewkling.github.io/ggcube/reference/geom_smooth_3d.md)
   fits statistical models with two predictors and visualizes fitted
   surfaces with confidence intervals
-- [`stat_density_3d()`](https://matthewkling.github.io/ggcube/reference/stat_density_3d.md)
+- [`geom_density_3d()`](https://matthewkling.github.io/ggcube/reference/stat_density_3d.md)
   creates perspective visualizations of 2D kernel density estimates
-- [`stat_hull_3d()`](https://matthewkling.github.io/ggcube/reference/geom_hull_3d.md)
+- [`geom_hull_3d()`](https://matthewkling.github.io/ggcube/reference/geom_hull_3d.md)
   plots triangulated volumes based on convex or alpha hulls of 3D points
 
 See the
@@ -154,15 +157,17 @@ ggplot() +
 ![](reference/figures/README-functions-1.png)
 
 Example: a fitted model surface using
-[`geom_smooth_3d()`](https://matthewkling.github.io/ggcube/reference/geom_smooth_3d.md):
+[`geom_smooth_3d()`](https://matthewkling.github.io/ggcube/reference/geom_smooth_3d.md),
+with the data points depth-sorted among the fitted and confidence
+surfaces:
 
 ``` r
 
 # Generate scattered 3D data
 set.seed(123)
-d <- data.frame(x = rnorm(50),
-                y = rnorm(50))
-d$z <- d$x + d$x^2 - d$y^2 + rnorm(50)
+d <- data.frame(x = rnorm(200),
+                y = rnorm(200))
+d$z <- d$x + d$x^2 - d$y^2 + rnorm(200)
 
 # Plot GAM fit with uncertainty layers
 ggplot(d, aes(x, y, z)) + 
@@ -170,6 +175,7 @@ ggplot(d, aes(x, y, z)) +
                      method = "gam", formula = z ~ te(x, y),
                      se = TRUE, level = 0.99,
                      color = "black", grid = "equilateral") +
+      geom_point_3d() +
       scale_fill_manual(values = c("red", "darkorchid4", "steelblue")) +
       coord_3d(light = NULL)
 ```
@@ -201,16 +207,21 @@ While
 [`ggplot2::geom_point()`](https://ggplot2.tidyverse.org/reference/geom_point.html)
 works with ggcube as demonstrated above,
 [`geom_point_3d()`](https://matthewkling.github.io/ggcube/reference/geom_point_3d.md)
-creates 3D-aware scatter plots with proper point ordering, depth-scaled
-point sizes, and options to include reference lines and reference points
-projecting 3D points onto 2D face panels:
+creates 3D-aware scatter plots with proper point ordering and
+depth-scaled point sizes.
+[`geom_dropline_3d()`](https://matthewkling.github.io/ggcube/reference/geom_dropline_3d.md)
+and
+[`position_on_face()`](https://matthewkling.github.io/ggcube/reference/position_on_face.md)
+add drop lines and reference points projecting 3D points onto 2D face
+panels:
 
 ``` r
 
 ggplot(mpg, aes(x = displ, y = hwy, z = drv, fill = class)) +
-      geom_point_3d(size = 3, shape = 21, color = "black", stroke = .1,
-                    ref_lines = TRUE, ref_points = TRUE,
-                    ref_faces = c("ymax", "xmax")) +
+      geom_dropline_3d(faces = c("ymax", "xmax")) +
+      geom_point_3d(position = position_on_face(c("ymax", "xmax")), flat = TRUE,
+                    size = 3, shape = 21, stroke = .1, alpha = .5, show.legend = FALSE) +
+      geom_point_3d(size = 3, shape = 21, color = "black", stroke = .1) +
       coord_3d()
 ```
 
@@ -257,6 +268,44 @@ ggplot(df, aes(x, y, z, label = label, fill = x)) +
 ```
 
 ![](reference/figures/README-text-1.png)
+
+## Annotations and reference geometry
+
+[`annotate_3d()`](https://matthewkling.github.io/ggcube/reference/annotate_3d.md)
+adds points, text, segments, polygons, and other reference geometry at
+fixed positions, like ggplot2’s
+[`annotate()`](https://ggplot2.tidyverse.org/reference/annotate.html).
+Reference geometry that spans the panel has its own layer functions:
+[`geom_plane_3d()`](https://matthewkling.github.io/ggcube/reference/geom_plane_3d.md)
+draws planes,
+[`geom_refline_3d()`](https://matthewkling.github.io/ggcube/reference/geom_refline_3d.md)
+infinite lines, and
+[`geom_axes_3d()`](https://matthewkling.github.io/ggcube/reference/geom_axes_3d.md)
+axes through an origin, while
+[`geom_dropline_3d()`](https://matthewkling.github.io/ggcube/reference/geom_dropline_3d.md)
+drops lines from points to the panel’s faces. These are all depth-sorted
+with the rest of the scene, which makes ggcube handy for diagrams:
+
+``` r
+
+u <- c(1, .2, .4); v <- c(.3, 1, .7)
+vecs <- data.frame(xend = c(u[1], v[1]), yend = c(u[2], v[2]), zend = c(u[3], v[3]),
+                   label = c("u", "v"))
+ggplot(vecs, aes(0, 0, 0, xend = xend, yend = yend, zend = zend)) +
+      annotate_3d("polygon", x = c(0, u[1], v[1]), y = c(0, u[2], v[2]),
+                  z = c(0, u[3], v[3]), fill = "steelblue") +
+      geom_plane_3d(zintercept = .3, fill = "tomato", alpha = .4) +
+      geom_axes_3d() +
+      geom_segment_3d(arrow = arrow(type = "closed", length = unit(8, "pt")),
+                      linewidth = 1) +
+      geom_text_3d(aes(xend * 1.1, yend * 1.1, zend * 1.1, label = label),
+                   size = 6, on_top = TRUE) +
+      lims(x = c(-.25, 1.1), y = c(-.25, 1.1)) + zlim(-.25, 1.1) +
+      coord_3d() + 
+      theme_void()
+```
+
+![](reference/figures/README-annotation-1.png)
 
 ## Lighting effects
 
@@ -359,8 +408,8 @@ ggplot(iris, aes(Sepal.Length, Sepal.Width, Petal.Length,
       geom_voxel_3d(aes(round(Sepal.Length), round(Sepal.Width), round(Petal.Length)),
                     position = position_on_face("xmax"), alpha = .15, light = NULL) +
       
-      # 3D scatter plot (added last so it renders in front)
-      geom_point_3d( shape = 21, color = "black", stroke = .25)
+      # 3D scatter plot
+      geom_point_3d(shape = 21, color = "black", stroke = .25)
 ```
 
 ![](reference/figures/README-position-1.png)

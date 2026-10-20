@@ -79,7 +79,8 @@
 <p><code><a href="../reference/coord_3d.html">coord_3d()</a></code> is the core of every ggcube plot. It controls
 how 3D data is rotated, projected, framed, and decorated. This article
 walks through each of its parameters in detail.</p>
-<p>We’ll use a common base plot throughout:</p>
+<p>We’ll use a common base plot throughout. For clarity, let’s suppress
+the axis text and add arrows at the positive ends of the axis lines:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="../reference/stat_function_3d.html">geom_function_3d</a></span><span class="op">(</span></span>
@@ -92,17 +93,25 @@ walks through each of its parameters in detail.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/guides.html" class="external-link">guides</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="fu"><a href="../reference/guide_3d.html">guide_colorbar_3d</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_light</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"none"</span>,</span>
-<span>        axis.text <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span>        axis.text <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>        axis.line <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_line</a></span><span class="op">(</span>color <span class="op">=</span> <span class="st">"black"</span>, </span>
+<span>                                 arrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/grid/arrow.html" class="external-link">arrow</a></span><span class="op">(</span><span class="fl">20</span>, <span class="fu"><a href="https://rdrr.io/r/grid/unit.html" class="external-link">unit</a></span><span class="op">(</span><span class="fl">.1</span>, <span class="st">"in"</span><span class="op">)</span>, type <span class="op">=</span> <span class="st">"closed"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <div class="section level2">
 <h2 id="rotation">Rotation<a class="anchor" aria-label="anchor" href="#rotation"></a>
 </h2>
-<p>Three angles control how the plot is oriented: <code>pitch</code>,
-<code>roll</code>, and <code>yaw</code> rotate the plot around the x-,
-y-, and z-axes, respectively. All are specified in degrees. When they’re
-all zero, the plot resembles a standard 2D plot (+x = right, +y = up, +z
-= toward viewer). The defaults (<code>pitch = 0</code>,
-<code>roll = -60</code>, <code>yaw = -30</code>) give an overhead corner
-view that can work well for many plots.</p>
+<p>The plot’s rotation in 3D space can be specified in three different
+ways: Euler angles, viewing vectors, or viewing angles.</p>
+<div class="section level3">
+<h3 id="euler-angles">Euler angles<a class="anchor" aria-label="anchor" href="#euler-angles"></a>
+</h3>
+<p>One way to specify the rotation is by providing three angles,
+<code>pitch</code>, <code>roll</code>, and <code>yaw</code>, which
+rotate the plot around the x-, y-, and z-axes, respectively. All are
+specified in degrees. When they’re all zero, the plot resembles a
+standard 2D plot (+x = right, +y = up, +z = toward viewer). The defaults
+(<code>pitch = 0</code>, <code>roll = -60</code>,
+<code>yaw = -30</code>) give an overhead corner view that can work well
+for many plots.</p>
 <p>Here are a variety of rotations showing the default, the
 zero-rotation case, the effect of setting each rotation angle
 individually while the others are held at zero, and an example combining
@@ -117,6 +126,7 @@ them to achieve an arbitrary rotation (note this uses the
 <span>  <span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/coord_3d.html">coord_3d</a></span><span class="op">(</span>pitch <span class="op">=</span> <span class="fl">0</span>, roll <span class="op">=</span> <span class="fl">0</span>, yaw <span class="op">=</span> <span class="fl">30</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"yaw = 30"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://patchwork.data-imaginist.com/reference/plot_layout.html" class="external-link">plot_layout</a></span><span class="op">(</span>nrow <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
 <p><img src="coord_3d_files/figure-html/rotation-1.png" class="r-plt" alt="" width="1050"></p>
+</div>
 <div class="section level3">
 <h3 id="viewing-direction">Viewing direction<a class="anchor" aria-label="anchor" href="#viewing-direction"></a>
 </h3>
@@ -126,7 +136,7 @@ the same orientation as the data axes. Only the direction of the vector
 matters, not its length, so <code>c(1, 1, 1)</code> and
 <code>c(2, 2, 2)</code> both view the cube from its xmax-ymax-zmax
 corner. The plot is turned so that the z axis points up the page, or,
-when looking straight down the z axis, so that the y axis does.</p>
+when looking straight down the z axis, so that the y axis points up.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/coord_3d.html">coord_3d</a></span><span class="op">(</span>direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"c(0, 0, 1)"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/coord_3d.html">coord_3d</a></span><span class="op">(</span>direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"c(1, 1, 1)"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
@@ -136,32 +146,37 @@ when looking straight down the z axis, so that the y axis does.</p>
 <span>  <span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/coord_3d.html">coord_3d</a></span><span class="op">(</span>direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="op">-</span><span class="fl">1</span>, <span class="op">-</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"c(1, -1, -1)"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://patchwork.data-imaginist.com/reference/plot_layout.html" class="external-link">plot_layout</a></span><span class="op">(</span>nrow <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
 <p><img src="coord_3d_files/figure-html/view-direction-1.png" class="r-plt" alt="" width="1050"></p>
-<p>If you’d rather think in angles, <code><a href="../reference/direction.html">direction()</a></code> builds the
-vector from an azimuth and an elevation in degrees. Azimuth is a compass
-bearing, measured clockwise from the positive y axis, and elevation is
-the angle above the xy plane. The default view, for example, is from an
-azimuth of 210 and an elevation of 30, so
+<p>Because a direction only says where the viewer is, it can’t express a
+view that is tilted sideways; use <code>pitch</code>, <code>roll</code>,
+and <code>yaw</code> to achieve that. Supplying <code>direction</code>
+together with any of the rotation angles is an error.</p>
+</div>
+<div class="section level3">
+<h3 id="viewing-angles">Viewing angles<a class="anchor" aria-label="anchor" href="#viewing-angles"></a>
+</h3>
+<p>If you’d rather think in angles, you can pass an azimuth and an
+elevation to <code><a href="../reference/direction.html">direction()</a></code>, which builds a vector you can use
+for <code>direction</code>. Azimuth is a compass bearing, measured
+clockwise from the positive y axis, and elevation is the angle above the
+xy plane, both specified in degrees. The default view, for example, is
+from an azimuth of 210 and an elevation of 30, so
 <code>coord_3d(direction = direction(210, 30))</code> gives the same
 plot as <code><a href="../reference/coord_3d.html">coord_3d()</a></code>:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/direction.html">direction</a></span><span class="op">(</span><span class="fl">210</span>, <span class="fl">30</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] -0.4330127 -0.7500000  0.5000000</span></span></code></pre></div>
-<p>Because a direction only says where the viewer is, it can’t express a
-view that is tilted sideways; use <code>pitch</code>, <code>roll</code>,
-and <code>yaw</code> for those. Supplying <code>direction</code>
-together with any of the rotation angles is an error.</p>
 </div>
-<div class="section level3">
-<h3 id="finding-a-view">Finding a view<a class="anchor" aria-label="anchor" href="#finding-a-view"></a>
-</h3>
+</div>
+<div class="section level2">
+<h2 id="finding-a-view">Finding a view<a class="anchor" aria-label="anchor" href="#finding-a-view"></a>
+</h2>
 <p>Choosing angles by trial and error can be slow. Two tools help: the
-facets <code><a href="../reference/facet_wrap_views.html">facet_wrap_views()</a></code> and
+facet functions <code><a href="../reference/facet_wrap_views.html">facet_wrap_views()</a></code> and
 <code><a href="../reference/facet_wrap_views.html">facet_grid_views()</a></code> lay out a grid of views side by side for
-comparison, and <code><a href="../reference/orbit_3d.html">orbit_3d()</a></code> lets you drag the plot around
-and read the angles of the current view off its corner, ready to copy
-into <code><a href="../reference/coord_3d.html">coord_3d()</a></code>. See the <a href="../articles/animation.html">animation and multiple views</a>
-article for both.</p>
-</div>
+comparison, and <code><a href="../reference/orbit_3d.html">orbit_3d()</a></code> lets you interactively rotate
+the plot read the angles of the current view, ready to copy into
+<code><a href="../reference/coord_3d.html">coord_3d()</a></code>. See the <a href="../articles/animation.html">animation and multiple views</a>
+article for details on both.</p>
 </div>
 <div class="section level2">
 <h2 id="perspective-and-distance">Perspective and distance<a class="anchor" aria-label="anchor" href="#perspective-and-distance"></a>
@@ -218,6 +233,33 @@ applied to the data coordinates:</p>
 <p><img src="coord_3d_files/figure-html/ratio-1.png" class="r-plt" alt="" width="1050"></p>
 </div>
 <div class="section level2">
+<h2 id="zooming-clipping-and-expansion">Zooming, clipping, and expansion<a class="anchor" aria-label="anchor" href="#zooming-clipping-and-expansion"></a>
+</h2>
+<p><code>zoom</code> adjusts the overall framing without changing the
+rotation or projection. Values less than 1 zoom out (more whitespace),
+while values greater than 1 zoom in (tighter framing).</p>
+<p>The <code>clip</code> parameter controls whether graphical elements
+can be drawn outside the panel area (ggplot2’s rectangular canvas, not
+the projected 3D panel). The default <code>"off"</code> allows this,
+which is generally recommended for 3D plots where elements may extend
+beyond the projected panel area.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/coord_3d.html">coord_3d</a></span><span class="op">(</span>zoom <span class="op">=</span> <span class="fl">0.7</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"zoom = 0.7"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/coord_3d.html">coord_3d</a></span><span class="op">(</span>zoom <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"zoom = 1\n(default)"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/coord_3d.html">coord_3d</a></span><span class="op">(</span>zoom <span class="op">=</span> <span class="fl">1.5</span>, clip <span class="op">=</span> <span class="st">"on"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">'zoom = 1.5\nclip = "on"'</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://patchwork.data-imaginist.com/reference/plot_layout.html" class="external-link">plot_layout</a></span><span class="op">(</span>ncol <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
+<p><img src="coord_3d_files/figure-html/zoom-1.png" class="r-plt" alt="" width="1050">
+The <code>expand</code> parameter works like the <code>expand</code>
+argument in standard ggplot2 scales — when <code>TRUE</code> (the
+default), axis ranges are padded slightly beyond the data range. You can
+fine-tune expansion per axis using the standard scale functions.</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/coord_3d.html">coord_3d</a></span><span class="op">(</span>expand <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"expand = TRUE (default)"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/coord_3d.html">coord_3d</a></span><span class="op">(</span>expand <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"expand = FALSE"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://patchwork.data-imaginist.com/reference/plot_layout.html" class="external-link">plot_layout</a></span><span class="op">(</span>ncol <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
+<p><img src="coord_3d_files/figure-html/expand-1.png" class="r-plt" alt="" width="1050"></p>
+</div>
+<div class="section level2">
 <h2 id="panel-selection">Panel selection<a class="anchor" aria-label="anchor" href="#panel-selection"></a>
 </h2>
 <p>The <code>panels</code> argument controls which faces of the cube are
@@ -231,7 +273,7 @@ their styling is controlled via theme elements (see the theming section
 below).</p>
 <p>You can request specific faces by name, show all faces, or hide them
 entirely:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/coord_3d.html">coord_3d</a></span><span class="op">(</span>panels <span class="op">=</span> <span class="st">"background"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">'"background" (default)'</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/coord_3d.html">coord_3d</a></span><span class="op">(</span>panels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"xmin"</span>, <span class="st">"xmax"</span>, <span class="st">"zmax"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">'c("xmin", "xmax", "zmax")'</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
@@ -241,39 +283,15 @@ entirely:</p>
 <p><img src="coord_3d_files/figure-html/panels-1.png" class="r-plt" alt="" width="1050"></p>
 </div>
 <div class="section level2">
-<h2 id="zooming-clipping-and-expansion">Zooming, clipping, and expansion<a class="anchor" aria-label="anchor" href="#zooming-clipping-and-expansion"></a>
-</h2>
-<p><code>zoom</code> adjusts the overall framing without changing the
-rotation or projection. Values less than 1 zoom out (more whitespace),
-while values greater than 1 zoom in (tighter framing).</p>
-<p>The <code>clip</code> parameter controls whether graphical elements
-can be drawn outside the panel area (ggplot2’s rectangular canvas, not
-the projected 3D panel). The default <code>"off"</code> allows this,
-which is generally recommended for 3D plots where elements may extend
-beyond the projected panel area.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/coord_3d.html">coord_3d</a></span><span class="op">(</span>zoom <span class="op">=</span> <span class="fl">0.7</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"zoom = 0.7"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/coord_3d.html">coord_3d</a></span><span class="op">(</span>zoom <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"zoom = 1\n(default)"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/coord_3d.html">coord_3d</a></span><span class="op">(</span>zoom <span class="op">=</span> <span class="fl">1.5</span>, clip <span class="op">=</span> <span class="st">"on"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">'zoom = 1.5\nclip = "on"'</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://patchwork.data-imaginist.com/reference/plot_layout.html" class="external-link">plot_layout</a></span><span class="op">(</span>ncol <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
-<p><img src="coord_3d_files/figure-html/zoom-1.png" class="r-plt" alt="" width="1050">
-The <code>expand</code> parameter works like the <code>expand</code>
-argument in standard ggplot2 scales — when <code>TRUE</code> (the
-default), axis ranges are padded slightly beyond the data range. You can
-fine-tune expansion per axis using the standard scale functions.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/coord_3d.html">coord_3d</a></span><span class="op">(</span>expand <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"expand = TRUE (default)"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/coord_3d.html">coord_3d</a></span><span class="op">(</span>expand <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"expand = FALSE"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://patchwork.data-imaginist.com/reference/plot_layout.html" class="external-link">plot_layout</a></span><span class="op">(</span>ncol <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
-<p><img src="coord_3d_files/figure-html/expand-1.png" class="r-plt" alt="" width="1050"></p>
-</div>
-<div class="section level2">
 <h2 id="axis-label-placement">Axis label placement<a class="anchor" aria-label="anchor" href="#axis-label-placement"></a>
 </h2>
+<p>Axis furnishings, including lines, ticks, text, and titles,
+<em>belong to panels</em>. This means they can only be drawn on panels
+that are themselves visible (see above).</p>
 <p>The <code>xlabels</code>, <code>ylabels</code>, and
 <code>zlabels</code> parameters control where axis tick labels and
 titles are placed. Each axis potentially has multiple possible edges
-where labels could appear (depending on which faces are visible). The
+where labels could appear, depending on which faces are visible. The
 default <code>"auto"</code> uses a heuristic that prioritizes edges on
 the periphery of the plot for readability.</p>
 <p>For manual control, pass a length-2 character vector naming two
@@ -364,6 +382,9 @@ foreground faces (inherits from <code>panel.grid</code>)</li>
 <strong><code>panel.grid.major.foreground</code></strong>: Major
 grid lines on foreground faces (inherits from
 <code>panel.grid.foreground</code>)</li>
+<li>
+<strong><code>axis.line.z</code></strong>: Z-axis line (inherits
+from <code>axis.line</code>)</li>
 <li>
 <strong><code>axis.ticks.z</code></strong>: Z-axis tick (inherits
 from <code>axis.ticks</code>)</li>

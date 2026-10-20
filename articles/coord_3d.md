@@ -11,7 +11,8 @@ is the core of every ggcube plot. It controls how 3D data is rotated,
 projected, framed, and decorated. This article walks through each of its
 parameters in detail.
 
-We’ll use a common base plot throughout:
+We’ll use a common base plot throughout. For clarity, let’s suppress the
+axis text and add arrows at the positive ends of the axis lines:
 
 ``` r
 
@@ -26,17 +27,24 @@ p <- ggplot() +
   guides(fill = guide_colorbar_3d()) +
   theme_light() +
   theme(legend.position = "none",
-        axis.text = element_blank())
+        axis.text = element_blank(),
+        axis.line = element_line(color = "black", 
+                                 arrow = arrow(20, unit(.1, "in"), type = "closed")))
 ```
 
 ## Rotation
 
-Three angles control how the plot is oriented: `pitch`, `roll`, and
-`yaw` rotate the plot around the x-, y-, and z-axes, respectively. All
-are specified in degrees. When they’re all zero, the plot resembles a
-standard 2D plot (+x = right, +y = up, +z = toward viewer). The defaults
-(`pitch = 0`, `roll = -60`, `yaw = -30`) give an overhead corner view
-that can work well for many plots.
+The plot’s rotation in 3D space can be specified in three different
+ways: Euler angles, viewing vectors, or viewing angles.
+
+### Euler angles
+
+One way to specify the rotation is by providing three angles, `pitch`,
+`roll`, and `yaw`, which rotate the plot around the x-, y-, and z-axes,
+respectively. All are specified in degrees. When they’re all zero, the
+plot resembles a standard 2D plot (+x = right, +y = up, +z = toward
+viewer). The defaults (`pitch = 0`, `roll = -60`, `yaw = -30`) give an
+overhead corner view that can work well for many plots.
 
 Here are a variety of rotations showing the default, the zero-rotation
 case, the effect of setting each rotation angle individually while the
@@ -64,7 +72,7 @@ viewed *from*, as a vector `c(x, y, z)` in the same orientation as the
 data axes. Only the direction of the vector matters, not its length, so
 `c(1, 1, 1)` and `c(2, 2, 2)` both view the cube from its xmax-ymax-zmax
 corner. The plot is turned so that the z axis points up the page, or,
-when looking straight down the z axis, so that the y axis does.
+when looking straight down the z axis, so that the y axis points up.
 
 ``` r
 
@@ -79,12 +87,20 @@ when looking straight down the z axis, so that the y axis does.
 
 ![](coord_3d_files/figure-html/view-direction-1.png)
 
-If you’d rather think in angles,
-[`direction()`](https://matthewkling.github.io/ggcube/reference/direction.md)
-builds the vector from an azimuth and an elevation in degrees. Azimuth
-is a compass bearing, measured clockwise from the positive y axis, and
-elevation is the angle above the xy plane. The default view, for
-example, is from an azimuth of 210 and an elevation of 30, so
+Because a direction only says where the viewer is, it can’t express a
+view that is tilted sideways; use `pitch`, `roll`, and `yaw` to achieve
+that. Supplying `direction` together with any of the rotation angles is
+an error.
+
+### Viewing angles
+
+If you’d rather think in angles, you can pass an azimuth and an
+elevation to
+[`direction()`](https://matthewkling.github.io/ggcube/reference/direction.md),
+which builds a vector you can use for `direction`. Azimuth is a compass
+bearing, measured clockwise from the positive y axis, and elevation is
+the angle above the xy plane, both specified in degrees. The default
+view, for example, is from an azimuth of 210 and an elevation of 30, so
 `coord_3d(direction = direction(210, 30))` gives the same plot as
 [`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md):
 
@@ -94,26 +110,21 @@ direction(210, 30)
 #> [1] -0.4330127 -0.7500000  0.5000000
 ```
 
-Because a direction only says where the viewer is, it can’t express a
-view that is tilted sideways; use `pitch`, `roll`, and `yaw` for those.
-Supplying `direction` together with any of the rotation angles is an
-error.
-
-### Finding a view
+## Finding a view
 
 Choosing angles by trial and error can be slow. Two tools help: the
-facets
+facet functions
 [`facet_wrap_views()`](https://matthewkling.github.io/ggcube/reference/facet_wrap_views.md)
 and
 [`facet_grid_views()`](https://matthewkling.github.io/ggcube/reference/facet_wrap_views.md)
 lay out a grid of views side by side for comparison, and
 [`orbit_3d()`](https://matthewkling.github.io/ggcube/reference/orbit_3d.md)
-lets you drag the plot around and read the angles of the current view
-off its corner, ready to copy into
+lets you interactively rotate the plot read the angles of the current
+view, ready to copy into
 [`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md).
 See the [animation and multiple
 views](https://matthewkling.github.io/ggcube/articles/animation.md)
-article for both.
+article for details on both.
 
 ## Perspective and distance
 
@@ -184,31 +195,6 @@ coordinates:
 
 ![](coord_3d_files/figure-html/ratio-1.png)
 
-## Panel selection
-
-The `panels` argument controls which faces of the cube are drawn. The
-six faces are named `"xmin"`, `"xmax"`, `"ymin"`, `"ymax"`, `"zmin"`,
-and `"zmax"`. Depending on the rotation, some faces lie behind the data
-(“background” panels) and some lie in front (“foreground” panels). By
-default, only background panels are drawn. When drawn, foreground panels
-default to 20% opacity so they don’t obscure the data; their styling is
-controlled via theme elements (see the theming section below).
-
-You can request specific faces by name, show all faces, or hide them
-entirely:
-
-``` r
-
-(p + coord_3d(panels = "background") + ggtitle('"background" (default)')) +
-  (p + coord_3d(panels = c("xmin", "xmax", "zmax")) +
-      ggtitle('c("xmin", "xmax", "zmax")')) +
-  (p + coord_3d(panels = "all") + ggtitle('"all"')) +
-  (p + coord_3d(panels = "none") + ggtitle('"none"')) +
-  plot_layout(ncol = 2)
-```
-
-![](coord_3d_files/figure-html/panels-1.png)
-
 ## Zooming, clipping, and expansion
 
 `zoom` adjusts the overall framing without changing the rotation or
@@ -243,13 +229,42 @@ fine-tune expansion per axis using the standard scale functions.
 
 ![](coord_3d_files/figure-html/expand-1.png)
 
+## Panel selection
+
+The `panels` argument controls which faces of the cube are drawn. The
+six faces are named `"xmin"`, `"xmax"`, `"ymin"`, `"ymax"`, `"zmin"`,
+and `"zmax"`. Depending on the rotation, some faces lie behind the data
+(“background” panels) and some lie in front (“foreground” panels). By
+default, only background panels are drawn. When drawn, foreground panels
+default to 20% opacity so they don’t obscure the data; their styling is
+controlled via theme elements (see the theming section below).
+
+You can request specific faces by name, show all faces, or hide them
+entirely:
+
+``` r
+
+(p + coord_3d(panels = "background") + ggtitle('"background" (default)')) +
+  (p + coord_3d(panels = c("xmin", "xmax", "zmax")) +
+      ggtitle('c("xmin", "xmax", "zmax")')) +
+  (p + coord_3d(panels = "all") + ggtitle('"all"')) +
+  (p + coord_3d(panels = "none") + ggtitle('"none"')) +
+  plot_layout(ncol = 2)
+```
+
+![](coord_3d_files/figure-html/panels-1.png)
+
 ## Axis label placement
+
+Axis furnishings, including lines, ticks, text, and titles, *belong to
+panels*. This means they can only be drawn on panels that are themselves
+visible (see above).
 
 The `xlabels`, `ylabels`, and `zlabels` parameters control where axis
 tick labels and titles are placed. Each axis potentially has multiple
-possible edges where labels could appear (depending on which faces are
-visible). The default `"auto"` uses a heuristic that prioritizes edges
-on the periphery of the plot for readability.
+possible edges where labels could appear, depending on which faces are
+visible. The default `"auto"` uses a heuristic that prioritizes edges on
+the periphery of the plot for readability.
 
 For manual control, pass a length-2 character vector naming two adjacent
 faces — the shared edge between them is where the labels go. The first
@@ -359,6 +374,7 @@ The full set of 3D-specific theme elements:
   from `panel.grid`)
 - **`panel.grid.major.foreground`**: Major grid lines on foreground
   faces (inherits from `panel.grid.foreground`)
+- **`axis.line.z`**: Z-axis line (inherits from `axis.line`)
 - **`axis.ticks.z`**: Z-axis tick (inherits from `axis.ticks`)
 - **`axis.text.z`**: Z-axis tick labels (inherits from `axis.text`)
 - **`axis.title.z`**: Z-axis title (inherits from `axis.title`)

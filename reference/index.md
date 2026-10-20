@@ -26,6 +26,8 @@
 - [`geom_contour_3d()`](https://matthewkling.github.io/ggcube/reference/geom_contour_3d.md)
   [`stat_contour_3d()`](https://matthewkling.github.io/ggcube/reference/geom_contour_3d.md)
   : Contours of a 3D surface
+- [`geom_dropline_3d()`](https://matthewkling.github.io/ggcube/reference/geom_dropline_3d.md)
+  : 3D drop lines
 - [`geom_hull_3d()`](https://matthewkling.github.io/ggcube/reference/geom_hull_3d.md)
   [`stat_hull_3d()`](https://matthewkling.github.io/ggcube/reference/geom_hull_3d.md)
   : 3D convex and alpha hulls
@@ -36,7 +38,7 @@
   : 3D reference planes
 - [`geom_point_3d()`](https://matthewkling.github.io/ggcube/reference/geom_point_3d.md)
   [`stat_point_3d()`](https://matthewkling.github.io/ggcube/reference/geom_point_3d.md)
-  : 3D scatter plot with 2D reference elements
+  : 3D scatter plots
 - [`geom_polygon_3d()`](https://matthewkling.github.io/ggcube/reference/geom_polygon_3d.md)
   : 3D polygon geometry with depth sorting
 - [`geom_refline_3d()`](https://matthewkling.github.io/ggcube/reference/geom_refline_3d.md)

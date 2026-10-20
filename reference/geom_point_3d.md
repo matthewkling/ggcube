@@ -1,10 +1,9 @@
-# 3D scatter plot with 2D reference elements
+# 3D scatter plots
 
 `geom_point_3d()` creates scatter plots in 3D space with automatic
 depth-based size scaling. Points closer to the viewer appear larger,
 while points farther away appear smaller, creating realistic perspective
-effects. Optionally adds reference lines and points projecting to cube
-faces, to illustrate point locations in 2D.
+effects.
 
 ## Usage
 
@@ -20,24 +19,25 @@ geom_point_3d(
   sort_method = deprecated(),
   scale_depth = TRUE,
   on_top = FALSE,
-  raw_points = TRUE,
-  ref_lines = FALSE,
-  ref_points = FALSE,
-  ref_faces = "zmin",
-  ref_circle_radius = 1.5,
-  ref_circle_vertices = 16,
-  ref_line_color = NULL,
-  ref_line_colour = NULL,
-  ref_line_linewidth = 0.25,
-  ref_line_linetype = NULL,
-  ref_line_alpha = NULL,
-  ref_point_color = NULL,
-  ref_point_colour = NULL,
-  ref_point_fill = NULL,
-  ref_point_size = NULL,
-  ref_point_alpha = NULL,
-  ref_point_stroke = NULL,
-  ref_point_shape = NULL,
+  flat = FALSE,
+  raw_points = deprecated(),
+  ref_lines = deprecated(),
+  ref_points = deprecated(),
+  ref_faces = deprecated(),
+  ref_circle_radius = deprecated(),
+  ref_circle_vertices = deprecated(),
+  ref_line_color = deprecated(),
+  ref_line_colour = deprecated(),
+  ref_line_linewidth = deprecated(),
+  ref_line_linetype = deprecated(),
+  ref_line_alpha = deprecated(),
+  ref_point_color = deprecated(),
+  ref_point_colour = deprecated(),
+  ref_point_fill = deprecated(),
+  ref_point_size = deprecated(),
+  ref_point_alpha = deprecated(),
+  ref_point_stroke = deprecated(),
+  ref_point_shape = deprecated(),
   inherit.aes = TRUE,
   show.legend = NA
 )
@@ -51,24 +51,24 @@ stat_point_3d(
   na.rm = FALSE,
   sort_method = deprecated(),
   scale_depth = TRUE,
-  raw_points = TRUE,
-  ref_lines = FALSE,
-  ref_points = FALSE,
-  ref_faces = "zmin",
-  ref_circle_radius = 1.5,
-  ref_circle_vertices = 16,
-  ref_line_color = NULL,
-  ref_line_colour = NULL,
-  ref_line_linewidth = 0.25,
-  ref_line_linetype = NULL,
-  ref_line_alpha = NULL,
-  ref_point_color = NULL,
-  ref_point_colour = NULL,
-  ref_point_fill = NULL,
-  ref_point_size = NULL,
-  ref_point_alpha = NULL,
-  ref_point_stroke = NULL,
-  ref_point_shape = NULL,
+  raw_points = deprecated(),
+  ref_lines = deprecated(),
+  ref_points = deprecated(),
+  ref_faces = deprecated(),
+  ref_circle_radius = deprecated(),
+  ref_circle_vertices = deprecated(),
+  ref_line_color = deprecated(),
+  ref_line_colour = deprecated(),
+  ref_line_linewidth = deprecated(),
+  ref_line_linetype = deprecated(),
+  ref_line_alpha = deprecated(),
+  ref_point_color = deprecated(),
+  ref_point_colour = deprecated(),
+  ref_point_fill = deprecated(),
+  ref_point_size = deprecated(),
+  ref_point_alpha = deprecated(),
+  ref_point_stroke = deprecated(),
+  ref_point_shape = deprecated(),
   inherit.aes = TRUE,
   show.legend = NA
 )
@@ -94,7 +94,9 @@ stat_point_3d(
 
 - position:
 
-  Position adjustment, defaults to "identity".
+  Position adjustment, defaults to "identity". Use
+  [`position_on_face()`](https://matthewkling.github.io/ggcube/reference/position_on_face.md)
+  to place points on faces of the panel.
 
 - ...:
 
@@ -134,57 +136,40 @@ stat_point_3d(
   it, e.g. to keep labels legible. The layers drawn on top are
   depth-sorted among themselves. Default `FALSE`.
 
-- raw_points:
+- flat:
 
-  Logical indicating whether to show the original 3D points. Default is
-  `TRUE`.
+  If `TRUE`, points placed on a face of the panel by
+  [`position_on_face()`](https://matthewkling.github.io/ggcube/reference/position_on_face.md)
+  are drawn as markers lying flat in that face, like shadows, rather
+  than as symbols facing the viewer. Flat markers match the size of
+  ordinary markers at the centre of the panel, and are drawn in true
+  perspective, outlines included, whatever `scale_depth` is. They can be
+  open, solid, or filled circles, squares, diamonds, or triangles
+  (shapes 0, 1, 2, 5, 6, and 15 to 25). Points not on a face (e.g. with
+  `position_on_face(c("3D", "zmin"))`) are drawn as usual. Default
+  `FALSE`.
 
-- ref_lines:
+- raw_points, ref_lines, ref_points, ref_faces, ref_circle_radius,
+  ref_circle_vertices:
 
-  Logical indicating whether to show reference lines projecting from
-  points to cube faces. Default is `FALSE`.
-
-- ref_points:
-
-  Type of reference points to create. Options:
-
-  - `FALSE`: No reference points (default)
-
-  - `TRUE or "circles"`: Circular reference points that project properly
-
-  - `"points"`: Single-point references (renders faster and supports
-    non-circular shapes, but point shape is not 3D-transformed)
-
-- ref_faces:
-
-  Character vector specifying which cube faces to project to. Valid face
-  names are: "xmin", "xmax", "ymin", "ymax", "zmin", "zmax". Default is
-  "zmin" (bottom face). Multiple faces can be specified.
-
-- ref_circle_radius:
-
-  Radius for circular reference points as percentage of standardized
-  coordinate space.
-
-- ref_circle_vertices:
-
-  Number of vertices for circular reference points (higher = smoother).
+  Deprecated. Reference elements are now drawn by separate layers: drop
+  lines by
+  [`geom_dropline_3d()`](https://matthewkling.github.io/ggcube/reference/geom_dropline_3d.md),
+  and reference points by `geom_point_3d()` with
+  `position = position_on_face()` (and `flat = TRUE` for circles).
 
 - ref_line_color, ref_line_colour, ref_line_linewidth,
   ref_line_linetype, ref_line_alpha:
 
-  Styling overrides for reference lines. When NULL, inherits from point
-  aesthetics or uses defaults. Both American (`ref_line_color`) and
-  British (`ref_line_colour`) spellings are accepted.
+  Deprecated. Style a
+  [`geom_dropline_3d()`](https://matthewkling.github.io/ggcube/reference/geom_dropline_3d.md)
+  layer instead.
 
 - ref_point_color, ref_point_colour, ref_point_fill, ref_point_size,
   ref_point_alpha, ref_point_stroke, ref_point_shape:
 
-  Styling overrides for reference points and circles. When NULL,
-  inherits from raw point aesthetics with shape-aware logic (complex
-  shapes 21-25 vs simple shapes 0-20/characters). Both American
-  (`ref_point_color`) and British (`ref_point_colour`) spellings are
-  accepted.
+  Deprecated. Style a `geom_point_3d(position = position_on_face())`
+  layer instead.
 
 - inherit.aes:
 
@@ -207,8 +192,7 @@ A `Layer` object that can be added to a ggplot.
 
 StatPoint3D performs identity transformation (passes data through
 unchanged) while properly handling discrete scales for 3D coordinate
-systems. It can optionally generate reference lines and points
-projecting to cube faces.
+systems.
 
 ## Aesthetics
 
@@ -239,18 +223,6 @@ plus `z`:
 - `x_raw`, `y_raw`, `z_raw`: Original values before discrete-to-numeric
   conversion
 
-- `element_type`: Type of element ("raw_point", "ref_point", "ref_line",
-  "ref_circle")
-
-- `segment_id`: ID linking the two endpoints of reference lines
-
-- `ref_face`: Which face reference elements project to
-
-- `ref_circle_radius`: Radius for circular reference points
-
-- `ref_circle_vertices`: Number of vertices for circular reference
-  points
-
 ## Depth Scaling
 
 The depth scaling uses an inverse relationship with distance, following
@@ -280,38 +252,26 @@ ggcube uses shape-aware rendering for improved stroke behavior:
 
 - All shapes preserve stroke depth scaling and parameter control
 
-## Reference Features
+## Reference elements
 
-Reference lines and points help visualize the 3D relationships by
-projecting data points onto cube faces:
+To show where points lie in 3D, combine a point layer with layers that
+project the points onto faces of the panel:
 
-- **Reference lines**: Connect each 3D point to its projection on
-  specified faces
+- [`geom_dropline_3d()`](https://matthewkling.github.io/ggcube/reference/geom_dropline_3d.md)
+  draws lines from the points to faces.
 
-- **Reference points**: Show the projected location on the faces
+- `geom_point_3d(position = position_on_face())` draws the points on
+  faces, as upright markers, or with `flat = TRUE`, as markers lying in
+  the faces.
 
-- **Reference circles**: Circular projections that appear as realistic
-  3D shadows
-
-- **Depth sorting**: All elements (original points, reference lines,
-  reference points) are automatically depth-sorted for proper 3D
-  rendering
-
-## Aesthetic Inheritance
-
-Reference elements intelligently inherit styling from raw points:
-
-- **Shape-aware**: Complex shapes (21-25) with fill/colour are handled
-  differently from simple shapes (0-20/characters)
-
-- **Alpha detection**: If all points have alpha=1, uses 0.5 default for
-  ref elements; otherwise inherits mapped alpha
-
-- **Priority**: Explicit ref\_\* parameters \> mapped aesthetics \>
-  smart defaults
+All of these layers are depth-sorted together.
 
 ## See also
 
+[`geom_dropline_3d()`](https://matthewkling.github.io/ggcube/reference/geom_dropline_3d.md)
+for drop lines,
+[`position_on_face()`](https://matthewkling.github.io/ggcube/reference/position_on_face.md)
+for placing points on faces,
 [`geom_segment_3d()`](https://matthewkling.github.io/ggcube/reference/geom_segment_3d.md)
 for 3D segments,
 [`geom_path_3d()`](https://matthewkling.github.io/ggcube/reference/geom_path_3d.md)
@@ -332,10 +292,19 @@ ggplot(expand.grid(x = 1:5, y = 1:5, z = 1:5),
   scale_fill_viridis_c()
 
 
-# Add circular reference points on 2D face panel
+# Points with flat markers on two faces, and drop lines to them
 ggplot(mtcars, aes(mpg, wt, qsec)) +
-  geom_point_3d(size = 3,
-    ref_points = TRUE, ref_faces = c("ymax", "xmax")) +
+  geom_dropline_3d(faces = c("ymax", "xmax")) +
+  geom_point_3d(position = position_on_face(c("ymax", "xmax")),
+                flat = TRUE, alpha = .5, size = 3) +
+  geom_point_3d(size = 3) +
+  coord_3d()
+
+
+# Points and their shadows on the floor, in one layer
+ggplot(mtcars, aes(mpg, wt, qsec, fill = factor(cyl))) +
+  geom_point_3d(position = position_on_face(c("3D", "zmin")), flat = TRUE,
+                shape = 21, size = 3) +
   coord_3d()
 
 ```
