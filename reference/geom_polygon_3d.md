@@ -17,10 +17,11 @@ geom_polygon_3d(
   stat = StatIdentity3D,
   position = "identity",
   ...,
-  annotate = NULL,
+  annotate = deprecated(),
   rule = "evenodd",
   sort_method = deprecated(),
   scale_depth = TRUE,
+  on_top = FALSE,
   force_convex = FALSE,
   cull_backfaces = FALSE,
   light = NULL,
@@ -42,7 +43,11 @@ geom_polygon_3d(
   The data to be displayed in this layer. Note that if you specify
   `light` or `cull_backfaces`, behavior will depend on the "winding
   order" of polygon vertices, with the counter-clockwise face considered
-  the "front".
+  the "front". Each polygon is lit using the normal of its own plane;
+  with the default `backface_scale = -1` in
+  [`light()`](https://matthewkling.github.io/ggcube/reference/light.md),
+  which lights a back face as the reverse side of its front face, this
+  lights polygons the same way whatever their winding order.
 
 - stat:
 
@@ -59,15 +64,13 @@ geom_polygon_3d(
 
   Other arguments passed on to the layer function (typically
   GeomPolygon3D), such as aesthetics like `colour`, `fill`, `linewidth`,
-  `annotate = annotate_3d(...)`, etc.
+  etc.
 
 - annotate:
 
-  An
-  [`annotate_3d()`](https://matthewkling.github.io/ggcube/reference/annotate_3d.md)
-  specification, or a list of them, to draw within this layer.
-  Annotations are depth-sorted together with the layer's own geometry,
-  so they can pass in front of and behind it correctly.
+  Deprecated. Add annotations to the plot with `+ annotate_3d()`
+  instead. All 3D layers in a panel are depth-sorted together, so
+  annotations no longer need to be embedded in a layer.
 
 - rule:
 
@@ -93,6 +96,13 @@ geom_polygon_3d(
   values above 1 exaggerate it. This affects the layer only; use
   `coord_3d(scale_depth = )` for gridlines, cube borders, axis ticks,
   and axis text.
+
+- on_top:
+
+  If `TRUE`, the layer is drawn on top of the rest of the scene instead
+  of being depth-sorted with it, so other geometry never hides or cuts
+  it, e.g. to keep labels legible. The layers drawn on top are
+  depth-sorted among themselves. Default `FALSE`.
 
 - force_convex:
 

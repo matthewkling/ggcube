@@ -352,23 +352,27 @@ article.
 ## Annotations
 
 [`annotate_3d()`](https://matthewkling.github.io/ggcube/reference/annotate_3d.md)
-adds reference geometry — points, text labels, segments, axis lines, or
-planes — to any 3D layer. Unlike adding a separate layer, annotations
-are embedded within the host layer so they participate in the same depth
-sorting:
+adds reference geometry — points, text labels, segments, polygons, axes,
+reference lines, or planes — at positions given as parameters, like
+ggplot2’s
+[`annotate()`](https://ggplot2.tidyverse.org/reference/annotate.html).
+All 3D layers in a panel are depth-sorted together, so annotations pass
+in front of and behind the plot’s other geometry correctly. Planes,
+reference lines, and axes are also available as the layer functions
+[`geom_plane_3d()`](https://matthewkling.github.io/ggcube/reference/geom_plane_3d.md),
+[`geom_refline_3d()`](https://matthewkling.github.io/ggcube/reference/geom_refline_3d.md),
+and
+[`geom_axes_3d()`](https://matthewkling.github.io/ggcube/reference/geom_axes_3d.md).
 
 ``` r
 
 summit <- filter(mountain, z == max(z))
 ggplot(mountain, aes(x, y, z)) +
-      geom_contour_3d(
-            annotate = list(
-                  annotate_3d("plane", a = 0, b = 1, c = 0, d = .5, fill = "blue", alpha = .25),
-                  annotate_3d("point", x = summit$x, y = summit$y, z = summit$z, color = "red"),
-                  annotate_3d("text", x = summit$x, y = summit$y, z = summit$z, color = "red",
-                              label = "Summit", fontface = "bold", vjust = -1)
-            ), fill = "black"
-      ) +
+      geom_contour_3d(fill = "black") +
+      annotate_3d("plane", yintercept = .5, fill = "blue", alpha = .25) +
+      annotate_3d("point", x = summit$x, y = summit$y, z = summit$z, color = "red") +
+      annotate_3d("text", x = summit$x, y = summit$y, z = summit$z, color = "red",
+                  label = "Summit", fontface = "bold", vjust = -1) +
       coord_3d(ratio = c(2, 3, 1.5), light = "none")
 ```
 

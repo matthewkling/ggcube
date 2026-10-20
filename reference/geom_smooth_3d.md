@@ -15,7 +15,7 @@ geom_smooth_3d(
   stat = StatSmooth3D,
   position = "identity",
   ...,
-  annotate = NULL,
+  annotate = deprecated(),
   method = "loess",
   formula = NULL,
   method.args = list(),
@@ -133,15 +133,13 @@ stat_smooth_3d(
 
   Other arguments passed on to the layer function (typically
   GeomPolygon3D), such as aesthetics like `colour`, `fill`, `linewidth`,
-  `annotate = annotate_3d(...)`, etc.
+  etc.
 
 - annotate:
 
-  An
-  [`annotate_3d()`](https://matthewkling.github.io/ggcube/reference/annotate_3d.md)
-  specification, or a list of them, to draw within this layer.
-  Annotations are depth-sorted together with the layer's own geometry,
-  so they can pass in front of and behind it correctly.
+  Deprecated. Add annotations to the plot with `+ annotate_3d()`
+  instead. All 3D layers in a panel are depth-sorted together, so
+  annotations no longer need to be embedded in a layer.
 
 - method:
 
@@ -224,7 +222,7 @@ stat_smooth_3d(
   fitted surface. Points are depth-sorted together with the surface
   polygons for proper 3D rendering. Point styling is controlled via the
   `point_*` parameters; mapped aesthetics from the layer are not
-  inherited by annotation points. Default is `FALSE`.
+  inherited by these points. Default is `FALSE`.
 
 - point_colour, point_color:
 
@@ -255,10 +253,7 @@ stat_smooth_3d(
 
   Logical indicating whether to draw residual lines connecting data
   points to the fitted surface. Default is `FALSE`. Residual styling is
-  controlled via the `residual_*` parameters. Note: residual lines may
-  render incorrectly when combined with `se = TRUE`, as the lines
-  intersect the confidence interval surfaces and cannot be split at
-  intersection points.
+  controlled via the `residual_*` parameters.
 
 - residual_colour, residual_color:
 

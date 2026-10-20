@@ -15,6 +15,8 @@
 
 ## 3D layers
 
+- [`geom_axes_3d()`](https://matthewkling.github.io/ggcube/reference/geom_axes_3d.md)
+  : 3D coordinate axes
 - [`geom_bar_3d()`](https://matthewkling.github.io/ggcube/reference/geom_bar_3d.md)
   [`stat_bar_3d()`](https://matthewkling.github.io/ggcube/reference/geom_bar_3d.md)
   : 3D bar chart with automatic counting or binning
@@ -30,11 +32,15 @@
 - [`geom_path_3d()`](https://matthewkling.github.io/ggcube/reference/geom_path_3d.md)
   [`stat_path_3d()`](https://matthewkling.github.io/ggcube/reference/geom_path_3d.md)
   : 3D paths connecting observations
+- [`geom_plane_3d()`](https://matthewkling.github.io/ggcube/reference/geom_plane_3d.md)
+  : 3D reference planes
 - [`geom_point_3d()`](https://matthewkling.github.io/ggcube/reference/geom_point_3d.md)
   [`stat_point_3d()`](https://matthewkling.github.io/ggcube/reference/geom_point_3d.md)
   : 3D scatter plot with 2D reference elements
 - [`geom_polygon_3d()`](https://matthewkling.github.io/ggcube/reference/geom_polygon_3d.md)
   : 3D polygon geometry with depth sorting
+- [`geom_refline_3d()`](https://matthewkling.github.io/ggcube/reference/geom_refline_3d.md)
+  : 3D reference lines
 - [`geom_ridgeline_3d()`](https://matthewkling.github.io/ggcube/reference/geom_ridgeline_3d.md)
   : 3D ridgeline plot from point grid
 - [`geom_segment_3d()`](https://matthewkling.github.io/ggcube/reference/geom_segment_3d.md)
@@ -69,7 +75,7 @@
 - [`light()`](https://matthewkling.github.io/ggcube/reference/light.md)
   : Lighting specification for 3D surface rendering
 - [`annotate_3d()`](https://matthewkling.github.io/ggcube/reference/annotate_3d.md)
-  : Create a 3D annotation specification
+  : Create a 3D annotation layer
 - [`guide_colorbar_3d()`](https://matthewkling.github.io/ggcube/reference/guide_3d.md)
   [`guide_legend_3d()`](https://matthewkling.github.io/ggcube/reference/guide_3d.md)
   : Color guides showing lighting effects

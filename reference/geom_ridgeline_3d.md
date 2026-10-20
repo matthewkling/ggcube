@@ -13,7 +13,7 @@ geom_ridgeline_3d(
   stat = "identity_3d",
   position = "identity",
   ...,
-  annotate = NULL,
+  annotate = deprecated(),
   direction = "x",
   base = NULL,
   cull_backfaces = FALSE,
@@ -52,11 +52,9 @@ geom_ridgeline_3d(
 
 - annotate:
 
-  An
-  [`annotate_3d()`](https://matthewkling.github.io/ggcube/reference/annotate_3d.md)
-  specification, or a list of them, to draw within this layer.
-  Annotations are depth-sorted together with the layer's own geometry,
-  so they can pass in front of and behind it correctly.
+  Deprecated. Add annotations to the plot with `+ annotate_3d()`
+  instead. All 3D layers in a panel are depth-sorted together, so
+  annotations no longer need to be embedded in a layer.
 
 - direction:
 

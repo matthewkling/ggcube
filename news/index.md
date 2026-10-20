@@ -46,9 +46,68 @@ Performance:
   x 100 surface, which previously ran out of memory, in about six.
   ggcube now contains compiled code.
 
+### Annotations
+
+- [`annotate_3d()`](https://matthewkling.github.io/ggcube/reference/annotate_3d.md)
+  now returns a layer, added to a plot with `+` like ggplot2’s
+  [`annotate()`](https://ggplot2.tidyverse.org/reference/annotate.html),
+  e.g. `p + annotate_3d("point", x = 0, y = 0, z = 0)`. Since all 3D
+  layers in a panel are now depth-sorted together, annotations no longer
+  need to be embedded in another layer. Annotations now appear in every
+  facet panel, rather than only the first.
+- The `annotate` argument of layer functions is deprecated. Annotations
+  given through it are now added to the plot as layers of their own.
+- New
+  [`geom_plane_3d()`](https://matthewkling.github.io/ggcube/reference/geom_plane_3d.md)
+  draws planes clipped to the panel. Planes can be given as
+  `xintercept`, `yintercept`, or `zintercept` (perpendicular to an
+  axis); as `intercept`, `slope_x`, and `slope_y`
+  (`z = intercept + slope_x * x + slope_y * y`, as from a linear model);
+  or as general coefficients `a * x + b * y + c * z = d`. Given as
+  parameters, all forms are vectorized, so e.g. a linear system can be
+  drawn in one call; the regression and general forms can also be mapped
+  from data. Planes are split where they intersect other polygons, lit
+  from the side facing the viewer, never removed by back-face culling,
+  and don’t expand the plot’s axis ranges.
+- New
+  [`geom_refline_3d()`](https://matthewkling.github.io/ggcube/reference/geom_refline_3d.md)
+  draws infinite lines through a point (`x`, `y`, `z`) in a direction
+  (`dx`, `dy`, `dz`), clipped to the panel, such as the line spanned by
+  a vector. Directions can be given as parameters or mapped from data.
+  Like planes, lines don’t expand the plot’s axis ranges.
+- New
+  [`geom_axes_3d()`](https://matthewkling.github.io/ggcube/reference/geom_axes_3d.md)
+  draws x, y, and z axis lines through an origin (default `0`), each
+  spanning the panel’s full range, with arrowheads and labels at their
+  high ends. Unlike the axes on the edges of the panel, they are part of
+  the 3D scene, and are depth-sorted with it.
+- [`annotate_3d()`](https://matthewkling.github.io/ggcube/reference/annotate_3d.md)
+  gains the types `"polygon"` (filled polygons from their vertices, with
+  `group` to draw several in one call), and `"axes"`, `"refline"`, and
+  `"plane"`, which build layers with the new geoms above. Segment
+  annotations take an `arrow`, like
+  [`geom_segment_3d()`](https://matthewkling.github.io/ggcube/reference/geom_segment_3d.md).
+- [`geom_point_3d()`](https://matthewkling.github.io/ggcube/reference/geom_point_3d.md),
+  [`geom_segment_3d()`](https://matthewkling.github.io/ggcube/reference/geom_segment_3d.md),
+  [`geom_path_3d()`](https://matthewkling.github.io/ggcube/reference/geom_path_3d.md),
+  [`geom_polygon_3d()`](https://matthewkling.github.io/ggcube/reference/geom_polygon_3d.md),
+  [`geom_text_3d()`](https://matthewkling.github.io/ggcube/reference/geom_text_3d.md),
+  and the new geoms gain an `on_top` argument, which draws the layer on
+  top of the rest of the scene instead of depth-sorting it with it, so
+  other geometry never hides or cuts it. This keeps labels legible
+  wherever they fall, as in `annotate_3d("text", ..., on_top = TRUE)`.
+
 ### Other changes
 
 - ggcube now requires ggplot2 4.0.0 or later.
+
+- [`geom_polygon_3d()`](https://matthewkling.github.io/ggcube/reference/geom_polygon_3d.md)
+  now lights each polygon using the normal of its own plane, oriented by
+  its vertex winding. Lighting previously treated every polygon as a
+  tile of a surface `z = f(x, y)`, so vertical polygons were lit as if
+  horizontal, and polygons wound clockwise were lit as their reverse
+  side. With the default lighting, polygons are now lit the same way
+  whatever their winding order.
 
 - [`geom_contour_3d()`](https://matthewkling.github.io/ggcube/reference/geom_contour_3d.md)
   and
@@ -122,36 +181,10 @@ Performance:
   Angles are shown in the terms the orbit was given, so
   `yaw = c(0, 360)` reports values from 0 to 360.
 
-- Every `geom_*_3d()` function now has a documented `annotate` argument
-  for embedding
-  [`annotate_3d()`](https://matthewkling.github.io/ggcube/reference/annotate_3d.md)
-  annotations in the layer.
-  [`geom_text_3d()`](https://matthewkling.github.io/ggcube/reference/geom_text_3d.md)
-  with its default `method = "billboard"` now supports annotations;
-  previously it ignored them with an “unknown parameter” warning.
-
 - Fixed a bug where
   [`geom_text_3d()`](https://matthewkling.github.io/ggcube/reference/geom_text_3d.md)
   (billboard method) could draw labels at each other’s depth-scaled
   sizes under perspective projection.
-
-- Text annotations gain an `on_top` argument:
-  `annotate_3d("text", ..., on_top = TRUE)` draws labels after
-  everything else in the layer, instead of depth-sorting them, so
-  geometry never hides or clips them.
-
-- New `annotate_3d("polygon")` draws filled polygons from their
-  vertices, with `group` to draw several in one call. Like planes, they
-  are lit from the side facing the viewer and never removed by back-face
-  culling.
-
-- New `annotate_3d("line")` draws infinite lines through a point (`x`,
-  `y`, `z`) in a direction (`dx`, `dy`, `dz`), clipped to the panel.
-  Like planes, lines don’t expand the plot’s axis ranges.
-
-- Annotation segments no longer take the arrowheads of the layer they’re
-  in (e.g. `geom_segment_3d(arrow = )`); they’re drawn with an arrow
-  only when given their own via `annotate_3d(arrow = )`.
 
 - [`geom_segment_3d()`](https://matthewkling.github.io/ggcube/reference/geom_segment_3d.md)
   and
@@ -165,33 +198,8 @@ Performance:
   Previously, especially under perspective projection, they were often
   hidden behind it.
 
-- New `annotate_3d("plane")` draws planes clipped to the panel. Planes
-  can be given as `xintercept`, `yintercept`, or `zintercept`
-  (perpendicular to an axis); as `intercept`, `slope_x`, and `slope_y`
-  (`z = intercept + slope_x * x + slope_y * y`, as from a linear model);
-  or as general coefficients `a * x + b * y + c * z = d`. All forms are
-  vectorized, so e.g. a linear system can be drawn in one call. Planes
-  are depth-sorted with the layer’s geometry and split where they
-  intersect it, lit from the side facing the viewer, never removed by
-  back-face culling, and don’t expand the plot’s axis ranges.
-
-- Fixed an error when a
-  [`geom_point_3d()`](https://matthewkling.github.io/ggcube/reference/geom_point_3d.md)
-  layer with pairwise sorting contained annotations. Depth sorting now
-  also treats the reference lines of point layers as segments rather
-  than degenerate polygons.
-
-- New `annotate_3d("axes")` draws x, y, and z axis lines through an
-  origin (default `0`), each spanning the panel’s full range, with
-  arrowheads and labels at their high ends. Axes are depth-sorted with
-  the layer’s geometry, and are built from the panel’s limits at draw
-  time, so they don’t expand the plot’s axis ranges.
-
-- `annotate_3d("segment")` gains an `arrow` argument, taking a
-  [`grid::arrow()`](https://rdrr.io/r/grid/arrow.html) specification.
-  Closed arrowheads are filled with the segment colour, and when a
-  segment is split where it passes through a polygon, its arrowheads
-  stay at the original ends.
+- Depth sorting now treats the reference lines of point layers as
+  segments rather than degenerate polygons.
 
 - [`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md)
   now draws axis lines from the `axis.line` theme elements, plus a new
@@ -230,9 +238,8 @@ Performance:
 
 - Fixed a bug where depth sorting never constrained the order of a
   segment relative to a polygon it overlapped on screen, so segments
-  (e.g. residual lines and
-  [`annotate_3d()`](https://matthewkling.github.io/ggcube/reference/annotate_3d.md)
-  segments) could be drawn on the wrong side of polygons.
+  (e.g. residual lines and annotation segments) could be drawn on the
+  wrong side of polygons.
 
 ## ggcube 0.3.0
 

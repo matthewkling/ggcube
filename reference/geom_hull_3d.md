@@ -15,7 +15,7 @@ geom_hull_3d(
   stat = StatHull3D,
   position = "identity",
   ...,
-  annotate = NULL,
+  annotate = deprecated(),
   method = "convex",
   radius = NULL,
   singular = FALSE,
@@ -74,15 +74,13 @@ stat_hull_3d(
 
   Other arguments passed on to the layer function (typically
   GeomPolygon3D), such as aesthetics like `colour`, `fill`, `linewidth`,
-  `annotate = annotate_3d(...)`, etc.
+  etc.
 
 - annotate:
 
-  An
-  [`annotate_3d()`](https://matthewkling.github.io/ggcube/reference/annotate_3d.md)
-  specification, or a list of them, to draw within this layer.
-  Annotations are depth-sorted together with the layer's own geometry,
-  so they can pass in front of and behind it correctly.
+  Deprecated. Add annotations to the plot with `+ annotate_3d()`
+  instead. All 3D layers in a panel are depth-sorted together, so
+  annotations no longer need to be embedded in a layer.
 
 - method:
 

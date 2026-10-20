@@ -43,6 +43,6 @@ animate_3d(p, yaw = c(0, 360))
 #> Rendering 100 frames...
 #> Assembling animation...
 anim_save_3d(filename = file.path(tempdir(), "my_animation.gif"))
-#> Animation saved to /tmp/Rtmp4JpDc2/my_animation.gif
+#> Animation saved to /tmp/RtmpW22e1j/my_animation.gif
 # }
 ```

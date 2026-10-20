@@ -75,7 +75,7 @@ as a 3D surface or ridgeline plot.</p>
 <span>  stat <span class="op">=</span> <span class="st">"function_3d"</span>,</span>
 <span>  position <span class="op">=</span> <span class="st">"identity"</span>,</span>
 <span>  <span class="va">...</span>,</span>
-<span>  annotate <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  annotate <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  fun <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  xlim <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  ylim <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -166,9 +166,10 @@ which takes precedence.</p></dd>
 
 
 <dt id="arg-annotate">annotate<a class="anchor" aria-label="anchor" href="#arg-annotate"></a></dt>
-<dd><p>An <code><a href="annotate_3d.html">annotate_3d()</a></code> specification, or a list of them, to draw
-within this layer. Annotations are depth-sorted together with the layer's
-own geometry, so they can pass in front of and behind it correctly.</p></dd>
+<dd><p>Deprecated. Add annotations to the
+plot with <code>+ annotate_3d()</code> instead. All 3D layers in a panel are
+depth-sorted together, so annotations no longer need to be embedded in a
+layer.</p></dd>
 
 </dl></div>
     <div class="section level2">

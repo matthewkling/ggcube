@@ -61,9 +61,10 @@ coordinates (xend, yend, zend).</p>
 <span>  stat <span class="op">=</span> <span class="va">StatSegment3D</span>,</span>
 <span>  position <span class="op">=</span> <span class="st">"identity"</span>,</span>
 <span>  <span class="va">...</span>,</span>
-<span>  annotate <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  annotate <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  sort_method <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  scale_depth <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  on_top <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  arrow <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  arrow.fill <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  lineend <span class="op">=</span> <span class="st">"butt"</span>,</span>
@@ -115,9 +116,10 @@ for start coordinates and xend, yend, zend for end coordinates.</p></dd>
 
 
 <dt id="arg-annotate">annotate<a class="anchor" aria-label="anchor" href="#arg-annotate"></a></dt>
-<dd><p>An <code><a href="annotate_3d.html">annotate_3d()</a></code> specification, or a list of them, to draw
-within this layer. Annotations are depth-sorted together with the layer's
-own geometry, so they can pass in front of and behind it correctly.</p></dd>
+<dd><p>Deprecated. Add annotations to the
+plot with <code>+ annotate_3d()</code> instead. All 3D layers in a panel are
+depth-sorted together, so annotations no longer need to be embedded in a
+layer.</p></dd>
 
 
 <dt id="arg-sort-method">sort_method<a class="anchor" aria-label="anchor" href="#arg-sort-method"></a></dt>
@@ -133,6 +135,13 @@ applies full scaling and <code>FALSE</code> disables it; a number sets the stren
 directly, where <code>1</code> matches <code>TRUE</code>, <code>0</code> matches <code>FALSE</code>, values below 1
 subdue the effect and values above 1 exaggerate it. This affects the layer
 only; use <code>coord_3d(scale_depth = )</code> for panel and axis components.</p></dd>
+
+
+<dt id="arg-on-top">on_top<a class="anchor" aria-label="anchor" href="#arg-on-top"></a></dt>
+<dd><p>If <code>TRUE</code>, the layer is drawn on top of the rest of the
+scene instead of being depth-sorted with it, so other geometry never
+hides or cuts it, e.g. to keep labels legible. The layers drawn on top
+are depth-sorted among themselves. Default <code>FALSE</code>.</p></dd>
 
 
 <dt id="arg-arrow">arrow<a class="anchor" aria-label="anchor" href="#arg-arrow"></a></dt>

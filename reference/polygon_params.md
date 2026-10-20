@@ -57,4 +57,4 @@ enforcement for polygon-based 3D layers.
 
   Other arguments passed on to the layer function (typically
   GeomPolygon3D), such as aesthetics like `colour`, `fill`, `linewidth`,
-  `annotate = annotate_3d(...)`, etc.
+  etc.

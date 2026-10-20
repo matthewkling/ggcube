@@ -15,10 +15,11 @@ geom_point_3d(
   stat = StatPoint3D,
   position = "identity",
   ...,
-  annotate = NULL,
+  annotate = deprecated(),
   na.rm = FALSE,
   sort_method = deprecated(),
   scale_depth = TRUE,
+  on_top = FALSE,
   raw_points = TRUE,
   ref_lines = FALSE,
   ref_points = FALSE,
@@ -102,11 +103,9 @@ stat_point_3d(
 
 - annotate:
 
-  An
-  [`annotate_3d()`](https://matthewkling.github.io/ggcube/reference/annotate_3d.md)
-  specification, or a list of them, to draw within this layer.
-  Annotations are depth-sorted together with the layer's own geometry,
-  so they can pass in front of and behind it correctly.
+  Deprecated. Add annotations to the plot with `+ annotate_3d()`
+  instead. All 3D layers in a panel are depth-sorted together, so
+  annotations no longer need to be embedded in a layer.
 
 - na.rm:
 
@@ -127,6 +126,13 @@ stat_point_3d(
   values below 1 subdue the effect and values above 1 exaggerate it.
   This affects the layer only; use `coord_3d(scale_depth = )` for panel
   and axis components.
+
+- on_top:
+
+  If `TRUE`, the layer is drawn on top of the rest of the scene instead
+  of being depth-sorted with it, so other geometry never hides or cuts
+  it, e.g. to keep labels legible. The layers drawn on top are
+  depth-sorted among themselves. Default `FALSE`.
 
 - raw_points:
 
