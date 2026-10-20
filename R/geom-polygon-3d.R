@@ -13,9 +13,6 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                                                force_convex = FALSE,
                                                rule = "evenodd",
                                                on_top = FALSE,
-                                               point.colour = NULL, point.fill = NULL,
-                                               point.size = NULL, point.shape = NULL,
-                                               point.alpha = NULL, point.stroke = NULL,
                                                residual.colour = NULL, residual.linewidth = NULL,
                                                residual.linetype = NULL, residual.alpha = NULL) {
 
@@ -33,26 +30,6 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                                finish <- function(coords) {
                                      # Enforce convexity if requested (polygons only)
                                      coords <- drop_nonconvex_vertices(coords, force_convex)
-
-                                     # Apply smooth overlay point styling (post-transform, pre-depth-scale).
-                                     # Values come from geom_smooth_3d point.* params.
-                                     # Only applied when params are non-NULL (i.e. when smooth overlay
-                                     # is active).
-                                     if (".prim" %in% names(coords) && any(coords$.prim == "point", na.rm = TRUE)) {
-                                           pt_mask <- coords$.prim == "point" & !is.na(coords$.prim)
-
-                                           # Initialize point-specific columns if they don't exist
-                                           for (col in c("size", "shape", "stroke")) {
-                                                 if (!col %in% names(coords)) coords[[col]] <- NA_real_
-                                           }
-
-                                           if (!is.null(point.colour)) coords$colour[pt_mask] <- point.colour
-                                           if (!is.null(point.fill))   coords$fill[pt_mask]   <- point.fill
-                                           if (!is.null(point.size))   coords$size[pt_mask]   <- point.size
-                                           if (!is.null(point.shape))  coords$shape[pt_mask]  <- point.shape
-                                           if (!is.null(point.alpha))  coords$alpha[pt_mask]  <- point.alpha
-                                           if (!is.null(point.stroke)) coords$stroke[pt_mask] <- point.stroke
-                                     }
 
                                      # Apply smooth overlay segment styling (residual lines)
                                      if (".prim" %in% names(coords) && any(coords$.prim == "segment", na.rm = TRUE)) {

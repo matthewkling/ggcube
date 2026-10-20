@@ -322,6 +322,19 @@ with_annotations <- function(layer, annotate, fn, user_env = rlang::caller_env(2
 }
 
 
+#' Add a layer to a layer function's result
+#'
+#' @param x A layer, or a list of layers.
+#' @param extra A layer to append, or NULL.
+#' @return `x`, or a list of its layers and `extra`.
+#' @keywords internal
+#' @noRd
+append_layer <- function(x, extra) {
+      if (is.null(extra)) return(x)
+      c(if (inherits(x, "Layer")) list(x) else x, list(extra))
+}
+
+
 #' Flatten annotations into a list of layers
 #'
 #' @param annotate An `annotate_3d()` layer, or a (possibly nested) list of

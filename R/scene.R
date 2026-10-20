@@ -24,14 +24,17 @@
 #'   `arrow`, `arrow.fill`, `lineend`).
 #' @param on_top Whether the layer is drawn on top of the rest of its scene
 #'   rather than sorted with it.
+#' @param prepare Optional function of the rows and the panel size in points
+#'   (`function(rows, panel_pt)`), applied before sorting, for geometry that
+#'   depends on the panel's size.
 #' @return A `ggcube_layer` gTree, or a null grob for empty layers.
 #' @keywords internal
 #' @noRd
 layer_scene_grob <- function(rows, panel_params, finish = identity, render = list(),
-                             on_top = FALSE) {
+                             on_top = FALSE, prepare = NULL) {
       if (is.null(rows) || nrow(rows) == 0) return(grid::nullGrob())
       check_on_top(on_top)
-      grid::gTree(rows = rows, finish = finish, render = render, on_top = on_top,
+      grid::gTree(rows = rows, finish = finish, render = render, on_top = on_top, prepare = prepare,
                   proj = panel_params$proj, plot_bounds = panel_params$plot_bounds,
                   cache = new.env(parent = emptyenv()), cl = "ggcube_layer")
 }
@@ -126,7 +129,7 @@ scene_children <- function(layers, cache = NULL) {
       if (!is.null(cache) && identical(cache$panel_pt, panel_pt)) return(cache$children)
 
       rows <- scene_rows(layers, panel_pt)
-      capture_scene(rows, layers)
+      capture_scene(rows, layers, panel_pt)
 
       grobs <- list()
       if (nrow(rows) > 0) {
@@ -170,10 +173,15 @@ scene_rows <- function(layers, panel_pt = NULL) {
       plot_bounds <- layers[[1]]$plot_bounds
       multi <- length(layers) > 1
 
+      # Geometry that depends on the panel's size
+      layer_rows <- lapply(layers, function(l) {
+            if (is.null(l$prepare)) l$rows else l$prepare(l$rows, panel_pt)
+      })
+
       # Sort-relevant columns of every layer, with a reference back to the
       # full row. Group names are made unique across layers.
       frames <- lapply(seq_along(layers), function(i) {
-            r <- layers[[i]]$rows
+            r <- layer_rows[[i]]
             f <- r[intersect(.sort_columns, names(r))]
             f$.row <- seq_len(nrow(r))
             f$.layer <- i
@@ -200,7 +208,7 @@ scene_rows <- function(layers, panel_pt = NULL) {
       styled <- lapply(seq_along(layers), function(i) {
             s <- split[split$.layer == i, , drop = FALSE]
             if (nrow(s) == 0) return(NULL)
-            full <- layers[[i]]$rows[s$.row, , drop = FALSE]
+            full <- layer_rows[[i]][s$.row, , drop = FALSE]
             for (col in changed) full[[col]] <- s[[col]]
             if (multi) full$group <- sub("^L[0-9]+::", "", full$group)
             full$group <- as.integer(factor(full$group))
@@ -308,10 +316,11 @@ drawn_extents <- function(rows) {
 
 .scene_capture <- new.env(parent = emptyenv())
 
-capture_scene <- function(rows, layers) {
+capture_scene <- function(rows, layers, panel_pt = NULL) {
       if (!isTRUE(.scene_capture$active)) return(invisible())
       .scene_capture$scenes[[length(.scene_capture$scenes) + 1]] <- list(
-            rows = rows, proj = layers[[1]]$proj, plot_bounds = layers[[1]]$plot_bounds)
+            rows = rows, proj = layers[[1]]$proj, plot_bounds = layers[[1]]$plot_bounds,
+            panel_pt = panel_pt)
       invisible()
 }
 
@@ -322,9 +331,10 @@ capture_scene <- function(rows, layers) {
 #'
 #' @param p A ggplot.
 #' @param width,height,res Device size in inches and resolution.
-#' @return List with `panels` (each with `rows`, `proj`, `plot_bounds`),
-#'   `panel_pt` (the first panel's size in points), and `sizes_final = TRUE`
-#'   (marker and line sizes are as drawn).
+#' @return List with `panels` (each with `rows`, `proj`, `plot_bounds`, and
+#'   `panel_pt`, the size in points of the viewport it was drawn in),
+#'   `panel_pt` (the first panel's), and `sizes_final = TRUE` (marker and line
+#'   sizes are as drawn).
 #' @keywords internal
 #' @noRd
 validation_scene <- function(p, width = 6, height = 5, res = 100) {
@@ -337,13 +347,7 @@ validation_scene <- function(p, width = 6, height = 5, res = 100) {
       on.exit({ grDevices::dev.off(); unlink(f) }, add = TRUE)
       grid::grid.newpage()
       grid::grid.draw(ggplotGrob(p))
-      vps <- grid::grid.ls(viewports = TRUE, grobs = FALSE, print = FALSE)$name
-      pv <- grep("^panel\\.", vps, value = TRUE)
-      panel_pt <- c(width, height) * 72.27
-      if (length(pv)) {
-            grid::seekViewport(pv[1])
-            panel_pt <- c(grid::convertWidth(grid::unit(1, "npc"), "pt", valueOnly = TRUE),
-                          grid::convertHeight(grid::unit(1, "npc"), "pt", valueOnly = TRUE))
-      }
-      list(panels = .scene_capture$scenes, panel_pt = panel_pt, sizes_final = TRUE)
+      scenes <- .scene_capture$scenes
+      panel_pt <- if (length(scenes)) scenes[[1]]$panel_pt else c(width, height) * 72.27
+      list(panels = scenes, panel_pt = panel_pt, sizes_final = TRUE)
 }

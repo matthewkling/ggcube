@@ -49,14 +49,6 @@ Some standard ggplot2 layers like `geom_point()` work in 3D automatically. ggcub
 provides 3D-specific layer functions for surfaces, paths, volumes, and text, described
 below.
 
-Because ggcube works within ggplot2's 2D graphics engine, there are some important things
-to understand about how rendering works. Each 3D layer projects its geometry onto a 2D
-plane, with depth sorting to determine which elements appear in front of others. This
-sorting happens *within* each layer, but not *across* layers — just as in standard
-ggplot2, later layers are drawn on top of earlier ones regardless of their 3D depth.
-This means that layer order in your code matters, and complex multi-layer scenes may
-require some thought about stacking.
-
 
 ## Controlling the view
 
@@ -126,14 +118,17 @@ article for more detail on surface plotting options.
 
 ### Points
 
-`geom_point_3d()` extends scatter plots with depth-scaled point sizes (closer points shown larger), 
-proper depth sorting (closer points plotted on top), and optional reference lines and points that 
-project onto cube faces:
+`geom_point_3d()` extends scatter plots with depth-scaled point sizes (closer points shown larger)
+and proper depth sorting (closer points plotted on top). To show where points lie in 3D, add drop
+lines to cube faces with `geom_dropline_3d()`, and project the points onto those faces with
+`position_on_face()`, drawing them as markers lying flat on the faces with `flat = TRUE`:
 
 ```{r points}
 ggplot(mpg, aes(x = displ, y = hwy, z = drv, fill = class)) +
-      geom_point_3d(size = 3, shape = 21, color = "black", stroke = .1,
-                    ref_lines = TRUE, ref_faces = c("ymax", "xmax")) +
+      geom_dropline_3d(faces = c("ymax", "xmax")) +
+      geom_point_3d(position = position_on_face(c("ymax", "xmax")), flat = TRUE,
+                    size = 3, shape = 21, stroke = .1, alpha = .5, show.legend = FALSE) +
+      geom_point_3d(size = 3, shape = 21, color = "black", stroke = .1) +
       coord_3d()
 ```
 

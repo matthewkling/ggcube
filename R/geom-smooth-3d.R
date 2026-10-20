@@ -7,7 +7,7 @@ StatSmooth3D <- ggproto("StatSmooth3D", Stat,
                                           z = after_stat(z),
                                           fill = after_stat(fitted)),
 
-                        extra_params = c("na.rm", "points", "residuals"),
+                        extra_params = c("na.rm", "residuals"),
 
                         compute_group = function(data, scales, method = "loess", formula = NULL,
                                                  method.args = list(), cull_backfaces = FALSE,
@@ -16,7 +16,7 @@ StatSmooth3D <- ggproto("StatSmooth3D", Stat,
                                                  light = NULL, na.rm = FALSE, domain = "chull",
                                                  se = FALSE, level = 0.95, se.fill = NULL, se.colour = NULL,
                                                  se.alpha = 0.5, se.linewidth = NULL,
-                                                 points = FALSE, residuals = FALSE) {
+                                                 residuals = FALSE) {
 
                               # Remove missing values if requested
                               if (na.rm) {
@@ -123,26 +123,6 @@ StatSmooth3D <- ggproto("StatSmooth3D", Stat,
                                     mutate(cull_backfaces = cull_backfaces) %>%
                                     attach_light(light)
 
-                              # Optionally append data points
-                              if (points) {
-                                    pt_rows <- make_point_rows(
-                                          data,
-                                          group_prefix = paste0("smooth_data__grp", data$group[1])
-                                    )
-
-                                    # Ensure computed variables exist so after_stat() mappings
-                                    # don't produce NA (e.g. fill = after_stat(fitted))
-                                    if (!"fitted" %in% names(pt_rows)) pt_rows$fitted <- pt_rows$z
-                                    if (!"se" %in% names(pt_rows)) pt_rows$se <- 0
-                                    if (!"level" %in% names(pt_rows)) pt_rows$level <- "fitted"
-
-                                    # Drop PANEL to prevent NA conflicts in bind_rows
-                                    # (ggplot2 re-adds it after compute_group returns)
-                                    pt_rows$PANEL <- NULL
-
-                                    surfaces <- safe_bind_rows(surfaces, pt_rows)
-                              }
-
                               # Optionally append residual lines connecting points to surface
                               if (residuals) {
                                     data_fitted <- fit_and_predict(data, data, method, formula,
@@ -168,6 +148,48 @@ StatSmooth3D <- ggproto("StatSmooth3D", Stat,
 
 
 # helpers ---------------
+
+#' Layer of data points for a smooth's deprecated `points` argument
+#'
+#' Smooth layers used to draw their data points through `points = TRUE`,
+#' styled by the `point_*` arguments. They are now drawn by a separate
+#' [geom_point_3d()] layer with the smooth's data and position mapping, and
+#' the same fixed styling, so the smooth's other mapped aesthetics don't
+#' apply to them, as before.
+#'
+#' @param args Named list of the deprecated arguments.
+#' @param fn Name of the layer function.
+#' @param mapping,data,inherit.aes The smooth layer's arguments.
+#' @param user_env Environment of the user's call to the layer function.
+#' @return A layer, or NULL when no points are requested.
+#' @keywords internal
+#' @noRd
+smooth_points_layer <- function(args, fn, mapping, data, inherit.aes,
+                                user_env = rlang::caller_env(2)) {
+      given <- names(args)[vapply(args, lifecycle::is_present, logical(1))]
+      for (nm in given) {
+            lifecycle::deprecate_warn(
+                  "0.4.0", paste0(fn, "(", nm, ")"),
+                  details = paste("Draw the data points with a separate layer instead,",
+                                  "e.g. `+ geom_point_3d()`."),
+                  user_env = user_env
+            )
+      }
+      if (!"points" %in% given || !isTRUE(args$points)) return(NULL)
+
+      style <- list(colour = "black", fill = NA, size = 1.5, shape = 19, alpha = 1, stroke = 0.5)
+      if ("point_color" %in% given) style$colour <- args$point_color
+      for (nm in intersect(given, c("point_colour", "point_fill", "point_size", "point_shape",
+                                    "point_alpha", "point_stroke"))) {
+            style[[sub("^point_", "", nm)]] <- args[[nm]]
+      }
+
+      position <- if (is.null(mapping)) NULL else mapping[intersect(names(mapping), c("x", "y", "z"))]
+      if (!is.null(position)) class(position) <- class(mapping)
+      do.call(geom_point_3d, c(list(mapping = position, data = data, inherit.aes = inherit.aes,
+                                    show.legend = FALSE),
+                               style))
+}
 
 clip_polys_to_chull <- function(d, point_data){
 
@@ -354,18 +376,9 @@ gam_model <- function(){
 #' @param se_alpha Alpha transparency for confidence interval bands. Defaults to 0.5.
 #' @param se_linewidth Line width for confidence interval band borders. If `NULL`,
 #'   inherits from the main surface `linewidth` aesthetic.
-#' @param points Logical indicating whether to overlay the original data points
-#'   on the fitted surface. Points are depth-sorted together with the surface
-#'   polygons for proper 3D rendering. Point styling is controlled via the
-#'   `point_*` parameters; mapped aesthetics from the layer are not inherited
-#'   by these points. Default is `FALSE`.
-#' @param point_colour,point_color Color for data points. Defaults to `"black"`.
-#' @param point_fill Fill color for data points (only relevant for shapes 21-25).
-#'   Defaults to `NA` (transparent).
-#' @param point_size Size of data points.
-#' @param point_shape Shape of data points.
-#' @param point_alpha Alpha transparency for data points.
-#' @param point_stroke Stroke width for data points.
+#' @param points,point_colour,point_color,point_fill,point_size,point_shape,point_alpha,point_stroke
+#'   Deprecated. Draw the data points with a separate layer instead, e.g.
+#'   `+ geom_point_3d()`.
 #' @param residuals Logical indicating whether to draw residual lines connecting
 #'   data points to the fitted surface. Default is `FALSE`. Residual styling is
 #'   controlled via the `residual_*` parameters.
@@ -412,12 +425,12 @@ gam_model <- function(){
 #'
 #' \donttest{
 #'
-#' # Show data points
-#' p + geom_smooth_3d(points = TRUE)
+#' # Show data points, depth-sorted with the surface
+#' p + geom_smooth_3d() + geom_point_3d()
 #'
 #' # Show data points with residual lines
-#' p + geom_smooth_3d(points = TRUE, residuals = TRUE,
-#'       point_color = "red", alpha = .8)
+#' p + geom_smooth_3d(residuals = TRUE, alpha = .8) +
+#'       geom_point_3d(color = "red")
 #'
 #' # Linear model surface with 90% confidence intervals
 #' p + geom_smooth_3d(aes(fill = after_stat(level)),
@@ -486,13 +499,13 @@ geom_smooth_3d <- function(mapping = NULL, data = NULL, stat = StatSmooth3D,
                            se_color = NULL,
                            se_alpha = 0.5,
                            se_linewidth = NULL,
-                           points = FALSE,
-                           point_colour = "black", point_color = NULL,
-                           point_fill = NA,
-                           point_size = 1.5,
-                           point_shape = 19,
-                           point_alpha = 1,
-                           point_stroke = 0.5,
+                           points = deprecated(),
+                           point_colour = deprecated(), point_color = deprecated(),
+                           point_fill = deprecated(),
+                           point_size = deprecated(),
+                           point_shape = deprecated(),
+                           point_alpha = deprecated(),
+                           point_stroke = deprecated(),
                            residuals = FALSE,
                            residual_colour = "black", residual_color = NULL,
                            residual_linewidth = 0.5,
@@ -506,9 +519,14 @@ geom_smooth_3d <- function(mapping = NULL, data = NULL, stat = StatSmooth3D,
                            inherit.aes = TRUE) {
       check_sort_method(sort_method, "geom_smooth_3d")
 
+      points_layer <- smooth_points_layer(
+            list(points = points, point_colour = point_colour, point_color = point_color,
+                 point_fill = point_fill, point_size = point_size, point_shape = point_shape,
+                 point_alpha = point_alpha, point_stroke = point_stroke),
+            fn = "geom_smooth_3d", mapping = mapping, data = data, inherit.aes = inherit.aes)
+
       # Resolve colour spellings (American -> British)
       se_colour <- se_colour %||% se_color
-      if (!is.null(point_color)) point_colour <- point_color
       if (!is.null(residual_color)) residual_colour <- residual_color
 
       domain <- match.arg(domain)
@@ -525,11 +543,6 @@ geom_smooth_3d <- function(mapping = NULL, data = NULL, stat = StatSmooth3D,
                           scale_depth = scale_depth,
                           se.fill = se_fill, se.colour = se_colour, se.alpha = se_alpha,
                           se.linewidth = se_linewidth,
-                          points = points,
-                          point.colour = point_colour,
-                          point.fill = point_fill, point.size = point_size,
-                          point.shape = point_shape, point.alpha = point_alpha,
-                          point.stroke = point_stroke,
                           residuals = residuals,
                           residual.colour = residual_colour,
                           residual.linewidth = residual_linewidth,
@@ -537,7 +550,8 @@ geom_smooth_3d <- function(mapping = NULL, data = NULL, stat = StatSmooth3D,
                           residual.alpha = residual_alpha,
                           light = light, na.rm = na.rm, ...)
       )
-      with_annotations(out, annotate, "geom_smooth_3d")
+      out <- with_annotations(out, annotate, "geom_smooth_3d")
+      append_layer(out, points_layer)
 }
 
 #' @rdname geom_smooth_3d
@@ -560,13 +574,13 @@ stat_smooth_3d <- function(mapping = NULL, data = NULL,
                            se_color = NULL,
                            se_alpha = 0.5,
                            se_linewidth = NULL,
-                           points = FALSE,
-                           point_colour = "black", point_color = NULL,
-                           point_fill = NA,
-                           point_size = 1.5,
-                           point_shape = 19,
-                           point_alpha = 1,
-                           point_stroke = 0.5,
+                           points = deprecated(),
+                           point_colour = deprecated(), point_color = deprecated(),
+                           point_fill = deprecated(),
+                           point_size = deprecated(),
+                           point_shape = deprecated(),
+                           point_alpha = deprecated(),
+                           point_stroke = deprecated(),
                            residuals = FALSE,
                            residual_colour = "black", residual_color = NULL,
                            residual_linewidth = 0.5,
@@ -580,15 +594,20 @@ stat_smooth_3d <- function(mapping = NULL, data = NULL,
                            inherit.aes = TRUE) {
       check_sort_method(sort_method, "stat_smooth_3d")
 
+      points_layer <- smooth_points_layer(
+            list(points = points, point_colour = point_colour, point_color = point_color,
+                 point_fill = point_fill, point_size = point_size, point_shape = point_shape,
+                 point_alpha = point_alpha, point_stroke = point_stroke),
+            fn = "stat_smooth_3d", mapping = mapping, data = data, inherit.aes = inherit.aes)
+
       # Resolve colour spellings (American -> British)
       se_colour <- se_colour %||% se_color
-      if (!is.null(point_color)) point_colour <- point_color
       if (!is.null(residual_color)) residual_colour <- residual_color
 
       domain <- match.arg(domain)
 
       # Convert underscore param names to periods for layer internals
-      layer(
+      out <- layer(
             stat = StatSmooth3D, data = data, mapping = mapping, geom = get_proto(geom, "geom"),
             position = position, show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(method = method, formula = formula, method.args = method.args,
@@ -598,11 +617,6 @@ stat_smooth_3d <- function(mapping = NULL, data = NULL,
                           scale_depth = scale_depth,
                           se.fill = se_fill, se.colour = se_colour, se.alpha = se_alpha,
                           se.linewidth = se_linewidth,
-                          points = points,
-                          point.colour = point_colour,
-                          point.fill = point_fill, point.size = point_size,
-                          point.shape = point_shape, point.alpha = point_alpha,
-                          point.stroke = point_stroke,
                           residuals = residuals,
                           residual.colour = residual_colour,
                           residual.linewidth = residual_linewidth,
@@ -610,4 +624,5 @@ stat_smooth_3d <- function(mapping = NULL, data = NULL,
                           residual.alpha = residual_alpha,
                           light = light, na.rm = na.rm, ...)
       )
+      append_layer(out, points_layer)
 }

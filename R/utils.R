@@ -1,34 +1,4 @@
 
-#' Create point rows from raw data for mixed-geometry rendering
-#'
-#' Takes raw data points and prepares them for inclusion alongside polygon
-#' surfaces in a mixed-geometry layer. Assigns unique group IDs and sets
-#' `.prim = "point"`. Aesthetic columns are stripped so that overlay
-#' points don't contaminate scale training; styling is applied at render
-#' time in the geom's `draw_panel` via override parameters.
-#'
-#' @param data Data frame with x, y, z and aesthetic columns.
-#' @param group_prefix Prefix for point group IDs.
-#' @return Data frame with one row per point, tagged with `.prim = "point"`.
-#' @keywords internal
-#' @noRd
-make_point_rows <- function(data, group_prefix = "data_point") {
-
-      n <- nrow(data)
-
-      # Keep only positional and structural columns — strip mapped aesthetics
-      # so overlay points don't contaminate scale training
-      keep_cols <- intersect(names(data),
-                             c("x", "y", "z", "fitted", "se", "level"))
-      pt_data <- data[, keep_cols, drop = FALSE]
-
-      pt_data$group <- paste0(group_prefix, "__pt", seq_len(n))
-      pt_data$.prim <- "point"
-
-      return(pt_data)
-}
-
-
 #' Create segment rows connecting data points to a surface
 #'
 #' For each data point at (x, y, z), creates a two-row segment group

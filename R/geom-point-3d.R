@@ -3,11 +3,21 @@
 GeomPoint3D <- ggproto("GeomPoint3D", GeomPoint,
 
                        draw_panel = function(data, panel_params, coord, na.rm = FALSE,
-                                             scale_depth = TRUE, on_top = FALSE,
+                                             scale_depth = TRUE, on_top = FALSE, flat = FALSE,
                                              ref_line_colour = NULL, ref_line_linewidth = 0.25, ref_line_linetype = NULL, ref_line_alpha = NULL,
                                              ref_point_colour = NULL, ref_point_fill = NULL, ref_point_alpha = NULL, ref_point_size = NULL, ref_point_stroke = NULL, ref_point_shape = NULL) {
 
                              validate_coord3d(coord)
+
+                             # Markers projected onto a face are drawn lying in it
+                             if (isTRUE(flat)) {
+                                   face <- if ("project_to_face" %in% names(data)) data$project_to_face else NA
+                                   raw <- if ("element_type" %in% names(data)) {
+                                         is.na(data$element_type) | data$element_type == "raw_point"
+                                   } else TRUE
+                                   data$.flat <- raw & !is.na(face)
+                                   if (any(data$.flat)) check_flat_shapes(data$shape[data$.flat])
+                             }
 
                              # Point-specific preprocessing
                              data$ref_circle_radius <- data$ref_circle_radius / 100
@@ -19,7 +29,7 @@ GeomPoint3D <- ggproto("GeomPoint3D", GeomPoint,
                                    coords <- apply_depth_scaling(coords, scale_depth)
 
                                    # Resolve ref_* styling and assign .prim types
-                                   resolve_point_aesthetics(
+                                   coords <- resolve_point_aesthetics(
                                          coords,
                                          ref_line_colour = ref_line_colour,
                                          ref_line_linewidth = ref_line_linewidth,
@@ -32,9 +42,18 @@ GeomPoint3D <- ggproto("GeomPoint3D", GeomPoint,
                                          ref_point_stroke = ref_point_stroke,
                                          ref_point_shape = ref_point_shape
                                    )
+                                   style_flat_markers(coords)
                              }
 
-                             layer_scene_grob(coords, panel_params, finish, on_top = on_top)
+                             prepare <- if (isTRUE(flat)) {
+                                   function(rows, panel_pt) {
+                                         expand_flat_markers(rows, panel_pt, panel_params$proj,
+                                                             panel_params$plot_bounds)
+                                   }
+                             }
+
+                             layer_scene_grob(coords, panel_params, finish, on_top = on_top,
+                                              prepare = prepare)
                        }
 )
 
@@ -195,6 +214,82 @@ resolve_ref_circle_linewidth <- function(override_stroke, stroke, is_complex, av
 }
 
 
+# Deprecated reference elements -------------------------------------------------
+
+.point_ref_defaults <- list(
+      raw_points = TRUE, ref_lines = FALSE, ref_points = FALSE, ref_faces = "zmin",
+      ref_circle_radius = 1.5, ref_circle_vertices = 16,
+      ref_line_color = NULL, ref_line_colour = NULL, ref_line_linewidth = 0.25,
+      ref_line_linetype = NULL, ref_line_alpha = NULL,
+      ref_point_color = NULL, ref_point_colour = NULL, ref_point_fill = NULL,
+      ref_point_size = NULL, ref_point_alpha = NULL, ref_point_stroke = NULL,
+      ref_point_shape = NULL
+)
+
+#' Resolve a point layer's deprecated reference element arguments
+#'
+#' Reference lines, points, and circles are now drawn by separate layers
+#' ([geom_dropline_3d()], and [geom_point_3d()] with [position_on_face()]).
+#' The arguments still work, with a deprecation warning for each one given.
+#'
+#' @param env Environment of the call to the layer function.
+#' @param fn Name of the layer function.
+#' @param user_env Environment of the user's call to the layer function.
+#' @return Named list of the arguments' values, with defaults for those not
+#'   given and colour spellings resolved.
+#' @keywords internal
+#' @noRd
+point_ref_args <- function(env, fn, user_env = rlang::caller_env(2)) {
+      out <- .point_ref_defaults
+      details <- function(nm) {
+            if (nm == "raw_points") {
+                  "Reference elements are now drawn by separate layers, so leave out the point layer instead."
+            } else if (nm == "ref_lines") {
+                  "Draw drop lines with `geom_dropline_3d()` instead."
+            } else if (nm %in% c("ref_points", "ref_circle_radius", "ref_circle_vertices")) {
+                  paste("Draw reference points with a layer such as",
+                        "`geom_point_3d(position = position_on_face(), flat = TRUE)` instead.")
+            } else if (nm == "ref_faces") {
+                  "Give the faces to `geom_dropline_3d()` and `position_on_face()` instead."
+            } else if (startsWith(nm, "ref_line_")) {
+                  "Style a `geom_dropline_3d()` layer instead."
+            } else {
+                  "Style a `geom_point_3d(position = position_on_face())` layer instead."
+            }
+      }
+      for (nm in names(out)) {
+            if (eval(call("missing", as.name(nm)), env)) next
+            out[nm] <- list(get(nm, envir = env))
+            lifecycle::deprecate_warn("0.4.0", paste0(fn, "(", nm, ")"), details = details(nm),
+                                      user_env = user_env)
+      }
+      out$ref_line_color <- out$ref_line_color %||% out$ref_line_colour
+      out$ref_point_color <- out$ref_point_color %||% out$ref_point_colour
+      out
+}
+
+
+#' Check a point layer's `flat` argument
+#'
+#' @param flat The `flat` argument.
+#' @param position The layer's position adjustment.
+#' @keywords internal
+#' @noRd
+check_flat <- function(flat, position, call = rlang::caller_env()) {
+      if (!is.logical(flat) || length(flat) != 1 || is.na(flat)) {
+            rlang::abort("`flat` must be `TRUE` or `FALSE`.", call = call)
+      }
+      if (!flat) return(invisible())
+      faces <- if (inherits(position, "PositionOnFace")) setdiff(position$faces, "3D") else character()
+      if (length(faces) == 0) {
+            rlang::abort(c("`flat = TRUE` draws markers lying flat on a face of the panel, so it needs a face.",
+                           i = "Place the points on one or more faces with `position = position_on_face()`, e.g. `position_on_face(\"zmin\")`."),
+                         call = call)
+      }
+      invisible()
+}
+
+
 # Stat -------------------------------------------------------------------------
 
 StatPoint3D <- ggproto("StatPoint3D", Stat,
@@ -325,55 +420,46 @@ generate_point_elements <- function(data, raw_points,
 
 # User-facing functions --------------------------------------------------------
 
-#' 3D scatter plot with 2D reference elements
+#' 3D scatter plots
 #'
 #' `geom_point_3d()` creates scatter plots in 3D space with automatic depth-based
 #' size scaling. Points closer to the viewer appear larger, while points farther
-#' away appear smaller, creating realistic perspective effects. Optionally adds
-#' reference lines and points projecting to cube faces, to illustrate point locations
-#' in 2D.
+#' away appear smaller, creating realistic perspective effects.
 #'
 #' StatPoint3D performs identity transformation (passes data through unchanged) while
-#' properly handling discrete scales for 3D coordinate systems. It can optionally
-#' generate reference lines and points projecting to cube faces.
+#' properly handling discrete scales for 3D coordinate systems.
 #'
 #' @param mapping Set of aesthetic mappings created by [aes()]. In addition to
 #'   the standard point aesthetics, `geom_point_3d()` requires x, y, and z coordinates.
 #' @param data The data to be displayed in this layer.
 #' @param stat The statistical transformation to use on the data. Defaults to `"point_3d"`.
 #' @param geom The geometric object used to display the data. Defaults to `"point_3d"`.
-#' @param position Position adjustment, defaults to "identity".
+#' @param position Position adjustment, defaults to "identity". Use
+#'   [position_on_face()] to place points on faces of the panel.
 #' @param ... Other arguments passed on to [ggplot2::layer()].
 #' @param na.rm If `FALSE`, missing values are removed with a warning.
 #' @param show.legend Logical indicating whether this layer should be included in legends.
 #' @param inherit.aes If `FALSE`, overrides the default aesthetics.
+#' @param flat If `TRUE`, points placed on a face of the panel by
+#'   [position_on_face()] are drawn as markers lying flat in that face, like
+#'   shadows, rather than as symbols facing the viewer. Flat markers match the
+#'   size of ordinary markers at the centre of the panel, and are drawn in
+#'   true perspective, outlines included, whatever `scale_depth` is. They can be open, solid, or filled circles, squares,
+#'   diamonds, or triangles (shapes 0, 1, 2, 5, 6, and 15 to 25). Points not
+#'   on a face (e.g. with `position_on_face(c("3D", "zmin"))`) are drawn as
+#'   usual. Default `FALSE`.
 #' @inheritParams sort_params
 #' @inheritParams depth_params
 #' @inheritParams on_top_param
 #' @inheritParams annotate_params
-#' @param raw_points Logical indicating whether to show the original 3D points.
-#'   Default is `TRUE`.
-#' @param ref_lines Logical indicating whether to show reference lines projecting
-#'   from points to cube faces. Default is `FALSE`.
-#' @param ref_points Type of reference points to create. Options:
-#'   \itemize{
-#'     \item \code{FALSE}: No reference points (default)
-#'     \item \code{TRUE or "circles"}: Circular reference points that project properly
-#'     \item \code{"points"}: Single-point references (renders faster and supports non-circular shapes,
-#'     but point shape is not 3D-transformed)
-#'   }
-#' @param ref_faces Character vector specifying which cube faces to project to.
-#'   Valid face names are: "xmin", "xmax", "ymin", "ymax", "zmin", "zmax".
-#'   Default is "zmin" (bottom face). Multiple faces can be specified.
-#' @param ref_circle_radius Radius for circular reference points as percentage of standardized coordinate space.
-#' @param ref_circle_vertices Number of vertices for circular reference points (higher = smoother).
+#' @param raw_points,ref_lines,ref_points,ref_faces,ref_circle_radius,ref_circle_vertices
+#'   Deprecated. Reference elements are now drawn by separate layers: drop
+#'   lines by [geom_dropline_3d()], and reference points by `geom_point_3d()`
+#'   with `position = position_on_face()` (and `flat = TRUE` for circles).
 #' @param ref_line_color,ref_line_colour,ref_line_linewidth,ref_line_linetype,ref_line_alpha
-#'   Styling overrides for reference lines. When NULL, inherits from point aesthetics or uses defaults.
-#'   Both American (`ref_line_color`) and British (`ref_line_colour`) spellings are accepted.
+#'   Deprecated. Style a [geom_dropline_3d()] layer instead.
 #' @param ref_point_color,ref_point_colour,ref_point_fill,ref_point_size,ref_point_alpha,ref_point_stroke,ref_point_shape
-#'   Styling overrides for reference points and circles. When NULL, inherits from raw point aesthetics
-#'   with shape-aware logic (complex shapes 21-25 vs simple shapes 0-20/characters).
-#'   Both American (`ref_point_color`) and British (`ref_point_colour`) spellings are accepted.
+#'   Deprecated. Style a `geom_point_3d(position = position_on_face())` layer instead.
 #'
 #' @section Aesthetics:
 #' `geom_point_3d()` supports all the same aesthetics as [ggplot2::geom_point()], plus `z`:
@@ -389,11 +475,6 @@ generate_point_elements <- function(data, raw_points,
 #'
 #' @section StatPoint3D returns the following computed variables:
 #' - `x_raw`, `y_raw`, `z_raw`: Original values before discrete-to-numeric conversion
-#' - `element_type`: Type of element ("raw_point", "ref_point", "ref_line", "ref_circle")
-#' - `segment_id`: ID linking the two endpoints of reference lines
-#' - `ref_face`: Which face reference elements project to
-#' - `ref_circle_radius`: Radius for circular reference points
-#' - `ref_circle_vertices`: Number of vertices for circular reference points
 #'
 #' @section Depth Scaling:
 #' The depth scaling uses an inverse relationship with distance, following the
@@ -411,20 +492,15 @@ generate_point_elements <- function(data, raw_points,
 #' - Both size and stroke are depth-scaled when `scale_depth = TRUE`
 #' - All shapes preserve stroke depth scaling and parameter control
 #'
-#' @section Reference Features:
-#' Reference lines and points help visualize the 3D relationships by projecting
-#' data points onto cube faces:
-#' - **Reference lines**: Connect each 3D point to its projection on specified faces
-#' - **Reference points**: Show the projected location on the faces
-#' - **Reference circles**: Circular projections that appear as realistic 3D shadows
-#' - **Depth sorting**: All elements (original points, reference lines, reference points)
-#'   are automatically depth-sorted for proper 3D rendering
+#' @section Reference elements:
+#' To show where points lie in 3D, combine a point layer with layers that
+#' project the points onto faces of the panel:
+#' - [geom_dropline_3d()] draws lines from the points to faces.
+#' - `geom_point_3d(position = position_on_face())` draws the points on
+#'   faces, as upright markers, or with `flat = TRUE`, as markers lying in
+#'   the faces.
 #'
-#' @section Aesthetic Inheritance:
-#' Reference elements intelligently inherit styling from raw points:
-#' - **Shape-aware**: Complex shapes (21-25) with fill/colour are handled differently from simple shapes (0-20/characters)
-#' - **Alpha detection**: If all points have alpha=1, uses 0.5 default for ref elements; otherwise inherits mapped alpha
-#' - **Priority**: Explicit ref_* parameters > mapped aesthetics > smart defaults
+#' All of these layers are depth-sorted together.
 #'
 #' @examples
 #' library(ggplot2)
@@ -436,14 +512,23 @@ generate_point_elements <- function(data, raw_points,
 #'   coord_3d(pitch = 40, roll = 5, yaw = 0, dist = 1.5) +
 #'   scale_fill_viridis_c()
 #'
-#' # Add circular reference points on 2D face panel
+#' # Points with flat markers on two faces, and drop lines to them
 #' ggplot(mtcars, aes(mpg, wt, qsec)) +
-#'   geom_point_3d(size = 3,
-#'     ref_points = TRUE, ref_faces = c("ymax", "xmax")) +
+#'   geom_dropline_3d(faces = c("ymax", "xmax")) +
+#'   geom_point_3d(position = position_on_face(c("ymax", "xmax")),
+#'                 flat = TRUE, alpha = .5, size = 3) +
+#'   geom_point_3d(size = 3) +
 #'   coord_3d()
 #'
-#' @seealso [geom_segment_3d()] for 3D segments, [geom_path_3d()] for 3D paths,
-#'   [coord_3d()] for 3D coordinate systems.
+#' # Points and their shadows on the floor, in one layer
+#' ggplot(mtcars, aes(mpg, wt, qsec, fill = factor(cyl))) +
+#'   geom_point_3d(position = position_on_face(c("3D", "zmin")), flat = TRUE,
+#'                 shape = 21, size = 3) +
+#'   coord_3d()
+#'
+#' @seealso [geom_dropline_3d()] for drop lines, [position_on_face()] for
+#'   placing points on faces, [geom_segment_3d()] for 3D segments,
+#'   [geom_path_3d()] for 3D paths, [coord_3d()] for 3D coordinate systems.
 #' @return A `Layer` object that can be added to a ggplot.
 #' @rdname geom_point_3d
 #' @export
@@ -453,58 +538,53 @@ geom_point_3d <- function(mapping = NULL, data = NULL,
                           annotate = deprecated(),
                           na.rm = FALSE,
                           sort_method = deprecated(),
-                          scale_depth = TRUE, on_top = FALSE,
-                          raw_points = TRUE,
-                          ref_lines = FALSE,
-                          ref_points = FALSE,
-                          ref_faces = "zmin",
-                          ref_circle_radius = 1.5,
-                          ref_circle_vertices = 16,
-                          ref_line_color = NULL, ref_line_colour = NULL,
-                          ref_line_linewidth = 0.25,
-                          ref_line_linetype = NULL,
-                          ref_line_alpha = NULL,
-                          ref_point_color = NULL, ref_point_colour = NULL,
-                          ref_point_fill = NULL,
-                          ref_point_size = NULL,
-                          ref_point_alpha = NULL,
-                          ref_point_stroke = NULL,
-                          ref_point_shape = NULL,
+                          scale_depth = TRUE, on_top = FALSE, flat = FALSE,
+                          raw_points = deprecated(),
+                          ref_lines = deprecated(),
+                          ref_points = deprecated(),
+                          ref_faces = deprecated(),
+                          ref_circle_radius = deprecated(),
+                          ref_circle_vertices = deprecated(),
+                          ref_line_color = deprecated(), ref_line_colour = deprecated(),
+                          ref_line_linewidth = deprecated(),
+                          ref_line_linetype = deprecated(),
+                          ref_line_alpha = deprecated(),
+                          ref_point_color = deprecated(), ref_point_colour = deprecated(),
+                          ref_point_fill = deprecated(),
+                          ref_point_size = deprecated(),
+                          ref_point_alpha = deprecated(),
+                          ref_point_stroke = deprecated(),
+                          ref_point_shape = deprecated(),
                           inherit.aes = TRUE,
                           show.legend = NA) {
       check_sort_method(sort_method, "geom_point_3d")
       check_on_top(on_top)
 
-      # Handle both American and British spellings
-      if (!is.null(ref_line_colour) && is.null(ref_line_color)) {
-            ref_line_color <- ref_line_colour
-      }
-      if (!is.null(ref_point_colour) && is.null(ref_point_color)) {
-            ref_point_color <- ref_point_colour
-      }
+      ref <- point_ref_args(rlang::current_env(), "geom_point_3d")
+      check_flat(flat, position)
 
       out <- layer(
             data = data, mapping = mapping, stat = get_proto(stat, "stat"), geom = GeomPoint3D,
             position = position,  show.legend = show.legend, inherit.aes = inherit.aes,
             params = list(
                   na.rm = na.rm,
-                  scale_depth = scale_depth, on_top = on_top,
-                  raw_points = raw_points,
-                  ref_lines = ref_lines,
-                  ref_points = ref_points,
-                  ref_faces = ref_faces,
-                  ref_circle_radius = ref_circle_radius,
-                  ref_circle_vertices = ref_circle_vertices,
-                  ref_line_color = ref_line_color,
-                  ref_line_linewidth = ref_line_linewidth,
-                  ref_line_linetype = ref_line_linetype,
-                  ref_line_alpha = ref_line_alpha,
-                  ref_point_color = ref_point_color,
-                  ref_point_fill = ref_point_fill,
-                  ref_point_size = ref_point_size,
-                  ref_point_alpha = ref_point_alpha,
-                  ref_point_stroke = ref_point_stroke,
-                  ref_point_shape = ref_point_shape,
+                  scale_depth = scale_depth, on_top = on_top, flat = flat,
+                  raw_points = ref$raw_points,
+                  ref_lines = ref$ref_lines,
+                  ref_points = ref$ref_points,
+                  ref_faces = ref$ref_faces,
+                  ref_circle_radius = ref$ref_circle_radius,
+                  ref_circle_vertices = ref$ref_circle_vertices,
+                  ref_line_color = ref$ref_line_color,
+                  ref_line_linewidth = ref$ref_line_linewidth,
+                  ref_line_linetype = ref$ref_line_linetype,
+                  ref_line_alpha = ref$ref_line_alpha,
+                  ref_point_color = ref$ref_point_color,
+                  ref_point_fill = ref$ref_point_fill,
+                  ref_point_size = ref$ref_point_size,
+                  ref_point_alpha = ref$ref_point_alpha,
+                  ref_point_stroke = ref$ref_point_stroke,
+                  ref_point_shape = ref$ref_point_shape,
                   ...
             )
       )
@@ -519,33 +599,27 @@ stat_point_3d <- function(mapping = NULL, data = NULL,
                           na.rm = FALSE,
                           sort_method = deprecated(),
                           scale_depth = TRUE,
-                          raw_points = TRUE,
-                          ref_lines = FALSE,
-                          ref_points = FALSE,
-                          ref_faces = "zmin",
-                          ref_circle_radius = 1.5,
-                          ref_circle_vertices = 16,
-                          ref_line_color = NULL, ref_line_colour = NULL,
-                          ref_line_linewidth = 0.25,
-                          ref_line_linetype = NULL,
-                          ref_line_alpha = NULL,
-                          ref_point_color = NULL, ref_point_colour = NULL,
-                          ref_point_fill = NULL,
-                          ref_point_size = NULL,
-                          ref_point_alpha = NULL,
-                          ref_point_stroke = NULL,
-                          ref_point_shape = NULL,
+                          raw_points = deprecated(),
+                          ref_lines = deprecated(),
+                          ref_points = deprecated(),
+                          ref_faces = deprecated(),
+                          ref_circle_radius = deprecated(),
+                          ref_circle_vertices = deprecated(),
+                          ref_line_color = deprecated(), ref_line_colour = deprecated(),
+                          ref_line_linewidth = deprecated(),
+                          ref_line_linetype = deprecated(),
+                          ref_line_alpha = deprecated(),
+                          ref_point_color = deprecated(), ref_point_colour = deprecated(),
+                          ref_point_fill = deprecated(),
+                          ref_point_size = deprecated(),
+                          ref_point_alpha = deprecated(),
+                          ref_point_stroke = deprecated(),
+                          ref_point_shape = deprecated(),
                           inherit.aes = TRUE,
                           show.legend = NA) {
       check_sort_method(sort_method, "stat_point_3d")
 
-      # Handle both American and British spellings
-      if (!is.null(ref_line_colour) && is.null(ref_line_color)) {
-            ref_line_color <- ref_line_colour
-      }
-      if (!is.null(ref_point_colour) && is.null(ref_point_color)) {
-            ref_point_color <- ref_point_colour
-      }
+      ref <- point_ref_args(rlang::current_env(), "stat_point_3d")
 
       layer(
             data = data, mapping = mapping, stat = StatPoint3D, geom = get_proto(geom, "geom"),
@@ -553,22 +627,22 @@ stat_point_3d <- function(mapping = NULL, data = NULL,
             params = list(
                   na.rm = na.rm,
                   scale_depth = scale_depth,
-                  raw_points = raw_points,
-                  ref_lines = ref_lines,
-                  ref_points = ref_points,
-                  ref_faces = ref_faces,
-                  ref_circle_radius = ref_circle_radius,
-                  ref_circle_vertices = ref_circle_vertices,
-                  ref_line_color = ref_line_color,
-                  ref_line_linewidth = ref_line_linewidth,
-                  ref_line_linetype = ref_line_linetype,
-                  ref_line_alpha = ref_line_alpha,
-                  ref_point_color = ref_point_color,
-                  ref_point_fill = ref_point_fill,
-                  ref_point_size = ref_point_size,
-                  ref_point_alpha = ref_point_alpha,
-                  ref_point_stroke = ref_point_stroke,
-                  ref_point_shape = ref_point_shape,
+                  raw_points = ref$raw_points,
+                  ref_lines = ref$ref_lines,
+                  ref_points = ref$ref_points,
+                  ref_faces = ref$ref_faces,
+                  ref_circle_radius = ref$ref_circle_radius,
+                  ref_circle_vertices = ref$ref_circle_vertices,
+                  ref_line_color = ref$ref_line_color,
+                  ref_line_linewidth = ref$ref_line_linewidth,
+                  ref_line_linetype = ref$ref_line_linetype,
+                  ref_line_alpha = ref$ref_line_alpha,
+                  ref_point_color = ref$ref_point_color,
+                  ref_point_fill = ref$ref_point_fill,
+                  ref_point_size = ref$ref_point_size,
+                  ref_point_alpha = ref$ref_point_alpha,
+                  ref_point_stroke = ref$ref_point_stroke,
+                  ref_point_shape = ref$ref_point_shape,
                   ...
             )
       )

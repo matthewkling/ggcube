@@ -131,8 +131,8 @@ test_that("layers whose columns differ in type are drawn together, each with its
       p <- ggplot(d, aes(x, y, z, xend = xend, yend = yend, zend = zend)) +
             geom_segment_3d() +                                   # numeric line type
             geom_refline_3d(dx = 1, dy = -1, linetype = "dashed") +
-            geom_point_3d(aes(x, y, z), inherit.aes = FALSE, ref_lines = TRUE,
-                          data = data.frame(x = 0.5, y = 0.5, z = 0.5)) +
+            suppressWarnings(geom_point_3d(aes(x, y, z), inherit.aes = FALSE, ref_lines = TRUE,
+                          data = data.frame(x = 0.5, y = 0.5, z = 0.5))) +
             coord_3d()
       segs <- find_grobs(drawn_grob(p), "segments")
       ltys <- unlist(lapply(segs, function(s) s$gp$lty))

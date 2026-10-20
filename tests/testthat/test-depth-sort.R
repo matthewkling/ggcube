@@ -312,7 +312,7 @@ test_that("pairwise sorting types untyped groups by vertex count", {
       # Point layers assign primitive types only when rendering, so their
       # groups reach the sort untyped, alongside other layers' typed rows
       p <- ggplot(data.frame(x = 1:3, y = 1:3, z = 1:3), aes(x, y, z)) +
-            geom_point_3d(ref_lines = TRUE) +
+            suppressWarnings(geom_point_3d(ref_lines = TRUE)) +
             annotate_3d("segment", x = 2, y = 2, z = 2.5, xend = 3, yend = 2, zend = 2.5) +
             coord_3d()
       expect_no_error(drawn_grob(p))

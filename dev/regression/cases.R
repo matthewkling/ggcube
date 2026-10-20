@@ -192,6 +192,26 @@ regression_cases <- function() {
                         coord_3d()
             }),
 
+            points_reference_layers = list(tags = c("multi", "new"), plot = function() {
+                  ggplot(cloud(40, 6), aes(x, y, z, colour = x)) +
+                        geom_dropline_3d(faces = c("zmin", "ymax")) +
+                        geom_point_3d(position = position_on_face(c("zmin", "ymax")), flat = TRUE,
+                                      size = 2, alpha = 0.5) +
+                        geom_point_3d(size = 2) +
+                        coord_3d()
+            }),
+
+            points_flat_shapes = list(tags = c("single", "new"), plot = function() {
+                  shapes <- c(0, 1, 2, 5, 6, 15:25)
+                  d <- data.frame(x = rep(1:4, 4), y = rep(1:4, each = 4), z = 2, s = factor(shapes))
+                  ggplot(d, aes(x, y, z, shape = s)) +
+                        scale_shape_manual(values = shapes) +
+                        geom_point_3d(position = position_on_face(c("3D", "zmin")), flat = TRUE,
+                                      size = 5, fill = "gold") +
+                        zlim(0, 2) +
+                        coord_3d()
+            }),
+
             points_plane_pairwise = list(tags = c("single", "sort", "ann"), plot = function() {
                   ggplot(cloud(200, 7), aes(x, y, z)) +
                         geom_point_3d(size = 2, colour = "black", sort_method = "pairwise",

@@ -3,7 +3,7 @@
 \name{geom_point_3d}
 \alias{geom_point_3d}
 \alias{stat_point_3d}
-\title{3D scatter plot with 2D reference elements}
+\title{3D scatter plots}
 \usage{
 geom_point_3d(
   mapping = NULL,
@@ -16,24 +16,25 @@ geom_point_3d(
   sort_method = deprecated(),
   scale_depth = TRUE,
   on_top = FALSE,
-  raw_points = TRUE,
-  ref_lines = FALSE,
-  ref_points = FALSE,
-  ref_faces = "zmin",
-  ref_circle_radius = 1.5,
-  ref_circle_vertices = 16,
-  ref_line_color = NULL,
-  ref_line_colour = NULL,
-  ref_line_linewidth = 0.25,
-  ref_line_linetype = NULL,
-  ref_line_alpha = NULL,
-  ref_point_color = NULL,
-  ref_point_colour = NULL,
-  ref_point_fill = NULL,
-  ref_point_size = NULL,
-  ref_point_alpha = NULL,
-  ref_point_stroke = NULL,
-  ref_point_shape = NULL,
+  flat = FALSE,
+  raw_points = deprecated(),
+  ref_lines = deprecated(),
+  ref_points = deprecated(),
+  ref_faces = deprecated(),
+  ref_circle_radius = deprecated(),
+  ref_circle_vertices = deprecated(),
+  ref_line_color = deprecated(),
+  ref_line_colour = deprecated(),
+  ref_line_linewidth = deprecated(),
+  ref_line_linetype = deprecated(),
+  ref_line_alpha = deprecated(),
+  ref_point_color = deprecated(),
+  ref_point_colour = deprecated(),
+  ref_point_fill = deprecated(),
+  ref_point_size = deprecated(),
+  ref_point_alpha = deprecated(),
+  ref_point_stroke = deprecated(),
+  ref_point_shape = deprecated(),
   inherit.aes = TRUE,
   show.legend = NA
 )
@@ -47,24 +48,24 @@ stat_point_3d(
   na.rm = FALSE,
   sort_method = deprecated(),
   scale_depth = TRUE,
-  raw_points = TRUE,
-  ref_lines = FALSE,
-  ref_points = FALSE,
-  ref_faces = "zmin",
-  ref_circle_radius = 1.5,
-  ref_circle_vertices = 16,
-  ref_line_color = NULL,
-  ref_line_colour = NULL,
-  ref_line_linewidth = 0.25,
-  ref_line_linetype = NULL,
-  ref_line_alpha = NULL,
-  ref_point_color = NULL,
-  ref_point_colour = NULL,
-  ref_point_fill = NULL,
-  ref_point_size = NULL,
-  ref_point_alpha = NULL,
-  ref_point_stroke = NULL,
-  ref_point_shape = NULL,
+  raw_points = deprecated(),
+  ref_lines = deprecated(),
+  ref_points = deprecated(),
+  ref_faces = deprecated(),
+  ref_circle_radius = deprecated(),
+  ref_circle_vertices = deprecated(),
+  ref_line_color = deprecated(),
+  ref_line_colour = deprecated(),
+  ref_line_linewidth = deprecated(),
+  ref_line_linetype = deprecated(),
+  ref_line_alpha = deprecated(),
+  ref_point_color = deprecated(),
+  ref_point_colour = deprecated(),
+  ref_point_fill = deprecated(),
+  ref_point_size = deprecated(),
+  ref_point_alpha = deprecated(),
+  ref_point_stroke = deprecated(),
+  ref_point_shape = deprecated(),
   inherit.aes = TRUE,
   show.legend = NA
 )
@@ -77,7 +78,8 @@ the standard point aesthetics, \code{geom_point_3d()} requires x, y, and z coord
 
 \item{stat}{The statistical transformation to use on the data. Defaults to \code{"point_3d"}.}
 
-\item{position}{Position adjustment, defaults to "identity".}
+\item{position}{Position adjustment, defaults to "identity". Use
+\code{\link[=position_on_face]{position_on_face()}} to place points on faces of the panel.}
 
 \item{...}{Other arguments passed on to \code{\link[ggplot2:layer]{ggplot2::layer()}}.}
 
@@ -104,34 +106,22 @@ scene instead of being depth-sorted with it, so other geometry never
 hides or cuts it, e.g. to keep labels legible. The layers drawn on top
 are depth-sorted among themselves. Default \code{FALSE}.}
 
-\item{raw_points}{Logical indicating whether to show the original 3D points.
-Default is \code{TRUE}.}
+\item{flat}{If \code{TRUE}, points placed on a face of the panel by
+\code{\link[=position_on_face]{position_on_face()}} are drawn as markers lying flat in that face, like
+shadows, rather than as symbols facing the viewer. Flat markers match the
+size of ordinary markers at the centre of the panel, and are drawn in
+true perspective, outlines included, whatever \code{scale_depth} is. They can be open, solid, or filled circles, squares,
+diamonds, or triangles (shapes 0, 1, 2, 5, 6, and 15 to 25). Points not
+on a face (e.g. with \code{position_on_face(c("3D", "zmin"))}) are drawn as
+usual. Default \code{FALSE}.}
 
-\item{ref_lines}{Logical indicating whether to show reference lines projecting
-from points to cube faces. Default is \code{FALSE}.}
+\item{raw_points, ref_lines, ref_points, ref_faces, ref_circle_radius, ref_circle_vertices}{Deprecated. Reference elements are now drawn by separate layers: drop
+lines by \code{\link[=geom_dropline_3d]{geom_dropline_3d()}}, and reference points by \code{geom_point_3d()}
+with \code{position = position_on_face()} (and \code{flat = TRUE} for circles).}
 
-\item{ref_points}{Type of reference points to create. Options:
-\itemize{
-\item \code{FALSE}: No reference points (default)
-\item \code{TRUE or "circles"}: Circular reference points that project properly
-\item \code{"points"}: Single-point references (renders faster and supports non-circular shapes,
-but point shape is not 3D-transformed)
-}}
+\item{ref_line_color, ref_line_colour, ref_line_linewidth, ref_line_linetype, ref_line_alpha}{Deprecated. Style a \code{\link[=geom_dropline_3d]{geom_dropline_3d()}} layer instead.}
 
-\item{ref_faces}{Character vector specifying which cube faces to project to.
-Valid face names are: "xmin", "xmax", "ymin", "ymax", "zmin", "zmax".
-Default is "zmin" (bottom face). Multiple faces can be specified.}
-
-\item{ref_circle_radius}{Radius for circular reference points as percentage of standardized coordinate space.}
-
-\item{ref_circle_vertices}{Number of vertices for circular reference points (higher = smoother).}
-
-\item{ref_line_color, ref_line_colour, ref_line_linewidth, ref_line_linetype, ref_line_alpha}{Styling overrides for reference lines. When NULL, inherits from point aesthetics or uses defaults.
-Both American (\code{ref_line_color}) and British (\code{ref_line_colour}) spellings are accepted.}
-
-\item{ref_point_color, ref_point_colour, ref_point_fill, ref_point_size, ref_point_alpha, ref_point_stroke, ref_point_shape}{Styling overrides for reference points and circles. When NULL, inherits from raw point aesthetics
-with shape-aware logic (complex shapes 21-25 vs simple shapes 0-20/characters).
-Both American (\code{ref_point_color}) and British (\code{ref_point_colour}) spellings are accepted.}
+\item{ref_point_color, ref_point_colour, ref_point_fill, ref_point_size, ref_point_alpha, ref_point_stroke, ref_point_shape}{Deprecated. Style a \code{geom_point_3d(position = position_on_face())} layer instead.}
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics.}
 
@@ -145,14 +135,11 @@ A \code{Layer} object that can be added to a ggplot.
 \description{
 \code{geom_point_3d()} creates scatter plots in 3D space with automatic depth-based
 size scaling. Points closer to the viewer appear larger, while points farther
-away appear smaller, creating realistic perspective effects. Optionally adds
-reference lines and points projecting to cube faces, to illustrate point locations
-in 2D.
+away appear smaller, creating realistic perspective effects.
 }
 \details{
 StatPoint3D performs identity transformation (passes data through unchanged) while
-properly handling discrete scales for 3D coordinate systems. It can optionally
-generate reference lines and points projecting to cube faces.
+properly handling discrete scales for 3D coordinate systems.
 }
 \section{Aesthetics}{
 
@@ -174,11 +161,6 @@ generate reference lines and points projecting to cube faces.
 
 \itemize{
 \item \code{x_raw}, \code{y_raw}, \code{z_raw}: Original values before discrete-to-numeric conversion
-\item \code{element_type}: Type of element ("raw_point", "ref_point", "ref_line", "ref_circle")
-\item \code{segment_id}: ID linking the two endpoints of reference lines
-\item \code{ref_face}: Which face reference elements project to
-\item \code{ref_circle_radius}: Radius for circular reference points
-\item \code{ref_circle_vertices}: Number of vertices for circular reference points
 }
 }
 
@@ -206,27 +188,18 @@ ggcube uses shape-aware rendering for improved stroke behavior:
 }
 }
 
-\section{Reference Features}{
+\section{Reference elements}{
 
-Reference lines and points help visualize the 3D relationships by projecting
-data points onto cube faces:
+To show where points lie in 3D, combine a point layer with layers that
+project the points onto faces of the panel:
 \itemize{
-\item \strong{Reference lines}: Connect each 3D point to its projection on specified faces
-\item \strong{Reference points}: Show the projected location on the faces
-\item \strong{Reference circles}: Circular projections that appear as realistic 3D shadows
-\item \strong{Depth sorting}: All elements (original points, reference lines, reference points)
-are automatically depth-sorted for proper 3D rendering
-}
+\item \code{\link[=geom_dropline_3d]{geom_dropline_3d()}} draws lines from the points to faces.
+\item \code{geom_point_3d(position = position_on_face())} draws the points on
+faces, as upright markers, or with \code{flat = TRUE}, as markers lying in
+the faces.
 }
 
-\section{Aesthetic Inheritance}{
-
-Reference elements intelligently inherit styling from raw points:
-\itemize{
-\item \strong{Shape-aware}: Complex shapes (21-25) with fill/colour are handled differently from simple shapes (0-20/characters)
-\item \strong{Alpha detection}: If all points have alpha=1, uses 0.5 default for ref elements; otherwise inherits mapped alpha
-\item \strong{Priority}: Explicit ref_* parameters > mapped aesthetics > smart defaults
-}
+All of these layers are depth-sorted together.
 }
 
 \examples{
@@ -239,14 +212,23 @@ ggplot(expand.grid(x = 1:5, y = 1:5, z = 1:5),
   coord_3d(pitch = 40, roll = 5, yaw = 0, dist = 1.5) +
   scale_fill_viridis_c()
 
-# Add circular reference points on 2D face panel
+# Points with flat markers on two faces, and drop lines to them
 ggplot(mtcars, aes(mpg, wt, qsec)) +
-  geom_point_3d(size = 3,
-    ref_points = TRUE, ref_faces = c("ymax", "xmax")) +
+  geom_dropline_3d(faces = c("ymax", "xmax")) +
+  geom_point_3d(position = position_on_face(c("ymax", "xmax")),
+                flat = TRUE, alpha = .5, size = 3) +
+  geom_point_3d(size = 3) +
+  coord_3d()
+
+# Points and their shadows on the floor, in one layer
+ggplot(mtcars, aes(mpg, wt, qsec, fill = factor(cyl))) +
+  geom_point_3d(position = position_on_face(c("3D", "zmin")), flat = TRUE,
+                shape = 21, size = 3) +
   coord_3d()
 
 }
 \seealso{
-\code{\link[=geom_segment_3d]{geom_segment_3d()}} for 3D segments, \code{\link[=geom_path_3d]{geom_path_3d()}} for 3D paths,
-\code{\link[=coord_3d]{coord_3d()}} for 3D coordinate systems.
+\code{\link[=geom_dropline_3d]{geom_dropline_3d()}} for drop lines, \code{\link[=position_on_face]{position_on_face()}} for
+placing points on faces, \code{\link[=geom_segment_3d]{geom_segment_3d()}} for 3D segments,
+\code{\link[=geom_path_3d]{geom_path_3d()}} for 3D paths, \code{\link[=coord_3d]{coord_3d()}} for 3D coordinate systems.
 }

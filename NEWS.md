@@ -22,6 +22,13 @@ Performance:
 * `annotate_3d()` gains the types `"polygon"` (filled polygons from their vertices, with `group` to draw several in one call), and `"axes"`, `"refline"`, and `"plane"`, which build layers with the new geoms above. Segment annotations take an `arrow`, like `geom_segment_3d()`.
 * `geom_point_3d()`, `geom_segment_3d()`, `geom_path_3d()`, `geom_polygon_3d()`, `geom_text_3d()`, and the new geoms gain an `on_top` argument, which draws the layer on top of the rest of the scene instead of depth-sorting it with it, so other geometry never hides or cuts it. This keeps labels legible wherever they fall, as in `annotate_3d("text", ..., on_top = TRUE)`.
 
+## Reference elements
+
+* New `geom_dropline_3d()` draws lines from points to their projections on faces of the panel, given by `faces` (default `"zmin"`, the floor).
+* `geom_point_3d()` gains a `flat` argument: with `flat = TRUE`, points placed on a face of the panel by `position_on_face()` are drawn as markers lying flat in that face, like shadows, rather than as symbols facing the viewer. Flat markers can be open, solid, or filled circles, squares, diamonds, or triangles, match the size of ordinary markers at the centre of the panel, and are drawn in true perspective, outlines included, regardless of `scale_depth`. With `position_on_face(c("3D", "zmin"))`, one layer draws the points and their shadows.
+* The reference element arguments of `geom_point_3d()` and `stat_point_3d()` (`raw_points`, and those starting `ref_`) are deprecated in favour of separate layers: drop lines with `geom_dropline_3d()`, and reference points with `geom_point_3d(position = position_on_face())`, adding `flat = TRUE` for circles. They still work, with a warning.
+* The `points` argument of `geom_smooth_3d()` and `stat_smooth_3d()`, and the `point_*` arguments that style the points, are deprecated. Draw the data points with a separate layer, e.g. `+ geom_point_3d()`; points requested through `points = TRUE` are now added as such a layer.
+
 ## Other changes
 
 * ggcube now requires ggplot2 4.0.0 or later.
