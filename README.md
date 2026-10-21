@@ -14,6 +14,13 @@ status](https://www.r-pkg.org/badges/version/ggcube)](https://CRAN.R-project.org
 surfaces, volumes, scatter plots, and complex layered visualizations
 using familiar ggplot2 syntax with `aes(x, y, z)` and `coord_3d()`.
 
+<figure>
+<img src="man/figures/README-banner.jpg"
+alt="A grid of 18 example plots made with ggcube" />
+<figcaption aria-hidden="true">A grid of 18 example plots made with
+ggcube</figcaption>
+</figure>
+
 The package provides a variety of 3D-specific `geoms` to render
 surfaces, prisms, points, paths, and text in 3D; it also works with some
 standard ggplot2 layer functions. All 3D layers in a panel are
@@ -114,8 +121,8 @@ Example: a terrain surface using `geom_surface_3d()`:
 ggplot(mountain, aes(x, y, z)) +
       geom_surface_3d(aes(fill = z, color = z)) +
       scale_fill_viridis_c() + scale_color_viridis_c() +
-      coord_3d(ratio = c(1.5, 2, 1), expand = FALSE, panels = "zmin",
-               light = light(direction = c(1, 0, 0))) +
+      coord_3d(ratio = c(1.5, 2, 1), expand = FALSE, panels = "zmin") +
+      light(direction = c(1, 0, 0)) +
       guides(fill = guide_colorbar_3d()) +
       theme_light()
 ```
@@ -271,8 +278,8 @@ ggplot(vecs, aes(0, 0, 0, xend = xend, yend = yend, zend = zend)) +
                       linewidth = 1) +
       geom_text_3d(aes(xend * 1.1, yend * 1.1, zend * 1.1, label = label),
                    size = 6, on_top = TRUE) +
-      lims(x = c(-.25, 1.1), y = c(-.25, 1.1)) + zlim(-.25, 1.1) +
-      coord_3d() + 
+      xlim(-.25, 1.1) + ylim(-.25, 1.1) + zlim(-.25, 1.1) +
+      coord_3d(panels = "none") + 
       theme_void()
 ```
 
@@ -281,7 +288,7 @@ ggplot(vecs, aes(0, 0, 0, xend = xend, yend = yend, zend = zend)) +
 ## Lighting effects
 
 Lighting of 3D polygon layers is controlled by adding a `light()`
-specification to the plot, or providing to the `light` parameter of a
+specification to the plot, or providing it to the `light` parameter of a
 layer function or `coord_3d()`. See the [lighting and
 shading](https://matthewkling.github.io/ggcube/articles/lighting.html)
 article for a comprehensive guide.
@@ -317,8 +324,10 @@ A major limitation of 3D figures is that you can’t get a full view of
 the data from any single angle. One way to mitigate this is by rotating
 the figure to view the data from different directions. ggcube offers
 animated rotation via `animate_3d()`, and interactive drag-to-rotate
-plots via `orbit_3d()`. See the [animation and
-interaction](https://matthewkling.github.io/ggcube/articles/animation.html)
+plots via `orbit_3d()`. You can also render a plot from multiple views
+using `facet_wrap_views()` or `facet_grid_views()`. See the [animation,
+orbits, and multiple
+views](https://matthewkling.github.io/ggcube/articles/animation.html)
 article for details. Here’s an example of a rotating gif:
 
 ``` r
