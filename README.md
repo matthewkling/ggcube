@@ -14,12 +14,7 @@ status](https://www.r-pkg.org/badges/version/ggcube)](https://CRAN.R-project.org
 surfaces, volumes, scatter plots, and complex layered visualizations
 using familiar ggplot2 syntax with `aes(x, y, z)` and `coord_3d()`.
 
-<figure>
-<img src="man/figures/README-banner.jpg"
-alt="A grid of 18 example plots made with ggcube" />
-<figcaption aria-hidden="true">A grid of 18 example plots made with
-ggcube</figcaption>
-</figure>
+![](man/figures/README-banner.jpg)
 
 The package provides a variety of 3D-specific `geoms` to render
 surfaces, prisms, points, paths, and text in 3D; it also works with some
