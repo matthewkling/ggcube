@@ -5,6 +5,11 @@ surfaces, volumes, scatter plots, and complex layered visualizations
 using familiar ggplot2 syntax with `aes(x, y, z)` and
 [`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md).
 
+![A grid of 18 example plots made with
+ggcube](reference/figures/README-banner.jpg)
+
+A grid of 18 example plots made with ggcube
+
 The package provides a variety of 3D-specific `geoms` to render
 surfaces, prisms, points, paths, and text in 3D; it also works with some
 standard ggplot2 layer functions. All 3D layers in a panel are
@@ -115,8 +120,8 @@ Example: a terrain surface using
 ggplot(mountain, aes(x, y, z)) +
       geom_surface_3d(aes(fill = z, color = z)) +
       scale_fill_viridis_c() + scale_color_viridis_c() +
-      coord_3d(ratio = c(1.5, 2, 1), expand = FALSE, panels = "zmin",
-               light = light(direction = c(1, 0, 0))) +
+      coord_3d(ratio = c(1.5, 2, 1), expand = FALSE, panels = "zmin") +
+      light(direction = c(1, 0, 0)) +
       guides(fill = guide_colorbar_3d()) +
       theme_light()
 ```
@@ -300,8 +305,8 @@ ggplot(vecs, aes(0, 0, 0, xend = xend, yend = yend, zend = zend)) +
                       linewidth = 1) +
       geom_text_3d(aes(xend * 1.1, yend * 1.1, zend * 1.1, label = label),
                    size = 6, on_top = TRUE) +
-      lims(x = c(-.25, 1.1), y = c(-.25, 1.1)) + zlim(-.25, 1.1) +
-      coord_3d() + 
+      xlim(-.25, 1.1) + ylim(-.25, 1.1) + zlim(-.25, 1.1) +
+      coord_3d(panels = "none") + 
       theme_void()
 ```
 
@@ -311,7 +316,7 @@ ggplot(vecs, aes(0, 0, 0, xend = xend, yend = yend, zend = zend)) +
 
 Lighting of 3D polygon layers is controlled by adding a
 [`light()`](https://matthewkling.github.io/ggcube/reference/light.md)
-specification to the plot, or providing to the `light` parameter of a
+specification to the plot, or providing it to the `light` parameter of a
 layer function or
 [`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md).
 See the [lighting and
@@ -353,8 +358,12 @@ animated rotation via
 [`animate_3d()`](https://matthewkling.github.io/ggcube/reference/animate_3d.md),
 and interactive drag-to-rotate plots via
 [`orbit_3d()`](https://matthewkling.github.io/ggcube/reference/orbit_3d.md).
-See the [animation and
-interaction](https://matthewkling.github.io/ggcube/articles/animation.html)
+You can also render a plot from multiple views using
+[`facet_wrap_views()`](https://matthewkling.github.io/ggcube/reference/facet_wrap_views.md)
+or
+[`facet_grid_views()`](https://matthewkling.github.io/ggcube/reference/facet_wrap_views.md).
+See the [animation, orbits, and multiple
+views](https://matthewkling.github.io/ggcube/articles/animation.html)
 article for details. Here’s an example of a rotating gif:
 
 ``` r
