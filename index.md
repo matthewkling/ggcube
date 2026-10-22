@@ -5,10 +5,7 @@ surfaces, volumes, scatter plots, and complex layered visualizations
 using familiar ggplot2 syntax with `aes(x, y, z)` and
 [`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md).
 
-![A grid of 18 example plots made with
-ggcube](reference/figures/README-banner.jpg)
-
-A grid of 18 example plots made with ggcube
+![](reference/figures/README-banner.jpg)
 
 The package provides a variety of 3D-specific `geoms` to render
 surfaces, prisms, points, paths, and text in 3D; it also works with some
