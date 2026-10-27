@@ -33,6 +33,7 @@ Performance:
 
 * ggcube now requires ggplot2 4.0.0 or later.
 * `geom_polygon_3d()` now lights each polygon using the normal of its own plane, oriented by its vertex winding. Lighting previously treated every polygon as a tile of a surface `z = f(x, y)`, so vertical polygons were lit as if horizontal, and polygons wound clockwise were lit as their reverse side. With the default lighting, polygons are now lit the same way whatever their winding order.
+* `light("direct")` now lights back faces that face the light. Light values were clamped to be non-negative before back faces had their sign flipped, so every visible back face, such as the underside of a surface seen from below, was drawn black regardless of where the light came from. A nonzero `backface_offset` now shifts direct light values before they are clamped, as it does for diffuse lighting.
 * `geom_contour_3d()` and `geom_ridgeline_3d()` now work with facets. They processed every panel's data together, so faceted plots mixed panels' contours and could leave panels empty.
 * ggcube now requires systemfonts 1.2.0 or later. Earlier versions lack the glyph outline functions ggcube uses, so loading ggcube against them failed.
 * New `direction()` builds the length-3 direction vectors used by `coord_3d()` and `light()` from an azimuth and an elevation in degrees, for cases where angles are easier to reason about than components. Azimuth is a compass bearing measured clockwise from the positive y axis, matching terrain shading conventions.

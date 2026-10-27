@@ -547,3 +547,26 @@ test_that("polygons are lit by their own plane, the same whatever their winding"
       expect_equal(unname(lit$vertical), rep(lit$vertical[[1]], 4))
       expect_equal(toupper(lit$vertical[[1]]), "#4682B4")              # steelblue, unshaded
 })
+
+
+test_that("direct lighting lights back faces that face the light", {
+      square <- data.frame(x = c(0, 1, 1, 0), y = c(0, 0, 1, 1), z = 0.5)
+      fill <- function(view, light_z) {
+            p <- ggplot(square, aes(x, y, z)) +
+                  geom_polygon_3d(fill = "steelblue") +
+                  lims(x = c(0, 1), y = c(0, 1)) + zlim(0, 1) +
+                  coord_3d(direction = c(0.3, -0.4, view),
+                           light = light("direct", direction = c(0.2, 0.1, light_z)))
+            polys <- find_grobs(find_grobs(drawn_grob(p), "ggcube_layer")[[1]], "polygon")
+            polys[[1]]$gp$fill
+      }
+
+      # The square's underside, seen from below with light from below, is lit
+      # as its top is when seen from above with light from above
+      expect_equal(fill(-1, -1), fill(1, 1))
+      expect_false(toupper(fill(-1, -1)) == "#000000")
+
+      # The side facing away from the light is dark, seen from either side
+      expect_equal(toupper(fill(-1, 1)), "#000000")
+      expect_equal(toupper(fill(1, -1)), "#000000")
+})

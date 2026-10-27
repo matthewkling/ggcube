@@ -389,7 +389,11 @@ compute_light <- function(normals, lighting, face_centers = NULL) {
 
       # Apply lighting model (same for both directional and positional)
       light <- switch(params$method,
-                      direct = pmax(0, dot_products),             # Direct lighting with hard shadows
+                      # Direct lighting with hard shadows. Values are left unclamped here, and
+                      # clamped to [0, 1] when blended with colors, so that back faces can first
+                      # have their sign flipped: clamping before the flip would leave every back
+                      # face dark, including those facing the light.
+                      direct = dot_products,
                       diffuse = dot_products,                     # Atmospheric lighting: full -1 to +1 range
                       rgb = {                              # Map normals to RGB hex colors
                             if (use_positional) {
