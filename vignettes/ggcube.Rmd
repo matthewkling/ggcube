@@ -2,20 +2,20 @@
 title: "Introduction to ggcube"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Introduction to ggcube}
+%\VignetteIndexEntry{Introduction to ggcube}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
----
+  ---
   
-```{r, include = FALSE}
+  ```{r, include = FALSE}
 knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  fig.width = 7,
-  fig.height = 5,
-  dpi = 150,
-  warning = FALSE,
-  message = FALSE
+collapse = TRUE,
+comment = "#>",
+fig.width = 7,
+fig.height = 5,
+dpi = 150,
+warning = FALSE,
+message = FALSE
 )
 ```
 
@@ -95,11 +95,12 @@ surfaces, bars, paths, and text.
 
 Here's a quick tour of the main categories.
 
+
 ### Surfaces
 
-Several geoms and stats work together to render surfaces. `geom_surface_3d()` renders
-data as a tessellated surface, `geom_contour_3d()` creates layer-cake
-contour stacks, and `geom_ridgeline_3d()` shows cross-sectional slices:
+Several geoms and stats work together to render surfaces with a z value for every (x, y) position. 
+`geom_surface_3d()` renders data as a tessellated surface, `geom_contour_3d()` creates 
+layer-cake contour stacks, and `geom_ridgeline_3d()` shows cross-sectional slices:
 
 ```{r surface}
 ggplot(mountain, aes(x, y, z)) +
@@ -115,6 +116,29 @@ Stats like `stat_function_3d()`, `stat_smooth_3d()`, and `stat_density_3d()` gen
 surface data from functions, model fits, or kernel density estimates. These stats can be
 paired with any of the surface geoms. See the [3D surfaces](https://matthewkling.github.io/ggcube/articles/surfaces.html)
 article for more detail on surface plotting options.
+
+
+### Volumes
+
+ggcube's volume functions draw surfaces that bound regions of 3D space. Unlike terrain, these 
+surfaces can fold over, nest inside one another, and close on themselves. `geom_hull_3d()` 
+computes and renders triangulated hulls from 3D point clouds, including convex and alpha hulls.
+The other volume functions are each an "iso" variant of one of the lower-dimensional surface 
+functions mentioned above: 
+`geom_isosurface_3d()` draws surfaces on preexisting 3D gridded data, 
+`geom_isofunction_3d()` draws mathematical functions, and
+`geom_isodensity_3d()` draws density contours of 3D point clouds.
+
+```{r surface}
+gyroid <- function(x, y, z) sin(x) * cos(y) + sin(y) * cos(z) + sin(z) * cos(x)
+ggplot() +
+      geom_isofunction_3d(fun = gyroid, cap = TRUE, fill = "#993333", n = 40,
+                          xlim = c(0, 4 * pi), ylim = c(0, 4 * pi), zlim = c(0, 4 * pi)) +
+      coord_3d() + light(mode = "hsl") + theme_void()
+```
+
+See the [3D volumes](https://matthewkling.github.io/ggcube/articles/volumes.html) article for details.
+
 
 ### Points
 
@@ -132,7 +156,8 @@ ggplot(mpg, aes(x = displ, y = hwy, z = drv, fill = class)) +
       coord_3d()
 ```
 
-### Paths
+
+### Lines
 
 `geom_path_3d()` connects observations with depth-sorted, depth-scaled line segments:
 
@@ -149,6 +174,7 @@ ggplot(spiral, aes(x, y, z, color = time)) +
 `geom_segment_3d()` is also available for drawing individual segments defined by start
 and end coordinates.
 
+
 ### Prisms
 
 `geom_col_3d()` produces 3D column charts, `geom_bar_3d()` creates 3D histograms with
@@ -162,15 +188,6 @@ ggplot(iris, aes(Species, Sepal.Length, fill = Species)) +
       theme(legend.position = "none")
 ```
 
-### Hulls
-
-`geom_hull_3d()` computes and renders triangulated hulls from 3D point clouds, including convex and alpha hulls:
-
-```{r hull}
-ggplot(sphere_points, aes(x, y, z)) +
-      geom_hull_3d(method = "convex", fill = "#9e2602", color = "#5e1600") +
-      coord_3d()
-```
 
 ### Distributions
 
@@ -184,6 +201,7 @@ ggplot(iris, aes(y = Sepal.Length, x = Species, fill = Species)) +
       coord_3d() +
       theme(legend.position = "none")
 ```
+
 
 ### Text
 

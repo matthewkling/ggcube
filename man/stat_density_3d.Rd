@@ -141,6 +141,7 @@ A 3D version of \code{ggplot2::stat_density_2d()}.
 Creates surfaces from 2D point data using kernel density estimation.
 The density values become the z-coordinates of the surface, allowing
 visualization of data concentration as peaks and valleys in 3D space.
+(For density volumes of 3D point clouds, use \code{\link[=geom_isodensity_3d]{geom_isodensity_3d()}} instead.)
 }
 \section{Aesthetics}{
 
@@ -232,7 +233,9 @@ ggplot(iris, aes(Petal.Length, Sepal.Length, fill = Species)) +
 
 }
 \seealso{
-\code{\link[ggplot2:stat_density_2d]{ggplot2::stat_density_2d()}} for 2D density contours, \code{\link[=stat_surface_3d]{stat_surface_3d()}} for
-surfaces from existing grid data, \code{\link[=light]{light()}} for lighting specifications,
+\code{\link[ggplot2:stat_density_2d]{ggplot2::stat_density_2d()}} for 2D density contours,
+\code{\link[=geom_isodensity_3d]{geom_isodensity_3d()}} for density volumes of 3D point clouds,
+\code{\link[=stat_surface_3d]{stat_surface_3d()}} for surfaces from existing grid data,
+\code{\link[=light]{light()}} for lighting specifications,
 \code{\link[=coord_3d]{coord_3d()}} for 3D coordinate systems.
 }

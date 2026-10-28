@@ -206,6 +206,7 @@ ggplot(iris, aes(Petal.Length, Sepal.Length, Sepal.Width,
 \dontshow{\}) # examplesIf}
 }
 \seealso{
+\code{\link[=geom_isodensity_3d]{geom_isodensity_3d()}} for contours of 3D density fields,
 \code{\link[=coord_3d]{coord_3d()}} for 3D coordinate systems, \link{geom_polygon_3d} for the
 default geometry with depth sorting, \code{\link[=light]{light()}} for lighting specifications.
 }

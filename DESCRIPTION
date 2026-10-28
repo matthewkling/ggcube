@@ -48,6 +48,7 @@ Suggests:
     progress,
     ragg,
     rjson,
+    rmarchingcubes,
     rmarkdown,
     rstudioapi,
     shiny,

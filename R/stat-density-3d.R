@@ -146,6 +146,7 @@ kde2d <- function(x, y, eval_x, eval_y, h) {
 #' Creates surfaces from 2D point data using kernel density estimation.
 #' The density values become the z-coordinates of the surface, allowing
 #' visualization of data concentration as peaks and valleys in 3D space.
+#' (For density volumes of 3D point clouds, use [geom_isodensity_3d()] instead.)
 #'
 #' @param mapping Set of aesthetic mappings created by [aes()]. This stat
 #'   requires `x` and `y` aesthetics. By default, `fill` is mapped to
@@ -240,8 +241,10 @@ kde2d <- function(x, y, eval_x, eval_y, h) {
 #'
 #' }
 #'
-#' @seealso [ggplot2::stat_density_2d()] for 2D density contours, [stat_surface_3d()] for
-#'   surfaces from existing grid data, [light()] for lighting specifications,
+#' @seealso [ggplot2::stat_density_2d()] for 2D density contours,
+#'   [geom_isodensity_3d()] for density volumes of 3D point clouds,
+#'   [stat_surface_3d()] for surfaces from existing grid data,
+#'   [light()] for lighting specifications,
 #'   [coord_3d()] for 3D coordinate systems.
 #' @rdname stat_density_3d
 #' @return A `Layer` object that can be added to a ggplot.

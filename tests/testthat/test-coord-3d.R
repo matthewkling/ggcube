@@ -73,3 +73,20 @@ test_that("repeated builds don't accumulate z scale range", {
 
       expect_equal(z_limits(p), z_limits(p))
 })
+
+
+test_that("plots with no data draw an empty cube", {
+      empty <- data.frame(x = numeric(), y = numeric(), z = numeric())
+      p <- ggplot(empty, aes(x, y, z)) + geom_point_3d() + coord_3d()
+
+      expect_no_warning(g <- drawn_grob(p))
+      expect_s3_class(g, "grob")
+
+      # Framed by the cube's corners, there being no gridlines to frame it
+      pp <- ggplot_build(p)$layout$panel_params[[1]]
+      corners <- expand.grid(x = c(-0.5, 0.5) * pp$effective_ratios[1],
+                             y = c(-0.5, 0.5) * pp$effective_ratios[2],
+                             z = c(-0.5, 0.5) * pp$effective_ratios[3])
+      projected <- transform_3d_standard(corners, pp$proj)
+      expect_equal(pp$plot_bounds, calculate_plot_bounds(projected$x, projected$y)$bounds)
+})

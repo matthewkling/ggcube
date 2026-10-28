@@ -58,7 +58,7 @@ make_scale_grid <- function(visible_faces, scale_info, scales = "free", ratio = 
                                free_axis = vr)
             })
       }) %>%
-            mutate(group = rep(1:(nrow(.)/2), each = 2)) %>%
+            mutate(group = rep(seq_len(nrow(.) / 2), each = 2)) %>%
             group_by(group) %>%
             mutate(start_boundaries = paste0(pmin(face, paste0(free_axis, "min")), "_",
                                              pmax(face, paste0(free_axis, "min"))),

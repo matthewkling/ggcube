@@ -34,9 +34,9 @@ StatSurface3D <- ggproto("StatSurface3D", Stat,
 #' rendering. If data form a regular grid, can render either a GeomSurface3D
 #' of rectangular or right-triangular tiles, or a GeomRidgeline3D or GeomContour3D
 #' set of surface slices; otherwise, renders irregular triangular tiles via Delaunay
-#' trianuglation.
+#' trianuglation. (For surfaces of 4D x-y-z-value data, use [geom_isosurface_3d()].)
 #'
-#'  For regular grids, computes point-level gradients. Works with
+#' For regular grids, computes point-level gradients. Works with
 #' both [geom_surface_3d()] for mesh rendering and [geom_ridgeline_3d()] for
 #' ridgeline rendering.
 #'
@@ -160,8 +160,8 @@ StatSurface3D <- ggproto("StatSurface3D", Stat,
 #'
 #' }
 #'
-#' @seealso [geom_surface_3d()], [geom_ridgeline_3d()], [stat_function_3d()],
-#'   [coord_3d()]
+#' @seealso [geom_isosurface_3d()], [geom_surface_3d()], [geom_ridgeline_3d()],
+#'   [stat_function_3d()], [coord_3d()]
 #' @export
 stat_surface_3d <- function(mapping = NULL, data = NULL,
                             geom = "surface_3d", position = "identity",

@@ -22,8 +22,8 @@ library(patchwork)
 Surfaces are ggcube's richest feature area. This article gives an overview of the geoms and 
 stats that work together to render continuous surfaces from various data sources. "Surface" here
 means a data object with a single z value for each (x, y) position, like a heightmap or 
-terrain model. This vignette doesn't cover hulls (`geom_hull_3d()`) or columnar surfaces 
-(`geom_col_3d()`). 
+terrain model. This vignette doesn't cover columnar surfaces (`geom_col_3d()`), or volumes 
+like hulls and isosurfaces, which are covered in the [volumes](volumes.html) article. 
 
 Surfaces can be rendered from several data sources and in several visual styles, using a 
 system of interchangeable geoms and stats. ggcube currently includes three surface geoms:
@@ -110,7 +110,8 @@ bands, and `stat_function_3d(geom = "ridgeline_3d")` renders it as ridgelines.
 ## Surface stats
 
 Four stats produce surface data. Each generates a regular grid of (x, y, z) points
-that can be rendered by any of the three surface geoms.
+that can be rendered by any of the three surface geoms. (Note that several of these stats also have a higher-dimensional analog covered in the [volumes](volumes.html) article.)
+
 
 ### User-supplied data
 
@@ -130,7 +131,8 @@ ggplot(pts, aes(x, y, z = z, fill = z)) +
 
 ### Mathematical functions
 
-`stat_function_3d()` evaluates a function f(x, y) over a grid:
+`stat_function_3d()` evaluates a function f(x, y) over a grid.
+(4D functions f(x, y, z) can instead be visualized with `geom_isosurface_3d()`.)
 
 ```{r stat_function}
 ggplot(mapping = aes(color = after_stat(x))) +
@@ -155,8 +157,9 @@ ggplot(mtcars, aes(qsec, disp, mpg, fill = after_stat(level))) +
 
 ### Kernel density
 
-`stat_density_3d()` (or `geom_density_3d()`) computes a 2D kernel density estimate.
-It has options for modifying bandwidth, resolution:
+`stat_density_3d()` and `geom_density_3d()` compute a 2D kernel density estimate.
+(For contours of **3D** kernel densities, see `geom_isodensity_3d()`.)
+It has options for modifying bandwidth, resolution, etc.:
 
 ```{r stat_density}
 ggplot(faithful, aes(eruptions, waiting)) +

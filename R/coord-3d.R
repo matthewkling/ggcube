@@ -596,6 +596,14 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                                full_grid <- make_scale_grid(all_faces, panel_params$scale_info,
                                                             panel_params$scales, panel_params$ratio)
 
+                               # Scales without breaks, as when no layer has data, give no
+                               # gridlines to frame the plot, so frame the cube's corners instead
+                               if (!is.null(full_grid) && nrow(full_grid) == 0) {
+                                     full_grid <- expand.grid(x = c(-0.5, 0.5) * effective_ratios[1],
+                                                              y = c(-0.5, 0.5) * effective_ratios[2],
+                                                              z = c(-0.5, 0.5) * effective_ratios[3])
+                               }
+
                                if (!is.null(full_grid)) {
                                      # Transform the FULL grid to get base bounds
                                      full_grid_transformed <- transform_3d_standard(full_grid, panel_params$proj)

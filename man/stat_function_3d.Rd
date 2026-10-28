@@ -98,8 +98,9 @@ layer.}
 A \code{Layer} object that can be added to a ggplot.
 }
 \description{
-Evaluates a function f(x,y) = z over a regular grid and renders the result
-as a 3D surface or ridgeline plot.
+Evaluates a 2D function f(x,y) = z over a regular grid and renders the result
+as a 3D surface or ridgeline plot. (For 3D functions f(x, y, z) = c, use
+\code{\link[=geom_isofunction_3d]{geom_isofunction_3d()}} instead.)
 }
 \section{Computed variables}{
 
@@ -141,5 +142,6 @@ ggplot() +
 
 }
 \seealso{
-\code{\link[=geom_surface_3d]{geom_surface_3d()}}, \code{\link[=geom_ridgeline_3d]{geom_ridgeline_3d()}}, \code{\link[=coord_3d]{coord_3d()}}
+\code{\link[=geom_surface_3d]{geom_surface_3d()}}, \code{\link[=geom_ridgeline_3d]{geom_ridgeline_3d()}}, \code{\link[=coord_3d]{coord_3d()}},
+\code{\link[=geom_isofunction_3d]{geom_isofunction_3d()}} for isosurfaces of functions of three variables
 }

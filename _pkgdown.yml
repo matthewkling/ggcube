@@ -48,5 +48,6 @@ articles:
     contents:
       - articles/coord_3d
       - articles/surfaces
+      - articles/volumes
       - articles/lighting
       - articles/animation

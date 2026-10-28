@@ -517,7 +517,8 @@ StatHull3D <- ggproto("StatHull3D", Stat,
 #'       geom_hull_3d() +
 #'       coord_3d(scales = "fixed")
 #'
-#' @seealso [coord_3d()] for 3D coordinate systems, [geom_polygon_3d] for the
+#' @seealso [geom_isodensity_3d()] for contours of 3D density fields,
+#'   [coord_3d()] for 3D coordinate systems, [geom_polygon_3d] for the
 #'   default geometry with depth sorting, [light()] for lighting specifications.
 #' @rdname geom_hull_3d
 #' @return A `Layer` object that can be added to a ggplot.

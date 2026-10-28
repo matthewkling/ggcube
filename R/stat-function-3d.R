@@ -90,8 +90,9 @@ StatFunction3D <- ggproto("StatFunction3D", Stat,
 
 #' 3D surface from a function
 #'
-#' Evaluates a function f(x,y) = z over a regular grid and renders the result
-#' as a 3D surface or ridgeline plot.
+#' Evaluates a 2D function f(x,y) = z over a regular grid and renders the result
+#' as a 3D surface or ridgeline plot. (For 3D functions f(x, y, z) = c, use
+#' [geom_isofunction_3d()] instead.)
 #'
 #' @param mapping Set of aesthetic mappings created by [aes()]. By default, fill
 #'   is mapped to `after_stat(z)`.
@@ -148,7 +149,8 @@ StatFunction3D <- ggproto("StatFunction3D", Stat,
 #'
 #' }
 #'
-#' @seealso [geom_surface_3d()], [geom_ridgeline_3d()], [coord_3d()]
+#' @seealso [geom_surface_3d()], [geom_ridgeline_3d()], [coord_3d()],
+#'   [geom_isofunction_3d()] for isosurfaces of functions of three variables
 #' @export
 stat_function_3d <- function(mapping = NULL, data = ensure_nonempty_data,
                              geom = "surface_3d", position = "identity",

@@ -49,7 +49,9 @@ grob_uses_colour <- function(g, colour) {
 
 test_that("every layer function with an annotate argument has it deprecated", {
       fns <- grep("^geom_.*_3d$", getNamespaceExports("ggcube"), value = TRUE)
-      fns <- setdiff(fns, c("geom_plane_3d", "geom_refline_3d", "geom_axes_3d", "geom_dropline_3d"))
+      fns <- setdiff(fns, c("geom_plane_3d", "geom_refline_3d", "geom_axes_3d", "geom_dropline_3d",
+                            "geom_isosurface_3d", "geom_isodensity_3d",
+                            "geom_isofunction_3d"))
       expect_gte(length(fns), 16)
       for (fn in fns) {
             f <- formals(get(fn, envir = asNamespace("ggcube")))

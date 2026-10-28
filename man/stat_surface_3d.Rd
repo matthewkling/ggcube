@@ -108,7 +108,7 @@ Takes user-provided (x, y, z) point data and prepares it for surface
 rendering. If data form a regular grid, can render either a GeomSurface3D
 of rectangular or right-triangular tiles, or a GeomRidgeline3D or GeomContour3D
 set of surface slices; otherwise, renders irregular triangular tiles via Delaunay
-trianuglation.
+trianuglation. (For surfaces of 4D x-y-z-value data, use \code{\link[=geom_isosurface_3d]{geom_isosurface_3d()}}.)
 }
 \details{
 For regular grids, computes point-level gradients. Works with
@@ -226,6 +226,6 @@ ggplot(pts, aes(x, y, z = z, fill = z)) +
 
 }
 \seealso{
-\code{\link[=geom_surface_3d]{geom_surface_3d()}}, \code{\link[=geom_ridgeline_3d]{geom_ridgeline_3d()}}, \code{\link[=stat_function_3d]{stat_function_3d()}},
-\code{\link[=coord_3d]{coord_3d()}}
+\code{\link[=geom_isosurface_3d]{geom_isosurface_3d()}}, \code{\link[=geom_surface_3d]{geom_surface_3d()}}, \code{\link[=geom_ridgeline_3d]{geom_ridgeline_3d()}},
+\code{\link[=stat_function_3d]{stat_function_3d()}}, \code{\link[=coord_3d]{coord_3d()}}
 }
