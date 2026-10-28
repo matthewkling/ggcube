@@ -64,3 +64,44 @@ test_that("the hull of a box's corners is drawn with square faces", {
       expect_length(sizes, 6)
       expect_true(all(sizes == 4))
 })
+
+
+# Groups that can't enclose a volume ---------------------------------------------
+
+test_that("groups that can't enclose a volume are dropped, not the whole layer", {
+      skip_if_not_installed("geometry")
+
+      # A z limit leaves virginica with a single point
+      p <- ggplot(iris, aes(Sepal.Length, Sepal.Width, Petal.Length, group = Species)) +
+            geom_hull_3d() + zlim(NA, 4.5) + coord_3d()
+      warnings <- character(0)
+      d <- withCallingHandlers(layer_data(p), warning = function(w) {
+            warnings <<- c(warnings, conditionMessage(w))
+            invokeRestart("muffleWarning")
+      })
+      expect_true(any(grepl("Dropped 1 group with too few points", warnings)))
+      expect_false(any(grepl("Computation failed", warnings)))
+
+      # The other two groups are hulled as without the dropped group
+      kept <- iris[iris$Species != "virginica" & iris$Petal.Length <= 4.5, ]
+      alone <- suppressWarnings(layer_data(
+            ggplot(kept, aes(Sepal.Length, Sepal.Width, Petal.Length, group = Species)) +
+                  geom_hull_3d() + zlim(NA, 4.5) + coord_3d()))
+      expect_equal(nrow(d), nrow(alone))
+      expect_equal(sort(d$z), sort(alone$z))
+})
+
+test_that("a group needs four points not all in one plane", {
+      skip_if_not_installed("geometry")
+      tetra <- data.frame(x = c(0, 1, 0, 0), y = c(0, 0, 1, 0), z = c(0, 0, 0, 1), g = "tetra")
+      flat <- data.frame(x = c(0, 1, 1, 0, 0.5), y = c(0, 0, 1, 1, 0.5), z = 0, g = "flat")
+      few <- data.frame(x = c(0, 1, 0), y = c(0, 0, 1), z = c(0, 1, 2), g = "few")
+
+      p <- ggplot(rbind(tetra, flat, few), aes(x, y, z, group = g)) + geom_hull_3d() + coord_3d()
+      expect_warning(d <- layer_data(p), "Dropped 2 groups")
+      expect_equal(nrow(d), 12)
+      expect_equal(length(unique(d$group)), 4)
+
+      # Nothing is dropped, and no warning given, when every group can be hulled
+      expect_no_warning(layer_data(ggplot(tetra, aes(x, y, z)) + geom_hull_3d() + coord_3d()))
+})

@@ -172,6 +172,24 @@ orient_triangles <- function(coords, tri, reference_points = NULL) {
       list(tri = tri, normals = normals)
 }
 
+#' Whether points can enclose a volume
+#'
+#' A hull needs at least four distinct points that don't all lie in one
+#' plane, i.e. whose centered coordinates have rank 3.
+#'
+#' @param coords Data frame or matrix of `x`, `y`, and `z` coordinates.
+#' @param tol Tolerance, relative to the points' largest extent, below which
+#'   their extent in a direction counts as zero.
+#' @return `TRUE` or `FALSE`.
+#' @keywords internal
+#' @noRd
+encloses_volume <- function(coords, tol = 1e-10) {
+      coords <- unique(matrix(as.numeric(as.matrix(coords)), ncol = 3))
+      if (nrow(coords) < 4) return(FALSE)
+      d <- svd(scale(coords, scale = FALSE), nu = 0, nv = 0)$d
+      d[3] > tol * d[1]
+}
+
 #' Merge adjacent coplanar triangles into polygonal faces
 #'
 #' Triangles that share an edge, lie in the same plane, and face the same way
@@ -299,6 +317,23 @@ StatHull3D <- ggproto("StatHull3D", Stat,
                       required_aes = c("x", "y", "z"),
                       setup_data = function(data, params) {
                             censor_z_limits(data)
+                      },
+
+                      # Groups that can't enclose a volume are dropped, so that they don't
+                      # fail the whole layer
+                      compute_panel = function(self, data, scales, ...) {
+                            rows <- split(seq_len(nrow(data)), data$group)
+                            encloses <- vapply(rows, function(i) encloses_volume(data[i, c("x", "y", "z")]),
+                                               logical(1))
+                            if (!all(encloses)) {
+                                  n <- sum(!encloses)
+                                  rlang::warn(c(
+                                        sprintf("Dropped %d group%s with too few points to enclose a volume (`stat_hull_3d()`).",
+                                                n, if (n == 1) "" else "s"),
+                                        i = "A hull needs at least 4 points that don't all lie in one plane."))
+                                  data <- data[unlist(rows[encloses], use.names = FALSE), , drop = FALSE]
+                            }
+                            ggproto_parent(Stat, self)$compute_panel(data, scales, ...)
                       },
 
                       compute_group = function(data, scales,
@@ -454,7 +489,10 @@ StatHull3D <- ggproto("StatHull3D", Stat,
 #' @section Grouping:
 #' Hulls respect ggplot2 grouping aesthetics. To create separate hulls for different
 #' subsets of your data, use `aes(group = category_variable)` or similar grouping aesthetics.
-#' Each group will get its own independent hull.
+#' Each group will get its own independent hull. Groups that can't enclose a
+#' volume, having fewer than four points or all their points in one plane, are
+#' dropped with a warning; this can happen when limits on the plot's scales
+#' remove most of a group's points.
 #'
 #' @section Alpha scale sensitivity:
 #' Alpha shape method is highly sensitive to coordinate scales. `radius` is expressed

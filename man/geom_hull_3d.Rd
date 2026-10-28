@@ -123,7 +123,10 @@ e.g. the hull of a box's corners is drawn with square faces.
 
 Hulls respect ggplot2 grouping aesthetics. To create separate hulls for different
 subsets of your data, use \code{aes(group = category_variable)} or similar grouping aesthetics.
-Each group will get its own independent hull.
+Each group will get its own independent hull. Groups that can't enclose a
+volume, having fewer than four points or all their points in one plane, are
+dropped with a warning; this can happen when limits on the plot's scales
+remove most of a group's points.
 }
 
 \section{Alpha scale sensitivity}{
