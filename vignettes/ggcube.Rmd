@@ -129,7 +129,7 @@ functions mentioned above:
 `geom_isofunction_3d()` draws mathematical functions, and
 `geom_isodensity_3d()` draws density contours of 3D point clouds.
 
-```{r surface}
+```{r volume}
 gyroid <- function(x, y, z) sin(x) * cos(y) + sin(y) * cos(z) + sin(z) * cos(x)
 ggplot() +
       geom_isofunction_3d(fun = gyroid, cap = TRUE, fill = "#993333", n = 40,
