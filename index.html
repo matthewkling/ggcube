@@ -44,6 +44,7 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="articles/coord_3d.html">Controlling the 3D view</a></li>
     <li><a class="dropdown-item" href="articles/surfaces.html">Surfaces</a></li>
+    <li><a class="dropdown-item" href="articles/volumes.html">Volumes</a></li>
     <li><a class="dropdown-item" href="articles/lighting.html">Lighting and shading</a></li>
     <li><a class="dropdown-item" href="articles/animation.html">Animation, orbits, and multiple views</a></li>
   </ul>
@@ -85,19 +86,6 @@
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"matthewkling/ggcube"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="related-packages">Related packages<a class="anchor" aria-label="anchor" href="#related-packages"></a>
-</h2>
-<p>R has several other tools for 3D visualization. ggcube is designed for users who want to stay within the ggplot2 ecosystem. Other packages offer different tradeoffs:</p>
-<ul>
-<li>
-<a href="https://plotly.com/r/" class="external-link"><strong>plotly</strong></a> and <a href="https://dmurdoch.github.io/rgl/" class="external-link"><strong>rgl</strong></a> provide interactive 3D viewers with rotation and zoom via WebGL/OpenGL, using their own APIs.</li>
-<li>
-<a href="https://www.rayshader.com/" class="external-link"><strong>rayshader</strong></a> produces ray-traced renderings of terrain data with photorealistic lighting and shadows; it also makes 3D popups of ggplot2 figures, but not 3D ggplots per se.</li>
-<li>
-<a href="https://github.com/AckerDWM/gg3D" class="external-link"><strong>gg3D</strong></a> was another ggplot2 extension for 3D plotting, but is no longer actively maintained.</li>
-</ul>
-</div>
-<div class="section level2">
 <h2 id="quick-start">Quick start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
 </h2>
 <p>The essential ingredient of a ggcube plot is <code><a href="reference/coord_3d.html">coord_3d()</a></code>. Adding this to a standard ggplot, and providing a <code>z</code> aesthetic variable, creates a 3D plot:</p>
@@ -123,9 +111,10 @@
 <div class="section level2">
 <h2 id="id_3d-surfaces">3D surfaces<a class="anchor" aria-label="anchor" href="#id_3d-surfaces"></a>
 </h2>
+<p>ggcube’s surface layer functions draw terrain-like figures with a z value for every combination of x and y:</p>
 <ul>
 <li>
-<code><a href="reference/stat_surface_3d.html">geom_surface_3d()</a></code> renders surfaces based on existing grid data such as terrain data</li>
+<code><a href="reference/stat_surface_3d.html">geom_surface_3d()</a></code> renders surfaces based on existing grid data such as topography</li>
 <li>
 <code><a href="reference/geom_ridgeline_3d.html">geom_ridgeline_3d()</a></code> renders surfaces as a series of cross-sections</li>
 <li>
@@ -137,7 +126,7 @@
 <li>
 <code><a href="reference/stat_density_3d.html">geom_density_3d()</a></code> creates perspective visualizations of 2D kernel density estimates</li>
 <li>
-<code><a href="reference/geom_hull_3d.html">geom_hull_3d()</a></code> plots triangulated volumes based on convex or alpha hulls of 3D points</li>
+<code><a href="reference/geom_plane_3d.html">geom_plane_3d()</a></code> draws flat planes at arbitrary orientations</li>
 </ul>
 <p>See the <a href="https://matthewkling.github.io/ggcube/articles/surfaces.html">surfaces</a> article for a full guide to surface options.</p>
 <p>Example: a terrain surface using <code><a href="reference/stat_surface_3d.html">geom_surface_3d()</a></code>:</p>
@@ -191,10 +180,36 @@
 <p><img src="reference/figures/README-smooth-1.png" alt="" width="100%"></p>
 </div>
 <div class="section level2">
-<h2 id="id_3d-paths">3D paths<a class="anchor" aria-label="anchor" href="#id_3d-paths"></a>
+<h2 id="id_3d-volumes">3D volumes<a class="anchor" aria-label="anchor" href="#id_3d-volumes"></a>
 </h2>
-<p><code><a href="reference/geom_path_3d.html">geom_path_3d()</a></code> renders paths in 3D space with depth-based sorting and scaling:</p>
+<p>This family of layers draws the boundaries of regions in 3D space, which can fold, nest, and close on themselves:</p>
+<ul>
+<li>
+<code><a href="reference/geom_hull_3d.html">geom_hull_3d()</a></code> plots triangulated volumes based on convex or alpha hulls of 3D points</li>
+<li>
+<code><a href="reference/geom_isodensity_3d.html">geom_isodensity_3d()</a></code> estimates the density of 3D points, and draws surfaces enclosing given fractions of it</li>
+<li>
+<code><a href="reference/geom_isosurface_3d.html">geom_isosurface_3d()</a></code> draws isosurfaces of a 3D field, the 3D analog of contour lines, e.g. of a function of three variables</li>
+<li>
+<code><a href="reference/geom_isofunction_3d.html">geom_isofunction_3d()</a></code> draws isosurfaces of a function of three variables</li>
+</ul>
+<p>See the <a href="https://matthewkling.github.io/ggcube/articles/volumes.html">volumes</a> article for more details.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">gyroid</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cos</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cos</a></span><span class="op">(</span><span class="va">z</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">z</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cos</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>      <span class="fu"><a href="reference/geom_isofunction_3d.html">geom_isofunction_3d</a></span><span class="op">(</span></span>
+<span>            fun <span class="op">=</span> <span class="va">gyroid</span>, cap <span class="op">=</span> <span class="cn">TRUE</span>, fill <span class="op">=</span> <span class="st">"darkorchid4"</span>, n <span class="op">=</span> <span class="fl">40</span>,</span>
+<span>            xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">4</span> <span class="op">*</span> <span class="va">pi</span><span class="op">)</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">4</span> <span class="op">*</span> <span class="va">pi</span><span class="op">)</span>, zlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">4</span> <span class="op">*</span> <span class="va">pi</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>      <span class="fu"><a href="reference/coord_3d.html">coord_3d</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>      <span class="fu"><a href="reference/light.html">light</a></span><span class="op">(</span>mode <span class="op">=</span> <span class="st">"hsl"</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_void</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p><img src="reference/figures/README-volumes-1.png" alt="" width="100%"></p>
+</div>
+<div class="section level2">
+<h2 id="id_3d-lines">3D lines<a class="anchor" aria-label="anchor" href="#id_3d-lines"></a>
+</h2>
+<p>Line geoms render paths in 3D space with depth-based sorting and scaling, including <code><a href="reference/geom_segment_3d.html">geom_segment_3d()</a></code> and <code><a href="reference/geom_path_3d.html">geom_path_3d()</a></code>:</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">butterfly</span> <span class="op">&lt;-</span> <span class="fu">ggcube</span><span class="fu">:::</span><span class="fu">lorenz_attractor</span><span class="op">(</span>n_points <span class="op">=</span> <span class="fl">8000</span>, dt <span class="op">=</span> <span class="fl">.01</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">butterfly</span>, <span class="fu"><a href="reference/aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span>, color <span class="op">=</span> <span class="va">time</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>      <span class="fu"><a href="reference/geom_path_3d.html">geom_path_3d</a></span><span class="op">(</span>linewidth <span class="op">=</span> <span class="fl">0.1</span>, color <span class="op">=</span> <span class="st">"black"</span>,</span>
@@ -209,7 +224,7 @@
 <h2 id="id_3d-points">3D points<a class="anchor" aria-label="anchor" href="#id_3d-points"></a>
 </h2>
 <p>While <code><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">ggplot2::geom_point()</a></code> works with ggcube as demonstrated above, <code><a href="reference/geom_point_3d.html">geom_point_3d()</a></code> creates 3D-aware scatter plots with proper point ordering and depth-scaled point sizes. <code><a href="reference/geom_dropline_3d.html">geom_dropline_3d()</a></code> and <code><a href="reference/position_on_face.html">position_on_face()</a></code> add drop lines and reference points projecting 3D points onto 2D face panels:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mpg</span>, <span class="fu"><a href="reference/aes.html">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">displ</span>, y <span class="op">=</span> <span class="va">hwy</span>, z <span class="op">=</span> <span class="va">drv</span>, fill <span class="op">=</span> <span class="va">class</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>      <span class="fu"><a href="reference/geom_dropline_3d.html">geom_dropline_3d</a></span><span class="op">(</span>faces <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ymax"</span>, <span class="st">"xmax"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>      <span class="fu"><a href="reference/geom_point_3d.html">geom_point_3d</a></span><span class="op">(</span>position <span class="op">=</span> <span class="fu"><a href="reference/position_on_face.html">position_on_face</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ymax"</span>, <span class="st">"xmax"</span><span class="op">)</span><span class="op">)</span>, flat <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -230,7 +245,7 @@
 <code><a href="reference/geom_voxel_3d.html">geom_voxel_3d()</a></code> renders sparse 3D pixel data as arrays of cubes</li>
 </ul>
 <p>Example: a 3D histogram using <code><a href="reference/geom_bar_3d.html">geom_bar_3d()</a></code>:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">faithful</span>, <span class="fu"><a href="reference/aes.html">aes</a></span><span class="op">(</span><span class="va">waiting</span>, <span class="va">eruptions</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>      <span class="fu"><a href="reference/geom_bar_3d.html">geom_bar_3d</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="st">"steelblue"</span>, color <span class="op">=</span> <span class="st">"steelblue"</span>, </span>
 <span>                  bins <span class="op">=</span> <span class="fl">15</span>, width <span class="op">=</span> <span class="fl">.9</span><span class="op">)</span> <span class="op">+</span></span>
@@ -241,8 +256,8 @@
 <div class="section level2">
 <h2 id="id_3d-text">3D text<a class="anchor" aria-label="anchor" href="#id_3d-text"></a>
 </h2>
-<p><code><a href="reference/geom_text_3d.html">geom_text_3d()</a></code> creates 3D-aware text, rendered either as “billboard” text that faces the viewing plane or as 3D polygons that can face any direction:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<p><code><a href="reference/geom_text_3d.html">geom_text_3d()</a></code> creates 3D-aware text, rendered either as <code>"billboard"</code> text that faces the viewing plane or as 3D <code>"polygon"</code> text that can face any direction:</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html" class="external-link">expand.grid</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"B"</span>, <span class="st">"H"</span>, <span class="st">"N"</span><span class="op">)</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"o"</span>, <span class="st">"u"</span><span class="op">)</span>, z <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"g"</span>, <span class="st">"t"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">df</span><span class="op">$</span><span class="va">label</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">df</span><span class="op">$</span><span class="va">x</span>, <span class="va">df</span><span class="op">$</span><span class="va">y</span>, <span class="va">df</span><span class="op">$</span><span class="va">z</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df</span>, <span class="fu"><a href="reference/aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span>, label <span class="op">=</span> <span class="va">label</span>, fill <span class="op">=</span> <span class="va">x</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
@@ -256,7 +271,7 @@
 <h2 id="annotations-and-reference-geometry">Annotations and reference geometry<a class="anchor" aria-label="anchor" href="#annotations-and-reference-geometry"></a>
 </h2>
 <p><code><a href="reference/annotate_3d.html">annotate_3d()</a></code> adds points, text, segments, polygons, and other reference geometry at fixed positions, like ggplot2’s <code><a href="https://ggplot2.tidyverse.org/reference/annotate.html" class="external-link">annotate()</a></code>. Reference geometry that spans the panel has its own layer functions: <code><a href="reference/geom_plane_3d.html">geom_plane_3d()</a></code> draws planes, <code><a href="reference/geom_refline_3d.html">geom_refline_3d()</a></code> infinite lines, and <code><a href="reference/geom_axes_3d.html">geom_axes_3d()</a></code> axes through an origin, while <code><a href="reference/geom_dropline_3d.html">geom_dropline_3d()</a></code> drops lines from points to the panel’s faces. These are all depth-sorted with the rest of the scene, which makes ggcube handy for diagrams:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">u</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">.2</span>, <span class="fl">.4</span><span class="op">)</span>; <span class="va">v</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">.3</span>, <span class="fl">1</span>, <span class="fl">.7</span><span class="op">)</span></span>
 <span><span class="va">vecs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>xend <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">u</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="va">v</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span>, yend <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">u</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span>, <span class="va">v</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span>, zend <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">u</span><span class="op">[</span><span class="fl">3</span><span class="op">]</span>, <span class="va">v</span><span class="op">[</span><span class="fl">3</span><span class="op">]</span><span class="op">)</span>,</span>
 <span>                   label <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"u"</span>, <span class="st">"v"</span><span class="op">)</span><span class="op">)</span></span>
@@ -278,7 +293,7 @@
 <h2 id="lighting-effects">Lighting effects<a class="anchor" aria-label="anchor" href="#lighting-effects"></a>
 </h2>
 <p>Lighting of 3D polygon layers is controlled by adding a <code><a href="reference/light.html">light()</a></code> specification to the plot, or providing it to the <code>light</code> parameter of a layer function or <code><a href="reference/coord_3d.html">coord_3d()</a></code>. See the <a href="https://matthewkling.github.io/ggcube/articles/lighting.html">lighting and shading</a> article for a comprehensive guide.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">sphere_points</span>, <span class="fu"><a href="reference/aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>      <span class="fu"><a href="reference/coord_3d.html">coord_3d</a></span><span class="op">(</span>scales <span class="op">=</span> <span class="st">"fixed"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_c</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
@@ -305,10 +320,10 @@
 <h2 id="animation-and-interaction">Animation and interaction<a class="anchor" aria-label="anchor" href="#animation-and-interaction"></a>
 </h2>
 <p>A major limitation of 3D figures is that you can’t get a full view of the data from any single angle. One way to mitigate this is by rotating the figure to view the data from different directions. ggcube offers animated rotation via <code><a href="reference/animate_3d.html">animate_3d()</a></code>, and interactive drag-to-rotate plots via <code><a href="reference/orbit_3d.html">orbit_3d()</a></code>. You can also render a plot from multiple views using <code><a href="reference/facet_wrap_views.html">facet_wrap_views()</a></code> or <code><a href="reference/facet_wrap_views.html">facet_grid_views()</a></code>. See the <a href="https://matthewkling.github.io/ggcube/articles/animation.html">animation, orbits, and multiple views</a> article for details. Here’s an example of a rotating gif:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">mammoth</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="fu">rjson</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/rjson/man/fromJSON.html" class="external-link">fromJSON</a></span><span class="op">(</span></span>
-<span>  file <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"https://raw.githubusercontent.com/PAIR-code/"</span>,</span>
-<span>                <span class="st">"understanding-umap/master/raw_data/mammoth_3d_50k.json"</span><span class="op">)</span></span>
+<span>      file <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"https://raw.githubusercontent.com/PAIR-code/"</span>,</span>
+<span>                    <span class="st">"understanding-umap/master/raw_data/mammoth_3d_50k.json"</span><span class="op">)</span></span>
 <span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">mammoth</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Y"</span>, <span class="st">"X"</span>, <span class="st">"Z"</span><span class="op">)</span></span>
 <span></span>
@@ -329,7 +344,7 @@
 <h2 id="face-projection">Face projection<a class="anchor" aria-label="anchor" href="#face-projection"></a>
 </h2>
 <p>3D and 2D layers can be mixed by using <code><a href="reference/position_on_face.html">position_on_face()</a></code> to project data onto 2D cube faces. We saw this in the <code><a href="reference/geom_path_3d.html">geom_path_3d()</a></code> example above, but here’s another example that mixes different geoms, including natively-2D layers like <code><a href="https://ggplot2.tidyverse.org/reference/geom_density_2d.html" class="external-link">ggplot2::stat_density_2d()</a></code>:</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">iris</span>, <span class="fu"><a href="reference/aes.html">aes</a></span><span class="op">(</span><span class="va">Sepal.Length</span>, <span class="va">Sepal.Width</span>, <span class="va">Petal.Length</span>, </span>
 <span>                 color <span class="op">=</span> <span class="va">Species</span>, fill <span class="op">=</span> <span class="va">Species</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
@@ -349,6 +364,19 @@
 <span>      <span class="co"># 3D scatter plot</span></span>
 <span>      <span class="fu"><a href="reference/geom_point_3d.html">geom_point_3d</a></span><span class="op">(</span>shape <span class="op">=</span> <span class="fl">21</span>, color <span class="op">=</span> <span class="st">"black"</span>, stroke <span class="op">=</span> <span class="fl">.25</span><span class="op">)</span></span></code></pre></div>
 <p><img src="reference/figures/README-position-1.png" alt="" width="100%"></p>
+</div>
+<div class="section level2">
+<h2 id="related-packages">Related packages<a class="anchor" aria-label="anchor" href="#related-packages"></a>
+</h2>
+<p>R has several other tools for 3D visualization. ggcube is designed for users who want to stay within the ggplot2 ecosystem. Other packages offer different tradeoffs:</p>
+<ul>
+<li>
+<a href="https://plotly.com/r/" class="external-link"><strong>plotly</strong></a> and <a href="https://dmurdoch.github.io/rgl/" class="external-link"><strong>rgl</strong></a> provide interactive 3D viewers with rotation and zoom via WebGL/OpenGL, using their own APIs.</li>
+<li>
+<a href="https://www.rayshader.com/" class="external-link"><strong>rayshader</strong></a> produces ray-traced renderings of terrain data with photorealistic lighting and shadows; it also makes 3D popups of ggplot2 figures, but not 3D ggplots per se.</li>
+<li>
+<a href="https://github.com/AckerDWM/gg3D" class="external-link"><strong>gg3D</strong></a> was another ggplot2 extension for 3D plotting, but is no longer actively maintained.</li>
+</ul>
 </div>
 <div class="section level2">
 <h2 id="learn-more">Learn more<a class="anchor" aria-label="anchor" href="#learn-more"></a>

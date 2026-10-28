@@ -25,6 +25,20 @@ zlim(min, max, ...)
 
 A ggplot2 scale object for the z aesthetic with specified limits.
 
+## Details
+
+Limits on the z scale work like those set with
+[`ggplot2::xlim()`](https://ggplot2.tidyverse.org/reference/lims.html)
+and
+[`ggplot2::ylim()`](https://ggplot2.tidyverse.org/reference/lims.html):
+data outside them are removed before stats that summarize observations,
+such as hulls and smooths, are computed. Surfaces and other polygons
+that cross limits on any axis are cut where they cross them, while
+columns, bars, and voxels that extend beyond the limits are removed
+whole. Rows of gridded surface data are vertices of the surface rather
+than observations, so z limits cut those surfaces rather than removing
+rows.
+
 ## See also
 
 [`scale_z_continuous`](https://matthewkling.github.io/ggcube/reference/scale_z_continuous.md)

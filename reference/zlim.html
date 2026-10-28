@@ -25,6 +25,7 @@ scale parameters."><meta property="og:image" content="https://matthewkling.githu
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/coord_3d.html">Controlling the 3D view</a></li>
     <li><a class="dropdown-item" href="../articles/surfaces.html">Surfaces</a></li>
+    <li><a class="dropdown-item" href="../articles/volumes.html">Volumes</a></li>
     <li><a class="dropdown-item" href="../articles/lighting.html">Lighting and shading</a></li>
     <li><a class="dropdown-item" href="../articles/animation.html">Animation, orbits, and multiple views</a></li>
   </ul></li>
@@ -70,6 +71,16 @@ scale parameters.</p>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A ggplot2 scale object for the z aesthetic with specified limits.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>Limits on the z scale work like those set with <code><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">ggplot2::xlim()</a></code> and
+<code><a href="https://ggplot2.tidyverse.org/reference/lims.html" class="external-link">ggplot2::ylim()</a></code>: data outside them are removed before stats that summarize
+observations, such as hulls and smooths, are computed. Surfaces and other
+polygons that cross limits on any axis are cut where they cross them, while
+columns, bars, and voxels that extend beyond the limits are removed whole.
+Rows of gridded surface data are vertices of the surface rather than
+observations, so z limits cut those surfaces rather than removing rows.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

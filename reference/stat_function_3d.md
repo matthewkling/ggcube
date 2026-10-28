@@ -1,7 +1,10 @@
 # 3D surface from a function
 
-Evaluates a function f(x,y) = z over a regular grid and renders the
-result as a 3D surface or ridgeline plot.
+Evaluates a 2D function f(x,y) = z over a regular grid and renders the
+result as a 3D surface or ridgeline plot. (For 3D functions f(x, y, z) =
+c, use
+[`geom_isofunction_3d()`](https://matthewkling.github.io/ggcube/reference/geom_isofunction_3d.md)
+instead.)
 
 ## Usage
 
@@ -159,7 +162,9 @@ A `Layer` object that can be added to a ggplot.
 
 [`geom_surface_3d()`](https://matthewkling.github.io/ggcube/reference/stat_surface_3d.md),
 [`geom_ridgeline_3d()`](https://matthewkling.github.io/ggcube/reference/geom_ridgeline_3d.md),
-[`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md)
+[`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md),
+[`geom_isofunction_3d()`](https://matthewkling.github.io/ggcube/reference/geom_isofunction_3d.md)
+for isosurfaces of functions of three variables
 
 ## Examples
 

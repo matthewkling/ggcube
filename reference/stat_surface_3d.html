@@ -3,11 +3,11 @@
 rendering. If data form a regular grid, can render either a GeomSurface3D
 of rectangular or right-triangular tiles, or a GeomRidgeline3D or GeomContour3D
 set of surface slices; otherwise, renders irregular triangular tiles via Delaunay
-trianuglation."><meta property="og:description" content="Takes user-provided (x, y, z) point data and prepares it for surface
+trianuglation. (For surfaces of 4D x-y-z-value data, use geom_isosurface_3d().)"><meta property="og:description" content="Takes user-provided (x, y, z) point data and prepares it for surface
 rendering. If data form a regular grid, can render either a GeomSurface3D
 of rectangular or right-triangular tiles, or a GeomRidgeline3D or GeomContour3D
 set of surface slices; otherwise, renders irregular triangular tiles via Delaunay
-trianuglation."><meta property="og:image" content="https://matthewkling.github.io/ggcube/logo.png"></head><body>
+trianuglation. (For surfaces of 4D x-y-z-value data, use geom_isosurface_3d().)"><meta property="og:image" content="https://matthewkling.github.io/ggcube/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -29,6 +29,7 @@ trianuglation."><meta property="og:image" content="https://matthewkling.github.i
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/coord_3d.html">Controlling the 3D view</a></li>
     <li><a class="dropdown-item" href="../articles/surfaces.html">Surfaces</a></li>
+    <li><a class="dropdown-item" href="../articles/volumes.html">Volumes</a></li>
     <li><a class="dropdown-item" href="../articles/lighting.html">Lighting and shading</a></li>
     <li><a class="dropdown-item" href="../articles/animation.html">Animation, orbits, and multiple views</a></li>
   </ul></li>
@@ -53,7 +54,7 @@ trianuglation."><meta property="og:image" content="https://matthewkling.github.i
 rendering. If data form a regular grid, can render either a GeomSurface3D
 of rectangular or right-triangular tiles, or a GeomRidgeline3D or GeomContour3D
 set of surface slices; otherwise, renders irregular triangular tiles via Delaunay
-trianuglation.</p>
+trianuglation. (For surfaces of 4D x-y-z-value data, use <code><a href="geom_isosurface_3d.html">geom_isosurface_3d()</a></code>.)</p>
     </div>
 
     <div class="section level2">
@@ -228,8 +229,8 @@ through for Delaunay tessellation by the geom.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code>geom_surface_3d()</code>, <code><a href="geom_ridgeline_3d.html">geom_ridgeline_3d()</a></code>, <code><a href="stat_function_3d.html">stat_function_3d()</a></code>,
-<code><a href="coord_3d.html">coord_3d()</a></code></p></div>
+    <div class="dont-index"><p><code><a href="geom_isosurface_3d.html">geom_isosurface_3d()</a></code>, <code>geom_surface_3d()</code>, <code><a href="geom_ridgeline_3d.html">geom_ridgeline_3d()</a></code>,
+<code><a href="stat_function_3d.html">stat_function_3d()</a></code>, <code><a href="coord_3d.html">coord_3d()</a></code></p></div>
     </div>
 
     <div class="section level2">

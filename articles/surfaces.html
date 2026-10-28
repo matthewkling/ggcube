@@ -41,6 +41,7 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/coord_3d.html">Controlling the 3D view</a></li>
     <li><a class="dropdown-item" href="../articles/surfaces.html">Surfaces</a></li>
+    <li><a class="dropdown-item" href="../articles/volumes.html">Volumes</a></li>
     <li><a class="dropdown-item" href="../articles/lighting.html">Lighting and shading</a></li>
     <li><a class="dropdown-item" href="../articles/animation.html">Animation, orbits, and multiple views</a></li>
   </ul>
@@ -80,9 +81,9 @@
 overview of the geoms and stats that work together to render continuous
 surfaces from various data sources. “Surface” here means a data object
 with a single z value for each (x, y) position, like a heightmap or
-terrain model. This vignette doesn’t cover hulls
-(<code><a href="../reference/geom_hull_3d.html">geom_hull_3d()</a></code>) or columnar surfaces
-(<code><a href="../reference/geom_col_3d.html">geom_col_3d()</a></code>).</p>
+terrain model. This vignette doesn’t cover columnar surfaces
+(<code><a href="../reference/geom_col_3d.html">geom_col_3d()</a></code>), or volumes like hulls and isosurfaces,
+which are covered in the <a href="volumes.html">volumes</a> article.</p>
 <p>Surfaces can be rendered from several data sources and in several
 visual styles, using a system of interchangeable geoms and stats. ggcube
 currently includes three surface geoms:</p>
@@ -193,7 +194,9 @@ ridgelines.</p>
 <h2 id="surface-stats">Surface stats<a class="anchor" aria-label="anchor" href="#surface-stats"></a>
 </h2>
 <p>Four stats produce surface data. Each generates a regular grid of (x,
-y, z) points that can be rendered by any of the three surface geoms.</p>
+y, z) points that can be rendered by any of the three surface geoms.
+(Note that several of these stats also have a higher-dimensional analog
+covered in the <a href="volumes.html">volumes</a> article.)</p>
 <div class="section level3">
 <h3 id="user-supplied-data">User-supplied data<a class="anchor" aria-label="anchor" href="#user-supplied-data"></a>
 </h3>
@@ -216,7 +219,8 @@ shown here:</p>
 <h3 id="mathematical-functions">Mathematical functions<a class="anchor" aria-label="anchor" href="#mathematical-functions"></a>
 </h3>
 <p><code><a href="../reference/stat_function_3d.html">stat_function_3d()</a></code> evaluates a function f(x, y) over a
-grid:</p>
+grid. (4D functions f(x, y, z) can instead be visualized with
+<code><a href="../reference/geom_isosurface_3d.html">geom_isosurface_3d()</a></code>.)</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span>mapping <span class="op">=</span> <span class="fu"><a href="../reference/aes.html">aes</a></span><span class="op">(</span>color <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="../reference/stat_function_3d.html">geom_function_3d</a></span><span class="op">(</span>fun <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cos</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span>,</span>
@@ -243,9 +247,11 @@ here:</p>
 <div class="section level3">
 <h3 id="kernel-density">Kernel density<a class="anchor" aria-label="anchor" href="#kernel-density"></a>
 </h3>
-<p><code><a href="../reference/stat_density_3d.html">stat_density_3d()</a></code> (or <code><a href="../reference/stat_density_3d.html">geom_density_3d()</a></code>)
-computes a 2D kernel density estimate. It has options for modifying
-bandwidth, resolution:</p>
+<p><code><a href="../reference/stat_density_3d.html">stat_density_3d()</a></code> and <code><a href="../reference/stat_density_3d.html">geom_density_3d()</a></code>
+compute a 2D kernel density estimate. (For contours of
+<strong>3D</strong> kernel densities, see
+<code><a href="../reference/geom_isodensity_3d.html">geom_isodensity_3d()</a></code>.) It has options for modifying
+bandwidth, resolution, etc.:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">faithful</span>, <span class="fu"><a href="../reference/aes.html">aes</a></span><span class="op">(</span><span class="va">eruptions</span>, <span class="va">waiting</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="../reference/stat_density_3d.html">geom_density_3d</a></span><span class="op">(</span>min_ndensity <span class="op">=</span> <span class="fl">.01</span><span class="op">)</span> <span class="op">+</span></span>

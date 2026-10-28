@@ -5,6 +5,9 @@ A 3D version of
 Creates surfaces from 2D point data using kernel density estimation. The
 density values become the z-coordinates of the surface, allowing
 visualization of data concentration as peaks and valleys in 3D space.
+(For density volumes of 3D point clouds, use
+[`geom_isodensity_3d()`](https://matthewkling.github.io/ggcube/reference/geom_isodensity_3d.md)
+instead.)
 
 ## Usage
 
@@ -252,6 +255,8 @@ The following computed variables are available via
 
 [`ggplot2::stat_density_2d()`](https://ggplot2.tidyverse.org/reference/geom_density_2d.html)
 for 2D density contours,
+[`geom_isodensity_3d()`](https://matthewkling.github.io/ggcube/reference/geom_isodensity_3d.md)
+for density volumes of 3D point clouds,
 [`stat_surface_3d()`](https://matthewkling.github.io/ggcube/reference/stat_surface_3d.md)
 for surfaces from existing grid data,
 [`light()`](https://matthewkling.github.io/ggcube/reference/light.md)

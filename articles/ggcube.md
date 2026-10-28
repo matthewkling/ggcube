@@ -95,7 +95,8 @@ Here’s a quick tour of the main categories.
 
 ### Surfaces
 
-Several geoms and stats work together to render surfaces.
+Several geoms and stats work together to render surfaces with a z value
+for every (x, y) position.
 [`geom_surface_3d()`](https://matthewkling.github.io/ggcube/reference/stat_surface_3d.md)
 renders data as a tessellated surface,
 [`geom_contour_3d()`](https://matthewkling.github.io/ggcube/reference/geom_contour_3d.md)
@@ -127,6 +128,38 @@ the [3D
 surfaces](https://matthewkling.github.io/ggcube/articles/surfaces.html)
 article for more detail on surface plotting options.
 
+### Volumes
+
+ggcube’s volume functions draw surfaces that bound regions of 3D space.
+Unlike terrain, these surfaces can fold over, nest inside one another,
+and close on themselves.
+[`geom_hull_3d()`](https://matthewkling.github.io/ggcube/reference/geom_hull_3d.md)
+computes and renders triangulated hulls from 3D point clouds, including
+convex and alpha hulls. The other volume functions are each an “iso”
+variant of one of the lower-dimensional surface functions mentioned
+above:
+[`geom_isosurface_3d()`](https://matthewkling.github.io/ggcube/reference/geom_isosurface_3d.md)
+draws surfaces on preexisting 3D gridded data,
+[`geom_isofunction_3d()`](https://matthewkling.github.io/ggcube/reference/geom_isofunction_3d.md)
+draws mathematical functions, and
+[`geom_isodensity_3d()`](https://matthewkling.github.io/ggcube/reference/geom_isodensity_3d.md)
+draws density contours of 3D point clouds.
+
+``` r
+
+gyroid <- function(x, y, z) sin(x) * cos(y) + sin(y) * cos(z) + sin(z) * cos(x)
+ggplot() +
+      geom_isofunction_3d(fun = gyroid, cap = TRUE, fill = "#993333", n = 40,
+                          xlim = c(0, 4 * pi), ylim = c(0, 4 * pi), zlim = c(0, 4 * pi)) +
+      coord_3d() + light(mode = "hsl") + theme_void()
+```
+
+![](ggcube_files/figure-html/volume-1.png)
+
+See the [3D
+volumes](https://matthewkling.github.io/ggcube/articles/volumes.html)
+article for details.
+
 ### Points
 
 [`geom_point_3d()`](https://matthewkling.github.io/ggcube/reference/geom_point_3d.md)
@@ -150,7 +183,7 @@ ggplot(mpg, aes(x = displ, y = hwy, z = drv, fill = class)) +
 
 ![](ggcube_files/figure-html/points-1.png)
 
-### Paths
+### Lines
 
 [`geom_path_3d()`](https://matthewkling.github.io/ggcube/reference/geom_path_3d.md)
 connects observations with depth-sorted, depth-scaled line segments:
@@ -191,21 +224,6 @@ ggplot(iris, aes(Species, Sepal.Length, fill = Species)) +
 ```
 
 ![](ggcube_files/figure-html/bar-1.png)
-
-### Hulls
-
-[`geom_hull_3d()`](https://matthewkling.github.io/ggcube/reference/geom_hull_3d.md)
-computes and renders triangulated hulls from 3D point clouds, including
-convex and alpha hulls:
-
-``` r
-
-ggplot(sphere_points, aes(x, y, z)) +
-      geom_hull_3d(method = "convex", fill = "#9e2602", color = "#5e1600") +
-      coord_3d()
-```
-
-![](ggcube_files/figure-html/hull-1.png)
 
 ### Distributions
 

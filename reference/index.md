@@ -31,6 +31,15 @@
 - [`geom_hull_3d()`](https://matthewkling.github.io/ggcube/reference/geom_hull_3d.md)
   [`stat_hull_3d()`](https://matthewkling.github.io/ggcube/reference/geom_hull_3d.md)
   : 3D convex and alpha hulls
+- [`geom_isodensity_3d()`](https://matthewkling.github.io/ggcube/reference/geom_isodensity_3d.md)
+  [`stat_isodensity_3d()`](https://matthewkling.github.io/ggcube/reference/geom_isodensity_3d.md)
+  : 3D density surfaces
+- [`geom_isofunction_3d()`](https://matthewkling.github.io/ggcube/reference/geom_isofunction_3d.md)
+  [`stat_isofunction_3d()`](https://matthewkling.github.io/ggcube/reference/geom_isofunction_3d.md)
+  : 3D isosurfaces of functions
+- [`geom_isosurface_3d()`](https://matthewkling.github.io/ggcube/reference/geom_isosurface_3d.md)
+  [`stat_isosurface_3d()`](https://matthewkling.github.io/ggcube/reference/geom_isosurface_3d.md)
+  : 3D isosurfaces
 - [`geom_path_3d()`](https://matthewkling.github.io/ggcube/reference/geom_path_3d.md)
   [`stat_path_3d()`](https://matthewkling.github.io/ggcube/reference/geom_path_3d.md)
   : 3D paths connecting observations

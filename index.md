@@ -33,21 +33,6 @@ install.packages("ggcube")
 devtools::install_github("matthewkling/ggcube")
 ```
 
-## Related packages
-
-R has several other tools for 3D visualization. ggcube is designed for
-users who want to stay within the ggplot2 ecosystem. Other packages
-offer different tradeoffs:
-
-- [**plotly**](https://plotly.com/r/) and
-  [**rgl**](https://dmurdoch.github.io/rgl/) provide interactive 3D
-  viewers with rotation and zoom via WebGL/OpenGL, using their own APIs.
-- [**rayshader**](https://www.rayshader.com/) produces ray-traced
-  renderings of terrain data with photorealistic lighting and shadows;
-  it also makes 3D popups of ggplot2 figures, but not 3D ggplots per se.
-- [**gg3D**](https://github.com/AckerDWM/gg3D) was another ggplot2
-  extension for 3D plotting, but is no longer actively maintained.
-
 ## Quick start
 
 The essential ingredient of a ggcube plot is
@@ -89,8 +74,11 @@ ggplot(mpg, aes(displ, hwy, drv, color = class)) +
 
 ## 3D surfaces
 
+ggcube’s surface layer functions draw terrain-like figures with a z
+value for every combination of x and y:
+
 - [`geom_surface_3d()`](https://matthewkling.github.io/ggcube/reference/stat_surface_3d.md)
-  renders surfaces based on existing grid data such as terrain data
+  renders surfaces based on existing grid data such as topography
 - [`geom_ridgeline_3d()`](https://matthewkling.github.io/ggcube/reference/geom_ridgeline_3d.md)
   renders surfaces as a series of cross-sections
 - [`geom_contour_3d()`](https://matthewkling.github.io/ggcube/reference/geom_contour_3d.md)
@@ -102,8 +90,8 @@ ggplot(mpg, aes(displ, hwy, drv, color = class)) +
   surfaces with confidence intervals
 - [`geom_density_3d()`](https://matthewkling.github.io/ggcube/reference/stat_density_3d.md)
   creates perspective visualizations of 2D kernel density estimates
-- [`geom_hull_3d()`](https://matthewkling.github.io/ggcube/reference/geom_hull_3d.md)
-  plots triangulated volumes based on convex or alpha hulls of 3D points
+- [`geom_plane_3d()`](https://matthewkling.github.io/ggcube/reference/geom_plane_3d.md)
+  draws flat planes at arbitrary orientations
 
 See the
 [surfaces](https://matthewkling.github.io/ggcube/articles/surfaces.html)
@@ -184,10 +172,47 @@ ggplot(d, aes(x, y, z)) +
 
 ![](reference/figures/README-smooth-1.png)
 
-## 3D paths
+## 3D volumes
 
-[`geom_path_3d()`](https://matthewkling.github.io/ggcube/reference/geom_path_3d.md)
-renders paths in 3D space with depth-based sorting and scaling:
+This family of layers draws the boundaries of regions in 3D space, which
+can fold, nest, and close on themselves:
+
+- [`geom_hull_3d()`](https://matthewkling.github.io/ggcube/reference/geom_hull_3d.md)
+  plots triangulated volumes based on convex or alpha hulls of 3D points
+- [`geom_isodensity_3d()`](https://matthewkling.github.io/ggcube/reference/geom_isodensity_3d.md)
+  estimates the density of 3D points, and draws surfaces enclosing given
+  fractions of it
+- [`geom_isosurface_3d()`](https://matthewkling.github.io/ggcube/reference/geom_isosurface_3d.md)
+  draws isosurfaces of a 3D field, the 3D analog of contour lines,
+  e.g. of a function of three variables
+- [`geom_isofunction_3d()`](https://matthewkling.github.io/ggcube/reference/geom_isofunction_3d.md)
+  draws isosurfaces of a function of three variables
+
+See the
+[volumes](https://matthewkling.github.io/ggcube/articles/volumes.html)
+article for more details.
+
+``` r
+
+gyroid <- function(x, y, z) sin(x) * cos(y) + sin(y) * cos(z) + sin(z) * cos(x)
+ggplot() +
+      geom_isofunction_3d(
+            fun = gyroid, cap = TRUE, fill = "darkorchid4", n = 40,
+            xlim = c(0, 4 * pi), ylim = c(0, 4 * pi), zlim = c(0, 4 * pi)) +
+      coord_3d() + 
+      light(mode = "hsl") + 
+      theme_void()
+```
+
+![](reference/figures/README-volumes-1.png)
+
+## 3D lines
+
+Line geoms render paths in 3D space with depth-based sorting and
+scaling, including
+[`geom_segment_3d()`](https://matthewkling.github.io/ggcube/reference/geom_segment_3d.md)
+and
+[`geom_path_3d()`](https://matthewkling.github.io/ggcube/reference/geom_path_3d.md):
 
 ``` r
 
@@ -255,8 +280,8 @@ ggplot(faithful, aes(waiting, eruptions)) +
 ## 3D text
 
 [`geom_text_3d()`](https://matthewkling.github.io/ggcube/reference/geom_text_3d.md)
-creates 3D-aware text, rendered either as “billboard” text that faces
-the viewing plane or as 3D polygons that can face any direction:
+creates 3D-aware text, rendered either as `"billboard"` text that faces
+the viewing plane or as 3D `"polygon"` text that can face any direction:
 
 ``` r
 
@@ -366,8 +391,8 @@ article for details. Here’s an example of a rotating gif:
 ``` r
 
 mammoth <- data.frame(do.call(rbind, rjson::fromJSON(
-  file = paste0("https://raw.githubusercontent.com/PAIR-code/",
-                "understanding-umap/master/raw_data/mammoth_3d_50k.json")
+      file = paste0("https://raw.githubusercontent.com/PAIR-code/",
+                    "understanding-umap/master/raw_data/mammoth_3d_50k.json")
 )))
 colnames(mammoth) <- c("Y", "X", "Z")
 
@@ -419,6 +444,21 @@ ggplot(iris, aes(Sepal.Length, Sepal.Width, Petal.Length,
 ```
 
 ![](reference/figures/README-position-1.png)
+
+## Related packages
+
+R has several other tools for 3D visualization. ggcube is designed for
+users who want to stay within the ggplot2 ecosystem. Other packages
+offer different tradeoffs:
+
+- [**plotly**](https://plotly.com/r/) and
+  [**rgl**](https://dmurdoch.github.io/rgl/) provide interactive 3D
+  viewers with rotation and zoom via WebGL/OpenGL, using their own APIs.
+- [**rayshader**](https://www.rayshader.com/) produces ray-traced
+  renderings of terrain data with photorealistic lighting and shadows;
+  it also makes 3D popups of ggplot2 figures, but not 3D ggplots per se.
+- [**gg3D**](https://github.com/AckerDWM/gg3D) was another ggplot2
+  extension for 3D plotting, but is no longer actively maintained.
 
 ## Learn more
 

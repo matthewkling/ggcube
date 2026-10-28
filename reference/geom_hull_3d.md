@@ -208,6 +208,8 @@ likely fail for data scaled 0-1000. Guidelines for choosing radius:
 
 ## See also
 
+[`geom_isodensity_3d()`](https://matthewkling.github.io/ggcube/reference/geom_isodensity_3d.md)
+for contours of 3D density fields,
 [`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md)
 for 3D coordinate systems,
 [geom_polygon_3d](https://matthewkling.github.io/ggcube/reference/geom_polygon_3d.md)

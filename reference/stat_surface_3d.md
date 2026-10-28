@@ -4,7 +4,9 @@ Takes user-provided (x, y, z) point data and prepares it for surface
 rendering. If data form a regular grid, can render either a
 GeomSurface3D of rectangular or right-triangular tiles, or a
 GeomRidgeline3D or GeomContour3D set of surface slices; otherwise,
-renders irregular triangular tiles via Delaunay trianuglation.
+renders irregular triangular tiles via Delaunay trianuglation. (For
+surfaces of 4D x-y-z-value data, use
+[`geom_isosurface_3d()`](https://matthewkling.github.io/ggcube/reference/geom_isosurface_3d.md).)
 
 ## Usage
 
@@ -185,6 +187,7 @@ clouds are passed through for Delaunay tessellation by the geom.
 
 ## See also
 
+[`geom_isosurface_3d()`](https://matthewkling.github.io/ggcube/reference/geom_isosurface_3d.md),
 `geom_surface_3d()`,
 [`geom_ridgeline_3d()`](https://matthewkling.github.io/ggcube/reference/geom_ridgeline_3d.md),
 [`stat_function_3d()`](https://matthewkling.github.io/ggcube/reference/stat_function_3d.md),

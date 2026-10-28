@@ -133,7 +133,97 @@ Performance:
   points requested through `points = TRUE` are now added as such a
   layer.
 
+### Scale limits
+
+- Limits on the z scale, e.g. from
+  [`zlim()`](https://matthewkling.github.io/ggcube/reference/zlim.md),
+  now apply before a layer’s stat is computed, as ggplot2 applies limits
+  on x and y: stats that summarize observations, such as hulls, smooths,
+  isodensity surfaces, voxels, columns, points, segments, paths, and
+  text, now use only the data within the limits, and remove the rest
+  with a warning. Previously z limits were applied only afterward, so
+  that e.g. a hull or smooth was computed from all the data and then
+  drawn with its vertices beyond the limits missing. The z scale’s `oob`
+  function is respected, e.g. `oob = scales::squish` moves values to the
+  limits instead.
+- Surfaces and other polygons are now cut cleanly where they cross
+  limits on any axis, with new vertices on the limits, rather than drawn
+  with their vertices beyond the limits dropped. This applies to
+  [`geom_polygon_3d()`](https://matthewkling.github.io/ggcube/reference/geom_polygon_3d.md),
+  [`geom_surface_3d()`](https://matthewkling.github.io/ggcube/reference/stat_surface_3d.md),
+  [`geom_contour_3d()`](https://matthewkling.github.io/ggcube/reference/geom_contour_3d.md),
+  [`geom_ridgeline_3d()`](https://matthewkling.github.io/ggcube/reference/geom_ridgeline_3d.md),
+  and the layers drawn with them, such as
+  [`geom_function_3d()`](https://matthewkling.github.io/ggcube/reference/stat_function_3d.md),
+  [`geom_smooth_3d()`](https://matthewkling.github.io/ggcube/reference/geom_smooth_3d.md),
+  [`geom_density_3d()`](https://matthewkling.github.io/ggcube/reference/stat_density_3d.md),
+  and
+  [`geom_distributions_3d()`](https://matthewkling.github.io/ggcube/reference/stat_distributions_3d.md),
+  and to text drawn with `method = "polygon"`. Since rows of gridded
+  surface data are the surface’s vertices, z limits cut those surfaces
+  rather than removing rows; x and y limits still trim the grid before
+  the stat. Columns, bars, and voxels that extend beyond the limits are
+  removed whole, as ggplot2 removes bars, rather than cut.
+- Polygons with missing vertices, such as tiles of a smooth that can’t
+  be predicted at all their corners, are now removed whole rather than
+  drawn with their remaining vertices.
+- [`geom_path_3d()`](https://matthewkling.github.io/ggcube/reference/geom_path_3d.md)
+  now breaks paths at points that are missing or outside the scale
+  limits, as
+  [`geom_path()`](https://ggplot2.tidyverse.org/reference/geom_path.html)
+  does, rather than joining the points on either side.
+- [`geom_point_3d()`](https://matthewkling.github.io/ggcube/reference/geom_point_3d.md)
+  no longer fails when points lie outside limits set on the z scale.
+
 ### Other changes
+
+- New
+  [`geom_isosurface_3d()`](https://matthewkling.github.io/ggcube/reference/geom_isosurface_3d.md)
+  and
+  [`stat_isosurface_3d()`](https://matthewkling.github.io/ggcube/reference/geom_isosurface_3d.md)
+  draw isosurfaces of a scalar field sampled on a 3D grid, the 3D analog
+  of contour lines: map the field to the new `value` aesthetic, and give
+  the field values at which to draw surfaces as `levels`. Grids may be
+  unevenly spaced. Surfaces face outward from the regions they enclose,
+  by default where `value` exceeds the level (`inside = "above"`), or
+  with `inside = "below"` where it’s less, and are triangulated by
+  marching cubes using the rmarchingcubes package, which must be
+  installed.
+
+- New
+  [`geom_isodensity_3d()`](https://matthewkling.github.io/ggcube/reference/geom_isodensity_3d.md)
+  and
+  [`stat_isodensity_3d()`](https://matthewkling.github.io/ggcube/reference/geom_isodensity_3d.md)
+  estimate the density of a 3D point cloud, and draw surfaces enclosing
+  given fractions of it (`probs`, by default `0.5`), the 3D analog of
+  [`geom_density_2d()`](https://ggplot2.tidyverse.org/reference/geom_density_2d.html).
+  Each group gets its own density, and points can be weighted.
+  Bandwidths `h` follow the convention of
+  [`stat_density_3d()`](https://matthewkling.github.io/ggcube/reference/stat_density_3d.md),
+  and default to the normal reference rule for three dimensions. Like
+  isosurfaces, these require the rmarchingcubes package. Both kinds of
+  surface are cut cleanly where they cross limits set on the plot’s
+  scales, e.g. with
+  [`xlim()`](https://ggplot2.tidyverse.org/reference/lims.html) or
+  [`zlim()`](https://matthewkling.github.io/ggcube/reference/zlim.md),
+  and with `cap = TRUE` are closed there with flat caps showing their
+  cross sections. Isosurfaces are also capped where they meet the edges
+  of their grid.
+
+- New
+  [`geom_isofunction_3d()`](https://matthewkling.github.io/ggcube/reference/geom_isofunction_3d.md)
+  and
+  [`stat_isofunction_3d()`](https://matthewkling.github.io/ggcube/reference/geom_isofunction_3d.md)
+  draw isosurfaces of a function of three variables, evaluated over a
+  domain given by `xlim`, `ylim`, and `zlim`: by default the implicit
+  surface `fun(x, y, z) = 0`, so that
+  e.g. `function(x, y, z) x^2 + y^2 + z^2 - 1` draws a unit ball. They
+  are to
+  [`geom_isosurface_3d()`](https://matthewkling.github.io/ggcube/reference/geom_isosurface_3d.md)
+  what
+  [`geom_function_3d()`](https://matthewkling.github.io/ggcube/reference/stat_function_3d.md)
+  is to
+  [`geom_surface_3d()`](https://matthewkling.github.io/ggcube/reference/stat_surface_3d.md).
 
 - ggcube now requires ggplot2 4.0.0 or later.
 
@@ -144,6 +234,18 @@ Performance:
   horizontal, and polygons wound clockwise were lit as their reverse
   side. With the default lighting, polygons are now lit the same way
   whatever their winding order.
+
+- Plots in which no layer has data now draw an empty cube, as ggplot2
+  draws an empty panel. They previously failed with an unrelated error,
+  which also hid the warning from any layer whose stat failed, or that
+  found nothing to draw.
+
+- `light("direct")` now lights back faces that face the light. Light
+  values were clamped to be non-negative before back faces had their
+  sign flipped, so every visible back face, such as the underside of a
+  surface seen from below, was drawn black regardless of where the light
+  came from. A nonzero `backface_offset` now shifts direct light values
+  before they are clamped, as it does for diffuse lighting.
 
 - [`geom_contour_3d()`](https://matthewkling.github.io/ggcube/reference/geom_contour_3d.md)
   and

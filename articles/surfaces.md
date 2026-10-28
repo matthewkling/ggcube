@@ -10,10 +10,11 @@ Surfaces are ggcube’s richest feature area. This article gives an
 overview of the geoms and stats that work together to render continuous
 surfaces from various data sources. “Surface” here means a data object
 with a single z value for each (x, y) position, like a heightmap or
-terrain model. This vignette doesn’t cover hulls
-([`geom_hull_3d()`](https://matthewkling.github.io/ggcube/reference/geom_hull_3d.md))
-or columnar surfaces
-([`geom_col_3d()`](https://matthewkling.github.io/ggcube/reference/geom_col_3d.md)).
+terrain model. This vignette doesn’t cover columnar surfaces
+([`geom_col_3d()`](https://matthewkling.github.io/ggcube/reference/geom_col_3d.md)),
+or volumes like hulls and isosurfaces, which are covered in the
+[volumes](https://matthewkling.github.io/ggcube/articles/volumes.md)
+article.
 
 Surfaces can be rendered from several data sources and in several visual
 styles, using a system of interchangeable geoms and stats. ggcube
@@ -122,7 +123,11 @@ renders a mathematical function as contour bands, and
 ## Surface stats
 
 Four stats produce surface data. Each generates a regular grid of (x, y,
-z) points that can be rendered by any of the three surface geoms.
+z) points that can be rendered by any of the three surface geoms. (Note
+that several of these stats also have a higher-dimensional analog
+covered in the
+[volumes](https://matthewkling.github.io/ggcube/articles/volumes.md)
+article.)
 
 ### User-supplied data
 
@@ -149,7 +154,9 @@ ggplot(pts, aes(x, y, z = z, fill = z)) +
 ### Mathematical functions
 
 [`stat_function_3d()`](https://matthewkling.github.io/ggcube/reference/stat_function_3d.md)
-evaluates a function f(x, y) over a grid:
+evaluates a function f(x, y) over a grid. (4D functions f(x, y, z) can
+instead be visualized with
+[`geom_isosurface_3d()`](https://matthewkling.github.io/ggcube/reference/geom_isosurface_3d.md).)
 
 ``` r
 
@@ -185,10 +192,12 @@ ggplot(mtcars, aes(qsec, disp, mpg, fill = after_stat(level))) +
 ### Kernel density
 
 [`stat_density_3d()`](https://matthewkling.github.io/ggcube/reference/stat_density_3d.md)
-(or
-[`geom_density_3d()`](https://matthewkling.github.io/ggcube/reference/stat_density_3d.md))
-computes a 2D kernel density estimate. It has options for modifying
-bandwidth, resolution:
+and
+[`geom_density_3d()`](https://matthewkling.github.io/ggcube/reference/stat_density_3d.md)
+compute a 2D kernel density estimate. (For contours of **3D** kernel
+densities, see
+[`geom_isodensity_3d()`](https://matthewkling.github.io/ggcube/reference/geom_isodensity_3d.md).)
+It has options for modifying bandwidth, resolution, etc.:
 
 ``` r
 
