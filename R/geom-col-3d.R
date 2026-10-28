@@ -3,6 +3,10 @@ StatCol3D <- ggproto("StatCol3D", Stat,
                      optional_aes = c("zmin"),
                      default_aes = aes(group = after_stat(group)),
 
+                     setup_data = function(data, params) {
+                           censor_z_limits(data)
+                     },
+
                      compute_panel = function(data, scales, na.rm = FALSE,
                                               width = 1.0, faces = "all",
                                               light = NULL, zmin = NULL,

@@ -35,7 +35,7 @@ GeomContour3D <- ggproto("GeomContour3D", GeomPolygon3D,
                                all_data <- split(data, list(data$PANEL, data$group),
                                                  drop = TRUE)
 
-                               lapply(all_data, function(data){
+                               data <- lapply(all_data, function(data){
 
                                      # Validate grid structure
                                      n_unique_x <- length(unique(round(data$x, 10)))
@@ -74,6 +74,8 @@ GeomContour3D <- ggproto("GeomContour3D", GeomPolygon3D,
                                      bind_rows() %>%
                                      mutate(group = gsub("__", "_", group),
                                             group = paste0("contour__layer", group))
+
+                               clip_to_limits(data)
                          }
 )
 

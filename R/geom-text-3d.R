@@ -604,6 +604,10 @@ GeomText3DPolygon <- ggproto("GeomText3DPolygon", GeomPolygon3D,
 StatText3DPolygon <- ggproto("StatText3DPolygon", Stat,
                              required_aes = c("x", "y", "z", "label"),
 
+                             setup_data = function(data, params) {
+                                   censor_z_limits(data)
+                             },
+
                              compute_panel = function(data, scales, na.rm = FALSE,
                                                       family = "sans",
                                                       weight = "normal",
@@ -834,6 +838,10 @@ StatText3DPolygon <- ggproto("StatText3DPolygon", Stat,
 
 StatText3DBillboard <- ggproto("StatText3DBillboard", Stat,
                                required_aes = c("x", "y", "z", "label"),
+
+                               setup_data = function(data, params) {
+                                     censor_z_limits(data)
+                               },
 
                                default_aes = aes(
                                      colour = "black",

@@ -173,9 +173,11 @@ test_that("scale limits cut surfaces without changing the mass they enclose", {
             expect_equal(unique(d$level), unique(free$level), info = axis)
       }
 
-      # A limit on one side only. The density is evaluated on a grid over the
-      # remaining range, so the other side is unchanged, up to resolution.
-      d <- layer_data(base + scale_z_continuous(limits = c(0, NA)))
+      # A limit on one side only removes the points beyond it, as x and y limits
+      # do, and cuts the surface there. The density is evaluated on a grid over
+      # the remaining range, so the far side is nearly unchanged.
+      expect_warning(d <- layer_data(base + scale_z_continuous(limits = c(0, NA))),
+                     "Removed \\d+ rows")
       expect_equal(min(d$z), 0)
       expect_equal(max(d$z), max(free$z), tolerance = 0.05)
 })

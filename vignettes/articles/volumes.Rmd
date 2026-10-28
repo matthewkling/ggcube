@@ -226,10 +226,10 @@ ggplot(orbital, aes(x, y, z, value = psi^2, fill = after_stat(level))) +
       xlim(2, NA)
 ```
 
-As elsewhere in ggplot2, limits on the x and y scales remove data outside them
-before the layer's stat is computed. For gridded data like the orbital's, that just
-trims the grid, though ggplot2 warns about the removed rows; for point clouds, it
-changes the density. Limits on the z scale don't remove data.
+As elsewhere in ggplot2, limits remove data outside them before the layer's stat
+is computed. For point clouds, that changes the density. For gridded data like the
+orbital's, it just trims the grid, though ggplot2 warns about rows removed by x and
+y limits.
 
 
 

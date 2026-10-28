@@ -2,6 +2,8 @@
 
 GeomPoint3D <- ggproto("GeomPoint3D", GeomPoint,
 
+                       non_missing_aes = c(GeomPoint$non_missing_aes, "z"),
+
                        draw_panel = function(data, panel_params, coord, na.rm = FALSE,
                                              scale_depth = TRUE, on_top = FALSE, flat = FALSE,
                                              ref_line_colour = NULL, ref_line_linewidth = 0.25, ref_line_linetype = NULL, ref_line_alpha = NULL,
@@ -294,6 +296,10 @@ check_flat <- function(flat, position, call = rlang::caller_env()) {
 
 StatPoint3D <- ggproto("StatPoint3D", Stat,
                        required_aes = c("x", "y", "z"),
+
+                       setup_data = function(data, params) {
+                             censor_z_limits(data)
+                       },
 
                        compute_panel = function(data, scales, na.rm = FALSE,
                                                 raw_points = TRUE,

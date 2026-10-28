@@ -297,6 +297,10 @@ boundary_loop <- function(tri) {
 
 StatHull3D <- ggproto("StatHull3D", Stat,
                       required_aes = c("x", "y", "z"),
+                      setup_data = function(data, params) {
+                            censor_z_limits(data)
+                      },
+
                       compute_group = function(data, scales,
                                                method = "convex", radius = NULL,
                                                singular = FALSE,

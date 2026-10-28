@@ -124,6 +124,17 @@ stat_path_3d <- function(mapping = NULL, data = NULL,
 StatPath3D <- ggproto("StatPath3D", Stat,
                       required_aes = c("x", "y", "z"),
 
+                      setup_data = function(data, params) {
+                            censor_z_limits(data)
+                      },
+
+                      # Points that are missing or beyond the limits break paths, rather than
+                      # being removed and joined across
+                      compute_layer = function(self, data, params, layout) {
+                            data <- break_paths(data)
+                            ggproto_parent(Stat, self)$compute_layer(data, params, layout)
+                      },
+
                       compute_group = function(data, scales, na.rm = FALSE) {
 
                             # Remove missing values if requested

@@ -19,6 +19,15 @@ This is a shorthand for \code{scale_z_continuous(limits = c(min, max))}.
 It's a convenient way to set the z-axis limits without specifying other
 scale parameters.
 }
+\details{
+Limits on the z scale work like those set with \code{\link[ggplot2:xlim]{ggplot2::xlim()}} and
+\code{\link[ggplot2:ylim]{ggplot2::ylim()}}: data outside them are removed before stats that summarize
+observations, such as hulls and smooths, are computed. Surfaces and other
+polygons that cross limits on any axis are cut where they cross them, while
+columns, bars, and voxels that extend beyond the limits are removed whole.
+Rows of gridded surface data are vertices of the surface rather than
+observations, so z limits cut those surfaces rather than removing rows.
+}
 \examples{
 library(ggplot2)
 

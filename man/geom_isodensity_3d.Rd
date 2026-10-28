@@ -128,9 +128,11 @@ the data lie.
 The density is a Gaussian kernel density estimate, evaluated on a grid that
 extends beyond the data far enough for surfaces to close, and surfaces are
 triangulated with the marching cubes algorithm. Where limits are set on the
-plot's scales, e.g. with \code{\link[ggplot2:xlim]{ggplot2::xlim()}} or \code{\link[=zlim]{zlim()}}, surfaces are cut at them,
-leaving them open there unless \code{cap = TRUE}; the fractions of mass they
-enclose are unaffected.
+plot's scales, e.g. with \code{\link[ggplot2:xlim]{ggplot2::xlim()}} or \code{\link[=zlim]{zlim()}}, points outside them
+are removed before the density is estimated, as elsewhere in ggplot2, and
+surfaces are cut at them, leaving them open there unless \code{cap = TRUE}. Cutting
+doesn't change the fractions of mass the surfaces enclose, which refer to the
+whole estimate.
 }
 \section{Aesthetics}{
 

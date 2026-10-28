@@ -56,12 +56,14 @@ GeomRidgeline3D <- ggproto("GeomRidgeline3D", GeomPolygon3D,
                                              group_prefix = "ridgeline__"
                                        )
                                  }
-                                 if ("PANEL" %in% names(data)) {
+                                 data <- if ("PANEL" %in% names(data)) {
                                        bind_rows(lapply(split(data, data$PANEL, drop = TRUE),
                                                         to_ridgelines))
                                  } else {
                                        to_ridgelines(data)
                                  }
+
+                                 clip_to_limits(data)
                            }
 
                            # draw_panel inherited from GeomPolygon3D

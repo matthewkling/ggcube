@@ -33,7 +33,9 @@ GeomSurface3D <- ggproto("GeomSurface3D", GeomPolygon3D,
                                )
 
                                # Average aesthetics per polygon
-                               average_aesthetics(data)
+                               data <- average_aesthetics(data)
+
+                               clip_to_limits(data)
                          }
 
                          # draw_panel inherited from GeomPolygon3D

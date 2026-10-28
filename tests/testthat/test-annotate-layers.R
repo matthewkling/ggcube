@@ -82,7 +82,7 @@ test_that("every layer function's annotate argument draws its annotations", {
                               invokeRestart("muffleWarning")
                         })
                   expect_false(any(grepl("unknown param|Removed .* row", warnings, ignore.case = TRUE) &
-                                         !grepl("^Removed 78 rows", warnings)),
+                                         !grepl("^Removed 156 rows", warnings)),
                                info = paste(nm, type))
                   expect_true(grob_uses_colour(g, "#FF00FF"), info = paste(nm, type))
             }

@@ -108,6 +108,10 @@ stat_segment_3d <- function(mapping = NULL, data = NULL,
 StatSegment3D <- ggproto("StatSegment3D", Stat,
                          required_aes = c("x", "y", "z", "xend", "yend", "zend"),
 
+                         setup_data = function(data, params) {
+                               censor_z_limits(data)
+                         },
+
                          compute_group = function(data, scales, na.rm = FALSE) {
 
                                # Remove missing values if requested

@@ -9,6 +9,10 @@ StatSmooth3D <- ggproto("StatSmooth3D", Stat,
 
                         extra_params = c("na.rm", "residuals"),
 
+                        setup_data = function(data, params) {
+                              censor_z_limits(data)
+                        },
+
                         compute_group = function(data, scales, method = "loess", formula = NULL,
                                                  method.args = list(), cull_backfaces = FALSE,
                                                  xlim = NULL, ylim = NULL,

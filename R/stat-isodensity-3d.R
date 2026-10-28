@@ -7,6 +7,10 @@ StatIsodensity3D <- ggproto("StatIsodensity3D", Stat,
                             optional_aes = "weight",
                             dropped_aes = "weight",
 
+                            setup_data = function(data, params) {
+                                  censor_z_limits(data)
+                            },
+
                             compute_group = function(data, scales, probs = 0.5, n = 30,
                                                      h = NULL, adjust = 1, cap = FALSE,
                                                      cull_backfaces = FALSE, light = NULL) {
@@ -184,9 +188,11 @@ isodensity_levels <- function(values, probs) {
 #' The density is a Gaussian kernel density estimate, evaluated on a grid that
 #' extends beyond the data far enough for surfaces to close, and surfaces are
 #' triangulated with the marching cubes algorithm. Where limits are set on the
-#' plot's scales, e.g. with [ggplot2::xlim()] or [zlim()], surfaces are cut at them,
-#' leaving them open there unless `cap = TRUE`; the fractions of mass they
-#' enclose are unaffected.
+#' plot's scales, e.g. with [ggplot2::xlim()] or [zlim()], points outside them
+#' are removed before the density is estimated, as elsewhere in ggplot2, and
+#' surfaces are cut at them, leaving them open there unless `cap = TRUE`. Cutting
+#' doesn't change the fractions of mass the surfaces enclose, which refer to the
+#' whole estimate.
 #'
 #' @param probs Numeric vector of fractions of probability mass, between 0 and
 #'   1, for each surface to enclose. Defaults to `0.5`, a single surface around

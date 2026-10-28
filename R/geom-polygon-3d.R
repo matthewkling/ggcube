@@ -4,6 +4,14 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
 
                          optional_aes = c("subgroup"),
 
+                         setup_data = function(data, params) {
+                               clip_to_limits(data)
+                         },
+
+                         handle_na = function(self, data, params) {
+                               remove_partial_polygons(data, params$na.rm, snake_class_name(self))
+                         },
+
                          default_aes = aes(
                                fill = "grey50", colour = "grey50", linewidth = 0.1, linetype = 1, alpha = 1
                          ),

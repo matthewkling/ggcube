@@ -187,6 +187,14 @@ scale_z_discrete <- function(name = waiver(), breaks = waiver(), labels = waiver
 #' It's a convenient way to set the z-axis limits without specifying other
 #' scale parameters.
 #'
+#' Limits on the z scale work like those set with [ggplot2::xlim()] and
+#' [ggplot2::ylim()]: data outside them are removed before stats that summarize
+#' observations, such as hulls and smooths, are computed. Surfaces and other
+#' polygons that cross limits on any axis are cut where they cross them, while
+#' columns, bars, and voxels that extend beyond the limits are removed whole.
+#' Rows of gridded surface data are vertices of the surface rather than
+#' observations, so z limits cut those surfaces rather than removing rows.
+#'
 #' @param min,max The minimum and maximum values for the z-axis.
 #' @param ... Additional arguments passed to \code{scale_z_continuous()}.
 #'
