@@ -6,7 +6,7 @@ GeomSurface3D <- ggproto("GeomSurface3D", GeomPolygon3D,
 
                          default_aes = aes(
                                colour = NA,
-                               fill = "grey60",
+                               fill = "grey50",
                                linewidth = 0.1,
                                linetype = 1,
                                alpha = NA

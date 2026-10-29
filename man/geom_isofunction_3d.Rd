@@ -61,7 +61,10 @@ stat_isofunction_3d(
 onto one 2D surface, use \code{position_on_face()}.}
 
 \item{...}{Other arguments passed on to the layer function (typically GeomPolygon3D), such as
-aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc.}
+aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc. Unless \code{colour} is mapped or set,
+opaque polygons are outlined in their fill color, which hides the seams between
+adjacent polygons, and translucent polygons aren't outlined. Contours and ridgelines
+are the exception, with outlines of their own.}
 
 \item{fun}{A function of \code{x}, \code{y}, and \code{z}, taking vectors of each and
 returning a vector of values.}

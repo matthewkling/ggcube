@@ -1122,15 +1122,33 @@ transform_light_position <- function(position, scale_ranges, scales, ratio) {
 #' Resolve a lighting specification to its final value
 #'
 #' `waiver()` signals that no lighting was specified anywhere, in which case the
-#' package default applies. `NULL` is a deliberate request for no lighting and is
-#' preserved as-is.
+#' package default applies, marked as such (see `is_default_light()`). `NULL` is
+#' a deliberate request for no lighting and is preserved as-is.
 #'
 #' @param light A `light` object, `"none"`, `NULL`, or `waiver()`.
 #' @return A `light` object, `"none"`, or `NULL`.
 #' @keywords internal
 #' @noRd
 resolve_light <- function(light) {
-      if (inherits(light, "waiver")) light() else light
+      if (!inherits(light, "waiver")) return(light)
+      default <- light()
+      attr(default, "ggcube_default") <- TRUE
+      default
+}
+
+#' Is a light the package default?
+#'
+#' The default light, resolved from a `waiver()`, carries a marker, which
+#' copies of it (such as the per-frame lights of animations) keep. Layers that
+#' aren't lit by default (see `GeomPolygon3D$lit_by_default`) skip it, but not
+#' lighting set explicitly.
+#'
+#' @param light A `light` object, or `NULL`.
+#' @return `TRUE` or `FALSE`.
+#' @keywords internal
+#' @noRd
+is_default_light <- function(light) {
+      isTRUE(attr(light, "ggcube_default"))
 }
 
 #' Store lighting specification to data frame for downstream use

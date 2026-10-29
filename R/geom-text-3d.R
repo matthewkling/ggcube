@@ -596,7 +596,10 @@ GeomText3DPolygon <- ggproto("GeomText3DPolygon", GeomPolygon3D,
                                    linewidth = 0,
                                    linetype = 1,
                                    alpha = 1
-                             )
+                             ),
+
+                             # Glyphs are outlined only when asked
+                             outline_matches_fill = FALSE
 )
 
 # Stat (Polygon method) -------------------------------------------------------

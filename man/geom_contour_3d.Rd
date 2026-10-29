@@ -129,12 +129,20 @@ it to filled contour polygons using the \code{isoband} package.
 And understands these additional aesthetics:
 \describe{
 \item{fill}{Band fill color. For automatic coloring by elevation, use
-\code{aes(fill = after_stat(z))}. Default is "grey60".}
-\item{colour}{Band border color (default: "grey30")}
+\code{aes(fill = after_stat(z))}. Default is "black".}
+\item{colour}{Band border color (default: "white")}
 \item{alpha}{Transparency}
 \item{linewidth}{Border width (default: 0.1)}
 \item{linetype}{Border line type}
 }
+}
+
+\section{Lighting}{
+
+Unlike most 3D layers, contour bands aren't lit by default. All their faces point
+the same way, so lighting could only shift all their colors at once. Lighting
+set explicitly, with the layer's \code{light} argument or with \code{+ light()} or
+\code{coord_3d(light = )}, still applies.
 }
 
 \section{Computed variables}{

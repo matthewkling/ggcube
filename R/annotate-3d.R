@@ -58,7 +58,7 @@
 #' vertices in order. To draw several polygons in one call, give `group`, with
 #' one value per vertex; vertices sharing a value form one polygon. Each
 #' polygon needs at least 3 vertices. Optional styling: `fill` (default
-#' `"grey60"`), `alpha` (default `0.5`), `colour`/`color` for the outline
+#' `"grey50"`), `alpha` (default `0.5`), `colour`/`color` for the outline
 #' (default `"grey30"`), `linewidth` (default `0.5`), `linetype`. Styling
 #' values apply per polygon, so they must have length 1 or one value per
 #' polygon, in the order the groups first appear.
@@ -272,7 +272,7 @@ annotate_polygon <- function(params) {
             rlang::abort("annotate_3d(\"polygon\"): each polygon needs at least 3 vertices.")
       }
 
-      defaults <- list(fill = "grey60", alpha = 0.5, colour = "grey30", linewidth = 0.5)
+      defaults <- list(fill = "grey50", alpha = 0.5, colour = "grey30", linewidth = 0.5)
       for (nm in setdiff(names(defaults), names(params))) params[[nm]] <- defaults[[nm]]
 
       style <- intersect(setdiff(names(params), c("x", "y", "z", "group")),

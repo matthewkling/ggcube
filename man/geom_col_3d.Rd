@@ -55,7 +55,10 @@ stat_col_3d(
 onto one 2D surface, use \code{position_on_face()}.}
 
 \item{...}{Other arguments passed on to the layer function (typically GeomPolygon3D), such as
-aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc.}
+aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc. Unless \code{colour} is mapped or set,
+opaque polygons are outlined in their fill color, which hides the seams between
+adjacent polygons, and translucent polygons aren't outlined. Contours and ridgelines
+are the exception, with outlines of their own.}
 
 \item{annotate}{Deprecated. Add annotations to the
 plot with \code{+ annotate_3d()} instead. All 3D layers in a panel are

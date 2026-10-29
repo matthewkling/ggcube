@@ -57,7 +57,10 @@ produced by \code{\link[=expand.grid]{expand.grid()}}. Even grid spacing is not 
 onto one 2D surface, use \code{position_on_face()}.}
 
 \item{...}{Other arguments passed on to the layer function (typically GeomPolygon3D), such as
-aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc.}
+aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc. Unless \code{colour} is mapped or set,
+opaque polygons are outlined in their fill color, which hides the seams between
+adjacent polygons, and translucent polygons aren't outlined. Contours and ridgelines
+are the exception, with outlines of their own.}
 
 \item{probs}{Numeric vector of fractions of probability mass, between 0 and
 1, for each surface to enclose. Defaults to \code{0.5}, a single surface around

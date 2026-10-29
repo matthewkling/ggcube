@@ -116,7 +116,10 @@ NULL
 #' @param show.legend Logical indicating whether this layer should be included in legends.
 #' @param inherit.aes If `FALSE`, overrides the default aesthetics.
 #' @param ... Other arguments passed on to the layer function (typically GeomPolygon3D), such as
-#'   aesthetics like `colour`, `fill`, `linewidth`, etc.
+#'   aesthetics like `colour`, `fill`, `linewidth`, etc. Unless `colour` is mapped or set,
+#'   opaque polygons are outlined in their fill color, which hides the seams between
+#'   adjacent polygons, and translucent polygons aren't outlined. Contours and ridgelines
+#'   are the exception, with outlines of their own.
 #' @name polygon_params
 #' @keywords internal
 NULL

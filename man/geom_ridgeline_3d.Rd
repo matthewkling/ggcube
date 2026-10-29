@@ -96,12 +96,20 @@ of the surface.
 
 \describe{
 \item{x, y, z}{Point coordinates (required)}
-\item{fill}{Polygon fill color (default: "grey70")}
+\item{fill}{Polygon fill color (default: "white")}
 \item{colour}{Polygon border color (default: "black")}
 \item{alpha}{Transparency}
 \item{linewidth}{Border width}
 \item{linetype}{Border type}
 }
+}
+
+\section{Lighting}{
+
+Unlike most 3D layers, ridgelines aren't lit by default. All their faces point
+the same way, so lighting could only shift all their colors at once. Lighting
+set explicitly, with the layer's \code{light} argument or with \code{+ light()} or
+\code{coord_3d(light = )}, still applies.
 }
 
 \examples{

@@ -7,7 +7,7 @@ GeomPlane3D <- ggproto("GeomPlane3D", Geom,
                        optional_aes = c("a", "b", "c", "d", "intercept", "slope_x", "slope_y"),
 
                        default_aes = aes(
-                             fill = "grey60", colour = NA, alpha = 0.5, linewidth = 0.5, linetype = 1
+                             fill = "grey50", colour = NA, alpha = 0.5, linewidth = 0.5, linetype = 1
                        ),
 
                        setup_data = function(data, params) {

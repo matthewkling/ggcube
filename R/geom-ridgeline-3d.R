@@ -15,6 +15,12 @@ GeomRidgeline3D <- ggproto("GeomRidgeline3D", GeomPolygon3D,
                            extra_params = c("na.rm", "direction", "base", "cull_backfaces",
                                             "scale_depth", "force_convex"),
 
+                           # Ridges all face the same way, so lighting would only
+                           # shift all their colors at once; their outlines are
+                           # drawn in their own color
+                           lit_by_default = FALSE,
+                           outline_matches_fill = FALSE,
+
                            setup_params = function(data, params) {
                                  if(is.null(params$direction) && ".direction" %in% names(data)) params$direction <- data$.direction[1]
                                  params$direction <- params$direction %||% "x"
@@ -91,12 +97,18 @@ GeomRidgeline3D <- ggproto("GeomRidgeline3D", GeomPolygon3D,
 #' @section Aesthetics:
 #' \describe{
 #'   \item{x, y, z}{Point coordinates (required)}
-#'   \item{fill}{Polygon fill color (default: "grey70")}
+#'   \item{fill}{Polygon fill color (default: "white")}
 #'   \item{colour}{Polygon border color (default: "black")}
 #'   \item{alpha}{Transparency}
 #'   \item{linewidth}{Border width}
 #'   \item{linetype}{Border type}
 #' }
+#'
+#' @section Lighting:
+#' Unlike most 3D layers, ridgelines aren't lit by default. All their faces point
+#' the same way, so lighting could only shift all their colors at once. Lighting
+#' set explicitly, with the layer's `light` argument or with `+ light()` or
+#' `coord_3d(light = )`, still applies.
 #'
 #' @examples
 #' # From point grid

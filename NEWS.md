@@ -45,6 +45,9 @@ Changes to default behaviors, which alter the rendering of most lit plots relati
 * Faces at 45 degrees to the light now keep their base color exactly, and faces turned further toward or away from it are highlighted or shadowed. Previously faces perpendicular to the light kept their base color, so nearly every upward-facing face was strongly highlighted.
 * Shadows are now stronger than highlights by default (`shadow = 0.8`, `highlight = 0.6`), since fading to black looks more natural than fading to white.
 * The default light now comes from 60 degrees above the horizon, `direction(270, 60)`, rather than about 63 degrees (`c(-.5, 0, 1)`). The tops and two visible sides of columns and voxels now get three distinct shades.
+* `geom_contour_3d()` and `geom_ridgeline_3d()` are no longer lit by default. Their faces all point the same way, so lighting could only shift all their colors away from those specified. Lighting set explicitly, with `+ light()`, `coord_3d(light = )`, or a layer's `light` argument, still applies.
+* Polygon layers now outline opaque polygons in their fill color by default, as `geom_isosurface_3d()` already did, which hides the seams that antialiasing leaves between adjacent polygons, and don't outline translucent polygons. Previously surfaces had no outlines, and hulls, columns, voxels, and other polygons had grey outlines. Setting or mapping `colour` works as before. Contours and ridgelines keep their outlines.
+* The default fill of surfaces, planes, and polygon annotations is now `"grey50"`, matching other polygon layers, rather than `"grey60"`.
 
 New options:
 

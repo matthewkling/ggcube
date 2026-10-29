@@ -16,7 +16,43 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                                fill = "grey50", colour = "grey50", linewidth = 0.1, linetype = 1, alpha = 1
                          ),
 
-                         draw_panel = function(data, panel_params, coord,
+                         # Whether the package's default lighting applies. Layers
+                         # whose faces all point the same way, such as contours,
+                         # set this to FALSE: lighting can only shift all their
+                         # colors at once. Lighting set explicitly applies either way.
+                         lit_by_default = TRUE,
+
+                         # Whether, unless a color is mapped or set, opaque polygons
+                         # are outlined in their fill color, which hides the seams
+                         # that antialiasing leaves between adjacent polygons, and
+                         # translucent ones aren't outlined, since outlines
+                         # overlapping their neighbors would show as a mesh. An
+                         # `after_scale(fill)` default can't do this, since ggplot2
+                         # applies it before fixed parameters like `fill = "red"`.
+                         outline_matches_fill = TRUE,
+
+                         use_defaults = function(self, data, params = list(),
+                                                 modifiers = aes(), default_aes = NULL,
+                                                 theme = NULL, ...) {
+                               own_color <- "colour" %in% c(names(data), names(params),
+                                                            names(modifiers))
+                               data <- ggproto_parent(Geom, self)$use_defaults(
+                                     data, params, modifiers, default_aes, theme, ...)
+                               if (self$outline_matches_fill && !own_color && nrow(data) > 0) {
+                                     # Only polygons: points and lines of composite
+                                     # layers keep their own colors
+                                     polygon <- if (".prim" %in% names(data)) {
+                                           is.na(data$.prim) | data$.prim == "polygon"
+                                     } else {
+                                           rep(TRUE, nrow(data))
+                                     }
+                                     opaque <- is.na(data$alpha) | data$alpha >= 1
+                                     data$colour[polygon] <- ifelse(opaque[polygon], data$fill[polygon], NA)
+                               }
+                               data
+                         },
+
+                         draw_panel = function(self, data, panel_params, coord,
                                                scale_depth = TRUE,
                                                force_convex = FALSE,
                                                rule = "evenodd",
@@ -26,6 +62,10 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
 
                                # Parameter validation
                                validate_coord3d(coord)
+
+                               if (!self$lit_by_default && is_default_light(panel_params$light)) {
+                                     panel_params$light <- NULL
+                               }
 
                                # Transform data
                                if (!".prim" %in% names(data)) {

@@ -17,6 +17,12 @@ GeomContour3D <- ggproto("GeomContour3D", GeomPolygon3D,
                          extra_params = c("na.rm", "bins", "binwidth", "breaks",
                                           "cull_backfaces", "scale_depth", "force_convex"),
 
+                         # Contour bands all face up, so lighting would only shift
+                         # all their colors at once; their outlines are drawn
+                         # in their own color
+                         lit_by_default = FALSE,
+                         outline_matches_fill = FALSE,
+
                          setup_params = function(data, params) {
                                params$bins <- params$bins %||% 10
                                params
@@ -224,12 +230,18 @@ points_to_contours <- function(data,
 #' And understands these additional aesthetics:
 #' \describe{
 #'   \item{fill}{Band fill color. For automatic coloring by elevation, use
-#'     `aes(fill = after_stat(z))`. Default is "grey60".}
-#'   \item{colour}{Band border color (default: "grey30")}
+#'     `aes(fill = after_stat(z))`. Default is "black".}
+#'   \item{colour}{Band border color (default: "white")}
 #'   \item{alpha}{Transparency}
 #'   \item{linewidth}{Border width (default: 0.1)}
 #'   \item{linetype}{Border line type}
 #' }
+#'
+#' @section Lighting:
+#' Unlike most 3D layers, contour bands aren't lit by default. All their faces point
+#' the same way, so lighting could only shift all their colors at once. Lighting
+#' set explicitly, with the layer's `light` argument or with `+ light()` or
+#' `coord_3d(light = )`, still applies.
 #'
 #' @section Computed variables:
 #' Each contour band is placed at its corresponding z-level (the upper boundary

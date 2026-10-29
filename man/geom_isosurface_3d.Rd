@@ -53,7 +53,10 @@ produced by \code{\link[=expand.grid]{expand.grid()}}. Even grid spacing is not 
 onto one 2D surface, use \code{position_on_face()}.}
 
 \item{...}{Other arguments passed on to the layer function (typically GeomPolygon3D), such as
-aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc.}
+aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc. Unless \code{colour} is mapped or set,
+opaque polygons are outlined in their fill color, which hides the seams between
+adjacent polygons, and translucent polygons aren't outlined. Contours and ridgelines
+are the exception, with outlines of their own.}
 
 \item{levels}{Numeric vector of values of the field at which to draw
 isosurfaces, one surface per value. Defaults to a single surface at the

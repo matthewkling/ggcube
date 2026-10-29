@@ -21,28 +21,9 @@ StatIsosurface3D <- ggproto("StatIsosurface3D", Stat,
 )
 
 
-GeomIsosurface3D <- ggproto("GeomIsosurface3D", GeomPolygon3D,
-
-                            # Unless a color is mapped or set, opaque triangles are outlined
-                            # in their fill color, hiding the seams that antialiasing leaves
-                            # between them, and translucent ones aren't outlined, since
-                            # outlines overlapping their neighbors would show as a mesh. An
-                            # `after_scale(fill)` default can't do this, since ggplot2
-                            # applies it before fixed parameters like `fill = "red"`.
-                            use_defaults = function(self, data, params = list(),
-                                                    modifiers = aes(), default_aes = NULL,
-                                                    theme = NULL, ...) {
-                                  own_color <- "colour" %in% c(names(data), names(params),
-                                                               names(modifiers))
-                                  data <- ggproto_parent(GeomPolygon3D, self)$use_defaults(
-                                        data, params, modifiers, default_aes, theme, ...)
-                                  if (!own_color) {
-                                        opaque <- is.na(data$alpha) | data$alpha >= 1
-                                        data$colour <- ifelse(opaque, data$fill, NA)
-                                  }
-                                  data
-                            }
-)
+# Isosurfaces are outlined in their fill color, like other polygon layers (see
+# `GeomPolygon3D$outline_matches_fill`)
+GeomIsosurface3D <- ggproto("GeomIsosurface3D", GeomPolygon3D)
 
 
 #' Stop unless the marching cubes engine is installed

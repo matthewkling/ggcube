@@ -66,7 +66,7 @@ Uses \code{\link[=geom_polygon_3d]{geom_polygon_3d()}}. Requires \code{x}, \code
 vertices in order. To draw several polygons in one call, give \code{group}, with
 one value per vertex; vertices sharing a value form one polygon. Each
 polygon needs at least 3 vertices. Optional styling: \code{fill} (default
-\code{"grey60"}), \code{alpha} (default \code{0.5}), \code{colour}/\code{color} for the outline
+\code{"grey50"}), \code{alpha} (default \code{0.5}), \code{colour}/\code{color} for the outline
 (default \code{"grey30"}), \code{linewidth} (default \code{0.5}), \code{linetype}. Styling
 values apply per polygon, so they must have length 1 or one value per
 polygon, in the order the groups first appear.

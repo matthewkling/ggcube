@@ -36,7 +36,10 @@ voxels, FALSE is safe because polygons fill always be convex.}
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics.}
 
 \item{...}{Other arguments passed on to the layer function (typically GeomPolygon3D), such as
-aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc.}
+aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc. Unless \code{colour} is mapped or set,
+opaque polygons are outlined in their fill color, which hides the seams between
+adjacent polygons, and translucent polygons aren't outlined. Contours and ridgelines
+are the exception, with outlines of their own.}
 }
 \description{
 Parameters controlling backface culling, depth scaling, and convexity
