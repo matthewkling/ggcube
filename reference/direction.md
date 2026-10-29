@@ -66,9 +66,11 @@ direction(270, 63.43)
 # Light from directly overhead
 light(direction = direction(0, 90))
 #> Lighting specification:
-#>   Method: diffuse 
-#>   Direction: [ 0, 6.12323399573677e-17, 1 ] (directional lighting)
+#>   Ramp: smooth (neutral 45 deg) 
+#>   Tone: lightness 
+#>   Strength: shadow 0.8 , highlight 0.6 
+#>   Direction: [ 0, 6.123e-17, 1 ] (directional lighting)
 #>     azimuth: 180 deg, elevation: 90 deg
 #>   anchor: scene 
-#>   Shading: fill + color (contrast = 1 , mode = hsv )
+#>   Lights: fill + color 
 ```

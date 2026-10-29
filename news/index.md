@@ -175,6 +175,102 @@ Performance:
 - [`geom_point_3d()`](https://matthewkling.github.io/ggcube/reference/geom_point_3d.md)
   no longer fails when points lie outside limits set on the z scale.
 
+### Lighting
+
+Changes to default behaviors, which alter the rendering of most lit
+plots relative to the prior version:
+
+- Lighting now changes the lightness of colors in the perceptual OKLab
+  color space, keeping their hue and as much of their chroma as
+  possible. Colors already at full brightness, such as `"darkorange"`,
+  can now be highlighted, where they previously stayed flat on lit
+  faces, and dark saturated colors, such as `"darkgreen"`, are lightened
+  to lighter versions of themselves rather than to neon. Highlights no
+  longer wash out to white.
+- Faces at 45 degrees to the light now keep their base color exactly,
+  and faces turned further toward or away from it are highlighted or
+  shadowed. Previously faces perpendicular to the light kept their base
+  color, so nearly every upward-facing face was strongly highlighted.
+- Shadows are now stronger than highlights by default (`shadow = 0.8`,
+  `highlight = 0.6`), since fading to black looks more natural than
+  fading to white.
+- The default light now comes from 60 degrees above the horizon,
+  `direction(270, 60)`, rather than about 63 degrees (`c(-.5, 0, 1)`).
+  The tops and two visible sides of columns and voxels now get three
+  distinct shades.
+- [`geom_contour_3d()`](https://matthewkling.github.io/ggcube/reference/geom_contour_3d.md)
+  and
+  [`geom_ridgeline_3d()`](https://matthewkling.github.io/ggcube/reference/geom_ridgeline_3d.md)
+  are no longer lit by default. Their faces all point the same way, so
+  lighting could only shift all their colors away from those specified.
+  Lighting set explicitly, with `+ light()`, `coord_3d(light = )`, or a
+  layer’s `light` argument, still applies.
+- Polygon layers now outline opaque polygons in their fill color by
+  default, as
+  [`geom_isosurface_3d()`](https://matthewkling.github.io/ggcube/reference/geom_isosurface_3d.md)
+  already did, which hides the seams that antialiasing leaves between
+  adjacent polygons, and don’t outline translucent polygons. These
+  outlines are lit along with the fill, so `light(color = FALSE)`
+  affects only border colors that are mapped or set. Previously surfaces
+  had no outlines, and hulls, columns, voxels, and other polygons had
+  grey outlines. Setting or mapping `colour` works as before. Contours
+  and ridgelines keep their outlines.
+- The default fill of surfaces, planes, and polygon annotations is now
+  `"grey50"`, matching other polygon layers, rather than `"grey60"`.
+
+New options:
+
+- [`light()`](https://matthewkling.github.io/ggcube/reference/light.md)
+  gains `ramp`, which decides how brightness changes as a surface turns
+  away from the light, and `tone`, which decides what lighter and darker
+  look like for a given color. Both take names, or objects from the new
+  experimental functions
+  [`ramp_smooth()`](https://matthewkling.github.io/ggcube/reference/ramps.md),
+  [`ramp_hard()`](https://matthewkling.github.io/ggcube/reference/ramps.md),
+  and
+  [`ramp_steps()`](https://matthewkling.github.io/ggcube/reference/ramps.md)
+  (gradual change, a sharp edge between lit and unlit sides, or flat
+  bands), and
+  [`tone_lightness()`](https://matthewkling.github.io/ggcube/reference/tones.md),
+  [`tone_tint()`](https://matthewkling.github.io/ggcube/reference/tones.md),
+  and
+  [`tone_normals()`](https://matthewkling.github.io/ggcube/reference/tones.md)
+  (lighter and darker versions of a hue, mixing toward chosen highlight
+  and shadow colors for colored light, or coloring faces by their
+  direction).
+- [`light()`](https://matthewkling.github.io/ggcube/reference/light.md)
+  gains `shadow` and `highlight`, which set the strength of shadows and
+  highlights separately, from 0 to 1.
+- The `method`, `mode`, and `contrast` arguments of
+  [`light()`](https://matthewkling.github.io/ggcube/reference/light.md)
+  are deprecated. `light("direct")` is now `light("hard")`,
+  `light(method = "rgb")` is now `light(tone = "normals")`, and
+  `contrast` is replaced by `shadow` and `highlight`. `mode = "hsv"` and
+  `mode = "hsl"` still give the color math of ggcube 0.3 for now.
+  `light("none")` is unchanged.
+- [`guide_colorbar_3d()`](https://matthewkling.github.io/ggcube/reference/guide_3d.md)
+  and
+  [`guide_legend_3d()`](https://matthewkling.github.io/ggcube/reference/guide_3d.md)
+  are now used by default for `fill` and `colour` scales whose aesthetic
+  is mapped by a lit layer, so lit plots show shaded guides without
+  asking for them. Guides set with
+  [`guides()`](https://ggplot2.tidyverse.org/reference/guides.html), or
+  given to a scale’s `guide` argument as guide objects, are left alone;
+  use e.g. `guides(fill = "colourbar")` for an unshaded guide. Guides of
+  aesthetics mapped only by unlit layers, such as points, aren’t shaded.
+- [`guide_colorbar_3d()`](https://matthewkling.github.io/ggcube/reference/guide_3d.md)
+  and
+  [`guide_legend_3d()`](https://matthewkling.github.io/ggcube/reference/guide_3d.md)
+  now center their shading on the scale’s colors, so the middle of the
+  guide shows the colors as specified, and `shade_range` gives exactly
+  the range shown, from full shadow (`-1`) to full highlight (`1`).
+- Fixed
+  [`guide_legend_3d()`](https://matthewkling.github.io/ggcube/reference/guide_3d.md)
+  shading keys from the wrong colors: each key was shaded from the color
+  of the key in the mirrored position, and keys of legends with several
+  columns were also mismatched. Each key is now shaded from its own
+  color.
+
 ### Other changes
 
 - New
@@ -240,18 +336,35 @@ Performance:
   which also hid the warning from any layer whose stat failed, or that
   found nothing to draw.
 
-- `light("direct")` now lights back faces that face the light. Light
-  values were clamped to be non-negative before back faces had their
-  sign flipped, so every visible back face, such as the underside of a
-  surface seen from below, was drawn black regardless of where the light
-  came from. A nonzero `backface_offset` now shifts direct light values
-  before they are clamped, as it does for diffuse lighting.
+- Hard lighting, `light("hard")` (formerly `light("direct")`), now
+  lights back faces that face the light. Light values were clamped to be
+  non-negative before back faces had their sign flipped, so every
+  visible back face, such as the underside of a surface seen from below,
+  was drawn black regardless of where the light came from. A nonzero
+  `backface_offset` now shifts direct light values before they are
+  clamped, as it does for diffuse lighting.
 
 - [`geom_contour_3d()`](https://matthewkling.github.io/ggcube/reference/geom_contour_3d.md)
   and
   [`geom_ridgeline_3d()`](https://matthewkling.github.io/ggcube/reference/geom_ridgeline_3d.md)
   now work with facets. They processed every panel’s data together, so
   faceted plots mixed panels’ contours and could leave panels empty.
+
+- Lighting now keeps the alpha of colors given with an alpha channel,
+  such as `"#FF000080"`. It previously made them opaque.
+
+- With `light(method = "rgb")`, the points and lines of a lit layer,
+  such as the residuals of
+  [`geom_smooth_3d()`](https://matthewkling.github.io/ggcube/reference/geom_smooth_3d.md),
+  are now drawn. Their colors were previously set to `NA`, so they
+  disappeared.
+
+- [`geom_ridgeline_3d()`](https://matthewkling.github.io/ggcube/reference/geom_ridgeline_3d.md)
+  with `direction = "x"`, the default, now lights each ridge by the side
+  that faces the viewer. Ridges were wound to face +x but lit as if they
+  faced -x, so the side facing the light was shaded as a back face: with
+  the default view and light, ridgelines were drawn darker than their
+  fill.
 
 - ggcube now requires systemfonts 1.2.0 or later. Earlier versions lack
   the glyph outline functions ggcube uses, so loading ggcube against

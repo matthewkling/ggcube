@@ -170,7 +170,7 @@ p <- ggplot() +
     fun = function(x, y) sin(x) * cos(y),
     xlim = c(-pi, pi), ylim = c(-pi, pi),
     fill = "steelblue", color = "steelblue", linewidth = .5) +
-  coord_3d(light = light(mode = "hsl", anchor = "camera",
+  coord_3d(light = light(anchor = "camera",
                          direction = c(1, 1, 0))) +
   theme_void()
 
@@ -197,6 +197,6 @@ anim <- animate_3d(p, yaw = c(0, 360), nframes = 12)
 #> Rendering 12 frames...
 #> Assembling animation...
 anim_save_3d(anim, file.path(tempdir(), "rotating_surface.gif"))
-#> Animation saved to /tmp/RtmpkKRnTF/rotating_surface.gif
+#> Animation saved to /tmp/RtmpIROVRn/rotating_surface.gif
 # }
 ```

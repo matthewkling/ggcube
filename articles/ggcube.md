@@ -107,11 +107,10 @@ shows cross-sectional slices:
 ``` r
 
 ggplot(mountain, aes(x, y, z)) +
-      geom_surface_3d(aes(fill = z, color = z)) +
-      scale_fill_viridis_c() + scale_color_viridis_c() +
+      geom_surface_3d(aes(fill = z)) +
+      scale_fill_viridis_c() +
       coord_3d(ratio = c(1.5, 2, 1), expand = FALSE, panels = "zmin") +
       light(direction = c(1, 0, 0)) +
-      guides(fill = guide_colorbar_3d()) +
       theme_light()
 ```
 
@@ -151,7 +150,7 @@ gyroid <- function(x, y, z) sin(x) * cos(y) + sin(y) * cos(z) + sin(z) * cos(x)
 ggplot() +
       geom_isofunction_3d(fun = gyroid, cap = TRUE, fill = "#993333", n = 40,
                           xlim = c(0, 4 * pi), ylim = c(0, 4 * pi), zlim = c(0, 4 * pi)) +
-      coord_3d() + light(mode = "hsl") + theme_void()
+      coord_3d() + theme_void()
 ```
 
 ![](ggcube_files/figure-html/volume-1.png)
@@ -273,19 +272,20 @@ function, which can be added to a plot or passed to
 
 ``` r
 
-p <- ggplot(sphere_points, aes(x, y, z)) +
-      geom_hull_3d(fill = "#9e2602", color = "#5e1600") +
-      coord_3d()
+p <- ggplot() +
+      geom_isofunction_3d(fun = function(x, y, z) x^2 + y^2 + z^2 - 1,
+                          xlim = c(-1.1, 1.1), ylim = c(-1.1, 1.1), zlim = c(-1.1, 1.1),
+                          n = 40, fill = "#9e2602") +
+      coord_3d(scales = "fixed")
 
-p + light(method = "direct", mode = "hsl", direction = c(0, 0, 1))
+p + light("hard", direction = c(0, 0, 1))
 ```
 
 ![](ggcube_files/figure-html/lighting-1.png)
 
 Use `light("none")` to disable lighting entirely, or `light = NULL` in a
 layer to inherit the coord-level setting. For a comprehensive guide to
-lighting methods, color modes, light direction, and backface handling,
-see the
+lighting ramps, tones, light direction, and backface handling, see the
 [lighting](https://matthewkling.github.io/ggcube/articles/lighting.html)
 article.
 
@@ -313,17 +313,16 @@ ggplot(mtcars, aes(mpg, wt, z = qsec)) +
 ### Shaded guides
 
 When lighting is active, standard color guides don’t reflect the shading
-visible in the plot.
+visible in the plot. So for lit layers, ggcube uses
 [`guide_colorbar_3d()`](https://matthewkling.github.io/ggcube/reference/guide_3d.md)
 and
-[`guide_legend_3d()`](https://matthewkling.github.io/ggcube/reference/guide_3d.md)
-create guides that show the range of shaded colors:
+[`guide_legend_3d()`](https://matthewkling.github.io/ggcube/reference/guide_3d.md),
+which show the range of shaded colors, in place of the standard guides:
 
 ``` r
 
 ggplot(mountain, aes(x, y, z, fill = z)) +
-      stat_surface_3d(light = light(mode = "hsl", direction = c(1, 0, 0))) +
-      guides(fill = guide_colorbar_3d()) +
+      stat_surface_3d(light = light(direction = c(1, 0, 0))) +
       scale_fill_gradientn(colors = c("tomato", "dodgerblue")) +
       coord_3d()
 ```
@@ -438,7 +437,7 @@ functions take a pre-made plot and a range of rotation angles:
 ``` r
 
 p <- ggplot(mountain, aes(x, y, z)) +
-      geom_contour_3d(fill = "black", color = "white", linewidth = .5, light = "none") +
+      geom_contour_3d(fill = "black", color = "white", linewidth = .5) +
       coord_3d(ratio = c(1.5, 2, 1), zoom = 1.25) +
       theme_void()
 

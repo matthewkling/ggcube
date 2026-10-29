@@ -171,10 +171,10 @@ for animations.
 ## Examples
 
 ``` r
-p <- ggplot(mountain, aes(x, y, z, fill = z, color = z)) +
+p <- ggplot(mountain, aes(x, y, z, fill = z)) +
   geom_surface_3d(linewidth = .25) +
   coord_3d(ratio = c(1.5, 2, 1)) +
-  scale_fill_viridis_c() + scale_color_viridis_c() +
+  scale_fill_viridis_c() +
   theme_void()
 
 # \donttest{
@@ -191,7 +191,7 @@ p + facet_wrap_views(~yaw, yaw = c(-90, 90), n = 3, roll = -20)
 
 
 # Compare light angles from a fixed view
-p + light("direct") + facet_wrap_views(~light_azimuth)
+p + light("hard") + facet_wrap_views(~light_azimuth)
 
 # }
 ```

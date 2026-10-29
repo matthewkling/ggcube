@@ -88,7 +88,12 @@ stat_isofunction_3d(
 
   Other arguments passed on to the layer function (typically
   GeomPolygon3D), such as aesthetics like `colour`, `fill`, `linewidth`,
-  etc.
+  etc. Unless `colour` is mapped or set, opaque polygons are outlined in
+  their fill color, which hides the seams between adjacent polygons, and
+  translucent polygons aren't outlined. These outlines are lit along
+  with the fill, whatever the `fill` and `color` arguments of
+  [`light()`](https://matthewkling.github.io/ggcube/reference/light.md).
+  Contours and ridgelines are the exception, with outlines of their own.
 
 - fun:
 
@@ -247,7 +252,7 @@ gyroid <- function(x, y, z) sin(x) * cos(y) + sin(y) * cos(z) + sin(z) * cos(x)
 ggplot() +
   geom_isofunction_3d(fun = gyroid, cap = TRUE, fill = "#993333", n = 40,
                       xlim = c(0, 4 * pi), ylim = c(0, 4 * pi), zlim = c(0, 4 * pi)) +
-  coord_3d() + light(mode = "hsl") + theme_void()
+  coord_3d() + theme_void()
 
 # }
 ```

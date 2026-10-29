@@ -92,7 +92,12 @@ stat_density_3d(
 
   Other arguments passed on to the layer function (typically
   GeomPolygon3D), such as aesthetics like `colour`, `fill`, `linewidth`,
-  etc.
+  etc. Unless `colour` is mapped or set, opaque polygons are outlined in
+  their fill color, which hides the seams between adjacent polygons, and
+  translucent polygons aren't outlined. These outlines are lit along
+  with the fill, whatever the `fill` and `color` arguments of
+  [`light()`](https://matthewkling.github.io/ggcube/reference/light.md).
+  Contours and ridgelines are the exception, with outlines of their own.
 
 - annotate:
 
@@ -278,7 +283,7 @@ p + geom_density_3d() + guides(fill = guide_colorbar_3d())
 
 # Specify alternative grid geometry and light model
 p + geom_density_3d(grid = "equilateral", n = 30, direction = "y",
-                    light = light("direct"),
+                    light = light("hard"),
                     color = "white", linewidth = .1) +
   guides(fill = guide_colorbar_3d())
 

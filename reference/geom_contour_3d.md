@@ -179,11 +179,11 @@ And understands these additional aesthetics:
 - fill:
 
   Band fill color. For automatic coloring by elevation, use
-  `aes(fill = after_stat(z))`. Default is "grey60".
+  `aes(fill = after_stat(z))`. Default is "black".
 
 - colour:
 
-  Band border color (default: "grey30")
+  Band border color (default: "white")
 
 - alpha:
 
@@ -196,6 +196,13 @@ And understands these additional aesthetics:
 - linetype:
 
   Border line type
+
+## Lighting
+
+Unlike most 3D layers, contour bands aren't lit by default. All their
+faces point the same way, so lighting could only shift all their colors
+at once. Lighting set explicitly, with the layer's `light` argument or
+with `+ light()` or `coord_3d(light = )`, still applies.
 
 ## Computed variables
 
@@ -224,21 +231,21 @@ for the 2D equivalent.
 # Basic usage with volcano data
 ggplot(mountain, aes(x, y, z)) +
       geom_contour_3d(color = "white", fill = "black") +
-      coord_3d(light = "none", ratio = c(1.5, 2, 1))
+      coord_3d(ratio = c(1.5, 2, 1))
 
 
 # Map fill to elevation and customize number of levels
 ggplot(mountain, aes(x, y, z, fill = after_stat(z))) +
       geom_contour_3d(bins = 12, color = "white") +
       scale_fill_viridis_c() +
-      coord_3d(light = "none", ratio = c(1.5, 2, 1))
+      coord_3d(ratio = c(1.5, 2, 1))
 
 
 # Specify exact breaks
 ggplot(mountain, aes(x, y, z, fill = after_stat(z))) +
   geom_contour_3d(breaks = seq(0, 200, by = 5)) +
   scale_fill_viridis_c() +
-  coord_3d(light = "none")
+  coord_3d()
 
 
 # With stat_density_3d
@@ -256,6 +263,6 @@ ggplot() +
     bins = 50, color = "black"
   ) +
   scale_fill_viridis_c(option = "B") +
-  coord_3d(light = "none")
+  coord_3d()
 
 ```

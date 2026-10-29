@@ -203,7 +203,7 @@ d <- dplyr::mutate(tidyr::expand_grid(x = -10:10, y = -10:10),
                    z = sqrt(x^2 + y^2) / 1.5,
                    z = cos(z) - z)
 p <- ggplot(d, aes(x, y, z)) +
-      coord_3d(light = light(mode = "hsl", direction = c(1, 0, 0)))
+      coord_3d(light = light(direction = c(1, 0, 0)))
 
 # surface with 3d lighting
 p + geom_surface_3d(fill = "steelblue", color = "steelblue", linewidth = .2)
@@ -240,25 +240,22 @@ ggplot(rbind(d, d2), aes(x, y, z, group = g, fill = g)) +
 
 
 # terrain surface with topographic hillshade and elevational fill
-ggplot(mountain, aes(x, y, z, fill = z, color = z)) +
+ggplot(mountain, aes(x, y, z, fill = z)) +
       geom_surface_3d(light = light(direction = c(1, 0, .5),
-                                    mode = "hsv", contrast = 1.5),
+                                    shadow = 1, highlight = 0.9),
                       linewidth = .2) +
       coord_3d(ratio = c(1, 1.5, .75)) +
       theme_light() +
-      scale_fill_gradientn(colors = c("darkgreen", "rosybrown4", "gray60")) +
-      scale_color_gradientn(colors = c("darkgreen", "rosybrown4", "gray60")) +
-      guides(fill = guide_colorbar_3d())
+      scale_fill_gradientn(colors = c("darkgreen", "rosybrown4", "gray60"))
 
 
 # stack of flat surfaces (e.g. a time series of raster maps)
 d <- expand.grid(lon = 1:20, lat = 1:20, time = 1:6)
 d$value <- sin(-d$lon * d$lat / 10) + d$time / 2
-ggplot(d, aes(lon, lat, time, group = time,
-              fill = value, color = value)) +
+ggplot(d, aes(lon, lat, time, group = time, fill = value)) +
    geom_surface_3d(light = "none") +
    coord_3d() +
-   scale_color_viridis_c() + scale_fill_viridis_c()
+   scale_fill_viridis_c()
 
 
 # stat_surface_3d with alternative geoms ----------------------------

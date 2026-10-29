@@ -71,15 +71,13 @@ point data:
 
 ``` r
 
-p <- ggplot(mountain, aes(x, y, z, fill = z, color = z)) +
+p <- ggplot(mountain, aes(x, y, z, fill = z)) +
   coord_3d(ratio = c(1, 1.5, .75)) +
   scale_fill_viridis_c() +
-  scale_color_viridis_c() +
   theme_light()
 
 p + geom_surface_3d(linewidth = .2) +
-  light(direction = c(1, 0, .5), mode = "hsv", contrast = 1.5) +
-  guides(fill = guide_colorbar_3d())
+  light(direction = c(1, 0, .5), shadow = 1, highlight = 0.9)
 ```
 
 ![](surfaces_files/figure-html/geom_surface-1.png)
@@ -93,7 +91,7 @@ the contour levels:
 
 ``` r
 
-p + geom_contour_3d(bins = 12, color = "white", light = "none")
+p + geom_contour_3d(bins = 12, color = "white")
 ```
 
 ![](surfaces_files/figure-html/geom_contour-1.png)
@@ -107,8 +105,7 @@ slices a surface into cross-sections, producing a ridgeline view. The
 ``` r
 
 p + stat_surface_3d(geom = "ridgeline_3d", direction = "y",
-                    fill = "black", color = "white",
-                    light = "none", linewidth = .1)
+                    fill = "black", color = "white", linewidth = .1)
 ```
 
 ![](surfaces_files/figure-html/geom_ridgeline-1.png)
@@ -203,7 +200,6 @@ It has options for modifying bandwidth, resolution, etc.:
 
 ggplot(faithful, aes(eruptions, waiting)) +
   geom_density_3d(min_ndensity = .01) +
-  guides(fill = guide_colorbar_3d()) +
   coord_3d() +
   scale_fill_viridis_c()
 ```
@@ -231,7 +227,7 @@ d <- dplyr::mutate(tidyr::expand_grid(x = -10:10, y = -10:10),
                    z = cos(z) - z)
 p <- ggplot(d, aes(x, y, z)) +
   coord_3d() +
-  light(mode = "hsl", direction = c(1, 0, 0))
+  light(direction = c(1, 0, 0))
 
 (p + geom_surface_3d(fill = "white", color = "darkblue",
                       linewidth = .2) +
@@ -261,8 +257,7 @@ direction of steepest ascent (`aspect`):
 ``` r
 
 p + geom_surface_3d(aes(fill = after_stat(slope)), grid = "right2") +
-  scale_fill_viridis_c() +
-  guides(fill = guide_colorbar_3d())
+  scale_fill_viridis_c()
 ```
 
 ![](surfaces_files/figure-html/computed_vars-1.png)
@@ -280,12 +275,12 @@ article for details.
 
 p <- ggplot(mountain, aes(x, y, z)) +
   coord_3d(ratio = c(1, 1.5, .75)) +
-  scale_fill_viridis_c() + scale_color_viridis_c() +
+  scale_fill_viridis_c() +
   theme(legend.position = "none")
 
-(p + geom_surface_3d(aes(fill = z, color = z), light = "none") +
+(p + geom_surface_3d(aes(fill = z), light = "none") +
     ggtitle('light = "none"')) +
-  (p + geom_surface_3d(aes(fill = z, color = z),
+  (p + geom_surface_3d(aes(fill = z),
                        light = light(direction = c(1, 0, 0))) +
       ggtitle("diffuse (default)")) +
   plot_layout(ncol = 2)

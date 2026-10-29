@@ -85,6 +85,14 @@
 
 - [`light()`](https://matthewkling.github.io/ggcube/reference/light.md)
   : Lighting specification for 3D surface rendering
+- [`ramp_smooth()`](https://matthewkling.github.io/ggcube/reference/ramps.md)
+  [`ramp_hard()`](https://matthewkling.github.io/ggcube/reference/ramps.md)
+  [`ramp_steps()`](https://matthewkling.github.io/ggcube/reference/ramps.md)
+  **\[experimental\]** : Lighting ramps
+- [`tone_lightness()`](https://matthewkling.github.io/ggcube/reference/tones.md)
+  [`tone_tint()`](https://matthewkling.github.io/ggcube/reference/tones.md)
+  [`tone_normals()`](https://matthewkling.github.io/ggcube/reference/tones.md)
+  **\[experimental\]** : Lighting tones
 - [`annotate_3d()`](https://matthewkling.github.io/ggcube/reference/annotate_3d.md)
   : Create a 3D annotation layer
 - [`guide_colorbar_3d()`](https://matthewkling.github.io/ggcube/reference/guide_3d.md)

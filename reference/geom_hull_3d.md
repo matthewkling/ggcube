@@ -74,7 +74,12 @@ stat_hull_3d(
 
   Other arguments passed on to the layer function (typically
   GeomPolygon3D), such as aesthetics like `colour`, `fill`, `linewidth`,
-  etc.
+  etc. Unless `colour` is mapped or set, opaque polygons are outlined in
+  their fill color, which hides the seams between adjacent polygons, and
+  translucent polygons aren't outlined. These outlines are lit along
+  with the fill, whatever the `fill` and `color` arguments of
+  [`light()`](https://matthewkling.github.io/ggcube/reference/light.md).
+  Contours and ridgelines are the exception, with outlines of their own.
 
 - annotate:
 
@@ -170,7 +175,9 @@ A `Layer` object that can be added to a ggplot.
 Hulls respect ggplot2 grouping aesthetics. To create separate hulls for
 different subsets of your data, use `aes(group = category_variable)` or
 similar grouping aesthetics. Each group will get its own independent
-hull.
+hull. Groups that can't enclose a volume, having fewer than four points
+or all their points in one plane, are dropped with a warning; this can
+happen when limits on the plot's scales remove most of a group's points.
 
 ## Alpha scale sensitivity
 

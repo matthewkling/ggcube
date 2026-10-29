@@ -108,7 +108,7 @@ set.seed(1)
 d <- data.frame(x = round(rnorm(10)), y = round(rnorm(10)), z = round(rnorm(10)))
 ggplot(d, aes(x, y, z)) +
   stat_voxel_3d(color = "black", fill = "steelblue",
-    light = light(direction = c(1, 1, 0), mode = "hsv"),
+    light = light(direction = c(1, 1, 0)),
     position = position_on_face(c("3D", "zmin", "xmax", "ymax"))) +
   coord_3d()
 

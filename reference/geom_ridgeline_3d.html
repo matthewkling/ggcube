@@ -184,7 +184,7 @@ which takes precedence.</p></dd>
 <dd><p>Point coordinates (required)</p></dd>
 
 <dt>fill</dt>
-<dd><p>Polygon fill color (default: "grey70")</p></dd>
+<dd><p>Polygon fill color (default: "white")</p></dd>
 
 <dt>colour</dt>
 <dd><p>Polygon border color (default: "black")</p></dd>
@@ -200,6 +200,15 @@ which takes precedence.</p></dd>
 
 
 </dl></div>
+    <div class="section level2">
+    <h2 id="lighting">Lighting<a class="anchor" aria-label="anchor" href="#lighting"></a></h2>
+
+
+<p>Unlike most 3D layers, ridgelines aren't lit by default. All their faces point
+the same way, so lighting could only shift all their colors at once. Lighting
+set explicitly, with the layer's <code>light</code> argument or with <code>+ light()</code> or
+<code>coord_3d(light = )</code>, still applies.</p>
+    </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="stat_surface_3d.html">geom_surface_3d()</a></code>, <code><a href="stat_function_3d.html">stat_function_3d()</a></code>, <code><a href="coord_3d.html">coord_3d()</a></code></p></div>

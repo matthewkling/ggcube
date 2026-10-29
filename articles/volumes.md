@@ -66,7 +66,7 @@ orbital$psi <- with(orbital, (3 * z^2 - (x^2 + y^2 + z^2)) *
 ggplot(orbital, aes(x, y, z, value = psi^2)) +
       geom_isosurface_3d(levels = 0.02 * max(orbital$psi^2), fill = "darkorchid") +
       coord_3d(scales = "fixed", roll = -70) +
-      light(mode = "hsl", direction = c(-1, 1, 1))
+      light(direction = c(-1, 1, 1))
 ```
 
 ![](volumes_files/figure-html/isosurface-1.png)
@@ -94,7 +94,7 @@ ggplot() +
                           xlim = c(-3, 3), ylim = c(-3, 3), zlim = c(-1, 1),
                           fill = "goldenrod") +
       coord_3d(scales = "fixed") +
-      light(mode = "hsl", direction = c(-1, 1, .5))
+      light(direction = c(-1, 1, .5))
 ```
 
 ![](volumes_files/figure-html/isofunction-1.png)
@@ -122,7 +122,7 @@ where they concentrate:
 p <- ggplot(iris, aes(Sepal.Length, Sepal.Width, Petal.Length,
                       fill = Species, color = Species)) +
       coord_3d() +
-      light(mode = "hsl", direction = c(1, 1, 1)) +
+      light(direction = c(1, 1, 1)) +
       theme(legend.position = "none")
 
 (p + geom_hull_3d() + ggtitle("geom_hull_3d()")) +
@@ -160,7 +160,7 @@ ggplot(orbital, aes(x, y, z, value = psi)) +
       geom_isosurface_3d(levels = level, fill = "tomato") +
       geom_isosurface_3d(levels = -level, inside = "below", fill = "steelblue") +
       coord_3d(scales = "fixed") +
-      light(mode = "hsl", direction = c(-1, 1, .5))
+      light(direction = c(-1, 1, .5))
 ```
 
 ![](volumes_files/figure-html/inside-1.png)
@@ -235,7 +235,7 @@ the cube:
 ``` r
 
 gyroid <- function(x, y, z) sin(x) * cos(y) + sin(y) * cos(z) + sin(z) * cos(x)
-p <- ggplot() + coord_3d() + light(mode = "hsl") + theme_void() +
+p <- ggplot() + coord_3d() + theme_void() +
       scale_fill_manual(values = c("goldenrod", "slateblue"))
 cut_torus <- function(cap) {
       geom_isofunction_3d(aes(fill = after_stat(cap)), fun = gyroid, cap = cap, n = 40,
@@ -260,7 +260,6 @@ ggplot(orbital, aes(x, y, z, value = psi^2, fill = after_stat(level))) +
       scale_fill_viridis_c(trans = "log10") +
       coord_3d(scales = "fixed", yaw = -130) +
       light(direction = c(0, -1, 1)) +
-      guides(fill = guide_colorbar_3d()) +
       xlim(2, NA)
 ```
 
@@ -290,7 +289,7 @@ fine ones smooth but slow ones:
 
 p <- ggplot() +
       coord_3d(scales = "fixed", panels = "none") +
-      light(mode = "hsl", direction = c(-1, 1, .5)) +
+      light(direction = c(-1, 1, .5)) +
       theme_void()
 resolution <- function(n) {
       p + geom_isofunction_3d(fun = torus, n = n, fill = "goldenrod",
@@ -312,8 +311,4 @@ anyway, saving some drawing time.
 Isosurfaces are lit like other ggcube surfaces; see the
 [lighting](https://matthewkling.github.io/ggcube/articles/lighting.md)
 article. Since lighting is computed per triangle, coarse surfaces show
-their facets, especially under strong or direct lighting. The default
-lighting mode darkens and brightens colors by changing their value, so
-colors that are already at full value, like `"darkorange"`, can’t get
-any brighter on lit faces; `light(mode = "hsl")` brightens toward white
-instead.
+their facets, especially under strong or hard lighting.

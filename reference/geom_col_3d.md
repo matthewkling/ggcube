@@ -74,7 +74,12 @@ stat_col_3d(
 
   Other arguments passed on to the layer function (typically
   GeomPolygon3D), such as aesthetics like `colour`, `fill`, `linewidth`,
-  etc.
+  etc. Unless `colour` is mapped or set, opaque polygons are outlined in
+  their fill color, which hides the seams between adjacent polygons, and
+  translucent polygons aren't outlined. These outlines are lit along
+  with the fill, whatever the `fill` and `color` arguments of
+  [`light()`](https://matthewkling.github.io/ggcube/reference/light.md).
+  Contours and ridgelines are the exception, with outlines of their own.
 
 - annotate:
 

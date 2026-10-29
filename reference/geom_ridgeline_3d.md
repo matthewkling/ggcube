@@ -142,7 +142,7 @@ A `Layer` object that can be added to a ggplot.
 
 - fill:
 
-  Polygon fill color (default: "grey70")
+  Polygon fill color (default: "white")
 
 - colour:
 
@@ -159,6 +159,13 @@ A `Layer` object that can be added to a ggplot.
 - linetype:
 
   Border type
+
+## Lighting
+
+Unlike most 3D layers, ridgelines aren't lit by default. All their faces
+point the same way, so lighting could only shift all their colors at
+once. Lighting set explicitly, with the layer's `light` argument or with
+`+ light()` or `coord_3d(light = )`, still applies.
 
 ## See also
 

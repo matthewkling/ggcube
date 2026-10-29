@@ -16,20 +16,37 @@ shadows, not **cast** shadows. Lighting can be applied to any
 polygon-based 3D layer — surfaces, hulls, bars, voxels, and polygon text
 — but is useful mainly for layers where polygon orientation varies.
 
-This vignette covers how to control [what parts](#lighting-targets) of
-your plot lighting is applied to, how lighting model parameters change
-the [visual qualities](#light-qualities) of the lighting, how to change
-the direction of the [light source](#light-sources), how to control how
-the [underside](#backface-lighting) of a polygon is lit, and how to add
-[lighting-aware guides](#id_3d-guides) to your plot.
+Lighting colors each face in three steps. First, the angle between the
+face and the direction toward the light is measured. Then a *ramp* turns
+that angle into how far the face moves toward shadow or highlight: by
+default, faces at 45 degrees to the light keep exactly the color you
+gave them, faces turned further toward the light are highlighted, and
+faces turned further away are shadowed. Finally, a *tone* decides what
+lighter and darker look like for a given color: by default, colors
+become lighter and darker versions of the same hue.
 
-We’ll use a common base plot throughout. Here it is with default
+This vignette covers how to control [what parts](#lighting-targets) of
+your plot lighting is applied to, how to change the [visual
+qualities](#light-qualities) of the lighting, how to change the
+direction of the [light source](#light-sources), how to control how the
+[underside](#backface-lighting) of a polygon is lit, and how lighting is
+shown in [guides](#id_3d-guides).
+
+We’ll use a common base plot throughout: a sphere, drawn as an
+isosurface of a function of x, y, and z. Here it is with default
 lighting:
 
 ``` r
 
-p <- ggplot(sphere_points, aes(x, y, z)) +
-  geom_hull_3d(fill = "#9e2602", color = "#5e1600") +
+# a unit sphere, centered at x = x0
+sphere <- function(x0 = 0, n = 40, ...) {
+  geom_isofunction_3d(fun = function(x, y, z) (x - x0)^2 + y^2 + z^2 - 1,
+                      xlim = x0 + c(-1.1, 1.1), ylim = c(-1.1, 1.1), zlim = c(-1.1, 1.1),
+                      n = n, ...)
+}
+
+p <- ggplot() +
+  sphere(fill = "#9e2602") +
   coord_3d(scales = "fixed")
 p
 ```
@@ -56,99 +73,146 @@ settings to disable lighting for this layer:
 
 ``` r
 
-p + geom_hull_3d(aes(x = x + 2.5), fill = "#9e2602", color = "#5e1600",
-                 light = "none")
+p + sphere(x0 = 2.5, fill = "#9e2602", light = "none")
 ```
 
 ![](lighting_files/figure-html/where-1.png)
 
 The `fill` and `color` parameters control which aesthetics get modified
-by lighting. By default both are `TRUE`:
+by lighting. By default both are `TRUE`. Here a coarser sphere is
+outlined in white, which is lit along with the fill by default, and
+stays white with `color = FALSE`:
 
 ``` r
 
-(p + ggtitle("fill + color (default)")) +
-  (p + light(fill = TRUE, color = FALSE) + ggtitle("fill only"))
+pw <- ggplot() +
+  sphere(n = 12, fill = "#9e2602", color = "white", linewidth = .3) +
+  coord_3d(scales = "fixed")
+(pw + ggtitle("fill + color (default)")) +
+  (pw + light(fill = TRUE, color = FALSE) + ggtitle("fill only"))
 ```
 
 ![](lighting_files/figure-html/targets-1.png)
+
+When no color is given, polygon layers outline polygons in their fill
+color, which hides the seams between them. These outlines are always lit
+along with the fill.
 
 Lighting works with both solid and aesthetically-mapped colors:
 
 ``` r
 
-ggplot(sphere_points, aes(x, y, z)) +
-  geom_hull_3d(aes(fill = x, color = x)) +
+ggplot() +
+  sphere(mapping = aes(fill = after_stat(x))) +
   scale_fill_viridis_c() +
-  scale_color_viridis_c() +
-  guides(fill = guide_colorbar_3d()) +
-  coord_3d() +
-  light("direct")
+  coord_3d(scales = "fixed")
 ```
 
 ![](lighting_files/figure-html/mapped_colors-1.png)
 
+Contours
+([`geom_contour_3d()`](https://matthewkling.github.io/ggcube/reference/geom_contour_3d.md))
+and ridgelines
+([`geom_ridgeline_3d()`](https://matthewkling.github.io/ggcube/reference/geom_ridgeline_3d.md))
+are the exception to default lighting: their faces all point the same
+way, so lighting could only shift all their colors away from those you
+gave them. They are lit only when you set lighting explicitly, with
+`+ light()` or their `light` argument.
+
 ## Light qualities
 
-### Lighting methods
+### Shadow and highlight strength
 
-The `method` parameter controls the lighting model:
+`shadow` and `highlight` set how strong shadows and highlights are, from
+0 (none) to 1 (fully black or white, with the default tone). By default,
+shadows are stronger than highlights (`shadow = 0.8`,
+`highlight = 0.6`), since fading to black looks more natural than fading
+to white:
 
-- **`"diffuse"`** (default): Soft, atmospheric lighting. Only surfaces
-  pointing directly away from the light source are fully dark.
-- **`"direct"`**: Hard lighting. All surfaces angled beyond 90 degrees
-  from the light are fully dark.
-- **`"rgb"`**: Maps surface orientation to RGB color space, replacing
-  the base colors entirely.
+``` r
+
+(p + light(shadow = 0.4, highlight = 0.3) + ggtitle("subtle")) +
+  (p + ggtitle("default")) +
+  (p + light(shadow = 1, highlight = 0.9) + ggtitle("strong")) +
+  plot_layout(ncol = 3)
+```
+
+![](lighting_files/figure-html/strength-1.png)
+
+### Ramps
+
+Lighting ramps control how brightness changes as a surface turns away
+from the light:
+
+- **`"smooth"`** (default): Brightness changes gradually. Only surfaces
+  pointing directly away from the light source are fully shadowed.
+- **`"hard"`**: All surfaces angled 90 degrees or more from the light
+  are fully shadowed, giving a sharp edge between lit and unlit sides.
+- **`"steps"`**: Brightness is discretized into flat bands, for a
+  cartoon-like look.
 - **`"none"`**: Disables lighting across the plot, except for layers
   that declare it themselves.
 
 ``` r
 
-(p + light(method = "diffuse") + ggtitle('"diffuse" (default)')) +
-  (p + light(method = "direct") + ggtitle('"direct"')) +
-  (p + light(method = "rgb") + ggtitle('"rgb"')) +
+(p + ggtitle('"smooth" (default)')) +
+  (p + light("hard") + ggtitle('"hard"')) +
+  (p + light("steps") + ggtitle('"steps"')) +
   plot_layout(ncol = 3)
 ```
 
-![](lighting_files/figure-html/methods-1.png)
+![](lighting_files/figure-html/ramps-1.png)
 
-### Color modes
-
-The `mode` parameter controls how lighting modifies colors. This applies
-to the `"diffuse"` and `"direct"` methods (not `"rgb"`). There are two
-color modes:
-
-- **`"hsv"`** (default): Modifies the value component of HSV color.
-  Highlights preserve hue; shadows fade to black.
-- **`"hsl"`**: Modifies the lightness component of HSL color. Highlights
-  fade to white; shadows fade to black.
-
-The two modes give identical results for grayscale base colors.
+For more control, you can give a ramp object instead of a name:
+[`ramp_smooth()`](https://matthewkling.github.io/ggcube/reference/ramps.md),
+[`ramp_hard()`](https://matthewkling.github.io/ggcube/reference/ramps.md),
+and
+[`ramp_steps()`](https://matthewkling.github.io/ggcube/reference/ramps.md)
+take a `neutral` angle, at which faces keep their base color, and
+[`ramp_steps()`](https://matthewkling.github.io/ggcube/reference/ramps.md)
+takes the number of bands, `n`. A smaller `neutral` angle puts the base
+color on faces closer to facing the light, which darkens the plot
+overall:
 
 ``` r
 
-(p + light(mode = "hsv") + ggtitle('"hsv" (default)')) +
-  (p + light(mode = "hsl") + ggtitle('"hsl"'))
-```
-
-![](lighting_files/figure-html/modes-1.png)
-
-### Contrast strength
-
-The `contrast` parameter scales the intensity of lighting effects.
-Values less than 1 give subtler effects; values greater than 1 give more
-dramatic ones:
-
-``` r
-
-(p + light(mode = "hsl", contrast = 0.5) + ggtitle("contrast = 0.5")) +
-  (p + light(mode = "hsl", contrast = 1) + ggtitle("contrast = 1 (default)")) +
-  (p + light(mode = "hsl", contrast = 1.5) + ggtitle("contrast = 1.5")) +
+(p + light(ramp_smooth(neutral = 30)) + ggtitle("ramp_smooth(neutral = 30)")) +
+  (p + light(ramp_smooth(neutral = 60)) + ggtitle("ramp_smooth(neutral = 60)")) +
+  (p + light(ramp_steps(n = 3)) + ggtitle("ramp_steps(n = 3)")) +
   plot_layout(ncol = 3)
 ```
 
-![](lighting_files/figure-html/contrast-1.png)
+![](lighting_files/figure-html/ramp-options-1.png)
+
+### Tones
+
+A lighting “tone” decides what lighter and darker look like for a given
+base color:
+
+- **`"lightness"`** (default): Colors become lighter and darker versions
+  of the same hue, reaching white at full highlight and black at full
+  shadow. Lightness is changed in the perceptual OKLab color space,
+  which preserves hue as colors lighten and darken.
+- **`"tint"`**: Colors mix toward a chosen highlight color and shadow
+  color, for colored light.
+- **`"normals"`**: Faces are colored by the direction they face,
+  replacing the base colors entirely.
+
+Give
+[`tone_tint()`](https://matthewkling.github.io/ggcube/reference/tones.md)
+its colors to choose the color of the light. Warm highlights with cool
+shadows are a classic choice:
+
+``` r
+
+(p + ggtitle('"lightness" (default)')) +
+  (p + light(tone = tone_tint(shadow = "darkblue", highlight = "gold")) +
+      ggtitle("tone_tint()")) +
+  (p + light(tone = "normals") + ggtitle('"normals"')) +
+  plot_layout(ncol = 3)
+```
+
+![](lighting_files/figure-html/tones-1.png)
 
 ## Light sources
 
@@ -168,8 +232,8 @@ direction is relative to the data axes or the camera:
 
 ``` r
 
-(p + light("direct", direction = c(0, -1, 0)) + ggtitle('anchor = "scene"')) +
-  (p + light("direct", direction = c(0, -1, 0), anchor = "camera") +
+(p + light("hard", direction = c(0, -1, 0)) + ggtitle('anchor = "scene"')) +
+  (p + light("hard", direction = c(0, -1, 0), anchor = "camera") +
       ggtitle('anchor = "camera"'))
 ```
 
@@ -180,13 +244,14 @@ Directions can also be given as angles with
 which takes an azimuth (a compass bearing, measured clockwise from the
 positive y axis) and an elevation (degrees above the xy plane). This is
 often easier when you want to raise or lower a light without changing
-which side it comes from. Here the light comes from the negative x side
-(an azimuth of 270), low and then high:
+which side it comes from. The default light comes from the negative x
+side (an azimuth of 270), 60 degrees above the horizon. Here it is low
+and then overhead:
 
 ``` r
 
-(p + light("direct", direction = direction(270, 10)) + ggtitle("elevation 10")) +
-  (p + light("direct", direction = direction(270, 60)) + ggtitle("elevation 60"))
+(p + light("hard", direction = direction(270, 10)) + ggtitle("elevation 10")) +
+  (p + light("hard", direction = direction(270, 90)) + ggtitle("elevation 90"))
 ```
 
 ![](lighting_files/figure-html/direction-angles-1.png)
@@ -196,13 +261,15 @@ translating between the two:
 
 ``` r
 
-light(direction = c(-0.5, 0, 1))
+light(direction = c(-1, -1, 1))
 #> Lighting specification:
-#>   Method: diffuse 
-#>   Direction: [ -0.5, 0, 1 ] (directional lighting)
-#>     azimuth: 270 deg, elevation: 63.4 deg
+#>   Ramp: smooth (neutral 45 deg) 
+#>   Tone: lightness 
+#>   Strength: shadow 0.8 , highlight 0.6 
+#>   Direction: [ -1, -1, 1 ] (directional lighting)
+#>     azimuth: 225 deg, elevation: 35.3 deg
 #>   anchor: scene 
-#>   Shading: fill + color (contrast = 1 , mode = hsv )
+#>   Lights: fill + color
 ```
 
 To compare light directions side by side, or to move the light around
@@ -232,8 +299,7 @@ inverse-square intensity falloff from the light source position.
 ggplot(mountain, aes(x, y, z)) +
   stat_surface_3d(fill = "red", color = "red") +
   coord_3d(
-    light = light(position = c(.5, .7, 95), distance_falloff = TRUE,
-                  mode = "hsl", contrast = .9),
+    light = light(position = c(.5, .7, 95), distance_falloff = TRUE),
     ratio = c(1.5, 2, 1))
 ```
 
@@ -256,11 +322,11 @@ pb <- ggplot() +
                    fill = "steelblue", color = "steelblue") +
       coord_3d(pitch = 0, roll = -70, yaw = 0)
 
-(pb + light(mode = "hsl") +
+(pb +
     ggtitle("default:\nbackface_scale = -1\nbackface_offset = 0")) +
-  (pb + light(backface_scale = 1, mode = "hsl") +
+  (pb + light(backface_scale = 1) +
       ggtitle("\nbackface_scale = 1\nbackface_offset = 0")) +
-  (pb + light(backface_scale = 1, mode = "hsl", backface_offset = -.5) +
+  (pb + light(backface_scale = 1, backface_offset = -.5) +
       ggtitle("\nbackface_scale = 1\nbackface_offset = -0.5")) +
   plot_layout(nrow = 1)
 ```
@@ -270,18 +336,19 @@ pb <- ggplot() +
 ## 3D guides
 
 When lighting is active, standard color guides don’t reflect the range
-of shaded colors visible in the plot. ggcube provides
+of shaded colors visible in the plot. So when lighting applies to a
+layer that maps `fill` or `color`, ggcube uses
 [`guide_colorbar_3d()`](https://matthewkling.github.io/ggcube/reference/guide_3d.md)
 and
 [`guide_legend_3d()`](https://matthewkling.github.io/ggcube/reference/guide_3d.md)
-to create guides that show the full shading gradient:
+in place of the standard guides, showing the shading gradient alongside
+each color, with the colors as given in the middle:
 
 ``` r
 
 ggplot(mountain, aes(x, y, z, fill = z)) +
   stat_surface_3d() +
-  light(mode = "hsl", direction = c(1, 0, 0)) +
-  guides(fill = guide_colorbar_3d()) +
+  light(direction = c(1, 0, 0)) +
   scale_fill_gradientn(colors = c("tomato", "dodgerblue")) +
   coord_3d(ratio = c(2, 3, 1.5))
 ```
@@ -292,17 +359,30 @@ ggplot(mountain, aes(x, y, z, fill = z)) +
 
 ggplot(mountain, aes(x, y, z, fill = x > .5, group = 1)) +
   stat_surface_3d() +
-  light(mode = "hsl", direction = c(1, 0, 0)) +
-  guides(fill = guide_legend_3d()) +
+  light(direction = c(1, 0, 0)) +
   coord_3d(ratio = c(2, 3, 1.5))
 ```
 
 ![](lighting_files/figure-html/guide_legend-1.png)
 
-Both guides accept `shade_range` to control the range of shading shown
-(a length-2 vector in the range -1 to 1), and `reverse_shade` to flip
-the gradient direction.
+Call the guides yourself to change their options: both accept
+`shade_range` to control the range of shading shown (a length-2 vector
+from -1, full shadow, to 1, full highlight), and `reverse_shade` to flip
+the gradient direction. For an unshaded guide, ask for a standard one,
+e.g. `guides(fill = "colourbar")`.
+
+``` r
+
+ggplot(mountain, aes(x, y, z, fill = z)) +
+  stat_surface_3d() +
+  light(direction = c(1, 0, 0)) +
+  guides(fill = guide_colorbar_3d(shade_range = c(-1, 1))) +
+  scale_fill_gradientn(colors = c("tomato", "dodgerblue")) +
+  coord_3d(ratio = c(2, 3, 1.5))
+```
+
+![](lighting_files/figure-html/guide_options-1.png)
 
 Note that when fill and color map to the same variable, ggplot2 creates
-a shared scale. In this case, apply the 3D guide via
+a shared scale. In this case, set the 3D guide’s options via
 `guides(fill = guide_colorbar_3d())`, not via the color guide.

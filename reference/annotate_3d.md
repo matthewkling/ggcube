@@ -79,7 +79,7 @@ Uses
 Requires `x`, `y`, `z` giving the polygon's vertices in order. To draw
 several polygons in one call, give `group`, with one value per vertex;
 vertices sharing a value form one polygon. Each polygon needs at least 3
-vertices. Optional styling: `fill` (default `"grey60"`), `alpha`
+vertices. Optional styling: `fill` (default `"grey50"`), `alpha`
 (default `0.5`), `colour`/`color` for the outline (default `"grey30"`),
 `linewidth` (default `0.5`), `linetype`. Styling values apply per
 polygon, so they must have length 1 or one value per polygon, in the
@@ -139,7 +139,7 @@ of two planes) is drawn on top of that polygon.
 p <- ggplot(mountain, aes(x, y, z)) +
   geom_surface_3d() +
   coord_3d(ratio = c(2, 3, 1),
-           light = light(mode = "hsl", direction = c(-1, 0, 0)))
+           light = light(direction = c(-1, 0, 0)))
 
 # A point, depth-sorted with the surface
 p + annotate_3d("point", x = .5, y = .25, z = 100, color = "red", size = 3)

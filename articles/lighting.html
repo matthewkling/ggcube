@@ -87,16 +87,33 @@ renders <strong>form</strong> shadows, not <strong>cast</strong>
 shadows. Lighting can be applied to any polygon-based 3D layer —
 surfaces, hulls, bars, voxels, and polygon text — but is useful mainly
 for layers where polygon orientation varies.</p>
+<p>Lighting colors each face in three steps. First, the angle between
+the face and the direction toward the light is measured. Then a
+<em>ramp</em> turns that angle into how far the face moves toward shadow
+or highlight: by default, faces at 45 degrees to the light keep exactly
+the color you gave them, faces turned further toward the light are
+highlighted, and faces turned further away are shadowed. Finally, a
+<em>tone</em> decides what lighter and darker look like for a given
+color: by default, colors become lighter and darker versions of the same
+hue.</p>
 <p>This vignette covers how to control <a href="#lighting-targets">what
-parts</a> of your plot lighting is applied to, how lighting model
-parameters change the <a href="#light-qualities">visual qualities</a> of
-the lighting, how to change the direction of the <a href="#light-sources">light source</a>, how to control how the <a href="#backface-lighting">underside</a> of a polygon is lit, and how to
-add <a href="#id_3d-guides">lighting-aware guides</a> to your plot.</p>
-<p>We’ll use a common base plot throughout. Here it is with default
+parts</a> of your plot lighting is applied to, how to change the <a href="#light-qualities">visual qualities</a> of the lighting, how to
+change the direction of the <a href="#light-sources">light source</a>,
+how to control how the <a href="#backface-lighting">underside</a> of a
+polygon is lit, and how lighting is shown in <a href="#id_3d-guides">guides</a>.</p>
+<p>We’ll use a common base plot throughout: a sphere, drawn as an
+isosurface of a function of x, y, and z. Here it is with default
 lighting:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">sphere_points</span>, <span class="fu"><a href="../reference/aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="../reference/geom_hull_3d.html">geom_hull_3d</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="st">"#9e2602"</span>, color <span class="op">=</span> <span class="st">"#5e1600"</span><span class="op">)</span> <span class="op">+</span></span>
+<code class="sourceCode R"><span><span class="co"># a unit sphere, centered at x = x0</span></span>
+<span><span class="va">sphere</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x0</span> <span class="op">=</span> <span class="fl">0</span>, <span class="va">n</span> <span class="op">=</span> <span class="fl">40</span>, <span class="va">...</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="../reference/geom_isofunction_3d.html">geom_isofunction_3d</a></span><span class="op">(</span>fun <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span><span class="op">)</span> <span class="op">(</span><span class="va">x</span> <span class="op">-</span> <span class="va">x0</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span> <span class="va">y</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span> <span class="va">z</span><span class="op">^</span><span class="fl">2</span> <span class="op">-</span> <span class="fl">1</span>,</span>
+<span>                      xlim <span class="op">=</span> <span class="va">x0</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1.1</span>, <span class="fl">1.1</span><span class="op">)</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1.1</span>, <span class="fl">1.1</span><span class="op">)</span>, zlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1.1</span>, <span class="fl">1.1</span><span class="op">)</span>,</span>
+<span>                      n <span class="op">=</span> <span class="va">n</span>, <span class="va">...</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">sphere</span><span class="op">(</span>fill <span class="op">=</span> <span class="st">"#9e2602"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="../reference/coord_3d.html">coord_3d</a></span><span class="op">(</span>scales <span class="op">=</span> <span class="st">"fixed"</span><span class="op">)</span></span>
 <span><span class="va">p</span></span></code></pre></div>
 <p><img src="lighting_files/figure-html/base-1.png" class="r-plt" alt="" width="1050"></p>
@@ -123,91 +140,124 @@ setting for that layer.</li>
 and override the inherited light settings to disable lighting for this
 layer:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/geom_hull_3d.html">geom_hull_3d</a></span><span class="op">(</span><span class="fu"><a href="../reference/aes.html">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">x</span> <span class="op">+</span> <span class="fl">2.5</span><span class="op">)</span>, fill <span class="op">=</span> <span class="st">"#9e2602"</span>, color <span class="op">=</span> <span class="st">"#5e1600"</span>,</span>
-<span>                 light <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">p</span> <span class="op">+</span> <span class="fu">sphere</span><span class="op">(</span>x0 <span class="op">=</span> <span class="fl">2.5</span>, fill <span class="op">=</span> <span class="st">"#9e2602"</span>, light <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="lighting_files/figure-html/where-1.png" class="r-plt" alt="" width="1050"></p>
 <p>The <code>fill</code> and <code>color</code> parameters control which
 aesthetics get modified by lighting. By default both are
-<code>TRUE</code>:</p>
+<code>TRUE</code>. Here a coarser sphere is outlined in white, which is
+lit along with the fill by default, and stays white with
+<code>color = FALSE</code>:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"fill + color (default)"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="cn">TRUE</span>, color <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"fill only"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">pw</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">sphere</span><span class="op">(</span>n <span class="op">=</span> <span class="fl">12</span>, fill <span class="op">=</span> <span class="st">"#9e2602"</span>, color <span class="op">=</span> <span class="st">"white"</span>, linewidth <span class="op">=</span> <span class="fl">.3</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="../reference/coord_3d.html">coord_3d</a></span><span class="op">(</span>scales <span class="op">=</span> <span class="st">"fixed"</span><span class="op">)</span></span>
+<span><span class="op">(</span><span class="va">pw</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"fill + color (default)"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="op">(</span><span class="va">pw</span> <span class="op">+</span> <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="cn">TRUE</span>, color <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"fill only"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p><img src="lighting_files/figure-html/targets-1.png" class="r-plt" alt="" width="1050"></p>
+<p>When no color is given, polygon layers outline polygons in their fill
+color, which hides the seams between them. These outlines are always lit
+along with the fill.</p>
 <p>Lighting works with both solid and aesthetically-mapped colors:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">sphere_points</span>, <span class="fu"><a href="../reference/aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="../reference/geom_hull_3d.html">geom_hull_3d</a></span><span class="op">(</span><span class="fu"><a href="../reference/aes.html">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="va">x</span>, color <span class="op">=</span> <span class="va">x</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">sphere</span><span class="op">(</span>mapping <span class="op">=</span> <span class="fu"><a href="../reference/aes.html">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_c</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_color_viridis_c</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/guides.html" class="external-link">guides</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="fu"><a href="../reference/guide_3d.html">guide_colorbar_3d</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="../reference/coord_3d.html">coord_3d</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span><span class="st">"direct"</span><span class="op">)</span></span></code></pre></div>
+<span>  <span class="fu"><a href="../reference/coord_3d.html">coord_3d</a></span><span class="op">(</span>scales <span class="op">=</span> <span class="st">"fixed"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="lighting_files/figure-html/mapped_colors-1.png" class="r-plt" alt="" width="1050"></p>
+<p>Contours (<code><a href="../reference/geom_contour_3d.html">geom_contour_3d()</a></code>) and ridgelines
+(<code><a href="../reference/geom_ridgeline_3d.html">geom_ridgeline_3d()</a></code>) are the exception to default
+lighting: their faces all point the same way, so lighting could only
+shift all their colors away from those you gave them. They are lit only
+when you set lighting explicitly, with <code>+ light()</code> or their
+<code>light</code> argument.</p>
 </div>
 <div class="section level2">
 <h2 id="light-qualities">Light qualities<a class="anchor" aria-label="anchor" href="#light-qualities"></a>
 </h2>
 <div class="section level3">
-<h3 id="lighting-methods">Lighting methods<a class="anchor" aria-label="anchor" href="#lighting-methods"></a>
+<h3 id="shadow-and-highlight-strength">Shadow and highlight strength<a class="anchor" aria-label="anchor" href="#shadow-and-highlight-strength"></a>
 </h3>
-<p>The <code>method</code> parameter controls the lighting model:</p>
+<p><code>shadow</code> and <code>highlight</code> set how strong shadows
+and highlights are, from 0 (none) to 1 (fully black or white, with the
+default tone). By default, shadows are stronger than highlights
+(<code>shadow = 0.8</code>, <code>highlight = 0.6</code>), since fading
+to black looks more natural than fading to white:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span>shadow <span class="op">=</span> <span class="fl">0.4</span>, highlight <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"subtle"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"default"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span>shadow <span class="op">=</span> <span class="fl">1</span>, highlight <span class="op">=</span> <span class="fl">0.9</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"strong"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://patchwork.data-imaginist.com/reference/plot_layout.html" class="external-link">plot_layout</a></span><span class="op">(</span>ncol <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
+<p><img src="lighting_files/figure-html/strength-1.png" class="r-plt" alt="" width="1050"></p>
+</div>
+<div class="section level3">
+<h3 id="ramps">Ramps<a class="anchor" aria-label="anchor" href="#ramps"></a>
+</h3>
+<p>Lighting ramps control how brightness changes as a surface turns away
+from the light:</p>
 <ul>
 <li>
-<strong><code>"diffuse"</code></strong> (default): Soft, atmospheric
-lighting. Only surfaces pointing directly away from the light source are
-fully dark.</li>
+<strong><code>"smooth"</code></strong> (default): Brightness changes
+gradually. Only surfaces pointing directly away from the light source
+are fully shadowed.</li>
 <li>
-<strong><code>"direct"</code></strong>: Hard lighting. All surfaces
-angled beyond 90 degrees from the light are fully dark.</li>
+<strong><code>"hard"</code></strong>: All surfaces angled 90 degrees
+or more from the light are fully shadowed, giving a sharp edge between
+lit and unlit sides.</li>
 <li>
-<strong><code>"rgb"</code></strong>: Maps surface orientation to RGB
-color space, replacing the base colors entirely.</li>
+<strong><code>"steps"</code></strong>: Brightness is discretized
+into flat bands, for a cartoon-like look.</li>
 <li>
 <strong><code>"none"</code></strong>: Disables lighting across the
 plot, except for layers that declare it themselves.</li>
 </ul>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"diffuse"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">'"diffuse" (default)'</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"direct"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">'"direct"'</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"rgb"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">'"rgb"'</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">'"smooth" (default)'</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span><span class="st">"hard"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">'"hard"'</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span><span class="st">"steps"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">'"steps"'</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://patchwork.data-imaginist.com/reference/plot_layout.html" class="external-link">plot_layout</a></span><span class="op">(</span>ncol <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
-<p><img src="lighting_files/figure-html/methods-1.png" class="r-plt" alt="" width="1050"></p>
+<p><img src="lighting_files/figure-html/ramps-1.png" class="r-plt" alt="" width="1050"></p>
+<p>For more control, you can give a ramp object instead of a name:
+<code><a href="../reference/ramps.html">ramp_smooth()</a></code>, <code><a href="../reference/ramps.html">ramp_hard()</a></code>, and
+<code><a href="../reference/ramps.html">ramp_steps()</a></code> take a <code>neutral</code> angle, at which
+faces keep their base color, and <code><a href="../reference/ramps.html">ramp_steps()</a></code> takes the
+number of bands, <code>n</code>. A smaller <code>neutral</code> angle
+puts the base color on faces closer to facing the light, which darkens
+the plot overall:</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span><span class="fu"><a href="../reference/ramps.html">ramp_smooth</a></span><span class="op">(</span>neutral <span class="op">=</span> <span class="fl">30</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"ramp_smooth(neutral = 30)"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span><span class="fu"><a href="../reference/ramps.html">ramp_smooth</a></span><span class="op">(</span>neutral <span class="op">=</span> <span class="fl">60</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"ramp_smooth(neutral = 60)"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span><span class="fu"><a href="../reference/ramps.html">ramp_steps</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">3</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"ramp_steps(n = 3)"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://patchwork.data-imaginist.com/reference/plot_layout.html" class="external-link">plot_layout</a></span><span class="op">(</span>ncol <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
+<p><img src="lighting_files/figure-html/ramp-options-1.png" class="r-plt" alt="" width="1050"></p>
 </div>
 <div class="section level3">
-<h3 id="color-modes">Color modes<a class="anchor" aria-label="anchor" href="#color-modes"></a>
+<h3 id="tones">Tones<a class="anchor" aria-label="anchor" href="#tones"></a>
 </h3>
-<p>The <code>mode</code> parameter controls how lighting modifies
-colors. This applies to the <code>"diffuse"</code> and
-<code>"direct"</code> methods (not <code>"rgb"</code>). There are two
-color modes:</p>
+<p>A lighting “tone” decides what lighter and darker look like for a
+given base color:</p>
 <ul>
 <li>
-<strong><code>"hsv"</code></strong> (default): Modifies the value
-component of HSV color. Highlights preserve hue; shadows fade to
-black.</li>
+<strong><code>"lightness"</code></strong> (default): Colors become
+lighter and darker versions of the same hue, reaching white at full
+highlight and black at full shadow. Lightness is changed in the
+perceptual OKLab color space, which preserves hue as colors lighten and
+darken.</li>
 <li>
-<strong><code>"hsl"</code></strong>: Modifies the lightness
-component of HSL color. Highlights fade to white; shadows fade to
-black.</li>
+<strong><code>"tint"</code></strong>: Colors mix toward a chosen
+highlight color and shadow color, for colored light.</li>
+<li>
+<strong><code>"normals"</code></strong>: Faces are colored by the
+direction they face, replacing the base colors entirely.</li>
 </ul>
-<p>The two modes give identical results for grayscale base colors.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span>mode <span class="op">=</span> <span class="st">"hsv"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">'"hsv" (default)'</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span>mode <span class="op">=</span> <span class="st">"hsl"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">'"hsl"'</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="lighting_files/figure-html/modes-1.png" class="r-plt" alt="" width="1050"></p>
-</div>
-<div class="section level3">
-<h3 id="contrast-strength">Contrast strength<a class="anchor" aria-label="anchor" href="#contrast-strength"></a>
-</h3>
-<p>The <code>contrast</code> parameter scales the intensity of lighting
-effects. Values less than 1 give subtler effects; values greater than 1
-give more dramatic ones:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span>mode <span class="op">=</span> <span class="st">"hsl"</span>, contrast <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"contrast = 0.5"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span>mode <span class="op">=</span> <span class="st">"hsl"</span>, contrast <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"contrast = 1 (default)"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span>mode <span class="op">=</span> <span class="st">"hsl"</span>, contrast <span class="op">=</span> <span class="fl">1.5</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"contrast = 1.5"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<p>Give <code><a href="../reference/tones.html">tone_tint()</a></code> its colors to choose the color of the
+light. Warm highlights with cool shadows are a classic choice:</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">'"lightness" (default)'</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span>tone <span class="op">=</span> <span class="fu"><a href="../reference/tones.html">tone_tint</a></span><span class="op">(</span>shadow <span class="op">=</span> <span class="st">"darkblue"</span>, highlight <span class="op">=</span> <span class="st">"gold"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"tone_tint()"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span>tone <span class="op">=</span> <span class="st">"normals"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">'"normals"'</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://patchwork.data-imaginist.com/reference/plot_layout.html" class="external-link">plot_layout</a></span><span class="op">(</span>ncol <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
-<p><img src="lighting_files/figure-html/contrast-1.png" class="r-plt" alt="" width="1050"></p>
+<p><img src="lighting_files/figure-html/tones-1.png" class="r-plt" alt="" width="1050"></p>
 </div>
 </div>
 <div class="section level2">
@@ -233,31 +283,34 @@ relative to the viewing pane. <code>direction = c(1, 0, 0)</code> always
 lights surfaces facing the right side of the plot, regardless of
 rotation.</li>
 </ul>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span><span class="st">"direct"</span>, direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="op">-</span><span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">'anchor = "scene"'</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span><span class="st">"direct"</span>, direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="op">-</span><span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span>, anchor <span class="op">=</span> <span class="st">"camera"</span><span class="op">)</span> <span class="op">+</span></span>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span><span class="st">"hard"</span>, direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="op">-</span><span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">'anchor = "scene"'</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span><span class="st">"hard"</span>, direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="op">-</span><span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span>, anchor <span class="op">=</span> <span class="st">"camera"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">'anchor = "camera"'</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p><img src="lighting_files/figure-html/direction-1.png" class="r-plt" alt="" width="1050"></p>
 <p>Directions can also be given as angles with <code><a href="../reference/direction.html">direction()</a></code>,
 which takes an azimuth (a compass bearing, measured clockwise from the
 positive y axis) and an elevation (degrees above the xy plane). This is
 often easier when you want to raise or lower a light without changing
-which side it comes from. Here the light comes from the negative x side
-(an azimuth of 270), low and then high:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span><span class="st">"direct"</span>, direction <span class="op">=</span> <span class="fu"><a href="../reference/direction.html">direction</a></span><span class="op">(</span><span class="fl">270</span>, <span class="fl">10</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"elevation 10"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span><span class="st">"direct"</span>, direction <span class="op">=</span> <span class="fu"><a href="../reference/direction.html">direction</a></span><span class="op">(</span><span class="fl">270</span>, <span class="fl">60</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"elevation 60"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+which side it comes from. The default light comes from the negative x
+side (an azimuth of 270), 60 degrees above the horizon. Here it is low
+and then overhead:</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span><span class="st">"hard"</span>, direction <span class="op">=</span> <span class="fu"><a href="../reference/direction.html">direction</a></span><span class="op">(</span><span class="fl">270</span>, <span class="fl">10</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"elevation 10"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span><span class="st">"hard"</span>, direction <span class="op">=</span> <span class="fu"><a href="../reference/direction.html">direction</a></span><span class="op">(</span><span class="fl">270</span>, <span class="fl">90</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"elevation 90"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p><img src="lighting_files/figure-html/direction-angles-1.png" class="r-plt" alt="" width="1050"></p>
 <p>Printing a light shows its direction both ways, which can help in
 translating between the two:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span>direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">0.5</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span>direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="op">-</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Lighting specification:</span></span>
-<span><span class="co">#&gt;   Method: diffuse </span></span>
-<span><span class="co">#&gt;   Direction: [ -0.5, 0, 1 ] (directional lighting)</span></span>
-<span><span class="co">#&gt;     azimuth: 270 deg, elevation: 63.4 deg</span></span>
+<span><span class="co">#&gt;   Ramp: smooth (neutral 45 deg) </span></span>
+<span><span class="co">#&gt;   Tone: lightness </span></span>
+<span><span class="co">#&gt;   Strength: shadow 0.8 , highlight 0.6 </span></span>
+<span><span class="co">#&gt;   Direction: [ -1, -1, 1 ] (directional lighting)</span></span>
+<span><span class="co">#&gt;     azimuth: 225 deg, elevation: 35.3 deg</span></span>
 <span><span class="co">#&gt;   anchor: scene </span></span>
-<span><span class="co">#&gt;   Shading: fill + color (contrast = 1 , mode = hsv )</span></span></code></pre></div>
+<span><span class="co">#&gt;   Lights: fill + color</span></span></code></pre></div>
 <p>To compare light directions side by side, or to move the light around
 interactively, see the <code>light_azimuth</code> and
 <code>light_elevation</code> arguments of <code><a href="../reference/orbit_3d.html">orbit_3d()</a></code> and
@@ -275,12 +328,11 @@ ggcube also supports positional lighting from a point source. Use
 light source location in data coordinates. Setting
 <code>distance_falloff = TRUE</code> applies inverse-square intensity
 falloff from the light source position.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mountain</span>, <span class="fu"><a href="../reference/aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="../reference/stat_surface_3d.html">stat_surface_3d</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="st">"red"</span>, color <span class="op">=</span> <span class="st">"red"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="../reference/coord_3d.html">coord_3d</a></span><span class="op">(</span></span>
-<span>    light <span class="op">=</span> <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span>position <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">.5</span>, <span class="fl">.7</span>, <span class="fl">95</span><span class="op">)</span>, distance_falloff <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>                  mode <span class="op">=</span> <span class="st">"hsl"</span>, contrast <span class="op">=</span> <span class="fl">.9</span><span class="op">)</span>,</span>
+<span>    light <span class="op">=</span> <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span>position <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">.5</span>, <span class="fl">.7</span>, <span class="fl">95</span><span class="op">)</span>, distance_falloff <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
 <span>    ratio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1.5</span>, <span class="fl">2</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p><img src="lighting_files/figure-html/positional-1.png" class="r-plt" alt="" width="1050"></p>
 </div>
@@ -295,18 +347,18 @@ creating strong visual contrast between the two sides. Setting
 <code>backface_scale = 1</code> lights backfaces the same as frontfaces.
 Modifying <code>backface_offset</code> to uniformly darkens or brightens
 all backfaces.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pb</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="../reference/stat_function_3d.html">geom_function_3d</a></span><span class="op">(</span>fun <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span> <span class="va">x</span><span class="op">^</span><span class="fl">2</span> <span class="op">+</span> <span class="va">y</span><span class="op">^</span><span class="fl">2</span>,</span>
 <span>                   xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3</span>, <span class="fl">3</span><span class="op">)</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">3</span>, <span class="fl">3</span><span class="op">)</span>,</span>
 <span>                   fill <span class="op">=</span> <span class="st">"steelblue"</span>, color <span class="op">=</span> <span class="st">"steelblue"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>      <span class="fu"><a href="../reference/coord_3d.html">coord_3d</a></span><span class="op">(</span>pitch <span class="op">=</span> <span class="fl">0</span>, roll <span class="op">=</span> <span class="op">-</span><span class="fl">70</span>, yaw <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span>
 <span></span>
-<span><span class="op">(</span><span class="va">pb</span> <span class="op">+</span> <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span>mode <span class="op">=</span> <span class="st">"hsl"</span><span class="op">)</span> <span class="op">+</span></span>
+<span><span class="op">(</span><span class="va">pb</span> <span class="op">+</span></span>
 <span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"default:\nbackface_scale = -1\nbackface_offset = 0"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="op">(</span><span class="va">pb</span> <span class="op">+</span> <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span>backface_scale <span class="op">=</span> <span class="fl">1</span>, mode <span class="op">=</span> <span class="st">"hsl"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="op">(</span><span class="va">pb</span> <span class="op">+</span> <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span>backface_scale <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
 <span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"\nbackface_scale = 1\nbackface_offset = 0"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="op">(</span><span class="va">pb</span> <span class="op">+</span> <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span>backface_scale <span class="op">=</span> <span class="fl">1</span>, mode <span class="op">=</span> <span class="st">"hsl"</span>, backface_offset <span class="op">=</span> <span class="op">-</span><span class="fl">.5</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="op">(</span><span class="va">pb</span> <span class="op">+</span> <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span>backface_scale <span class="op">=</span> <span class="fl">1</span>, backface_offset <span class="op">=</span> <span class="op">-</span><span class="fl">.5</span><span class="op">)</span> <span class="op">+</span></span>
 <span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"\nbackface_scale = 1\nbackface_offset = -0.5"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://patchwork.data-imaginist.com/reference/plot_layout.html" class="external-link">plot_layout</a></span><span class="op">(</span>nrow <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
 <p><img src="lighting_files/figure-html/backface-1.png" class="r-plt" alt="" width="1050"></p>
@@ -315,29 +367,40 @@ all backfaces.</p>
 <h2 id="d-guides">3D guides<a class="anchor" aria-label="anchor" href="#d-guides"></a>
 </h2>
 <p>When lighting is active, standard color guides don’t reflect the
-range of shaded colors visible in the plot. ggcube provides
-<code><a href="../reference/guide_3d.html">guide_colorbar_3d()</a></code> and <code><a href="../reference/guide_3d.html">guide_legend_3d()</a></code> to
-create guides that show the full shading gradient:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+range of shaded colors visible in the plot. So when lighting applies to
+a layer that maps <code>fill</code> or <code>color</code>, ggcube uses
+<code><a href="../reference/guide_3d.html">guide_colorbar_3d()</a></code> and <code><a href="../reference/guide_3d.html">guide_legend_3d()</a></code> in
+place of the standard guides, showing the shading gradient alongside
+each color, with the colors as given in the middle:</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mountain</span>, <span class="fu"><a href="../reference/aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span>, fill <span class="op">=</span> <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="../reference/stat_surface_3d.html">stat_surface_3d</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span>mode <span class="op">=</span> <span class="st">"hsl"</span>, direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/guides.html" class="external-link">guides</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="fu"><a href="../reference/guide_3d.html">guide_colorbar_3d</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span>direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_gradient.html" class="external-link">scale_fill_gradientn</a></span><span class="op">(</span>colors <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"tomato"</span>, <span class="st">"dodgerblue"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="../reference/coord_3d.html">coord_3d</a></span><span class="op">(</span>ratio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">1.5</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p><img src="lighting_files/figure-html/guide_colorbar-1.png" class="r-plt" alt="" width="1050"></p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mountain</span>, <span class="fu"><a href="../reference/aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span>, fill <span class="op">=</span> <span class="va">x</span> <span class="op">&gt;</span> <span class="fl">.5</span>, group <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="../reference/stat_surface_3d.html">stat_surface_3d</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span>mode <span class="op">=</span> <span class="st">"hsl"</span>, direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/guides.html" class="external-link">guides</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="fu"><a href="../reference/guide_3d.html">guide_legend_3d</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span>direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="../reference/coord_3d.html">coord_3d</a></span><span class="op">(</span>ratio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">1.5</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p><img src="lighting_files/figure-html/guide_legend-1.png" class="r-plt" alt="" width="1050"></p>
-<p>Both guides accept <code>shade_range</code> to control the range of
-shading shown (a length-2 vector in the range -1 to 1), and
-<code>reverse_shade</code> to flip the gradient direction.</p>
+<p>Call the guides yourself to change their options: both accept
+<code>shade_range</code> to control the range of shading shown (a
+length-2 vector from -1, full shadow, to 1, full highlight), and
+<code>reverse_shade</code> to flip the gradient direction. For an
+unshaded guide, ask for a standard one,
+e.g. <code>guides(fill = "colourbar")</code>.</p>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mountain</span>, <span class="fu"><a href="../reference/aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span>, fill <span class="op">=</span> <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="../reference/stat_surface_3d.html">stat_surface_3d</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span>direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/guides.html" class="external-link">guides</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="fu"><a href="../reference/guide_3d.html">guide_colorbar_3d</a></span><span class="op">(</span>shade_range <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_gradient.html" class="external-link">scale_fill_gradientn</a></span><span class="op">(</span>colors <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"tomato"</span>, <span class="st">"dodgerblue"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="../reference/coord_3d.html">coord_3d</a></span><span class="op">(</span>ratio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">1.5</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p><img src="lighting_files/figure-html/guide_options-1.png" class="r-plt" alt="" width="1050"></p>
 <p>Note that when fill and color map to the same variable, ggplot2
-creates a shared scale. In this case, apply the 3D guide via
+creates a shared scale. In this case, set the 3D guide’s options via
 <code>guides(fill = guide_colorbar_3d())</code>, not via the color
 guide.</p>
 </div>
