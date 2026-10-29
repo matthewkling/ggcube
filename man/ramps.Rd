@@ -11,7 +11,7 @@ ramp_smooth(neutral = 45)
 
 ramp_hard(neutral = 45)
 
-ramp_steps(n = 4, neutral = 45)
+ramp_steps(n = 4, neutral = 45, breaks = NULL)
 }
 \arguments{
 \item{neutral}{Angle in degrees between a face and the direction toward the
@@ -19,6 +19,13 @@ light at which colors are unchanged. Must be greater than 0 and less than
 180, or less than 90 for \code{ramp_hard()}. Default is 45.}
 
 \item{n}{Number of bands, at least 2. Default is 4.}
+
+\item{breaks}{Alternative to \code{n} and \code{neutral}: angles in degrees between a
+face and the direction toward the light at which one band ends and the
+next begins, increasing, greater than 0 and less than 180. Faces at a
+break fall in the darker band. For example, \code{breaks = 90} gives a fully
+highlighted lit side and a fully shadowed unlit side, and
+\code{breaks = c(60, 90)} adds a band of unchanged color between them.}
 }
 \value{
 A ramp object, for the \code{ramp} argument of \code{\link[=light]{light()}}.
@@ -40,8 +47,12 @@ from it. This is the default.
 \item \code{ramp_hard()} is like \code{ramp_smooth()} toward the light, but faces at 90
 degrees or more from the light are fully shadowed, giving a sharp edge
 between lit and unlit sides.
-\item \code{ramp_steps()} groups the brightness of \code{ramp_smooth()} into \code{n} flat bands,
-for a cartoon-like look.
+\item \code{ramp_steps()} divides faces into flat bands of brightness, for a
+cartoon-like look. The bands run evenly from full highlight on the band
+nearest the light to full shadow on the band farthest from it, so with an
+odd number of bands the middle one shows colors unchanged. Bands are
+either \code{n} equal divisions of the brightness of \code{ramp_smooth()}, or are
+divided at the angles given by \code{breaks}.
 }
 
 These can also be given to \code{\link[=light]{light()}} by name, as \code{"smooth"}, \code{"hard"}, or
@@ -60,6 +71,9 @@ p + light(ramp_smooth(neutral = 30))
 p + light(ramp_hard())
 
 p + light(ramp_steps(n = 3))
+
+# bands divided at chosen angles from the light
+p + light(ramp_steps(breaks = c(60, 90)))
 }
 \seealso{
 \code{\link[=light]{light()}}, and \code{\link[=tone_lightness]{tone_lightness()}} for tones, which decide what lighter

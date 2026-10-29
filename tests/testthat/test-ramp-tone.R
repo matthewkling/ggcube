@@ -36,10 +36,42 @@ test_that("hard ramps fully shadow faces at 90 degrees or more from the light", 
       expect_gt(ramp_level(ramp_hard(45), .1), -1)
 })
 
-test_that("stepped ramps give n flat levels", {
+test_that("stepped ramps give n flat levels from full shadow to full highlight", {
       level <- ramp_level(ramp_steps(4), cospi(seq(0, 180, by = 1) / 180))
-      expect_setequal(unique(level), c(-.75, -.25, .25, .75))
-      expect_length(unique(ramp_level(ramp_steps(3), seq(-1, 1, by = .01))), 3)
+      expect_equal(sort(unique(level)), c(-1, -1/3, 1/3, 1))
+      expect_equal(sort(unique(ramp_level(ramp_steps(3), seq(-1, 1, by = .01)))), c(-1, 0, 1))
+
+      # Bands divide the levels of the smooth ramp evenly
+      x <- seq(-1, 1, by = .01)
+      smooth <- ramp_level(ramp_smooth(45), x)
+      expect_equal(ramp_level(ramp_steps(2), x), ifelse(smooth >= 0, 1, -1))
+})
+
+test_that("stepped ramps with breaks divide bands at the given angles", {
+      angle <- seq(0, 180, by = 5)
+      x <- cospi(angle / 180)
+
+      # Lit and unlit sides; faces at the break are on the unlit side
+      expect_equal(ramp_level(ramp_steps(breaks = 90), x), ifelse(angle < 90, 1, -1))
+
+      expect_equal(ramp_level(ramp_steps(breaks = c(60, 90)), x),
+                   ifelse(angle < 60, 1, ifelse(angle < 90, 0, -1)))
+      expect_equal(ramp_level(ramp_steps(breaks = c(30, 60, 120)), x),
+                   c(1, 1/3, -1/3, -1)[findInterval(angle, c(30, 60, 120)) + 1])
+
+      # Light values beyond the unit range, from back-face offsets
+      expect_equal(ramp_level(ramp_steps(breaks = 90), c(-1.5, 1.5)), c(-1, 1))
+})
+
+test_that("stepped ramps take either breaks or n and neutral", {
+      expect_equal(ramp_steps(breaks = c(60, 90))[["n"]], 3L)
+      expect_error(ramp_steps(3, breaks = 90), "not both")
+      expect_error(ramp_steps(neutral = 30, breaks = 90), "not both")
+      expect_error(ramp_steps(breaks = c(90, 60)), "increasing")
+      expect_error(ramp_steps(breaks = 0), "`breaks`")
+      expect_error(ramp_steps(breaks = 180), "`breaks`")
+      expect_error(ramp_steps(breaks = "90"), "`breaks`")
+      expect_equal(light(ramp_steps(breaks = 90))$ramp, ramp_steps(breaks = 90))
 })
 
 test_that("ramps clamp light values beyond the unit range", {
@@ -206,6 +238,7 @@ test_that("lights, ramps, and tones print", {
       expect_output(print(light()), "lightness")
       expect_output(print(light("none")), "Disabled")
       expect_output(print(ramp_steps(3)), "steps \\(3 bands, neutral 45 deg\\)")
+      expect_output(print(ramp_steps(breaks = c(60, 90))), "steps \\(3 bands, breaks at 60, 90 deg\\)")
       expect_output(print(tone_tint("navy", "gold")), "tint \\(shadow navy, highlight gold\\)")
 })
 

@@ -62,8 +62,12 @@ check_neutral <- function(neutral, max = 180) {
 #' * `ramp_hard()` is like `ramp_smooth()` toward the light, but faces at 90
 #'   degrees or more from the light are fully shadowed, giving a sharp edge
 #'   between lit and unlit sides.
-#' * `ramp_steps()` groups the brightness of `ramp_smooth()` into `n` flat bands,
-#'   for a cartoon-like look.
+#' * `ramp_steps()` divides faces into flat bands of brightness, for a
+#'   cartoon-like look. The bands run evenly from full highlight on the band
+#'   nearest the light to full shadow on the band farthest from it, so with an
+#'   odd number of bands the middle one shows colors unchanged. Bands are
+#'   either `n` equal divisions of the brightness of `ramp_smooth()`, or are
+#'   divided at the angles given by `breaks`.
 #'
 #' These can also be given to [light()] by name, as `"smooth"`, `"hard"`, or
 #' `"steps"`, to use their defaults.
@@ -72,6 +76,12 @@ check_neutral <- function(neutral, max = 180) {
 #'   light at which colors are unchanged. Must be greater than 0 and less than
 #'   180, or less than 90 for `ramp_hard()`. Default is 45.
 #' @param n Number of bands, at least 2. Default is 4.
+#' @param breaks Alternative to `n` and `neutral`: angles in degrees between a
+#'   face and the direction toward the light at which one band ends and the
+#'   next begins, increasing, greater than 0 and less than 180. Faces at a
+#'   break fall in the darker band. For example, `breaks = 90` gives a fully
+#'   highlighted lit side and a fully shadowed unlit side, and
+#'   `breaks = c(60, 90)` adds a band of unchanged color between them.
 #' @return A ramp object, for the `ramp` argument of [light()].
 #' @seealso [light()], and [tone_lightness()] for tones, which decide what lighter
 #'   and darker look like.
@@ -88,6 +98,9 @@ check_neutral <- function(neutral, max = 180) {
 #' p + light(ramp_hard())
 #'
 #' p + light(ramp_steps(n = 3))
+#'
+#' # bands divided at chosen angles from the light
+#' p + light(ramp_steps(breaks = c(60, 90)))
 #' @name ramps
 NULL
 
@@ -107,12 +120,36 @@ ramp_hard <- function(neutral = 45) {
 
 #' @rdname ramps
 #' @export
-ramp_steps <- function(n = 4, neutral = 45) {
+ramp_steps <- function(n = 4, neutral = 45, breaks = NULL) {
+      if (!is.null(breaks)) {
+            if (!missing(n) || !missing(neutral)) {
+                  rlang::abort("Give either `breaks`, or `n` and `neutral`, not both.", call = NULL)
+            }
+            if (!is.numeric(breaks) || length(breaks) == 0 || any(!is.finite(breaks)) ||
+                any(breaks <= 0 | breaks >= 180) || any(diff(breaks) <= 0)) {
+                  rlang::abort("`breaks` must be increasing angles greater than 0 and less than 180 degrees.",
+                               call = NULL)
+            }
+            return(new_ramp("steps", n = length(breaks) + 1L, breaks = as.numeric(breaks)))
+      }
       if (!is.numeric(n) || length(n) != 1 || !is.finite(n) || n < 2 || n != round(n)) {
             rlang::abort("`n` must be a single whole number of at least 2.", call = NULL)
       }
       check_neutral(neutral)
       new_ramp("steps", n = as.integer(n), neutral = neutral)
+}
+
+#' Cosine of an angle in degrees
+#'
+#' Rounded so that angles with exact cosines, such as 60 degrees, get them
+#' exactly.
+#'
+#' @param angle Angles in degrees.
+#' @return Numeric vector.
+#' @keywords internal
+#' @noRd
+cos_deg <- function(angle) {
+      round(cospi(angle / 180), 15)
 }
 
 #' Light levels of light values
@@ -125,9 +162,17 @@ ramp_steps <- function(n = 4, neutral = 45) {
 #' @keywords internal
 #' @noRd
 ramp_level <- function(ramp, x) {
-      # Rounded so that angles with exact cosines, such as 60 degrees, get them
-      # exactly
-      c0 <- round(cospi(ramp$neutral / 180), 15)
+      n <- ramp[["n"]]
+      breaks <- ramp[["breaks"]]
+
+      # Stepped ramps divided at given angles: band 0 is nearest the light.
+      # Faces within rounding error of a break fall in the darker band.
+      if (!is.null(breaks)) {
+            band <- rowSums(outer(x, cos_deg(breaks) + 1e-12, `<=`))
+            return(1 - 2 * band / (n - 1))
+      }
+
+      c0 <- cos_deg(ramp$neutral)
       toward <- (x - c0) / (1 - c0)
       level <- switch(class(ramp)[1],
                       ggcube_ramp_smooth = ,
@@ -137,9 +182,10 @@ ramp_level <- function(ramp, x) {
       level <- pmax(-1, pmin(1, level))
       # Faces at the neutral angle leave colors exactly unchanged
       level[abs(level) < 1e-12] <- 0
+      # Stepped ramps divided evenly: band 0 is farthest from the light
       if (inherits(ramp, "ggcube_ramp_steps")) {
-            band <- pmin(floor((level + 1) / 2 * ramp[["n"]]), ramp[["n"]] - 1)
-            level <- -1 + (2 * band + 1) / ramp[["n"]]
+            band <- pmin(floor((level + 1) / 2 * n), n - 1)
+            level <- -1 + 2 * band / (n - 1)
       }
       level
 }
@@ -246,7 +292,11 @@ tone_legacy <- function(space = "hsv") {
 format_ramp <- function(x) {
       kind <- sub("^ggcube_ramp_", "", class(x)[1])
       details <- c(if (!is.null(x[["n"]])) paste(x[["n"]], "bands"),
-                   paste0("neutral ", x$neutral, " deg"))
+                   if (!is.null(x[["breaks"]])) {
+                         paste0("breaks at ", paste(x[["breaks"]], collapse = ", "), " deg")
+                   } else {
+                         paste0("neutral ", x$neutral, " deg")
+                   })
       paste0(kind, " (", paste(details, collapse = ", "), ")")
 }
 
