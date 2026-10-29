@@ -5,10 +5,14 @@
 #' shading is enabled in 3D plots.
 #'
 #' When lighting applies to a layer that maps `fill` or `colour`, ggcube uses
-#' these guides by default, in place of [ggplot2::guide_colourbar()] and
-#' [ggplot2::guide_legend()]. Call them explicitly to change their options, or
+#' these guides by default, in place of [ggplot2::guide_colourbar()],
+#' [ggplot2::guide_legend()], [ggplot2::guide_coloursteps()], and
+#' [ggplot2::guide_bins()]. Call them explicitly to change their options, or
 #' use e.g. `guides(fill = "colourbar")` for an unshaded guide. Guides given to
 #' a scale's `guide` argument as guide objects are left as they are.
+#'
+#' `guide_colorbar_3d()` shades colorbars drawn as a raster (the default) or as
+#' rectangles; colorbars drawn with `display = "gradient"` are left unshaded.
 #'
 #' When fill and color aesthetics map to the same variable (e.g.,
 #' \code{aes(fill = z, color = z)}), ggplot2 creates a shared scale with a
@@ -17,12 +21,15 @@
 #' uses the color aesthetic. Only use the color guide when color and fill
 #' map to different variables and you want separate guides for each.
 #'
+#' @param ... Additional arguments passed to the corresponding ggplot2 guide:
+#'   [ggplot2::guide_colorbar()], [ggplot2::guide_legend()],
+#'   [ggplot2::guide_colorsteps()], or [ggplot2::guide_bins()].
 #' @param reverse_shade Logical. If TRUE, reverses the lighting gradient direction. By default,
-#'   shadows are placed on the left, or on the bottom for horizontal colorbars.
+#'   shadows are placed on the left, or on the bottom for horizontal colorbars and color
+#'   steps.
 #' @param shade_range Length-2 numeric vector in the range -1 to 1, giving the limits
 #'   of the shading gradient. -1 is full shadow, 0 the colors as specified, and 1 full
 #'   highlight, as set by the light's `shadow` and `highlight`. Default is `c(-.5, .5)`.
-#' @param ... Additional arguments passed to \code{guide_colorbar()} or \code{guide_legend()}.
 #' @return A guide object that displays shading effects
 #' @examples
 #' # 3D guides are used by default for lit layers
@@ -44,6 +51,18 @@
 #'    stat_surface_3d(light = light(direction = c(1, 0, 0))) +
 #'    coord_3d()
 #'
+#' # binned scales get shaded color steps
+#' ggplot(mountain, aes(x, y, z, fill = z)) +
+#'    stat_surface_3d() +
+#'    scale_fill_viridis_b() +
+#'    coord_3d()
+#'
+#' # or shaded bins
+#' ggplot(mountain, aes(x, y, z, fill = z)) +
+#'    stat_surface_3d() +
+#'    scale_fill_viridis_b(guide = "bins") +
+#'    coord_3d()
+#'
 #' # an unshaded guide
 #' ggplot(mountain, aes(x, y, z, fill = z)) +
 #'    stat_surface_3d() +
@@ -51,16 +70,30 @@
 #'    coord_3d()
 #' @name guide_3d
 #' @export
-guide_colorbar_3d <- function(reverse_shade = FALSE, shade_range = c(-.5, .5), ...) {
+guide_colorbar_3d <- function(..., reverse_shade = FALSE, shade_range = c(-.5, .5)) {
       check_shade_range(shade_range)
       shade_guide(guide_colorbar(...), GuideColourbar3D, reverse_shade, shade_range)
 }
 
 #' @rdname guide_3d
 #' @export
-guide_legend_3d <- function(reverse_shade = FALSE, shade_range = c(-.5, .5), ...) {
+guide_legend_3d <- function(..., reverse_shade = FALSE, shade_range = c(-.5, .5)) {
       check_shade_range(shade_range)
       shade_guide(guide_legend(...), GuideLegend3D, reverse_shade, shade_range)
+}
+
+#' @rdname guide_3d
+#' @export
+guide_colorsteps_3d <- function(..., reverse_shade = FALSE, shade_range = c(-.5, .5)) {
+      check_shade_range(shade_range)
+      shade_guide(guide_colorsteps(...), GuideColoursteps3D, reverse_shade, shade_range)
+}
+
+#' @rdname guide_3d
+#' @export
+guide_bins_3d <- function(..., reverse_shade = FALSE, shade_range = c(-.5, .5)) {
+      check_shade_range(shade_range)
+      shade_guide(guide_bins(...), GuideBins3D, reverse_shade, shade_range)
 }
 
 #' Validate a 3D guide's shading range
@@ -111,12 +144,9 @@ shade_drawn_guide <- function(grob, base_colors, params, replace) {
       if (is.null(lighting)) return(grob)
 
       grad <- create_light_gradients(base_colors, lighting, params$shade_range)
+      # Columns run from shadow to highlight, whichever way the guide is drawn
       if (isTRUE(params$reverse_shade)) {
-            if (is.null(params$direction) || params$direction == "vertical") {
-                  grad <- grad[, ncol(grad):1, drop = FALSE]
-            } else {
-                  grad <- grad[nrow(grad):1, , drop = FALSE]
-            }
+            grad <- grad[, ncol(grad):1, drop = FALSE]
       }
       replace(grob, grad)
 }
@@ -126,7 +156,24 @@ GuideColourbar3D <- ggproto("GuideColourbar3D", GuideColourbar,
       draw = function(self, theme, position = NULL, direction = NULL, params = self$params) {
             grob <- ggproto_parent(GuideColourbar, self)$draw(theme, position, direction, params)
             # The colorbar's raster runs from the top, so from the last color
-            shade_drawn_guide(grob, rev(params$decor[["colour"]]), params, replace_colorbar_colors)
+            colors <- rev(params$decor[["colour"]])
+            horizontal <- identical(params$direction %||% direction, "horizontal")
+            shade_drawn_guide(grob, colors, params, function(grob, grad) {
+                  grob <- replace_bar_rects(grob, grad, colors, horizontal)
+                  replace_colorbar_colors(grob, grad)
+            })
+      }
+)
+
+GuideColoursteps3D <- ggproto("GuideColoursteps3D", GuideColoursteps,
+      params = c(GuideColoursteps$params, list(reverse_shade = FALSE, shade_range = c(-.5, .5))),
+      draw = function(self, theme, position = NULL, direction = NULL, params = self$params) {
+            grob <- ggproto_parent(GuideColoursteps, self)$draw(theme, position, direction, params)
+            colors <- params$decor[["colour"]]
+            horizontal <- identical(params$direction %||% direction, "horizontal")
+            shade_drawn_guide(grob, colors, params, function(grob, grad) {
+                  replace_bar_rects(grob, grad, colors, horizontal)
+            })
       }
 )
 
@@ -134,14 +181,33 @@ GuideLegend3D <- ggproto("GuideLegend3D", GuideLegend,
       params = c(GuideLegend$params, list(reverse_shade = FALSE, shade_range = c(-.5, .5))),
       draw = function(self, theme, position = NULL, direction = NULL, params = self$params) {
             grob <- ggproto_parent(GuideLegend, self)$draw(theme, position, direction, params)
-            aesthetic <- intersect(c("fill", "colour"), params$aesthetic)[1]
-            if (is.na(aesthetic)) return(grob)
-            base_colors <- params$key[[aesthetic]]
-            shade_drawn_guide(grob, base_colors, params, function(grob, grad) {
-                  replace_legend_colors(grob, grad, base_colors)
-            })
+            shade_drawn_legend(grob, params)
       }
 )
+
+GuideBins3D <- ggproto("GuideBins3D", GuideBins,
+      params = c(GuideBins$params, list(reverse_shade = FALSE, shade_range = c(-.5, .5))),
+      draw = function(self, theme, position = NULL, direction = NULL, params = self$params) {
+            grob <- ggproto_parent(GuideBins, self)$draw(theme, position, direction, params)
+            shade_drawn_legend(grob, params)
+      }
+)
+
+#' Shade the keys of a drawn legend
+#'
+#' @param grob A legend or bins guide drawn by its ggplot2 parent class.
+#' @param params The guide's parameters.
+#' @return The shaded guide.
+#' @keywords internal
+#' @noRd
+shade_drawn_legend <- function(grob, params) {
+      aesthetic <- intersect(c("fill", "colour"), params$aesthetic)[1]
+      if (is.na(aesthetic)) return(grob)
+      base_colors <- params$key[[aesthetic]]
+      shade_drawn_guide(grob, base_colors, params, function(grob, grad) {
+            replace_legend_colors(grob, grad, base_colors)
+      })
+}
 
 
 # Which lighting applies to an aesthetic -----------------------------------------
@@ -271,6 +337,8 @@ use_3d_guides <- function(plot, plot_light) {
             shaded <- switch(guide,
                              colourbar = , colorbar = guide_colorbar_3d,
                              legend = guide_legend_3d,
+                             coloursteps = , colorsteps = guide_colorsteps_3d,
+                             bins = guide_bins_3d,
                              NULL)
             if (is.null(shaded)) next
             if (is.null(aesthetic_light(plot, aesthetic, plot_light))) next
@@ -444,6 +512,52 @@ replace_legend_colors <- function(grob, grad, base_colors = NULL) {
       return(grob)
 }
 
+#' Replace a guide bar drawn as rectangles with shading gradients
+#'
+#' Color steps, and colorbars with `display = "rectangles"`, draw their bar as
+#' one rectangle per color. Each becomes a raster of the gradient of the color
+#' it's filled with, in the same place, shaded across the bar.
+#'
+#' @param grob A drawn guide gtable.
+#' @param grad Gradient matrix: one row per color in `base_colors`, columns
+#'   from shadow to highlight.
+#' @param base_colors The colors of the rows of `grad`.
+#' @param horizontal Whether the bar runs horizontally, so that shading runs
+#'   from bottom to top rather than from left to right.
+#' @return The guide with its bar replaced, or unchanged if it has no bar drawn
+#'   as rectangles.
+#' @keywords internal
+#' @noRd
+replace_bar_rects <- function(grob, grad, base_colors, horizontal = FALSE) {
+      if (!inherits(grob, "gtable")) return(grob)
+      idx <- which(grob$layout$name == "bar")
+      if (length(idx) != 1 || !inherits(grob$grobs[[idx]], "rect")) return(grob)
+      bar <- grob$grobs[[idx]]
+      fills <- bar$gp$fill
+      n <- length(fills)
+      if (n == 0) return(grob)
+
+      rows <- match(opaque_color_key(fills), opaque_color_key(base_colors))
+      fallback <- is.na(rows)
+      rows[fallback] <- seq_len(n)[fallback]
+
+      pick <- function(u, i) u[(i - 1) %% length(u) + 1]
+      rasters <- lapply(seq_len(n), function(i) {
+            if (rows[i] > nrow(grad)) return(NULL)
+            shades <- grad[rows[i], ]
+            # Rasters run from the top, so a horizontal bar's shadow, at the
+            # bottom, comes last
+            image <- if (horizontal) matrix(rev(shades), ncol = 1) else matrix(shades, nrow = 1)
+            grid::rasterGrob(image, x = pick(bar$x, i), y = pick(bar$y, i),
+                             width = pick(bar$width, i), height = pick(bar$height, i),
+                             just = bar$just, hjust = bar$hjust, vjust = bar$vjust,
+                             interpolate = TRUE)
+      })
+      grob$grobs[[idx]] <- grid::gTree(children = do.call(grid::gList, Filter(Negate(is.null), rasters)),
+                                       name = bar$name)
+      grob
+}
+
 #' Color key that ignores alpha
 #'
 #' @param colors Character vector of colors.
@@ -518,8 +632,9 @@ find_legend_key_cells <- function(grob) {
             return(integer(0))
       }
       nm <- grob$layout$name
-      # ggplot2 >= 4.0: "key-1-1-bg"; ggplot2 3.5.x: "key-1-1-1" etc.
-      grep("^key-\\d+-\\d+(-bg|-\\d+)?$", nm)
+      # ggplot2 >= 4.0: "key-1-1-bg"; ggplot2 3.5.x: "key-1-1-1" etc.; bins
+      # guides: "key 1 bg"
+      grep("^key-\\d+-\\d+(-bg|-\\d+)?$|^key \\d+ bg$", nm)
 }
 
 #' Replace the layer glyph in a single legend key cell with a gradient raster

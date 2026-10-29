@@ -302,8 +302,9 @@ pb <- ggplot() +
 
 When lighting is active, standard color guides don't reflect the range of shaded colors
 visible in the plot. So when lighting applies to a layer that maps `fill` or `color`, ggcube
-uses `guide_colorbar_3d()` and `guide_legend_3d()` in place of the standard guides, showing
-the shading gradient alongside each color, with the colors as given in the middle:
+uses `guide_colorbar_3d()`, `guide_legend_3d()`, `guide_colorsteps_3d()`, and
+`guide_bins_3d()` in place of the standard guides, showing the shading gradient alongside
+each color, with the colors as given in the middle:
 
 ```{r guide_colorbar}
 ggplot(mountain, aes(x, y, z, fill = z)) +
@@ -320,7 +321,15 @@ ggplot(mountain, aes(x, y, z, fill = x > .5, group = 1)) +
   coord_3d(ratio = c(2, 3, 1.5))
 ```
 
-Call the guides yourself to change their options: both accept `shade_range` to control the
+```{r guide_colorsteps}
+ggplot(mountain, aes(x, y, z, fill = z)) +
+  stat_surface_3d() +
+  light(direction = c(1, 0, 0)) +
+  scale_fill_viridis_b() +
+  coord_3d(ratio = c(2, 3, 1.5))
+```
+
+Call the guides yourself to change their options: all accept `shade_range` to control the
 range of shading shown (a length-2 vector from -1, full shadow, to 1, full highlight), and
 `reverse_shade` to flip the gradient direction. For an unshaded guide, ask for a standard
 one, e.g. `guides(fill = "colourbar")`.

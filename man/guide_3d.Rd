@@ -4,21 +4,30 @@
 \alias{guide_3d}
 \alias{guide_colorbar_3d}
 \alias{guide_legend_3d}
+\alias{guide_colorsteps_3d}
+\alias{guide_bins_3d}
 \title{Color guides showing lighting effects}
 \usage{
-guide_colorbar_3d(reverse_shade = FALSE, shade_range = c(-0.5, 0.5), ...)
+guide_colorbar_3d(..., reverse_shade = FALSE, shade_range = c(-0.5, 0.5))
 
-guide_legend_3d(reverse_shade = FALSE, shade_range = c(-0.5, 0.5), ...)
+guide_legend_3d(..., reverse_shade = FALSE, shade_range = c(-0.5, 0.5))
+
+guide_colorsteps_3d(..., reverse_shade = FALSE, shade_range = c(-0.5, 0.5))
+
+guide_bins_3d(..., reverse_shade = FALSE, shade_range = c(-0.5, 0.5))
 }
 \arguments{
+\item{...}{Additional arguments passed to the corresponding ggplot2 guide:
+\code{\link[ggplot2:guide_colorbar]{ggplot2::guide_colorbar()}}, \code{\link[ggplot2:guide_legend]{ggplot2::guide_legend()}},
+\code{\link[ggplot2:guide_colorsteps]{ggplot2::guide_colorsteps()}}, or \code{\link[ggplot2:guide_bins]{ggplot2::guide_bins()}}.}
+
 \item{reverse_shade}{Logical. If TRUE, reverses the lighting gradient direction. By default,
-shadows are placed on the left, or on the bottom for horizontal colorbars.}
+shadows are placed on the left, or on the bottom for horizontal colorbars and color
+steps.}
 
 \item{shade_range}{Length-2 numeric vector in the range -1 to 1, giving the limits
 of the shading gradient. -1 is full shadow, 0 the colors as specified, and 1 full
 highlight, as set by the light's \code{shadow} and \code{highlight}. Default is \code{c(-.5, .5)}.}
-
-\item{...}{Additional arguments passed to \code{guide_colorbar()} or \code{guide_legend()}.}
 }
 \value{
 A guide object that displays shading effects
@@ -30,10 +39,14 @@ shading is enabled in 3D plots.
 }
 \details{
 When lighting applies to a layer that maps \code{fill} or \code{colour}, ggcube uses
-these guides by default, in place of \code{\link[ggplot2:guide_colourbar]{ggplot2::guide_colourbar()}} and
-\code{\link[ggplot2:guide_legend]{ggplot2::guide_legend()}}. Call them explicitly to change their options, or
+these guides by default, in place of \code{\link[ggplot2:guide_colourbar]{ggplot2::guide_colourbar()}},
+\code{\link[ggplot2:guide_legend]{ggplot2::guide_legend()}}, \code{\link[ggplot2:guide_coloursteps]{ggplot2::guide_coloursteps()}}, and
+\code{\link[ggplot2:guide_bins]{ggplot2::guide_bins()}}. Call them explicitly to change their options, or
 use e.g. \code{guides(fill = "colourbar")} for an unshaded guide. Guides given to
 a scale's \code{guide} argument as guide objects are left as they are.
+
+\code{guide_colorbar_3d()} shades colorbars drawn as a raster (the default) or as
+rectangles; colorbars drawn with \code{display = "gradient"} are left unshaded.
 
 When fill and color aesthetics map to the same variable (e.g.,
 \code{aes(fill = z, color = z)}), ggplot2 creates a shared scale with a
@@ -60,6 +73,18 @@ ggplot(mountain, aes(x, y, z, fill = z)) +
 # discrete `legend` guide
 ggplot(mountain, aes(x, y, z, fill = x > .5, group = 1)) +
    stat_surface_3d(light = light(direction = c(1, 0, 0))) +
+   coord_3d()
+
+# binned scales get shaded color steps
+ggplot(mountain, aes(x, y, z, fill = z)) +
+   stat_surface_3d() +
+   scale_fill_viridis_b() +
+   coord_3d()
+
+# or shaded bins
+ggplot(mountain, aes(x, y, z, fill = z)) +
+   stat_surface_3d() +
+   scale_fill_viridis_b(guide = "bins") +
    coord_3d()
 
 # an unshaded guide

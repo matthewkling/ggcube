@@ -57,6 +57,9 @@ New options:
 * `guide_colorbar_3d()` and `guide_legend_3d()` are now used by default for `fill` and `colour` scales whose aesthetic is mapped by a lit layer, so lit plots show shaded guides without asking for them. Guides set with `guides()`, or given to a scale's `guide` argument as guide objects, are left alone; use e.g. `guides(fill = "colourbar")` for an unshaded guide. Guides of aesthetics mapped only by unlit layers, such as points, aren't shaded.
 * `guide_colorbar_3d()` and `guide_legend_3d()` now center their shading on the scale's colors, so the middle of the guide shows the colors as specified, and `shade_range` gives exactly the range shown, from full shadow (`-1`) to full highlight (`1`).
 * `light()` gains `specular` and `specular_size`, for glints where faces reflect the light toward the viewer, as on a glossy surface. Glints move toward the tone's full highlight color, so colored light from `tone_tint()` gives colored glints, and with `ramp_steps()` they're flat spots. They're off by default.
+* New `guide_colorsteps_3d()` and `guide_bins_3d()` shade the guides of binned scales, and like the other 3D guides are used by default when lighting applies. `guide_colorbar_3d()` now also shades colorbars drawn with `display = "rectangles"`.
+* Fixed `reverse_shade = TRUE` in horizontal 3D guides, which reversed a colorbar's colors rather than its shading, and shaded each legend key from another key's color.
+* `reverse` and other ggplot2 guide arguments given to the 3D guides now reach ggplot2: `reverse = TRUE` previously matched `reverse_shade`. `reverse_shade` and `shade_range` now come after `...`, so must be named in full.
 * Fixed `guide_legend_3d()` shading keys from the wrong colors: each key was shaded from the color of the key in the mirrored position, and keys of legends with several columns were also mismatched. Each key is now shaded from its own color.
 
 ## Other changes
