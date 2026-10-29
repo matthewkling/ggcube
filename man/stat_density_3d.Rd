@@ -70,7 +70,8 @@ onto one 2D surface, use \code{position_on_face()}.}
 \item{...}{Other arguments passed on to the layer function (typically GeomPolygon3D), such as
 aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc. Unless \code{colour} is mapped or set,
 opaque polygons are outlined in their fill color, which hides the seams between
-adjacent polygons, and translucent polygons aren't outlined. Contours and ridgelines
+adjacent polygons, and translucent polygons aren't outlined. These outlines are
+lit along with the fill, whatever the \code{fill} and \code{color} arguments of \code{\link[=light]{light()}}. Contours and ridgelines
 are the exception, with outlines of their own.}
 
 \item{annotate}{Deprecated. Add annotations to the
@@ -202,7 +203,7 @@ p + geom_density_3d() + guides(fill = guide_colorbar_3d())
 
 # Specify alternative grid geometry and light model
 p + geom_density_3d(grid = "equilateral", n = 30, direction = "y",
-                    light = light("direct"),
+                    light = light("hard"),
                     color = "white", linewidth = .1) +
   guides(fill = guide_colorbar_3d())
 

@@ -155,19 +155,19 @@ of the band). To color by elevation, use \code{aes(fill = after_stat(z))}.
 # Basic usage with volcano data
 ggplot(mountain, aes(x, y, z)) +
       geom_contour_3d(color = "white", fill = "black") +
-      coord_3d(light = "none", ratio = c(1.5, 2, 1))
+      coord_3d(ratio = c(1.5, 2, 1))
 
 # Map fill to elevation and customize number of levels
 ggplot(mountain, aes(x, y, z, fill = after_stat(z))) +
       geom_contour_3d(bins = 12, color = "white") +
       scale_fill_viridis_c() +
-      coord_3d(light = "none", ratio = c(1.5, 2, 1))
+      coord_3d(ratio = c(1.5, 2, 1))
 
 # Specify exact breaks
 ggplot(mountain, aes(x, y, z, fill = after_stat(z))) +
   geom_contour_3d(breaks = seq(0, 200, by = 5)) +
   scale_fill_viridis_c() +
-  coord_3d(light = "none")
+  coord_3d()
 
 # With stat_density_3d
 ggplot(faithful, aes(eruptions, waiting)) +
@@ -183,7 +183,7 @@ ggplot() +
     bins = 50, color = "black"
   ) +
   scale_fill_viridis_c(option = "B") +
-  coord_3d(light = "none")
+  coord_3d()
 
 }
 \seealso{

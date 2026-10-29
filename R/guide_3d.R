@@ -125,7 +125,8 @@ GuideColourbar3D <- ggproto("GuideColourbar3D", GuideColourbar,
       params = c(GuideColourbar$params, list(reverse_shade = FALSE, shade_range = c(-.5, .5))),
       draw = function(self, theme, position = NULL, direction = NULL, params = self$params) {
             grob <- ggproto_parent(GuideColourbar, self)$draw(theme, position, direction, params)
-            shade_drawn_guide(grob, params$decor[["colour"]], params, replace_colorbar_colors)
+            # The colorbar's raster runs from the top, so from the last color
+            shade_drawn_guide(grob, rev(params$decor[["colour"]]), params, replace_colorbar_colors)
       }
 )
 
@@ -135,7 +136,10 @@ GuideLegend3D <- ggproto("GuideLegend3D", GuideLegend,
             grob <- ggproto_parent(GuideLegend, self)$draw(theme, position, direction, params)
             aesthetic <- intersect(c("fill", "colour"), params$aesthetic)[1]
             if (is.na(aesthetic)) return(grob)
-            shade_drawn_guide(grob, params$key[[aesthetic]], params, replace_legend_colors)
+            base_colors <- params$key[[aesthetic]]
+            shade_drawn_guide(grob, base_colors, params, function(grob, grad) {
+                  replace_legend_colors(grob, grad, base_colors)
+            })
       }
 )
 
@@ -275,21 +279,20 @@ use_3d_guides <- function(plot, plot_light) {
       invisible()
 }
 
-#' Create shading gradients for colorbar
+#' Create shading gradients for 3D guides
 #'
 #' @param base_colors Character vector of base colors
 #' @param lighting_info Lighting specification object
 #' @param n_steps Number of lighting gradient steps (default 10)
-#' @return Matrix of colors with lighting applied
+#' @return Matrix of colors with lighting applied, with one row per base color,
+#'   in the order given, and one column per lighting step, from shadow to
+#'   highlight
 #' @keywords internal
 #' @noRd
 create_light_gradients <- function(base_colors,
                                    lighting_info,
                                    shade_range = c(-1, 1),
                                    n_steps = 20) {
-
-      # Reverse order for proper gradient direction
-      base_colors <- rev(base_colors)
 
       # Generate lighting values across range
       if(any(abs(shade_range) > 1)) stop("`shade_range` can't include values outside the range -1 to 1.")
@@ -394,7 +397,7 @@ replace_colorbar_colors <- function(grob, grad) {
 #' @return Modified grob with gradients
 #' @keywords internal
 #' @noRd
-replace_legend_colors <- function(grob, grad) {
+replace_legend_colors <- function(grob, grad, base_colors = NULL) {
       if (!inherits(grob, "gtable")) {
             return(grob)
       }
@@ -409,26 +412,99 @@ replace_legend_colors <- function(grob, grad) {
                   child <- grob$grobs[[i]]
                   if (inherits(child, "gtable") &&
                       length(find_legend_key_cells(child)) > 0) {
-                        grob$grobs[[i]] <- replace_legend_colors(child, grad)
+                        grob$grobs[[i]] <- replace_legend_colors(child, grad, base_colors)
                         modified <- TRUE
                   }
             }
             return(grob)
       }
 
-      # Order key cells by grid position (top-to-bottom, then left-to-right)
-      # so cell i corresponds to row i of the gradient matrix, matching the
-      # base-colour order regardless of layout naming.
+      # Each key cell gets the gradient of the key whose color its glyph is
+      # drawn in. Legends with several columns are filled column by column, so
+      # grid position alone doesn't give a cell's key. Cells whose glyph color
+      # matches no key fall back to grid position, top-to-bottom, then
+      # left-to-right.
       ord <- order(grob$layout$t[key_cells_here], grob$layout$l[key_cells_here])
       key_cells <- key_cells_here[ord]
+      rows <- seq_along(key_cells)
+      if (!is.null(base_colors)) {
+            glyph_fill <- vapply(key_cells, function(idx) {
+                  key_glyph_fill(grob$grobs[[idx]])
+            }, character(1))
+            matched <- match(opaque_color_key(glyph_fill), opaque_color_key(base_colors))
+            rows[!is.na(matched)] <- matched[!is.na(matched)]
+      }
 
-      n <- min(length(key_cells), nrow(grad))
-      for (i in seq_len(n)) {
+      for (i in seq_along(key_cells)) {
+            if (rows[i] > nrow(grad)) next
             idx <- key_cells[i]
-            grob$grobs[[idx]] <- replace_key_glyph(grob$grobs[[idx]], grad[i, ])
+            grob$grobs[[idx]] <- replace_key_glyph(grob$grobs[[idx]], grad[rows[i], ])
       }
 
       return(grob)
+}
+
+#' Color key that ignores alpha
+#'
+#' @param colors Character vector of colors.
+#' @return Character vector of opaque hex colors, with `NA` for missing or
+#'   invalid colors.
+#' @keywords internal
+#' @noRd
+opaque_color_key <- function(colors) {
+      out <- rep(NA_character_, length(colors))
+      ok <- !is.na(colors)
+      rgb_m <- tryCatch(col2rgb(colors[ok]), error = function(e) NULL)
+      if (!is.null(rgb_m)) out[ok] <- rgb(rgb_m[1, ], rgb_m[2, ], rgb_m[3, ], maxColorValue = 255)
+      out
+}
+
+#' Fill color of a legend key cell's glyph
+#'
+#' @param cell A grob (rect or gTree) for one legend key.
+#' @return The fill of the glyph that [replace_key_glyph()] would replace, or
+#'   `NA`.
+#' @keywords internal
+#' @noRd
+key_glyph_fill <- function(cell) {
+      if (inherits(cell, "rect")) return(cell$gp$fill %||% NA_character_)
+      name <- key_glyph_name(cell)
+      if (is.null(name)) return(NA_character_)
+      fill <- cell$children[[name]]$gp$fill
+      if (is.null(fill) || length(fill) == 0) NA_character_ else as.character(fill[1])
+}
+
+#' Name of the layer glyph rect within a legend key gTree
+#'
+#' @param cell A gTree legend key cell.
+#' @return The name of the child to replace, or `NULL`.
+#' @keywords internal
+#' @noRd
+key_glyph_name <- function(cell) {
+      if (!inherits(cell, "gTree") || length(cell$children) == 0) return(NULL)
+      child_names <- names(cell$children)
+      order_names <- names(cell$childrenOrder)
+
+      # The layer glyph is the child whose childrenOrder name is non-empty
+      # (the key background's name is ""). Fall back to the last rect child.
+      glyph_name <- NULL
+      if (!is.null(order_names)) {
+            named <- cell$childrenOrder[nzchar(order_names)]
+            if (length(named) > 0) {
+                  glyph_name <- unname(named[length(named)])
+            }
+      }
+
+      rect_children <- child_names[vapply(
+            cell$children, function(g) inherits(g, "rect"), logical(1)
+      )]
+
+      if (is.null(glyph_name) || !(glyph_name %in% child_names) ||
+          !inherits(cell$children[[glyph_name]], "rect")) {
+            if (length(rect_children) == 0) return(NULL)
+            glyph_name <- rect_children[length(rect_children)]
+      }
+      glyph_name
 }
 
 #' Identify the colored key cells within a legend gtable
@@ -467,28 +543,8 @@ replace_key_glyph <- function(cell, gradient_colors) {
 
       # gTree cell: replace the layer glyph rect among the children.
       if (inherits(cell, "gTree") && length(cell$children) > 0) {
-            child_names <- names(cell$children)
-            order_names <- names(cell$childrenOrder)
-
-            # The layer glyph is the child whose childrenOrder name is non-empty
-            # (the key background's name is ""). Fall back to the last rect child.
-            glyph_name <- NULL
-            if (!is.null(order_names)) {
-                  named <- cell$childrenOrder[nzchar(order_names)]
-                  if (length(named) > 0) {
-                        glyph_name <- unname(named[length(named)])
-                  }
-            }
-
-            rect_children <- child_names[vapply(
-                  cell$children, function(g) inherits(g, "rect"), logical(1)
-            )]
-
-            if (is.null(glyph_name) || !(glyph_name %in% child_names) ||
-                !inherits(cell$children[[glyph_name]], "rect")) {
-                  if (length(rect_children) == 0) return(cell)
-                  glyph_name <- rect_children[length(rect_children)]
-            }
+            glyph_name <- key_glyph_name(cell)
+            if (is.null(glyph_name)) return(cell)
 
             ref_rect <- cell$children[[glyph_name]]
             cell$children[[glyph_name]] <- legend_key_raster_grob(ref_rect, gradient_colors)

@@ -110,11 +110,11 @@
 #'
 #' @examplesIf requireNamespace("base64enc", quietly = TRUE) && requireNamespace("htmlwidgets", quietly = TRUE)
 #' \donttest{
-#' p <- ggplot(mountain, aes(x, y, z, fill = z, color = z)) +
+#' p <- ggplot(mountain, aes(x, y, z, fill = z)) +
 #'   geom_surface_3d(linewidth = .25) +
 #'   coord_3d(light = light(anchor = "camera",direction = c(1, 1, 0)),
 #'            ratio = c(1.5, 2, 1)) +
-#'   scale_fill_viridis_c() + scale_color_viridis_c() +
+#'   scale_fill_viridis_c() +
 #'   theme_void()
 #'
 #' # 1D drag-to-rotate turntable (small n to minimize runtime)
@@ -664,11 +664,11 @@ angles_return_home <- function(a, b, tol = 1e-6) {
 #' @examplesIf interactive() && requireNamespace("shiny", quietly = TRUE) && requireNamespace("base64enc", quietly = TRUE)
 #' library(shiny)
 #'
-#' p <- ggplot(mountain, aes(x, y, z, fill = z, color = z)) +
+#' p <- ggplot(mountain, aes(x, y, z, fill = z)) +
 #'   geom_surface_3d(linewidth = .25) +
 #'   coord_3d(light = light(anchor = "camera", direction = c(1, 1, 0)),
 #'            ratio = c(1.5, 2, 1)) +
-#'   scale_fill_viridis_c() + scale_color_viridis_c() +
+#'   scale_fill_viridis_c() +
 #'   theme_void()
 #'
 #' ui <- fluidPage(

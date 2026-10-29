@@ -101,11 +101,9 @@ Example: a terrain surface using `geom_surface_3d()`:
 
 ``` r
 ggplot(mountain, aes(x, y, z)) +
-      geom_surface_3d(aes(fill = z, color = z)) +
-      scale_fill_viridis_c() + scale_color_viridis_c() +
+      geom_surface_3d(aes(fill = z)) +
+      scale_fill_viridis_c() +
       coord_3d(ratio = c(1.5, 2, 1), expand = FALSE, panels = "zmin") +
-      light(direction = c(1, 0, 0)) +
-      guides(fill = guide_colorbar_3d()) +
       theme_light()
 ```
 
@@ -116,7 +114,7 @@ Example: a terrain surface using `geom_contour_3d()`:
 ``` r
 ggplot(mountain, aes(x, y, z)) +
       geom_contour_3d(fill = "black", color = "white", linewidth = .5) +
-      coord_3d(yaw = 60, ratio = c(1.5, 2, 1), light = "none") +
+      coord_3d(yaw = 60, ratio = c(1.5, 2, 1)) +
       theme_void()
 ```
 
@@ -158,7 +156,7 @@ ggplot(d, aes(x, y, z)) +
                      color = "black", grid = "equilateral") +
       geom_point_3d() +
       scale_fill_manual(values = c("red", "darkorchid4", "steelblue")) +
-      coord_3d(light = NULL)
+      coord_3d(light = "none")
 ```
 
 <img src="man/figures/README-smooth-1.png" alt="" width="100%" />
@@ -185,11 +183,11 @@ article for more details.
 gyroid <- function(x, y, z) sin(x) * cos(y) + sin(y) * cos(z) + sin(z) * cos(x)
 ggplot() +
       geom_isofunction_3d(
-            fun = gyroid, cap = TRUE, fill = "darkorchid4", n = 40,
+            fun = gyroid, cap = TRUE, fill = "darkorchid", n = 60,
             xlim = c(0, 4 * pi), ylim = c(0, 4 * pi), zlim = c(0, 4 * pi)) +
       coord_3d() + 
-      light(mode = "hsl") + 
-      theme_void()
+      theme_void() +
+      light(highlight = .8, shadow = 1)
 ```
 
 <img src="man/figures/README-volumes-1.png" alt="" width="100%" />
@@ -242,8 +240,7 @@ Example: a 3D histogram using `geom_bar_3d()`:
 
 ``` r
 ggplot(faithful, aes(waiting, eruptions)) +
-      geom_bar_3d(fill = "steelblue", color = "steelblue", 
-                  bins = 15, width = .9) +
+      geom_bar_3d(fill = "steelblue", bins = 15, width = .9) +
       coord_3d(yaw = 60) +
       scale_z_continuous(expand = c(0, 0))
 ```
@@ -307,26 +304,29 @@ shading](https://matthewkling.github.io/ggcube/articles/lighting.html)
 article for a comprehensive guide.
 
 ``` r
-ggplot(sphere_points, aes(x, y, z)) +
+# a unit sphere, centered at x = x0
+sphere <- function(x0 = 0, ...) {
+      geom_isofunction_3d(fun = function(x, y, z) (x - x0)^2 + y^2 + z^2 - 1,
+                          xlim = x0 + c(-1.1, 1.1), ylim = c(-1.1, 1.1), zlim = c(-1.1, 1.1),
+                          n = 40, ...)
+}
+
+ggplot() +
       coord_3d(scales = "fixed") +
       scale_fill_viridis_c() +
-      scale_color_viridis_c() +
       theme_dark() +
       theme(legend.position = "none") +
       
-      # apply shading to solid color/fill
-      geom_hull_3d(fill = "#8a2900", color = "#8a2900",
-                   light = light(method = "direct", mode = "hsl", 
-                                 direction = c(0, 0, 1))) +
+      # apply shading to solid fill
+      sphere(fill = "#8a2900",
+             light = light("hard", direction = c(-1, 0, 0))) +
       
-      # apply shading to aesthetic color/fill
-      geom_hull_3d(aes(x = x + 2.5, fill = x, color = x),
-                   light = light(method = "diffuse", mode = "hsv", 
-                                 direction = c(0, 0, 1), contrast = 2)) +
+      # apply shading to aesthetic fill
+      sphere(x0 = 2.5, mapping = aes(fill = after_stat(x)),
+             light = light(direction = c(0, 0, 1), shadow = 1, highlight = 1)) +
       
       # map surface orientation to 3D RGB color channels
-      geom_hull_3d(aes(x = x + 5),
-                   light = light(method = "rgb", direction = c(1, 0, -1)))
+      sphere(x0 = 5, light = light(tone = "normals", direction = c(1, 0, -1)))
 ```
 
 <img src="man/figures/README-lighting-1.png" alt="" width="100%" />
@@ -353,7 +353,8 @@ colnames(mammoth) <- c("Y", "X", "Z")
 p <- ggplot(mammoth, aes(X, Y, Z)) +
       geom_hull_3d(method = "alpha", radius = 8, 
                    fill = "darkred", color = "darkred") +
-      light(mode = "hsl", direction = c(-1, 1, 0), anchor = "camera") +
+      light(direction = c(-1, 1, 0), anchor = "camera",
+            shadow = 1, highlight = 1) +
       coord_3d(roll = -90, scales = "fixed", 
                panels = "zmin", expand = FALSE) +
       theme(axis.text = element_blank(),

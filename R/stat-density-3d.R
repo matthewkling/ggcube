@@ -209,7 +209,7 @@ kde2d <- function(x, y, eval_x, eval_y, h) {
 #'
 #' # Specify alternative grid geometry and light model
 #' p + geom_density_3d(grid = "equilateral", n = 30, direction = "y",
-#'                     light = light("direct"),
+#'                     light = light("hard"),
 #'                     color = "white", linewidth = .1) +
 #'   guides(fill = guide_colorbar_3d())
 #'

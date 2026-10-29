@@ -63,7 +63,10 @@ intensity falloff for positional lighting using inverse square law
 Default is FALSE.}
 
 \item{fill, color}{Logical values indicating whether to light fill colors and
-border colors. Both default to \code{TRUE}.}
+border colors. Both default to \code{TRUE}. \code{color} applies to border colors that
+are mapped or set: polygon layers that have neither are outlined in their fill
+color, to hide the seams between polygons, and those outlines always match the
+lit fill.}
 
 \item{tone}{What lighter and darker look like for a given color. One of
 \code{"lightness"} (the default: lighter and darker versions of the same hue),
@@ -164,11 +167,9 @@ p + light(tone = "normals")
 # use `fill` and `color` to select which aesthetics get modified by light
 p + light(fill = TRUE, color = FALSE)
 
-# apply lighting to aesthetically mapped colors, with shaded guide to match
-p + geom_hull_3d(aes(fill = x, color = x)) +
-      scale_fill_viridis_c() +
-      scale_color_viridis_c() +
-      guides(fill = guide_colorbar_3d())
+# apply lighting to aesthetically mapped colors, with a shaded guide to match
+p + geom_hull_3d(aes(fill = x)) +
+      scale_fill_viridis_c()
 
 # disable lighting entirely
 p + light("none")

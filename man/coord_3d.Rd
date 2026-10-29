@@ -184,12 +184,10 @@ summary of the axis range. You can remove the summary with
 # base plot used in examples
 p <- ggplot() +
   geom_function_3d(
-    aes(fill = after_stat(z), color = after_stat(z)),
     fun = function(x, y) sin(x) * cos(y),
     xlim = c(-pi, pi), ylim = c(-pi, pi), n = 50) +
-  light("direct", contrast = .7) +
+  light("hard", shadow = .6, highlight = .4) +
   scale_fill_viridis_c() +
-  scale_color_viridis_c() +
   theme(legend.position = "none")
 
 # 3D plot with default coord settings

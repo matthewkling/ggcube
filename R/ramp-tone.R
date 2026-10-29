@@ -413,7 +413,8 @@ blend_light_with_colors <- function(colors, light_values, lighting, normals = NU
 #'
 #' Applies a layer's lighting to its fill and/or border colors, using the
 #' lighting specification and light values that the coord attached to its
-#' rows.
+#' rows. Outlines that polygon layers draw in their fill color by default
+#' (marked by `.outline_from_fill`) take the lit fill color.
 #'
 #' @param coords Transformed layer data.
 #' @return `coords`, with lit colors.
@@ -443,6 +444,15 @@ blend_light <- function(coords) {
       }
       if (spec$shade %in% c("colour", "both")) {
             coords$colour <- blend_light_with_colors(coords$colour, coords$light, spec, normals)
+      }
+
+      # Outlines drawn in the fill color by default, rather than in a color the
+      # user mapped or set, exist only to hide seams between polygons, so they
+      # follow the fill whichever colors the light targets. Lit differently
+      # from the fill, they would draw the mesh over the shading.
+      if (".outline_from_fill" %in% names(coords)) {
+            implicit <- coords$.outline_from_fill %in% TRUE
+            coords$colour[implicit] <- coords$fill[implicit]
       }
       coords
 }

@@ -55,7 +55,8 @@ onto one 2D surface, use \code{position_on_face()}.}
 \item{...}{Other arguments passed on to the layer function (typically GeomPolygon3D), such as
 aesthetics like \code{colour}, \code{fill}, \code{linewidth}, etc. Unless \code{colour} is mapped or set,
 opaque polygons are outlined in their fill color, which hides the seams between
-adjacent polygons, and translucent polygons aren't outlined. Contours and ridgelines
+adjacent polygons, and translucent polygons aren't outlined. These outlines are
+lit along with the fill, whatever the \code{fill} and \code{color} arguments of \code{\link[=light]{light()}}. Contours and ridgelines
 are the exception, with outlines of their own.}
 
 \item{levels}{Numeric vector of values of the field at which to draw
@@ -191,7 +192,6 @@ gyroid$value <- with(gyroid, sin(x) * cos(y) + sin(y) * cos(z) + sin(z) * cos(x)
 ggplot(gyroid, aes(x, y, z, value = value)) +
   geom_isosurface_3d(levels = 0.5, fill = "darkred") +
   coord_3d(panels = "none") +
-  light(mode = "hsl") +
   theme_void()
 }
 \dontshow{\}) # examplesIf}

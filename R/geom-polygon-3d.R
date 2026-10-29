@@ -48,6 +48,9 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
                                      }
                                      opaque <- is.na(data$alpha) | data$alpha >= 1
                                      data$colour[polygon] <- ifelse(opaque[polygon], data$fill[polygon], NA)
+                                     # Marked so that lighting keeps these outlines
+                                     # matching their lit fill (see blend_light())
+                                     data$.outline_from_fill <- polygon & opaque
                                }
                                data
                          },
@@ -151,7 +154,7 @@ GeomPolygon3D <- ggproto("GeomPolygon3D", Geom,
 #' # Typically used via stats such as stat_surface_3d() or stat_hull_3d()
 #' ggplot(sphere_points, aes(x, y, z)) +
 #'   stat_hull_3d(method = "convex", fill = "dodgerblue",
-#'             light = light(fill = TRUE, mode = "hsl")) +
+#'             light = light(fill = TRUE)) +
 #'   coord_3d()
 #'
 #' # Can be used directly with properly structured data

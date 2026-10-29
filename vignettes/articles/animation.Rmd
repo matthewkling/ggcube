@@ -49,7 +49,7 @@ colnames(mammoth) <- c("Y", "X", "Z")
 p <- ggplot(mammoth, aes(X, Y, Z)) +
       geom_hull_3d(method = "alpha", radius = 8, 
                    fill = "darkred", color = "darkred") +
-      light(mode = "hsl", direction = c(-1, 1, 0), anchor = "camera") +
+      light(direction = c(-1, 1, 0), anchor = "camera") +
       coord_3d(roll = -90, scales = "fixed", zoom = 1.1,
                panels = "zmin", expand = FALSE) +
       theme(axis.text = element_blank(),

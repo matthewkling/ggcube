@@ -240,7 +240,7 @@ isodensity_levels <- function(values, probs) {
 #' # The densest half of each species
 #' ggplot(iris, aes(Sepal.Length, Sepal.Width, Petal.Length, fill = Species)) +
 #'   geom_isodensity_3d() +
-#'   light(mode = "hsl", direction = c(-1, 1, 0)) +
+#'   light(direction = c(-1, 1, 0)) +
 #'   coord_3d()
 #'
 #' # Nested translucent surfaces around Fiji earthquakes, which trace

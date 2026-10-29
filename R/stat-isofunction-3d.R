@@ -183,7 +183,7 @@ isofunction_grid <- function(fun, lims, n) {
 #' ggplot() +
 #'   geom_isofunction_3d(fun = gyroid, cap = TRUE, fill = "#993333", n = 40,
 #'                       xlim = c(0, 4 * pi), ylim = c(0, 4 * pi), zlim = c(0, 4 * pi)) +
-#'   coord_3d() + light(mode = "hsl") + theme_void()
+#'   coord_3d() + theme_void()
 #' }
 #'
 #' @seealso [geom_isosurface_3d()] for isosurfaces of gridded data,

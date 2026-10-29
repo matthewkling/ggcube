@@ -99,3 +99,40 @@ test_that("merged guides of fill and colour are shaded", {
             expect_no_error(ggplotGrob(p))
       }
 })
+
+# The shading gradient drawn in each key of a plot's legend, by key label
+legend_key_gradients <- function(p) {
+      gt <- ggplotGrob(p)
+      box <- gt$grobs[[grep("guide-box", gt$layout$name)[1]]]
+      leg <- box$grobs[[which(box$layout$name == "guides")]]
+      lay <- leg$layout
+      keys <- which(grepl("^key", lay$name))
+      out <- lapply(keys, function(i) {
+            label <- which(grepl("^label", lay$name) & lay$t == lay$t[i] & lay$l == lay$l[i] + 1)
+            text <- grid::getGrob(leg$grobs[[label]], gPath = "GRID.text", grep = TRUE)$label
+            raster <- Filter(function(g) inherits(g, "rastergrob"), leg$grobs[[i]]$children)[[1]]
+            list(label = text, colors = toupper(as.vector(raster$raster)))
+      })
+      stats::setNames(lapply(out, `[[`, "colors"), vapply(out, `[[`, character(1), "label"))
+}
+
+test_that("each legend key is shaded from its own color, in any layout", {
+      d <- expand.grid(x = 1:4, y = 1:2)
+      d$z <- d$x + d$y
+      d$k <- factor(letters[1:8])
+      base <- scales::hue_pal()(8)
+      key_gradient <- function(color) {
+            unique(toupper(create_light_gradients(color, light(), shade_range = c(-.5, .5))[1, ]))
+      }
+
+      for (ncol in 1:2) {
+            p <- ggplot(d, aes(x, y, z, fill = k)) + geom_col_3d() + coord_3d() +
+                  guides(fill = guide_legend_3d(ncol = ncol))
+            keys <- legend_key_gradients(p)
+            expect_setequal(names(keys), letters[1:8])
+            for (i in 1:8) {
+                  expect_equal(unique(keys[[letters[i]]]), key_gradient(base[i]),
+                               info = paste("ncol", ncol, "key", letters[i]))
+            }
+      }
+})

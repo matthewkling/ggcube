@@ -109,3 +109,33 @@ test_that("polygon layers default to a grey50 fill", {
             expect_equal(geom$default_aes$fill, "grey50")
       }
 })
+
+test_that("fill-colored outlines follow the lit fill, whatever the light targets", {
+      surface <- function(...) {
+            ggplot(grid_data(), aes(x, y, z)) + geom_surface_3d(fill = "steelblue", ...) + coord_3d()
+      }
+
+      # Lighting only fill: outlines match the lit fill, rather than drawing
+      # the mesh in the unlit fill color
+      cols <- drawn_polygon_colors(surface() + light(color = FALSE))
+      expect_equal(cols$col, cols$fill)
+      expect_gt(length(unique(cols$fill)), 1)
+
+      # Lighting only border colors: there are none set, so nothing is lit
+      cols <- drawn_polygon_colors(surface() + light(fill = FALSE))
+      expect_equal(unique(toupper(cols$fill)), "STEELBLUE")
+      expect_equal(cols$col, cols$fill)
+})
+
+test_that("set border colors are lit only when the light targets them", {
+      surface <- function(...) {
+            ggplot(grid_data(), aes(x, y, z)) +
+                  geom_surface_3d(fill = "steelblue", color = "black", ...) + coord_3d()
+      }
+      cols <- drawn_polygon_colors(surface() + light(color = FALSE))
+      expect_equal(unique(cols$col), "black")
+      expect_gt(length(unique(cols$fill)), 1)
+
+      cols <- drawn_polygon_colors(surface())
+      expect_gt(length(unique(cols$col)), 1)
+})

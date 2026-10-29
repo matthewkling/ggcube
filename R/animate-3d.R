@@ -77,7 +77,7 @@
 #'     fun = function(x, y) sin(x) * cos(y),
 #'     xlim = c(-pi, pi), ylim = c(-pi, pi),
 #'     fill = "steelblue", color = "steelblue", linewidth = .5) +
-#'   coord_3d(light = light(mode = "hsl", anchor = "camera",
+#'   coord_3d(light = light(anchor = "camera",
 #'                          direction = c(1, 1, 0))) +
 #'   theme_void()
 #'

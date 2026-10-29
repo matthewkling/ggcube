@@ -212,7 +212,7 @@ test_that("lights, ramps, and tones print", {
 test_that("3D guide gradients are centered on the scale's colors", {
       base <- c("#440154", "#21908C", "#FDE725")
       grad <- create_light_gradients(base, light(), shade_range = c(-.5, .5), n_steps = 21)
-      expect_equal(grad[, 11], rev(toupper(base)))
+      expect_equal(grad[, 11], toupper(base))
 
       # Lighter on the highlight side, darker on the shadow side
       L <- function(cols) linear_to_oklab(srgb_to_linear(t(col2rgb(cols)) / 255))[, 1]
@@ -221,5 +221,5 @@ test_that("3D guide gradients are centered on the scale's colors", {
 
       # Normal-based tones have no gradient to show
       flat <- create_light_gradients(base, light(tone = "normals"), n_steps = 5)
-      expect_equal(flat[, 1], rev(base))
+      expect_equal(flat[, 1], base)
 })

@@ -66,15 +66,13 @@ surface as shown here, or set `fill = NA` to produce a wireframe. It tessellates
 data into polygon tiles and supports both regular grids and irregular point data:
 
 ```{r geom_surface}
-p <- ggplot(mountain, aes(x, y, z, fill = z, color = z)) +
+p <- ggplot(mountain, aes(x, y, z, fill = z)) +
   coord_3d(ratio = c(1, 1.5, .75)) +
   scale_fill_viridis_c() +
-  scale_color_viridis_c() +
   theme_light()
 
 p + geom_surface_3d(linewidth = .2) +
-  light(direction = c(1, 0, .5), mode = "hsv", contrast = 1.5) +
-  guides(fill = guide_colorbar_3d())
+  light(direction = c(1, 0, .5), shadow = 1, highlight = 0.9)
 ```
 
 ### Contours
@@ -84,7 +82,7 @@ like a topographic layer-cake. The `bins` or `breaks` parameters control the con
 levels:
 
 ```{r geom_contour}
-p + geom_contour_3d(bins = 12, color = "white", light = "none")
+p + geom_contour_3d(bins = 12, color = "white")
 ```
 
 
@@ -95,8 +93,7 @@ view. The `direction` parameter controls the slicing axis:
 
 ```{r geom_ridgeline}
 p + stat_surface_3d(geom = "ridgeline_3d", direction = "y",
-                    fill = "black", color = "white",
-                    light = "none", linewidth = .1)
+                    fill = "black", color = "white", linewidth = .1)
 ```
 
 
@@ -164,7 +161,6 @@ It has options for modifying bandwidth, resolution, etc.:
 ```{r stat_density}
 ggplot(faithful, aes(eruptions, waiting)) +
   geom_density_3d(min_ndensity = .01) +
-  guides(fill = guide_colorbar_3d()) +
   coord_3d() +
   scale_fill_viridis_c()
 ```
@@ -187,7 +183,7 @@ d <- dplyr::mutate(tidyr::expand_grid(x = -10:10, y = -10:10),
                    z = cos(z) - z)
 p <- ggplot(d, aes(x, y, z)) +
   coord_3d() +
-  light(mode = "hsl", direction = c(1, 0, 0))
+  light(direction = c(1, 0, 0))
 
 (p + geom_surface_3d(fill = "white", color = "darkblue",
                       linewidth = .2) +
@@ -212,8 +208,7 @@ direction of steepest ascent (`aspect`):
 
 ```{r computed_vars}
 p + geom_surface_3d(aes(fill = after_stat(slope)), grid = "right2") +
-  scale_fill_viridis_c() +
-  guides(fill = guide_colorbar_3d())
+  scale_fill_viridis_c()
 ```
 
 ### Lighting
@@ -226,12 +221,12 @@ not benefit from lighting. See the [lighting](../articles/lighting.html) article
 ```{r lighting, fig.height = 3.5}
 p <- ggplot(mountain, aes(x, y, z)) +
   coord_3d(ratio = c(1, 1.5, .75)) +
-  scale_fill_viridis_c() + scale_color_viridis_c() +
+  scale_fill_viridis_c() +
   theme(legend.position = "none")
 
-(p + geom_surface_3d(aes(fill = z, color = z), light = "none") +
+(p + geom_surface_3d(aes(fill = z), light = "none") +
     ggtitle('light = "none"')) +
-  (p + geom_surface_3d(aes(fill = z, color = z),
+  (p + geom_surface_3d(aes(fill = z),
                        light = light(direction = c(1, 0, 0))) +
       ggtitle("diffuse (default)")) +
   plot_layout(ncol = 2)

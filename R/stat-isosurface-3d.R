@@ -578,7 +578,6 @@ check_cap <- function(cap) {
 #' ggplot(gyroid, aes(x, y, z, value = value)) +
 #'   geom_isosurface_3d(levels = 0.5, fill = "darkred") +
 #'   coord_3d(panels = "none") +
-#'   light(mode = "hsl") +
 #'   theme_void()
 #' }
 #'
