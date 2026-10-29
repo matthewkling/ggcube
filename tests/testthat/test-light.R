@@ -570,3 +570,30 @@ test_that("direct lighting lights back faces that face the light", {
       expect_equal(toupper(fill(-1, 1)), "#000000")
       expect_equal(toupper(fill(1, -1)), "#000000")
 })
+
+
+test_that("ridgeline faces are lit on the side facing the viewer", {
+      # Ridgelines are vertical sheets, so the visible side of each ridge must
+      # be lit by its true orientation: a normal along the slice axis, pointing
+      # toward the viewer. Ridges with direction = "x" were previously tagged as
+      # facing -x while wound to face +x, so their visible side was lit as if it
+      # faced away.
+      dir <- c(-.5, -.5, 1)
+      dirn <- dir / sqrt(sum(dir^2))
+
+      for (direction in c("x", "y")) for (yaw in c(-30, 150)) {
+            p <- ggplot(mountain, aes(x, y, z)) +
+                  geom_ridgeline_3d(direction = direction) +
+                  coord_3d(yaw = yaw, persp = FALSE,
+                           light = light(direction = dir))
+
+            bf <- built_faces(p)
+            eye <- eye_in_cube_space(bf$proj)$v
+            axis <- if (direction == "x") 1 else 2
+            truth <- sign(eye[axis]) * dirn[axis]
+
+            lit <- unique(round(stats::na.omit(as.numeric(bf$tr$light)), 10))
+            expect_equal(lit, truth, tolerance = 1e-8,
+                         info = paste("direction =", direction, "yaw =", yaw))
+      }
+})

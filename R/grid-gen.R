@@ -628,21 +628,16 @@ points_to_ridgelines <- function(data,
             zmax <- max(slice_data$z, na.rm = TRUE)
             n_ridge_pts <- nrow(slice_data)
 
-            # Build closed polygon vertices in CCW order when viewed from front with default projection
-            # For direction="x", front faces negative x (toward typical viewer)
-            # For direction="y", front faces negative y (toward typical viewer)
+            # Build the closed outline: base, along the ridge, back to base. Its
+            # winding doesn't matter here, since polysimplify() below rewinds it.
 
             if (direction == "x") {
-                  # Polygon in y-z plane at constant x, front faces -x
-                  # Looking from -x toward +x: y increases right, z increases up
-                  # CCW from -x view: (y_max, base) -> ridge points decreasing y -> (y_min, base)
+                  # Polygon in y-z plane at constant x
                   poly_x <- rep(slice_val, n_ridge_pts + 2)
                   poly_y <- c(ridge_min, slice_data$y, ridge_max)
                   poly_z <- c(base, slice_data$z, base)
             } else {
-                  # Polygon in x-z plane at constant y, front faces -y
-                  # Looking from -y toward +y: x increases right, z increases up
-                  # CCW from -y view: (x_max, base) -> ridge points decreasing x -> (x_min, base)
+                  # Polygon in x-z plane at constant y
                   poly_x <- c(ridge_min, slice_data$x, ridge_max)
                   poly_y <- rep(slice_val, n_ridge_pts + 2)
                   poly_z <- c(base, slice_data$z, base)
@@ -658,11 +653,6 @@ points_to_ridgelines <- function(data,
             nr <- nrow(ridge_df)
 
             ridge_df$order <- 1:nr
-
-            # Add face_type for axis-aligned normal computation
-            # Ridgelines are vertical planes, so normals point along the slice axis
-            # We want front faces to point toward typical viewer (negative x/y)
-            ridge_df$face_type <- if (direction == "x") "xmin" else "ymin"
 
             # Preserve ggplot2 internal columns
             internal_cols <- c("PANEL", "cull_backfaces", "lighting_spec")
@@ -689,7 +679,11 @@ points_to_ridgelines <- function(data,
                   ridge_df[[aes_col]] <- if (is.numeric(vals)) mean(vals, na.rm = TRUE) else vals[1]
             }
 
-            # split self-intersecting polygons
+            # Split self-intersecting polygons. Each piece's face_type, which
+            # sets its lighting normal, follows the piece's own winding, so that
+            # lighting agrees with the winding-based back-face test. A piece
+            # wound counter-clockwise in the (y, z) plane faces +x; one wound
+            # counter-clockwise in the (x, z) plane faces -y.
             if(direction == "x"){
                   polys <- polyclip::polysimplify(
                         A = list(x = ridge_df$y, y = ridge_df$z),
@@ -698,7 +692,8 @@ points_to_ridgelines <- function(data,
                         data.frame(x = ridge_df$x[1],
                                    y = p$x,
                                    z = p$y,
-                                   order = 1:length(p$x)))
+                                   order = 1:length(p$x),
+                                   face_type = if (ring_signed_area(p$x, p$y) > 0) "xmax" else "xmin"))
             } else {
                   polys <- polyclip::polysimplify(
                         A = list(x = ridge_df$x, y = ridge_df$z),
@@ -707,7 +702,8 @@ points_to_ridgelines <- function(data,
                         data.frame(x = p$x,
                                    y = ridge_df$y[1],
                                    z = p$y,
-                                   order = 1:length(p$x)))
+                                   order = 1:length(p$x),
+                                   face_type = if (ring_signed_area(p$x, p$y) > 0) "ymin" else "ymax"))
             }
             for(j in 1:length(polys)) polys[[j]]$group <- paste0(ridge_df$group[1], "::", j)
             ridge_df <- do.call("rbind", polys) %>%
@@ -725,4 +721,18 @@ points_to_ridgelines <- function(data,
       result <- do.call(rbind, all_ridges)
       rownames(result) <- NULL
       return(result)
+}
+
+#' Signed area of a polygon ring
+#'
+#' Shoelace formula. Positive for a ring wound counter-clockwise in a
+#' right-handed (u, v) plane.
+#'
+#' @param u,v Vertex coordinates in ring order, without repeating the first
+#'   vertex at the end.
+#' @return Signed area.
+#' @keywords internal
+#' @noRd
+ring_signed_area <- function(u, v) {
+      sum(u * c(v[-1], v[1]) - c(u[-1], u[1]) * v) / 2
 }
