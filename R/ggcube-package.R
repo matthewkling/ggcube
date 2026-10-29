@@ -59,7 +59,7 @@ utils::globalVariables(c(
       ".", ".area", ".backface", ".prim_depth", ".render_order", ".subgroup",
       ".vertex_idx", ".vertex_order", ".x_round", ".y_round",
       "Sxx", "Sxy", "Sxz", "Syy", "Syz",
-      "a", "apply_quantization", "axis", "b", "bin_area", "column", "cont_bin",
+      "a", "axis", "b", "bin_area", "column", "cont_bin",
       "contour", "d", "d_col", "d_row", "denom", "depth", "depth1", "depth_3d",
       "dx", "dy", "dz", "dzdx", "dzdy", "e",
       "e1x", "e1y", "e1z", "e2x", "e2y", "e2z",

@@ -244,6 +244,15 @@ light <- function(method = "diffuse",
             shade <- "neither"
       }
 
+      # How light values become colors: a ramp maps each face's light value to
+      # a light level in [-1, 1], `shadow` and `highlight` scale the level into
+      # an amount, and a tone turns base colors and amounts into lit colors
+      ramp <- switch(method,
+                     diffuse = ramp_smooth(neutral = 90),
+                     direct = ramp_hard(neutral = 60),
+                     rgb = ramp_smooth(neutral = 90))
+      tone <- if (method == "rgb") tone_normals() else tone_legacy(mode)
+
       # Create lighting specification object using original internal structure
       structure(
             list(
@@ -256,7 +265,11 @@ light <- function(method = "diffuse",
                   shade_mode = mode,
                   anchor = anchor,
                   backface_scale = backface_scale,
-                  backface_offset = backface_offset
+                  backface_offset = backface_offset,
+                  ramp = ramp,
+                  tone = tone,
+                  shadow = contrast,
+                  highlight = contrast
             ),
             class = "light"
       )
@@ -299,11 +312,13 @@ print.light <- function(x, ...) {
 }
 
 
-#' Apply lighting models to surface normals with positional light support
+#' Light values of faces from their normals
 #'
-#' Computes lighting values from surface normals using various lighting models.
-#' Supports both directional lighting (parallel rays) and positional lighting
-#' (point light sources with per-face light directions).
+#' Computes each face's light value: the cosine of the angle between its
+#' normal and the direction toward the light. Supports both directional
+#' lighting (parallel rays) and positional lighting (point light sources with
+#' per-face light directions). How light values become colors is decided later,
+#' when colors are blended, by the light's ramp and tone.
 #'
 #' @param normals Matrix with 3 columns (x, y, z normal components), where each
 #'   row represents a face normal vector. Should be unit vectors (normalized).
@@ -311,9 +326,7 @@ print.light <- function(x, ...) {
 #' @param face_centers Matrix with 3 columns (x, y, z coordinates) representing
 #'   the center position of each face in data coordinate space. Required for
 #'   positional lighting, optional for directional lighting.
-#' @return Vector of lighting values. For most methods, returns numeric values.
-#'   For \code{method = "rgb"}, returns hex color strings with \code{I()}
-#'   class for identity scaling.
+#' @return Numeric vector of light values, one per face.
 #' @keywords internal
 #' @noRd
 compute_light <- function(normals, lighting, face_centers = NULL) {
@@ -324,12 +337,6 @@ compute_light <- function(normals, lighting, face_centers = NULL) {
       }
 
       params <- lighting
-
-      # Validate resolved parameters
-      valid_light <- c("direct", "diffuse", "rgb", "normal_x", "normal_y", "normal_z")
-      if (!params$method %in% valid_light) {
-            stop("lighting method must be one of: ", paste(valid_light, collapse = ", "))
-      }
 
       # Check if positional lighting is requested
       use_positional <- !is.null(params$position)
@@ -387,41 +394,32 @@ compute_light <- function(normals, lighting, face_centers = NULL) {
             dot_products <- compute_light_dot_products(normals, light_dir_norm)
       }
 
-      # Apply lighting model (same for both directional and positional)
-      light <- switch(params$method,
-                      # Direct lighting with hard shadows. Values are left unclamped here, and
-                      # clamped to [0, 1] when blended with colors, so that back faces can first
-                      # have their sign flipped: clamping before the flip would leave every back
-                      # face dark, including those facing the light.
-                      direct = dot_products,
-                      diffuse = dot_products,                     # Atmospheric lighting: full -1 to +1 range
-                      rgb = {                              # Map normals to RGB hex colors
-                            if (use_positional) {
-                                  # For positional lighting, use average light direction for RGB mapping
-                                  avg_light_dir <- colMeans(light_directions)
-                                  compute_rgb_light(normals, avg_light_dir)
-                            } else {
-                                  light_dir_norm <- normalize_light_direction(params$direction)
-                                  compute_rgb_light(normals, light_dir_norm)
-                            }
-                      },
-                      normal_x = (normals[,1] + 1) / 2,           # X-normal as color (0-1 range)
-                      normal_y = (normals[,2] + 1) / 2,           # Y-normal as color (0-1 range)
-                      normal_z = (normals[,3] + 1) / 2,           # Z-normal as color (0-1 range)
-                      stop("Unknown lighting method")
-      )
+      # Values are left unclamped, and ramped into light levels when blended
+      # with colors, so that back faces can first have their sign flipped:
+      # clamping before the flip would leave every back face dark, including
+      # those facing the light.
+      dot_products
+}
 
-      # Apply quantization if requested
-      if (!is.null(params$quanta) && !params$method %in% c("rgb", "normal_x", "normal_y", "normal_z")) {
-            light <- apply_quantization(light, params$method, params$quanta)
+#' Light direction used by normal-based tones
+#'
+#' Normal-based tones such as [tone_normals()] color each face by its normal,
+#' rotated so that normals facing the light map to white. They need one light
+#' direction per layer: the light's direction, or for positional lighting, the
+#' mean of the faces' directions toward the light.
+#'
+#' @param lighting A lighting specification object, with `position` (if any)
+#'   already in visual space.
+#' @param face_centers Matrix with 3 columns of face centers in visual space.
+#' @return Numeric vector of length 3.
+#' @keywords internal
+#' @noRd
+tone_light_direction <- function(lighting, face_centers) {
+      if (is.null(lighting$position)) {
+            normalize_light_direction(lighting$direction)
+      } else {
+            colMeans(calculate_positional_light_directions(face_centers, lighting$position))
       }
-
-      # Auto-wrap RGB colors with I() for identity scaling
-      if (params$method == "rgb") {
-            light <- I(light)
-      }
-
-      return(light)
 }
 
 #' Calculate per-face light directions for positional lighting
@@ -653,15 +651,10 @@ compute_light_in_coord <- function(data, standardized_coords, scale_ranges, scal
       # Merge face-level lighting vars back into vertex-level polygon data
       poly_data <- left_join(poly_data, faces, by = join_by(group))
 
-      if (light$method == "rgb") {
-            poly_data$light <- I(poly_data$light)
-      }
-
-      # Add lighting parameters for shade processing in geom
-      poly_data$shade_enabled <- light$shade
-      poly_data$shade_strength <- light$shade_strength
-      poly_data$shade_mode <- light$shade_mode
-      poly_data$lighting_method <- light$method
+      # Record on the layer's lighting specification the light direction used
+      # by normal-based tones, for blending colors at draw time
+      poly_data$lighting_spec <- spec_with_tone_direction(data$lighting_spec[[1]], light,
+                                                          face_centers, nrow(poly_data))
 
       # Recombine with non-polygon rows (which get no lighting columns)
       if (all(poly_mask)) {
@@ -804,12 +797,26 @@ light_two_sided_polygons <- function(data, standardized_coords, light,
 
       out <- data[, !names(data) %in% c("normal_x", "normal_y", "normal_z"), drop = FALSE]
       out <- left_join(out, faces, by = join_by(group))
-      if (light$method == "rgb") out$light <- I(out$light)
-      out$shade_enabled <- light$shade
-      out$shade_strength <- light$shade_strength
-      out$shade_mode <- light$shade_mode
-      out$lighting_method <- light$method
+      out$lighting_spec <- spec_with_tone_direction(data$lighting_spec[[1]], light,
+                                                    face_centers, nrow(out))
       out
+}
+
+
+#' Lighting specification column carrying the tone light direction
+#'
+#' @param spec The layer's lighting specification, as attached to its data.
+#' @param light The specification as resolved for lighting, with `position`
+#'   (if any) in visual space.
+#' @param face_centers Matrix with 3 columns of face centers in visual space.
+#' @param n Number of rows.
+#' @return An `AsIs` list column of `n` copies of `spec`, with
+#'   `tone_direction` set.
+#' @keywords internal
+#' @noRd
+spec_with_tone_direction <- function(spec, light, face_centers, n) {
+      spec$tone_direction <- tone_light_direction(light, face_centers)
+      I(rep(list(spec), n))
 }
 
 
@@ -1005,259 +1012,6 @@ apply_surface_light <- function(face_data, normals, face_centers, light) {
       return(face_data_with_light)
 }
 
-
-#' Convert RGB to HSL color space
-#'
-#' @param rgb_matrix 3xN matrix with RGB values in 0-1 range
-#' @return 3xN matrix with HSL values (H in 0-1, S in 0-1, L in 0-1)
-#' @keywords internal
-#' @noRd
-rgb2hsl <- function(rgb_matrix) {
-      if (!is.matrix(rgb_matrix) || nrow(rgb_matrix) != 3) {
-            stop("rgb_matrix must be a 3xN matrix")
-      }
-
-      r <- rgb_matrix[1, ]
-      g <- rgb_matrix[2, ]
-      b <- rgb_matrix[3, ]
-
-      max_val <- pmax(r, g, b)
-      min_val <- pmin(r, g, b)
-      diff <- max_val - min_val
-
-      # Lightness
-      l <- (max_val + min_val) / 2
-
-      # Initialize hue and saturation
-      h <- rep(0, ncol(rgb_matrix))
-      s <- rep(0, ncol(rgb_matrix))
-
-      # Calculate saturation
-      non_zero_diff <- diff > 0
-      s[non_zero_diff] <- ifelse(
-            l[non_zero_diff] < 0.5,
-            diff[non_zero_diff] / (max_val[non_zero_diff] + min_val[non_zero_diff]),
-            diff[non_zero_diff] / (2 - max_val[non_zero_diff] - min_val[non_zero_diff])
-      )
-
-      # Calculate hue
-      if (any(non_zero_diff)) {
-            # Red is max
-            red_max <- non_zero_diff & (r == max_val)
-            h[red_max] <- ((g[red_max] - b[red_max]) / diff[red_max]) %% 6
-
-            # Green is max
-            green_max <- non_zero_diff & (g == max_val)
-            h[green_max] <- (b[green_max] - r[green_max]) / diff[green_max] + 2
-
-            # Blue is max
-            blue_max <- non_zero_diff & (b == max_val)
-            h[blue_max] <- (r[blue_max] - g[blue_max]) / diff[blue_max] + 4
-
-            # Normalize hue to [0, 1]
-            h <- h / 6
-      }
-
-      rbind(h, s, l)
-}
-
-#' Convert HSL to RGB color space
-#'
-#' @param hsl_matrix 3xN matrix with HSL values (H in 0-1, S in 0-1, L in 0-1)
-#' @return 3xN matrix with RGB values in 0-1 range
-#' @keywords internal
-#' @noRd
-hsl2rgb <- function(hsl_matrix) {
-      if (!is.matrix(hsl_matrix) || nrow(hsl_matrix) != 3) {
-            stop("hsl_matrix must be a 3xN matrix")
-      }
-
-      h <- hsl_matrix[1, ]
-      s <- hsl_matrix[2, ]
-      l <- hsl_matrix[3, ]
-
-      n <- ncol(hsl_matrix)
-      r <- rep(0, n)
-      g <- rep(0, n)
-      b <- rep(0, n)
-
-      for (i in seq_len(n)) {
-            if (s[i] == 0) {
-                  # Achromatic (gray)
-                  r[i] <- g[i] <- b[i] <- l[i]
-            } else {
-                  q <- ifelse(l[i] < 0.5, l[i] * (1 + s[i]), l[i] + s[i] - l[i] * s[i])
-                  p <- 2 * l[i] - q
-
-                  hue_to_rgb <- function(p, q, t) {
-                        if (t < 0) t <- t + 1
-                        if (t > 1) t <- t - 1
-                        if (t < 1/6) return(p + (q - p) * 6 * t)
-                        if (t < 1/2) return(q)
-                        if (t < 2/3) return(p + (q - p) * (2/3 - t) * 6)
-                        return(p)
-                  }
-
-                  r[i] <- hue_to_rgb(p, q, h[i] + 1/3)
-                  g[i] <- hue_to_rgb(p, q, h[i])
-                  b[i] <- hue_to_rgb(p, q, h[i] - 1/3)
-            }
-      }
-
-      rbind(r, g, b)
-}
-
-
-#' Apply shading to colors based on lighting values
-#'
-#' @param colors Vector of color values (hex or named colors)
-#' @param light_values Numeric vector of lighting values
-#' @param lighting Lighting specification with shade_mode and shade_strength
-#' @return Vector of modified colors
-#' @keywords internal
-#' @noRd
-blend_light_with_colors <- function(colors, light_values, lighting) {
-      # Handle NA or NULL colors
-      if (is.null(colors) || length(colors) == 0) {
-            return(colors)
-      }
-
-      # RGB method produces colors directly - return them as-is
-      if (lighting$method == "rgb") {
-            return(I(light_values))
-      }
-
-      # Initialize result
-      result_colors <- colors
-
-      # Handle only valid colors (not NA)
-      valid_mask <- !is.na(colors) & !is.na(light_values)
-
-      if (!any(valid_mask)) {
-            return(result_colors)
-      }
-
-      valid_base <- colors[valid_mask]
-      valid_light <- light_values[valid_mask]
-
-      # Normalize light values to [0, 1] if needed
-      if (lighting$method == "diffuse") {
-            valid_light <- (valid_light + 1) / 2
-      }
-      valid_light <- pmax(0, pmin(1, valid_light))
-
-      # Convert to RGB matrix
-      base_rgb <- col2rgb(valid_base)
-
-      if (lighting$shade_mode == "hsl") {
-            # HSL blending mode
-            base_rgb_norm <- base_rgb / 255  # Normalize to [0,1] for HSL
-            base_hsl <- rgb2hsl(base_rgb_norm)
-
-            # Modify only lightness (L component)
-            new_hsl <- base_hsl
-
-            for (i in seq_along(valid_light)) {
-                  h_val <- base_hsl[1, i]
-                  s_val <- base_hsl[2, i]
-                  l_val <- base_hsl[3, i]
-                  light_val <- valid_light[i]
-
-                  if (light_val > 0.5) {
-                        # Brighten toward white (L = 1)
-                        blend_factor <- (light_val - 0.5) * 2 * lighting$shade_strength
-                        new_l <- l_val + blend_factor * (1 - l_val)
-                  } else {
-                        # Darken toward black (L = 0)
-                        blend_factor <- (0.5 - light_val) * 2 * lighting$shade_strength
-                        new_l <- l_val * (1 - blend_factor)
-                  }
-
-                  new_hsl[1, i] <- h_val  # Preserve hue
-                  new_hsl[2, i] <- s_val  # Preserve saturation
-                  new_hsl[3, i] <- pmax(0, pmin(1, new_l))  # Clamp lightness
-            }
-
-            # Convert back to RGB
-            new_rgb <- hsl2rgb(new_hsl)
-            new_colors <- rgb(new_rgb[1, ], new_rgb[2, ], new_rgb[3, ])
-
-      } else {
-            # HSV blending mode
-            base_hsv <- rgb2hsv(base_rgb)
-
-            # Modify only brightness (V component)
-            new_hsv <- base_hsv
-
-            for (i in seq_along(valid_light)) {
-                  h_val <- base_hsv[1, i]
-                  s_val <- base_hsv[2, i]
-                  v_val <- base_hsv[3, i]
-                  light_val <- valid_light[i]
-
-                  # Handle NaN hue (gray colors)
-                  if (is.nan(h_val)) h_val <- 0
-
-                  if (light_val > 0.5) {
-                        # Brighten
-                        blend_factor <- (light_val - 0.5) * 2 * lighting$shade_strength
-                        new_v <- v_val + blend_factor * (1 - v_val)
-                  } else {
-                        # Darken
-                        blend_factor <- (0.5 - light_val) * 2 * lighting$shade_strength
-                        new_v <- v_val * (1 - blend_factor)
-                  }
-
-                  new_hsv[1, i] <- h_val
-                  new_hsv[2, i] <- s_val
-                  new_hsv[3, i] <- pmax(0, pmin(1, new_v))
-            }
-
-            # Convert back to colors
-            new_colors <- hsv(new_hsv[1, ], new_hsv[2, ], new_hsv[3, ])
-      }
-
-      result_colors[valid_mask] <- new_colors
-
-      return(result_colors)
-}
-
-
-blend_light <- function(coords) {
-
-      # Extract lighting parameters from special columns
-      if ("shade_enabled" %in% names(coords)) {
-            shade_val <- coords$shade_enabled[!is.na(coords$shade_enabled)][1]
-
-            if (!is.na(shade_val) && shade_val != "neither") {
-                  # Reconstruct lighting object from first non-NA row
-                  light <- list(
-                        shade = shade_val,
-                        shade_strength = coords$shade_strength[!is.na(coords$shade_strength)][1],
-                        shade_mode = coords$shade_mode[!is.na(coords$shade_mode)][1],
-                        method = coords$lighting_method[!is.na(coords$lighting_method)][1]
-                  )
-
-                  # Apply shading if enabled
-                  if (light$shade != "neither" && "light" %in% names(coords)) {
-                        # Blend fill colors if requested
-                        if (light$shade %in% c("fill", "both")) {
-                              coords$fill <- blend_light_with_colors(coords$fill, coords$light, light)
-                        }
-
-                        # Blend colour/border colors if requested
-                        if (light$shade %in% c("colour", "both")) {
-                              coords$colour <- blend_light_with_colors(coords$colour, coords$light, light)
-                        }
-                  }
-            }
-
-            # Clean up lighting parameter columns
-            coords <- coords[, !names(coords) %in% c("shade_enabled", "shade_strength", "shade_mode", "lighting_method")]
-      }
-
-      return(coords)
-}
 
 #' Convert light position from data units to visual space units
 #'
