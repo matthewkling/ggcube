@@ -4,6 +4,12 @@
 #' within each color. Shows the full range of colors visible when
 #' shading is enabled in 3D plots.
 #'
+#' When lighting applies to a layer that maps `fill` or `colour`, ggcube uses
+#' these guides by default, in place of [ggplot2::guide_colourbar()] and
+#' [ggplot2::guide_legend()]. Call them explicitly to change their options, or
+#' use e.g. `guides(fill = "colourbar")` for an unshaded guide. Guides given to
+#' a scale's `guide` argument as guide objects are left as they are.
+#'
 #' When fill and color aesthetics map to the same variable (e.g.,
 #' \code{aes(fill = z, color = z)}), ggplot2 creates a shared scale with a
 #' single guide. In this case, use \code{guides(fill = guide_*_3d())} to
@@ -14,170 +20,259 @@
 #' @param reverse_shade Logical. If TRUE, reverses the lighting gradient direction. By default,
 #'   shadows are placed on the left, or on the bottom for horizontal colorbars.
 #' @param shade_range Length-2 numeric vector in the range -1 to 1, giving the limits
-#'   of the shading gradient. -1 is full shade, and 1 is full highlight. Default is `c(-.5, .5)`.
+#'   of the shading gradient. -1 is full shadow, 0 the colors as specified, and 1 full
+#'   highlight, as set by the light's `shadow` and `highlight`. Default is `c(-.5, .5)`.
 #' @param ... Additional arguments passed to \code{guide_colorbar()} or \code{guide_legend()}.
 #' @return A guide object that displays shading effects
 #' @examples
-#' # continuous `colorbar` guide
+#' # 3D guides are used by default for lit layers
 #' ggplot(mountain, aes(x, y, z, fill = z)) +
-#'    stat_surface_3d(light = light(mode = "hsl", direction = c(1, 0, 0))) +
-#'    guides(fill = guide_colorbar_3d()) +
+#'    stat_surface_3d() +
 #'    scale_fill_gradientn(colors = c("tomato", "dodgerblue")) +
 #'    coord_3d()
 #'
+#' # a horizontal colorbar showing the full range of shading
+#' ggplot(mountain, aes(x, y, z, fill = z)) +
+#'    stat_surface_3d() +
+#'    guides(fill = guide_colorbar_3d(shade_range = c(-1, 1), direction = "horizontal")) +
+#'    scale_fill_gradientn(colors = c("tomato", "dodgerblue")) +
+#'    coord_3d() +
+#'    theme(legend.position = "bottom")
+#'
 #' # discrete `legend` guide
 #' ggplot(mountain, aes(x, y, z, fill = x > .5, group = 1)) +
-#'    stat_surface_3d(light = light(mode = "hsl", direction = c(1, 0, 0))) +
-#'    guides(fill = guide_legend_3d()) +
+#'    stat_surface_3d(light = light(direction = c(1, 0, 0))) +
+#'    coord_3d()
+#'
+#' # an unshaded guide
+#' ggplot(mountain, aes(x, y, z, fill = z)) +
+#'    stat_surface_3d() +
+#'    guides(fill = "colourbar") +
 #'    coord_3d()
 #' @name guide_3d
 #' @export
 guide_colorbar_3d <- function(reverse_shade = FALSE, shade_range = c(-.5, .5), ...) {
-      # Create normal guide
-      guide <- guide_colorbar(...)
-
-      # Store the original draw method
-      original_draw <- guide$draw
-
-      # Override the draw method with custom version
-      guide$draw <- function(theme, position = NULL, direction = NULL, params = guide$params) {
-
-            # Get original grob
-            original_grob <- original_draw(theme, position, direction, params)
-
-            # Get lighting info
-            lighting_info <- extract_light_from_plot()
-            if (!inherits(lighting_info, "light") || lighting_info$shade == "neither") {
-                  return(original_grob)
-            }
-
-            # Create lighting gradients
-            base_colors <- params$decor[["colour"]]
-            grad <- create_light_gradients(base_colors, lighting_info, shade_range)
-            if(reverse_shade){
-                  if(is.null(params$direction) || params$direction == "vertical"){
-                        grad <- grad[, ncol(grad):1]
-                  }else{
-                        grad <- grad[nrow(grad):1, ]
-                  }
-            }
-
-            # Replace colors in grob
-            shaded_grob <- replace_colorbar_colors(original_grob, grad)
-            return(shaded_grob)
-      }
-
-      guide
+      check_shade_range(shade_range)
+      shade_guide(guide_colorbar(...), GuideColourbar3D, reverse_shade, shade_range)
 }
 
 #' @rdname guide_3d
 #' @export
 guide_legend_3d <- function(reverse_shade = FALSE, shade_range = c(-.5, .5), ...) {
-      # Create normal guide
-      guide <- guide_legend(...)
-
-      # Store the original draw method
-      original_draw <- guide$draw
-
-      # Override the draw method with custom version
-      guide$draw <- function(theme, position = NULL, direction = NULL, params = guide$params) {
-
-            # Get original grob
-            original_grob <- original_draw(theme, position, direction, params)
-
-            # Get lighting info
-            lighting_info <- extract_light_from_plot()
-            if (!inherits(lighting_info, "light") || lighting_info$shade == "neither") {
-                  return(original_grob)
-            }
-
-            # Create lighting gradients
-            base_colors <- params$key[[params$aesthetic]]
-            grad <- create_light_gradients(base_colors, lighting_info, shade_range)
-            if(reverse_shade){
-                  if(is.null(params$direction) || params$direction == "vertical"){
-                        grad <- grad[, ncol(grad):1]
-                  }else{
-                        grad <- grad[nrow(grad):1, ]
-                  }
-            }
-
-            # Replace colors in grob
-            shaded_grob <- replace_legend_colors(original_grob, grad)
-            return(shaded_grob)
-      }
-
-      guide
+      check_shade_range(shade_range)
+      shade_guide(guide_legend(...), GuideLegend3D, reverse_shade, shade_range)
 }
 
-
-
-#' Extract lighting information from plot layers
+#' Validate a 3D guide's shading range
 #'
-#' @return List with lighting specification or NULL if none found
+#' @param shade_range The `shade_range` argument.
 #' @keywords internal
 #' @noRd
-extract_light_from_plot <- function() {
-      # Walk up the call stack to find the plot object
-      for (i in 1:20) {
-            tryCatch({
-                  env <- parent.frame(i)
-
-                  if (exists("plot", envir = env)) {
-                        plot_obj <- get("plot", envir = env)
-                        if (inherits(plot_obj, "ggplot")) {
-
-                              # Look for layers with lighting (existing behavior)
-                              lighting_layers <- list()
-                              for (j in seq_along(plot_obj$layers)) {
-                                    layer <- plot_obj$layers[[j]]
-
-                                    if ("light" %in% names(layer$stat_params)) {
-                                          lighting_layers[[length(lighting_layers) + 1]] <- layer$stat_params$light
-                                    }
-                              }
-
-                              # If layer lighting found, use it (maintains precedence)
-                              if (length(lighting_layers) > 0) {
-                                    if (length(lighting_layers) == 1) {
-                                          return(lighting_layers[[1]])
-                                    } else {
-                                          warning("Multiple layers with different lighting found. Using first layer's lighting.")
-                                          return(lighting_layers[[1]])
-                                    }
-                              }
-
-                              # No layer lighting found - check the coord. Its
-                              # `light` may be a `waiver()` when lighting was
-                              # never specified, or was supplied by `+ light()`
-                              # before `coord_3d()` and so is still stashed on
-                              # the plot. Resolve both cases to a real spec.
-                              if (!is.null(plot_obj$coordinates) && "light" %in% names(plot_obj$coordinates)) {
-                                    coord_light <- plot_obj$coordinates$light
-                                    if (inherits(coord_light, "waiver")) {
-                                          pending <- attr(plot_obj, "ggcube_pending_light")
-                                          # A waiver means lighting was never set
-                                          # on the coord: either it came from
-                                          # `+ light()` added before `coord_3d()`
-                                          # and is still stashed, or nothing was
-                                          # specified and the default applies.
-                                          coord_light <- if (!is.null(pending)) pending else light()
-                                    }
-                                    if (!is.null(coord_light)) {
-                                          return(coord_light)
-                                    }
-                              }
-
-                              # No lighting found anywhere
-                              return(NULL)
-                        }
-                  }
-            }, error = function(e) {
-                  # Skip frames that cause errors
-            })
+check_shade_range <- function(shade_range) {
+      if (!is.numeric(shade_range) || length(shade_range) != 2 || anyNA(shade_range) ||
+          any(abs(shade_range) > 1)) {
+            rlang::abort("`shade_range` must be two numbers in the range -1 to 1.", call = NULL)
       }
+      invisible()
+}
 
-      return(NULL)
+#' Make a shaded version of a ggplot2 guide
+#'
+#' The ggplot2 constructor processes the guide's own arguments; the result is
+#' rebuilt as an instance of the shaded subclass, with the shading parameters
+#' added.
+#'
+#' @param guide A guide made by [ggplot2::guide_colourbar()] or
+#'   [ggplot2::guide_legend()].
+#' @param super The shaded guide class.
+#' @param reverse_shade,shade_range Shading parameters.
+#' @return A guide object.
+#' @keywords internal
+#' @noRd
+shade_guide <- function(guide, super, reverse_shade, shade_range) {
+      ggproto(NULL, super,
+              params = c(guide$params, list(reverse_shade = reverse_shade, shade_range = shade_range)),
+              available_aes = guide$available_aes)
+}
+
+#' Shade a drawn guide's colors
+#'
+#' @param grob The guide drawn by its ggplot2 parent class.
+#' @param base_colors The guide's colors.
+#' @param params The guide's parameters.
+#' @param replace Function replacing a drawn guide's colors with a gradient
+#'   matrix.
+#' @return The shaded guide, or `grob` unchanged if no lighting applies to
+#'   the guide's aesthetic.
+#' @keywords internal
+#' @noRd
+shade_drawn_guide <- function(grob, base_colors, params, replace) {
+      lighting <- guide_lighting(params$aesthetic)
+      if (is.null(lighting)) return(grob)
+
+      grad <- create_light_gradients(base_colors, lighting, params$shade_range)
+      if (isTRUE(params$reverse_shade)) {
+            if (is.null(params$direction) || params$direction == "vertical") {
+                  grad <- grad[, ncol(grad):1, drop = FALSE]
+            } else {
+                  grad <- grad[nrow(grad):1, , drop = FALSE]
+            }
+      }
+      replace(grob, grad)
+}
+
+GuideColourbar3D <- ggproto("GuideColourbar3D", GuideColourbar,
+      params = c(GuideColourbar$params, list(reverse_shade = FALSE, shade_range = c(-.5, .5))),
+      draw = function(self, theme, position = NULL, direction = NULL, params = self$params) {
+            grob <- ggproto_parent(GuideColourbar, self)$draw(theme, position, direction, params)
+            shade_drawn_guide(grob, params$decor[["colour"]], params, replace_colorbar_colors)
+      }
+)
+
+GuideLegend3D <- ggproto("GuideLegend3D", GuideLegend,
+      params = c(GuideLegend$params, list(reverse_shade = FALSE, shade_range = c(-.5, .5))),
+      draw = function(self, theme, position = NULL, direction = NULL, params = self$params) {
+            grob <- ggproto_parent(GuideLegend, self)$draw(theme, position, direction, params)
+            aesthetic <- intersect(c("fill", "colour"), params$aesthetic)[1]
+            if (is.na(aesthetic)) return(grob)
+            shade_drawn_guide(grob, params$key[[aesthetic]], params, replace_legend_colors)
+      }
+)
+
+
+# Which lighting applies to an aesthetic -----------------------------------------
+
+#' Lighting that applies to an aesthetic
+#'
+#' A guide for an aesthetic is shaded if the aesthetic is mapped by a lit
+#' polygon layer whose lighting targets it: `fill`, or `colour` for border
+#' colors. Points and lines aren't lit, so their guides aren't shaded.
+#'
+#' @param plot A ggplot object.
+#' @param aesthetic `"fill"` or `"colour"`.
+#' @param plot_light The plot-level light as resolved for the build, or
+#'   `waiver()` to resolve it from `plot`.
+#' @return The applicable `light` object, from the first such layer, or
+#'   `NULL`.
+#' @keywords internal
+#' @noRd
+aesthetic_light <- function(plot, aesthetic, plot_light = waiver()) {
+      if (!isTRUE(aesthetic %in% c("fill", "colour"))) return(NULL)
+      if (inherits(plot_light, "waiver")) plot_light <- plot_level_light(plot)
+      targets <- if (aesthetic == "fill") c("fill", "both") else c("colour", "both")
+
+      for (layer in plot$layers) {
+            geom <- layer$geom
+            if (!inherits(geom, c("GeomPolygon3D", "GeomPlane3D"))) next
+            if (!layer_maps_aesthetic(layer, aesthetic)) next
+
+            layer_light <- layer$stat_params$light %||% layer$geom_params$light
+            light <- if (is.null(layer_light)) plot_light else layer_light
+            if (identical(light, "none") || !inherits(light, "light")) next
+            if (is.null(layer_light) && is_default_light(light) && isFALSE(geom$lit_by_default)) next
+            if (light$shade %in% targets) return(light)
+      }
+      NULL
+}
+
+#' The plot-level light of a plot
+#'
+#' @param plot A ggplot object.
+#' @return The resolved plot-level light, or `NULL` if lighting is disabled.
+#' @keywords internal
+#' @noRd
+plot_level_light <- function(plot) {
+      coord <- plot$coordinates
+      if (is.null(coord) || !"light" %in% names(coord)) return(NULL)
+      light <- coord$light
+      # A waiver means lighting was never set on the coord: either it came
+      # from `+ light()` added before `coord_3d()` and is still stashed, or
+      # nothing was specified and the default applies
+      if (inherits(light, "waiver")) {
+            pending <- attr(plot, "ggcube_pending_light")
+            if (!is.null(pending)) light <- pending
+      }
+      resolve_light(light)
+}
+
+#' Does a layer map an aesthetic?
+#'
+#' True if the aesthetic is mapped by the layer or its plot, or computed by
+#' default by the layer's stat (e.g. `fill = after_stat(z)`), and not set to
+#' a fixed value.
+#'
+#' @param layer A ggplot2 layer.
+#' @param aesthetic Aesthetic name.
+#' @return `TRUE` or `FALSE`.
+#' @keywords internal
+#' @noRd
+layer_maps_aesthetic <- function(layer, aesthetic) {
+      if (aesthetic %in% names(layer$aes_params)) return(FALSE)
+      mapping <- layer$computed_mapping %||% layer$mapping
+      if (aesthetic %in% names(mapping)) return(TRUE)
+      default <- layer$stat$default_aes[[aesthetic]]
+      !is.null(default) && is_calculated_aes(default)
+}
+
+#' Is a default aesthetic computed?
+#'
+#' @param x A default aesthetic value.
+#' @return `TRUE` for `after_stat()` or other calculated aesthetics.
+#' @keywords internal
+#' @noRd
+is_calculated_aes <- function(x) {
+      expr <- if (rlang::is_quosure(x)) rlang::quo_get_expr(x) else x
+      is.call(expr)
+}
+
+#' Lighting that applies to a guide being drawn
+#'
+#' Guides are drawn after the plot is built, so the plot is found by walking
+#' up the call stack.
+#'
+#' @param aesthetic The guide's aesthetics: more than one when ggplot2 has
+#'   merged the guides of several scales, e.g. of `fill` and `colour` mapped to
+#'   the same variable.
+#' @return A `light` object, or `NULL`.
+#' @keywords internal
+#' @noRd
+guide_lighting <- function(aesthetic) {
+      plot <- find_build_plot()
+      if (is.null(plot)) return(NULL)
+      for (aes in intersect(c("fill", "colour"), aesthetic)) {
+            light <- aesthetic_light(plot, aes)
+            if (!is.null(light)) return(light)
+      }
+      NULL
+}
+
+#' Use 3D guides for lit aesthetics
+#'
+#' Called while a plot is built. Scales of `fill` and `colour` that still have
+#' the default guide, `"colourbar"` or `"legend"`, get the 3D version if
+#' lighting applies to their aesthetic. Guides set with `guides()` take
+#' precedence over a scale's guide, so they still apply.
+#'
+#' @param plot The plot being built, whose scales are its own copies.
+#' @param plot_light The plot-level light as resolved for the build.
+#' @return Called for its side effect on the scales of `plot`.
+#' @keywords internal
+#' @noRd
+use_3d_guides <- function(plot, plot_light) {
+      for (scale in plot$scales$scales) {
+            aesthetic <- intersect(c("fill", "colour"), scale$aesthetics)[1]
+            if (is.na(aesthetic)) next
+            guide <- scale$guide
+            if (!is.character(guide) || length(guide) != 1) next
+            shaded <- switch(guide,
+                             colourbar = , colorbar = guide_colorbar_3d,
+                             legend = guide_legend_3d,
+                             NULL)
+            if (is.null(shaded)) next
+            if (is.null(aesthetic_light(plot, aesthetic, plot_light))) next
+            scale$guide <- shaded()
+      }
+      invisible()
 }
 
 #' Create shading gradients for colorbar

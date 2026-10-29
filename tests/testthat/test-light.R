@@ -352,26 +352,25 @@ test_that("plot-level lighting survives faceting and the print path", {
 
 
 test_that("3D guides see the resolved light, not the unresolved waiver", {
-      # extract_light_from_plot() reads the coord's `light` field directly. That
-      # field holds a `waiver()` until the build resolves it, and `waiver()$shade`
-      # is NULL, so an unguarded `$shade == "neither"` comparison yields NA and
+      # plot_level_light() reads the coord's `light` field directly. That field
+      # holds a `waiver()` until the build resolves it, and `waiver()$shade` is
+      # NULL, so an unguarded `$shade == "neither"` comparison yields NA and
       # errors when used as a condition.
-      extract <- extract_light_from_plot
-      probe <- function(plot) extract()
 
       # Unspecified lighting must resolve to the default, so guides shade the key.
-      bare <- probe(light_test_plot() + coord_3d())
+      bare <- plot_level_light(light_test_plot() + coord_3d())
       expect_s3_class(bare, "light")
       expect_equal(bare$shade, light()$shade)
+      expect_true(is_default_light(bare))
 
       # `+ light()` is visible whether it lands on the coord or is still stashed.
-      after  <- probe(light_test_plot() + coord_3d() + light(direction = c(1, 0, 0)))
-      before <- probe(light_test_plot() + light(direction = c(1, 0, 0)) + coord_3d())
+      after  <- plot_level_light(light_test_plot() + coord_3d() + light(direction = c(1, 0, 0)))
+      before <- plot_level_light(light_test_plot() + light(direction = c(1, 0, 0)) + coord_3d())
       expect_equal(after$direction, c(1, 0, 0))
       expect_equal(before$direction, c(1, 0, 0))
 
       # Disabled lighting stays NULL so guides skip shading entirely.
-      expect_null(probe(light_test_plot() + coord_3d(light = NULL)))
+      expect_null(plot_level_light(light_test_plot() + coord_3d(light = NULL)))
 })
 
 

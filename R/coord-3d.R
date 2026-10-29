@@ -706,6 +706,10 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                          effective_light <- if (is.null(pending)) self$light else pending
                          panel_params$light <- resolve_light(effective_light)
 
+                         # Lit aesthetics get 3D guides by default
+                         build_plot <- find_build_plot()
+                         if (!is.null(build_plot)) use_3d_guides(build_plot, panel_params$light)
+
                          return(panel_params)
                    },
 

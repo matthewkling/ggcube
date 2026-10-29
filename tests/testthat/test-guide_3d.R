@@ -80,8 +80,8 @@ test_that("replace_legend_colors converts key glyphs to rasters in a rendered le
       }
       expect_false(is.null(legend))
 
-      # Supply a gradient directly, bypassing extract_light_from_plot() (which
-      # only resolves during a live render).
+      # Supply a gradient directly, bypassing guide_lighting() (which only
+      # resolves during a live render).
       grad <- matrix(
             c("#000000", "#444444", "#888888", "#bbbbbb", "#ffffff"),
             nrow = 2, ncol = 5, byrow = TRUE
