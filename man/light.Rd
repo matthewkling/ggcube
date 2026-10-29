@@ -5,44 +5,41 @@
 \title{Lighting specification for 3D surface rendering}
 \usage{
 light(
-  method = "diffuse",
-  direction = c(-0.5, 0, 1),
+  ramp = "smooth",
+  direction = c(-0.5, 0, sqrt(3)/2),
   anchor = "scene",
   position = NULL,
   distance_falloff = FALSE,
   fill = TRUE,
   color = TRUE,
-  mode = "hsv",
-  contrast = 1,
+  tone = "lightness",
+  shadow = 0.8,
+  highlight = 0.6,
   backface_scale = -1,
-  backface_offset = 0
+  backface_offset = 0,
+  method = deprecated(),
+  mode = deprecated(),
+  contrast = deprecated()
 )
 }
 \arguments{
-\item{method}{Character string specifying lighting model:
-\itemize{
-\item \code{"diffuse"}: The default. Atmospheric lighting with soft shadows (only surfaces pointing
-directly away from light source are fully dark; base color occurs on surfaces perpendicular to light)
-\item \code{"direct"}: Direct lighting with hard shadows (all surfaces angled beyond 90 degrees from
-light source are fully dark; base color occurs on surfaces angled 45 degrees toward light)
-\item \code{"rgb"}: Map surface orientation to three dimensional color space. Rather than the light model
-darkening or brightening base colors as in the other models, this model generates a wholly new set of
-colors. If this option is selected, parameters like \code{mode} and \code{contrast} are ignored, but
-\code{fill}, \code{color}, and \code{direction} still apply.
-\item \code{"none"}: Disable lighting entirely. All other parameters are ignored.
-Equivalent to \code{light(fill = FALSE, color = FALSE)}, and to passing the
-bare string \code{"none"} to a \code{light} argument.
-}}
+\item{ramp}{How brightness changes as a surface turns away from the light.
+One of \code{"smooth"} (the default: gradual change), \code{"hard"} (a sharp edge
+between lit and unlit sides), or \code{"steps"} (flat bands), or a ramp from
+\code{\link[=ramp_smooth]{ramp_smooth()}}, \code{\link[=ramp_hard]{ramp_hard()}}, or \code{\link[=ramp_steps]{ramp_steps()}}, which take further
+options. \code{"none"} disables lighting, and ignores all other arguments:
+\code{light("none")} is equivalent to the bare string \code{"none"} accepted by the
+\code{light} argument of layers and \code{\link[=coord_3d]{coord_3d()}}.}
 
 \item{direction}{Numeric vector of length 3 specifying direction in 3D space (x, y, z) that
 light comes from for directional lighting. Depending on \code{anchor}, direction is relative to
-either the plot axes or the viewing pane. The default is \code{c(-.5, 0, 1)}, giving
-diagonal lighting from the upper right edge with default rotation and anchor. At least
-one value must be non-zero. Values are automatically normalized, so magnitude doesn't
-matter, only sign and relative magnitude. Direction is specified in visual space (relative
-to the rendered cube's bounding box), not data space. Use \code{\link[=direction]{direction()}} to build this
-vector from an azimuth and elevation instead of components; the default corresponds to
-\code{direction(270, 63.43)}. This argument is ignored if \code{position} is provided.}
+either the plot axes or the viewing pane. The default is \code{direction(270, 60)}: light from
+the xmin side of the cube, 60 degrees above horizontal. At least one value must be
+non-zero. Values are automatically normalized, so magnitude doesn't matter, only sign and
+relative magnitude. Direction is specified in visual space (relative to the rendered
+cube's bounding box), not data space. Use \code{\link[=direction]{direction()}} to build this vector from an
+azimuth and elevation instead of components. This argument is ignored if \code{position} is
+provided.}
 
 \item{anchor}{Character string specifying the reference frame for light direction:
 \itemize{
@@ -65,47 +62,70 @@ intensity falloff for positional lighting using inverse square law
 (intensity proportional to 1/distance²). Only used when \code{position} is specified.
 Default is FALSE.}
 
-\item{fill}{Logical indicating whether to apply lighting to fill colors. Default is TRUE.}
+\item{fill, color}{Logical values indicating whether to light fill colors and
+border colors. Both default to \code{TRUE}.}
 
-\item{color}{Logical indicating whether to apply lighting to border/line colors. Default is TRUE.}
+\item{tone}{What lighter and darker look like for a given color. One of
+\code{"lightness"} (the default: lighter and darker versions of the same hue),
+\code{"tint"} (mixing toward chosen highlight and shadow colors, for colored
+light), or \code{"normals"} (coloring faces by the direction they face), or a
+tone from \code{\link[=tone_lightness]{tone_lightness()}}, \code{\link[=tone_tint]{tone_tint()}}, or \code{\link[=tone_normals]{tone_normals()}}, which take
+further options.}
 
-\item{mode}{Character string specifying color lighting mode:
-\itemize{
-\item \code{"hsv"}: The default. Modifies \emph{value} component of \emph{HSV} color
-(fades to bright colors at high end, black at low end).
-\item \code{"hsl"}: Modifies \emph{lightness} component of \emph{HSL} color
-(fades to white at high end, black at low end).
-}
-These two options give identical results for grayscale colors.}
-
-\item{contrast}{Numeric value greater than zero controlling the intensity of lighting effects.
-1.0 (the default) gives full black-to-white range. Values less than 1 give subtler effects, while
-values greater than 1 give more dramatic effects.}
+\item{shadow, highlight}{Strength of shadows and highlights, from 0 (none) to 1
+(reaching the tone's full shadow or highlight, e.g. black or white for the
+default tone). Defaults are 0.8 and 0.6.}
 
 \item{backface_scale, backface_offset}{Numeric values that determine how "frontface" light values get
 modified (scaled and then offset) to derive "backface" light values. A backface is the side of a
-polygon that faces the underside of a surface or the inside of a volume. Frontface light values are
-typically in the range \verb{[-1, 1]} (unless \code{contrast} is boosted). The default scale of -1 gives
-backfaces highly contrasting lighting to frontfaces. To light backfaces the same as frontfaces,
-set scale to 1. To uniformly darken (brighten) all backfaces, use a negative (positive) offset.}
+polygon that faces the underside of a surface or the inside of a volume. Frontface light values,
+the cosines of faces' angles to the light, are in the range \verb{[-1, 1]}. The default scale of -1
+gives backfaces highly contrasting lighting to frontfaces. To light backfaces the same as
+frontfaces, set scale to 1. To uniformly darken (brighten) all backfaces, use a negative
+(positive) offset.}
+
+\item{method}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{ramp} instead: \code{"diffuse"} is
+now \code{ramp = "smooth"}, \code{"direct"} is \code{ramp = "hard"}, and \code{"rgb"} is
+\code{tone = "normals"}.}
+
+\item{mode}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Lighting now changes the lightness of
+colors in the perceptual OKLab color space, keeping their hue, so \code{mode} is no
+longer needed. For now, \code{"hsv"} and \code{"hsl"} still give the color math of ggcube
+0.3.}
+
+\item{contrast}{\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}} Use \code{shadow} and \code{highlight}
+instead. \code{contrast} scales both of their defaults.}
 }
 \value{
-A \code{lighting} object that can be added to a plot or passed to polygon-based 3D layers
+A \code{light} object that can be added to a plot or passed to polygon-based 3D layers
 or to \code{coord_3d()}.
 }
 \description{
-Creates a lighting specification object for use with 3D polygon layers.
-Lighting modifies the brightness of fill and/or base color aesthetics based on surface
-orientation (i.e., it implements form shadows but not cast shadows).
-Various options are available to control light qualities and light source location.
-The result can be added directly to a plot with \code{+ light()} to set lighting for
-the whole plot. It can also be passed to individual \verb{geom_*_3d()} layer functions,
+Creates a lighting specification for 3D polygon layers. Lighting changes the
+fill and/or border colors of each face according to its orientation to a
+light source (it gives form shadows, not cast shadows). The result can be
+added to a plot with \code{+ light()} to light the whole plot. It can also be
+passed to the \code{light} argument of individual \verb{geom_*_3d()} layer functions,
 which takes precedence over plot-level lighting.
 }
 \details{
-Note that light-like effects can also be achieved in some stats by mapping color
-aesthestics to computed variables such as \code{after_stat(dzdx)}; see \code{\link[=geom_surface_3d]{geom_surface_3d()}}
-for examples.
+Lighting colors each face in three steps:
+\enumerate{
+\item The angle between the face and the direction toward the light is
+measured.
+\item A \emph{ramp} turns the angle into how far the face moves toward shadow or
+highlight. With the default ramp, faces at 45 degrees to the light keep
+their base color exactly, faces turned further toward the light are
+highlighted, and faces turned further away are shadowed. \code{shadow} and
+\code{highlight} set how strong the effect is in each direction.
+\item A \emph{tone} decides what lighter and darker look like for a given color. With
+the default tone, colors become lighter and darker versions of the same
+hue.
+}
+
+Light-like effects can also be achieved in some stats by mapping color
+aesthetics to computed variables such as \code{after_stat(dzdx)}; see
+\code{\link[=geom_surface_3d]{geom_surface_3d()}} for examples.
 }
 \examples{
 # base plot used in examples
@@ -115,22 +135,28 @@ p <- ggplot(sphere_points, aes(x, y, z)) +
 
 # Light qualities ----------------------------------------------------------
 
-# default `"diffuse"` lighting
+# default lighting
 p
 
 \donttest{
 
-# use `"direct"` lighting to apply full shade to unlit surfaces
-p + light(method = "direct")
+# stronger shadows and highlights
+p + light(shadow = 1, highlight = 0.9)
 
-# use `"hsl"` mode to fade highlights to white
-p + light(mode = "hsl")
+# subtler lighting
+p + light(shadow = 0.4, highlight = 0.3)
 
-# adjust lighting intensity with `contrast`
-p + light(mode = "hsl", contrast = 1.5)
+# a sharp edge between lit and unlit sides
+p + light("hard")
 
-# use `"rgb"` lighting to map face orientation to 3D color space
-p + light(method = "rgb")
+# flat bands of light, with options given by a ramp function
+p + light(ramp_steps(n = 3))
+
+# colored light: warm highlights and cool shadows
+p + light(tone = tone_tint(shadow = "midnightblue", highlight = "lightyellow"))
+
+# color faces by the direction they face
+p + light(tone = "normals")
 
 
 # Lighting targets ---------------------------------------------------------
@@ -142,16 +168,15 @@ p + light(fill = TRUE, color = FALSE)
 p + geom_hull_3d(aes(fill = x, color = x)) +
       scale_fill_viridis_c() +
       scale_color_viridis_c() +
-      guides(fill = guide_colorbar_3d()) +
-      light(mode = "hsl", contrast = .9)
+      guides(fill = guide_colorbar_3d())
 
 # disable lighting entirely
 p + light("none")
 
 # if provided, layer-level lighting overrides plot-level lighting
-p + light("direct") + # plot-level: affects original layer
+p + light("hard") + # plot-level: affects original layer
   geom_hull_3d(aes(x = x + 2.5), fill = "#9e2602", color = "#5e1600",
-      light = light("direct", mode = "hsl", direction = c(0, -1, 0)))
+      light = light(direction = c(0, -1, 0)))
 
 
 # Light sources ------------------------------------------------------------
@@ -167,8 +192,7 @@ p + light(direction = c(1, 1, 0), anchor = "camera")
 # positional light source within plot
 ggplot(mountain, aes(x, y, z)) +
   stat_surface_3d(fill = "red", color = "red") +
-  light(position = c(.5, .7, 95), distance_falloff = TRUE,
-        mode = "hsl", contrast = .9) +
+  light(position = c(.5, .7, 95), distance_falloff = TRUE) +
   coord_3d(ratio = c(1.5, 2, 1))
 
 
@@ -180,13 +204,13 @@ p <- ggplot() +
     xlim = c(-3, 3), ylim = c(-3, 3),
     fill = "steelblue", color = "steelblue") +
     coord_3d(pitch = 0, roll = -70, yaw = 0)
-p + light(mode = "hsl")
+p
 
 # use `backface_scale = 1` to light backfaces as if they're frontfaces
-p + light(backface_scale = 1, mode = "hsl")
+p + light(backface_scale = 1)
 
 # use `backface_offset` to uniformly darken (or lighten) backfaces
-p + light(backface_scale = 1, mode = "hsl", backface_offset = -.5)
+p + light(backface_scale = 1, backface_offset = -.5)
 
 }
 

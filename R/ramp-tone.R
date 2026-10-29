@@ -45,46 +45,68 @@ check_neutral <- function(neutral, max = 180) {
       invisible(neutral)
 }
 
-#' Smooth ramp
+#' Lighting ramps
 #'
-#' Light levels change gradually with angle: colors are unchanged on faces at
-#' `neutral` degrees to the light, fully highlighted on faces facing it, and
-#' fully shadowed on faces facing directly away from it.
+#' `r lifecycle::badge("experimental")`
 #'
-#' @param neutral Angle in degrees, greater than 0 and less than 180.
-#' @return A `ggcube_ramp` object.
-#' @keywords internal
-#' @noRd
+#' A ramp decides how brightness changes as a surface turns away from the
+#' light, for use as the `ramp` argument of [light()]. Each ramp keeps colors
+#' unchanged on faces at `neutral` degrees to the light, and moves faces turned
+#' further toward the light toward full highlight, and faces turned further away
+#' toward full shadow. How far toward full highlight and shadow colors go is set
+#' by the `highlight` and `shadow` arguments of [light()].
+#'
+#' * `ramp_smooth()` changes brightness gradually, reaching full highlight on
+#'   faces that face the light and full shadow on faces that face directly away
+#'   from it. This is the default.
+#' * `ramp_hard()` is like `ramp_smooth()` toward the light, but faces at 90
+#'   degrees or more from the light are fully shadowed, giving a sharp edge
+#'   between lit and unlit sides.
+#' * `ramp_steps()` groups the brightness of `ramp_smooth()` into `n` flat bands,
+#'   for a cartoon-like look.
+#'
+#' These can also be given to [light()] by name, as `"smooth"`, `"hard"`, or
+#' `"steps"`, to use their defaults.
+#'
+#' @param neutral Angle in degrees between a face and the direction toward the
+#'   light at which colors are unchanged. Must be greater than 0 and less than
+#'   180, or less than 90 for `ramp_hard()`. Default is 45.
+#' @param n Number of bands, at least 2. Default is 4.
+#' @return A ramp object, for the `ramp` argument of [light()].
+#' @seealso [light()], and [tone_lightness()] for tones, which decide what lighter
+#'   and darker look like.
+#' @examples
+#' p <- ggplot(sphere_points, aes(x, y, z)) +
+#'   geom_hull_3d(fill = "steelblue", color = "steelblue") +
+#'   coord_3d(scales = "fixed")
+#'
+#' p + light(ramp_smooth())
+#'
+#' # base color on faces closer to facing the light, for darker overall shading
+#' p + light(ramp_smooth(neutral = 30))
+#'
+#' p + light(ramp_hard())
+#'
+#' p + light(ramp_steps(n = 3))
+#' @name ramps
+NULL
+
+#' @rdname ramps
+#' @export
 ramp_smooth <- function(neutral = 45) {
       check_neutral(neutral)
       new_ramp("smooth", neutral = neutral)
 }
 
-#' Hard ramp
-#'
-#' Like [ramp_smooth()] toward the light, but faces at 90 degrees or more from
-#' the light are fully shadowed, giving a sharp edge between lit and unlit
-#' sides.
-#'
-#' @param neutral Angle in degrees, greater than 0 and less than 90.
-#' @return A `ggcube_ramp` object.
-#' @keywords internal
-#' @noRd
+#' @rdname ramps
+#' @export
 ramp_hard <- function(neutral = 45) {
       check_neutral(neutral, max = 90)
       new_ramp("hard", neutral = neutral)
 }
 
-#' Stepped ramp
-#'
-#' The light levels of [ramp_smooth()], grouped into `n` flat bands of equal
-#' width.
-#'
-#' @param n Number of bands, at least 2.
-#' @param neutral Angle in degrees, greater than 0 and less than 180.
-#' @return A `ggcube_ramp` object.
-#' @keywords internal
-#' @noRd
+#' @rdname ramps
+#' @export
 ramp_steps <- function(n = 4, neutral = 45) {
       if (!is.numeric(n) || length(n) != 1 || !is.finite(n) || n < 2 || n != round(n)) {
             rlang::abort("`n` must be a single whole number of at least 2.", call = NULL)
@@ -116,8 +138,8 @@ ramp_level <- function(ramp, x) {
       # Faces at the neutral angle leave colors exactly unchanged
       level[abs(level) < 1e-12] <- 0
       if (inherits(ramp, "ggcube_ramp_steps")) {
-            band <- pmin(floor((level + 1) / 2 * ramp$n), ramp$n - 1)
-            level <- -1 + (2 * band + 1) / ramp$n
+            band <- pmin(floor((level + 1) / 2 * ramp[["n"]]), ramp[["n"]] - 1)
+            level <- -1 + (2 * band + 1) / ramp[["n"]]
       }
       level
 }
@@ -136,31 +158,56 @@ new_tone <- function(kind, ...) {
       structure(list(...), class = c(paste0("ggcube_tone_", kind), "ggcube_tone"))
 }
 
-#' Lightness tone
+#' Lighting tones
 #'
-#' Lit colors are lighter and darker versions of the same hue: the OKLab
-#' lightness of colors moves toward white (positive amounts) or black
-#' (negative amounts), keeping their hue, and as much of their chroma as the
-#' sRGB gamut allows.
+#' `r lifecycle::badge("experimental")`
 #'
-#' @return A `ggcube_tone` object.
-#' @keywords internal
-#' @noRd
+#' A tone decides what lighter and darker look like for a given color, for use
+#' as the `tone` argument of [light()]. How far faces move toward a tone's full
+#' highlight and shadow is set by the ramp and the `highlight` and `shadow`
+#' arguments of [light()].
+#'
+#' * `tone_lightness()` makes colors lighter and darker versions of the same
+#'   hue, reaching white at full highlight and black at full shadow. It changes
+#'   lightness in the perceptual OKLab color space, keeping hue, and as much
+#'   chroma as the sRGB gamut allows. This is the default.
+#' * `tone_tint()` mixes colors toward a chosen highlight color and shadow color,
+#'   in OKLab. This gives colored light, such as warm highlights with cool
+#'   shadows, like the split toning of photography.
+#' * `tone_normals()` ignores base colors, and colors each face by the direction
+#'   it faces: face normals are mapped to RGB color space, rotated so that faces
+#'   facing the light are white. 3D guides aren't shaded with this tone.
+#'
+#' These can also be given to [light()] by name, as `"lightness"`, `"tint"`, or
+#' `"normals"`, to use their defaults.
+#'
+#' @param shadow,highlight Colors reached at full shadow and full highlight.
+#'   Defaults are black and white.
+#' @return A tone object, for the `tone` argument of [light()].
+#' @seealso [light()], and [ramp_smooth()] for ramps, which decide how brightness
+#'   changes with angle.
+#' @examples
+#' p <- ggplot(sphere_points, aes(x, y, z)) +
+#'   geom_hull_3d(fill = "darkorange", color = "darkorange") +
+#'   coord_3d(scales = "fixed")
+#'
+#' p + light(tone = tone_lightness())
+#'
+#' # warm light with cool shadows
+#' p + light(tone = tone_tint(shadow = "midnightblue", highlight = "lightyellow"))
+#'
+#' p + light(tone = tone_normals())
+#' @name tones
+NULL
+
+#' @rdname tones
+#' @export
 tone_lightness <- function() {
       new_tone("lightness")
 }
 
-#' Tint tone
-#'
-#' Lit colors move toward a chosen highlight color (positive amounts) or
-#' shadow color (negative amounts), mixed in OKLab. This gives colored light,
-#' such as warm highlights with cool shadows.
-#'
-#' @param shadow,highlight Colors that fully shadowed and fully highlighted
-#'   faces take.
-#' @return A `ggcube_tone` object.
-#' @keywords internal
-#' @noRd
+#' @rdname tones
+#' @export
 tone_tint <- function(shadow = "black", highlight = "white") {
       for (arg in c("shadow", "highlight")) {
             value <- get(arg)
@@ -171,15 +218,8 @@ tone_tint <- function(shadow = "black", highlight = "white") {
       new_tone("tint", shadow = shadow, highlight = highlight)
 }
 
-#' Normal tone
-#'
-#' Colors faces by the direction they face, ignoring their base colors:
-#' normals are mapped to RGB color space, rotated so that faces facing the
-#' light are white.
-#'
-#' @return A `ggcube_tone` object.
-#' @keywords internal
-#' @noRd
+#' @rdname tones
+#' @export
 tone_normals <- function() {
       new_tone("normals")
 }
@@ -195,6 +235,42 @@ tone_normals <- function() {
 #' @noRd
 tone_legacy <- function(space = "hsv") {
       new_tone("legacy", space = space)
+}
+
+#' Describe ramps and tones
+#'
+#' @param x A ramp or tone.
+#' @return Character string.
+#' @keywords internal
+#' @noRd
+format_ramp <- function(x) {
+      kind <- sub("^ggcube_ramp_", "", class(x)[1])
+      details <- c(if (!is.null(x[["n"]])) paste(x[["n"]], "bands"),
+                   paste0("neutral ", x$neutral, " deg"))
+      paste0(kind, " (", paste(details, collapse = ", "), ")")
+}
+
+#' @noRd
+format_tone <- function(x) {
+      kind <- sub("^ggcube_tone_", "", class(x)[1])
+      switch(kind,
+             tint = paste0("tint (shadow ", x$shadow, ", highlight ", x$highlight, ")"),
+             legacy = paste0("legacy ", x$space),
+             kind)
+}
+
+#' @export
+print.ggcube_ramp <- function(x, ...) {
+      cat("<ramp>", format_ramp(x), "
+")
+      invisible(x)
+}
+
+#' @export
+print.ggcube_tone <- function(x, ...) {
+      cat("<tone>", format_tone(x), "
+")
+      invisible(x)
 }
 
 #' Apply a tone to colors

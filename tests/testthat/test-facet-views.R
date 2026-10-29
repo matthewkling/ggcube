@@ -84,7 +84,7 @@ test_that("a side of a grid formula can be empty", {
 })
 
 test_that("several angles on one side are crossed", {
-      p <- sphere_plot() + light("direct")
+      p <- sphere_plot() + light("hard")
       l <- built(p + facet_grid_views(roll ~ yaw + light_azimuth, n = c(2, 3, 2)))
       lay <- l$layout
       expect_equal(c(max(lay$ROW), max(lay$COL)), c(2, 6))
@@ -177,25 +177,25 @@ test_that("panels keep the plot's other coord settings", {
 # --- Lighting ----------------------------------------------------------------
 
 test_that("light angles give each panel its own light direction", {
-      p <- sphere_plot() + light("direct")
+      p <- sphere_plot() + light("hard")
       l <- built(p + facet_wrap_views(~light_azimuth, light_elevation = 30))
       dirs <- lapply(l$panel_params, function(pp) pp$light$direction)
       expect_equal(dirs, lapply(c(0, 90, 180, 270), direction, elevation = 30))
-      expect_equal(l$panel_params[[1]]$light$method, "direct")
+      expect_s3_class(l$panel_params[[1]]$light$ramp, "ggcube_ramp_hard")
       # The camera is untouched.
       expect_true(all(panel_angle(l, "yaw") == -30))
 })
 
 test_that("a light added before coord_3d() is the one faceted", {
       p <- ggplot(sphere_points, aes(x, y, z)) + geom_hull_3d() +
-            light("direct", mode = "hsl") + coord_3d()
+            light("hard", tone = "tint") + coord_3d()
       l <- built(p + facet_wrap_views(~light_elevation))
-      expect_equal(l$panel_params[[1]]$light$shade_mode, "hsl")
+      expect_s3_class(l$panel_params[[1]]$light$tone, "ggcube_tone_tint")
 })
 
 test_that("a camera facet leaves the plot's light alone", {
       p <- ggplot(sphere_points, aes(x, y, z)) + geom_hull_3d() +
-            light("direct", direction = c(1, 0, 0)) + coord_3d()
+            light("hard", direction = c(1, 0, 0)) + coord_3d()
       l <- built(p + facet_wrap_views(~yaw))
       for (pp in l$panel_params) expect_equal(pp$light$direction, c(1, 0, 0))
 })
@@ -226,7 +226,7 @@ test_that("n must match the formula", {
 
 test_that("light angles need a directional plot-level light", {
       p <- ggplot(sphere_points, aes(x, y, z)) + geom_hull_3d() +
-            geom_hull_3d(aes(x = x + 3), light = light("direct")) + coord_3d()
+            geom_hull_3d(aes(x = x + 3), light = light("hard")) + coord_3d()
       expect_error(ggplot_build(p + facet_wrap_views(~light_azimuth)),
                    "sets its own")
 

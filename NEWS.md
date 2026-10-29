@@ -37,6 +37,22 @@ Performance:
 * `geom_path_3d()` now breaks paths at points that are missing or outside the scale limits, as `geom_path()` does, rather than joining the points on either side.
 * `geom_point_3d()` no longer fails when points lie outside limits set on the z scale.
 
+## Lighting
+
+Changes to default behaviors, which alter the rendering of most lit plots relative to the prior version:
+
+* Lighting now changes the lightness of colors in the perceptual OKLab color space, keeping their hue and as much of their chroma as possible. Colors already at full brightness, such as `"darkorange"`, can now be highlighted, where they previously stayed flat on lit faces, and dark saturated colors, such as `"darkgreen"`, are lightened to lighter versions of themselves rather than to neon. Highlights no longer wash out to white.
+* Faces at 45 degrees to the light now keep their base color exactly, and faces turned further toward or away from it are highlighted or shadowed. Previously faces perpendicular to the light kept their base color, so nearly every upward-facing face was strongly highlighted.
+* Shadows are now stronger than highlights by default (`shadow = 0.8`, `highlight = 0.6`), since fading to black looks more natural than fading to white.
+* The default light now comes from 60 degrees above the horizon, `direction(270, 60)`, rather than about 63 degrees (`c(-.5, 0, 1)`). The tops and two visible sides of columns and voxels now get three distinct shades.
+
+New options:
+
+* `light()` gains `ramp`, which decides how brightness changes as a surface turns away from the light, and `tone`, which decides what lighter and darker look like for a given color. Both take names, or objects from the new experimental functions `ramp_smooth()`, `ramp_hard()`, and `ramp_steps()` (gradual change, a sharp edge between lit and unlit sides, or flat bands), and `tone_lightness()`, `tone_tint()`, and `tone_normals()` (lighter and darker versions of a hue, mixing toward chosen highlight and shadow colors for colored light, or coloring faces by their direction).
+* `light()` gains `shadow` and `highlight`, which set the strength of shadows and highlights separately, from 0 to 1.
+* The `method`, `mode`, and `contrast` arguments of `light()` are deprecated. `light("direct")` is now `light("hard")`, `light(method = "rgb")` is now `light(tone = "normals")`, and `contrast` is replaced by `shadow` and `highlight`. `mode = "hsv"` and `mode = "hsl"` still give the color math of ggcube 0.3 for now. `light("none")` is unchanged.
+* `guide_colorbar_3d()` and `guide_legend_3d()` now center their shading on the scale's colors, so the middle of the guide shows the colors as specified, and `shade_range` gives exactly the range shown, from full shadow (`-1`) to full highlight (`1`).
+
 ## Other changes
 
 * New `geom_isosurface_3d()` and `stat_isosurface_3d()` draw isosurfaces of a scalar field sampled on a 3D grid, the 3D analog of contour lines: map the field to the new `value` aesthetic, and give the field values at which to draw surfaces as `levels`. Grids may be unevenly spaced. Surfaces face outward from the regions they enclose, by default where `value` exceeds the level (`inside = "above"`), or with `inside = "below"` where it's less, and are triangulated by marching cubes using the rmarchingcubes package, which must be installed.

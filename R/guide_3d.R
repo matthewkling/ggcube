@@ -200,28 +200,16 @@ create_light_gradients <- function(base_colors,
       if(any(abs(shade_range) > 1)) stop("`shade_range` can't include values outside the range -1 to 1.")
       light <- seq(shade_range[1], shade_range[2], length.out = n_steps)
 
-      # Transform to give appearance of convex surface
-      light <- sin(light * pi/2)
+      # Light levels across the range, transformed to give the appearance of a
+      # convex surface, and scaled by the light's strengths into amounts
+      level <- sin(light * pi/2)
+      amount <- ifelse(level >= 0, lighting_info$highlight * level, lighting_info$shadow * level)
 
-      # Adjust range in accordance with lighting method
-      if (lighting_info$method != "diffuse") {
-            light <- scales::rescale(light, to = c(0, 1), from = c(-1, 1))
-      }
-
-      # Create matrix: rows = base colors, columns = lighting steps
-      grad <- matrix(NA_character_, nrow = length(base_colors), ncol = n_steps)
-
-      # Apply lighting to base colors across
-      for (i in seq_along(base_colors)) {
-            gradient_colors <- blend_light_with_colors(
-                  rep(base_colors[i], n_steps),
-                  light,
-                  lighting_info
-            )
-            grad[i, ] <- gradient_colors
-      }
-
-      return(grad)
+      # Rows are base colors, columns are lighting steps
+      grad <- tone_colors(lighting_info$tone,
+                          rep(base_colors, times = n_steps),
+                          rep(amount, each = length(base_colors)))
+      matrix(grad, nrow = length(base_colors), ncol = n_steps)
 }
 
 #' Replace colorbar colors with shading gradients

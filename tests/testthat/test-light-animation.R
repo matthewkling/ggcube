@@ -22,9 +22,9 @@ built_frame_light <- function(plot, light, param_seqs, i) {
 # --- resolve_animated_light ---------------------------------------------------
 
 test_that("the animated light comes from + light(), coord_3d(light =), or the default", {
-      added <- resolve_animated_light(lit_plot() + light("direct", direction = c(1, 0, 0)) +
+      added <- resolve_animated_light(lit_plot() + light("hard", direction = c(1, 0, 0)) +
                                             coord_3d())
-      expect_equal(added$method, "direct")
+      expect_s3_class(added$ramp, "ggcube_ramp_hard")
       expect_equal(added$direction, c(1, 0, 0))
 
       on_coord <- resolve_animated_light(lit_plot() +
@@ -51,7 +51,7 @@ test_that("animating a positional light is an error", {
 
 test_that("animating the light when a layer has its own light is an error", {
       p <- lit_plot() +
-            geom_hull_3d(aes(x = x + 3), light = light("direct")) +
+            geom_hull_3d(aes(x = x + 3), light = light("hard")) +
             coord_3d()
       expect_error(resolve_animated_light(p), "layer 2 sets its own")
 
@@ -113,7 +113,7 @@ test_that("light angles don't change the global bounds", {
 # --- Per-frame lights on built plots ---------------------------------------------
 
 test_that("each frame's built plot carries that frame's light direction", {
-      p <- lit_plot() + light("direct") + coord_3d()
+      p <- lit_plot() + light("hard") + coord_3d()
       base <- resolve_animated_light(p)
       seqs <- data.frame(pitch = 0, roll = -60, yaw = -30,
                          light_azimuth = c(0, 90), light_elevation = c(0, 45))
@@ -125,14 +125,14 @@ test_that("each frame's built plot carries that frame's light direction", {
       expect_equal(second$direction, direction(90, 45))
 
       # Everything but the direction is carried over from the base light.
-      expect_equal(second$method, "direct")
+      expect_s3_class(second$ramp, "ggcube_ramp_hard")
       expect_equal(second$anchor, base$anchor)
 })
 
 test_that("a light added with + light() doesn't collide with the frame's light", {
       # Without clearing the stashed `+ light()`, the frame coord's explicit
       # light would trigger the double-light error at build time.
-      p <- lit_plot() + light("direct", direction = c(1, 0, 0)) + coord_3d()
+      p <- lit_plot() + light("hard", direction = c(1, 0, 0)) + coord_3d()
       base <- resolve_animated_light(p)
       seqs <- data.frame(pitch = 0, roll = -60, yaw = -30,
                          light_azimuth = 180, light_elevation = 0)
@@ -142,7 +142,7 @@ test_that("a light added with + light() doesn't collide with the frame's light",
 })
 
 test_that("frames are left alone when the light isn't animated", {
-      p <- lit_plot() + light("direct", direction = c(1, 0, 0)) + coord_3d()
+      p <- lit_plot() + light("hard", direction = c(1, 0, 0)) + coord_3d()
       seqs <- data.frame(pitch = 0, roll = -60, yaw = -30)
 
       prepared <- prepare_frame_lights(p, NULL, seqs)

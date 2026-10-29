@@ -1,53 +1,46 @@
 #' Lighting specification for 3D surface rendering
 #'
-#' Creates a lighting specification object for use with 3D polygon layers.
-#' Lighting modifies the brightness of fill and/or base color aesthetics based on surface
-#' orientation (i.e., it implements form shadows but not cast shadows).
-#' Various options are available to control light qualities and light source location.
-#' The result can be added directly to a plot with `+ light()` to set lighting for
-#' the whole plot. It can also be passed to individual `geom_*_3d()` layer functions,
+#' Creates a lighting specification for 3D polygon layers. Lighting changes the
+#' fill and/or border colors of each face according to its orientation to a
+#' light source (it gives form shadows, not cast shadows). The result can be
+#' added to a plot with `+ light()` to light the whole plot. It can also be
+#' passed to the `light` argument of individual `geom_*_3d()` layer functions,
 #' which takes precedence over plot-level lighting.
 #'
-#' Note that light-like effects can also be achieved in some stats by mapping color
-#' aesthestics to computed variables such as `after_stat(dzdx)`; see [geom_surface_3d()]
-#' for examples.
+#' @details
+#' Lighting colors each face in three steps:
 #'
-#' @param method Character string specifying lighting model:
-#'   \itemize{
-#'     \item \code{"diffuse"}: The default. Atmospheric lighting with soft shadows (only surfaces pointing
-#'          directly away from light source are fully dark; base color occurs on surfaces perpendicular to light)
-#'     \item \code{"direct"}: Direct lighting with hard shadows (all surfaces angled beyond 90 degrees from
-#'          light source are fully dark; base color occurs on surfaces angled 45 degrees toward light)
-#'     \item \code{"rgb"}: Map surface orientation to three dimensional color space. Rather than the light model
-#'          darkening or brightening base colors as in the other models, this model generates a wholly new set of
-#'           colors. If this option is selected, parameters like `mode` and `contrast` are ignored, but
-#'           `fill`, `color`, and `direction` still apply.
-#'     \item \code{"none"}: Disable lighting entirely. All other parameters are ignored.
-#'          Equivalent to \code{light(fill = FALSE, color = FALSE)}, and to passing the
-#'          bare string \code{"none"} to a \code{light} argument.
-#'   }
-#' @param mode Character string specifying color lighting mode:
-#'   \itemize{
-#'     \item \code{"hsv"}: The default. Modifies _value_ component of _HSV_ color
-#'          (fades to bright colors at high end, black at low end).
-#'     \item \code{"hsl"}: Modifies _lightness_ component of _HSL_ color
-#'          (fades to white at high end, black at low end).
-#'   }
-#'   These two options give identical results for grayscale colors.
-#' @param fill Logical indicating whether to apply lighting to fill colors. Default is TRUE.
-#' @param color Logical indicating whether to apply lighting to border/line colors. Default is TRUE.
-#' @param contrast Numeric value greater than zero controlling the intensity of lighting effects.
-#'   1.0 (the default) gives full black-to-white range. Values less than 1 give subtler effects, while
-#'   values greater than 1 give more dramatic effects.
+#' 1. The angle between the face and the direction toward the light is
+#'    measured.
+#' 2. A *ramp* turns the angle into how far the face moves toward shadow or
+#'    highlight. With the default ramp, faces at 45 degrees to the light keep
+#'    their base color exactly, faces turned further toward the light are
+#'    highlighted, and faces turned further away are shadowed. `shadow` and
+#'    `highlight` set how strong the effect is in each direction.
+#' 3. A *tone* decides what lighter and darker look like for a given color. With
+#'    the default tone, colors become lighter and darker versions of the same
+#'    hue.
+#'
+#' Light-like effects can also be achieved in some stats by mapping color
+#' aesthetics to computed variables such as `after_stat(dzdx)`; see
+#' [geom_surface_3d()] for examples.
+#'
+#' @param ramp How brightness changes as a surface turns away from the light.
+#'   One of `"smooth"` (the default: gradual change), `"hard"` (a sharp edge
+#'   between lit and unlit sides), or `"steps"` (flat bands), or a ramp from
+#'   [ramp_smooth()], [ramp_hard()], or [ramp_steps()], which take further
+#'   options. `"none"` disables lighting, and ignores all other arguments:
+#'   `light("none")` is equivalent to the bare string `"none"` accepted by the
+#'   `light` argument of layers and [coord_3d()].
 #' @param direction Numeric vector of length 3 specifying direction in 3D space (x, y, z) that
 #'   light comes from for directional lighting. Depending on `anchor`, direction is relative to
-#'   either the plot axes or the viewing pane. The default is \code{c(-.5, 0, 1)}, giving
-#'   diagonal lighting from the upper right edge with default rotation and anchor. At least
-#'   one value must be non-zero. Values are automatically normalized, so magnitude doesn't
-#'   matter, only sign and relative magnitude. Direction is specified in visual space (relative
-#'   to the rendered cube's bounding box), not data space. Use [direction()] to build this
-#'   vector from an azimuth and elevation instead of components; the default corresponds to
-#'   \code{direction(270, 63.43)}. This argument is ignored if \code{position} is provided.
+#'   either the plot axes or the viewing pane. The default is `direction(270, 60)`: light from
+#'   the xmin side of the cube, 60 degrees above horizontal. At least one value must be
+#'   non-zero. Values are automatically normalized, so magnitude doesn't matter, only sign and
+#'   relative magnitude. Direction is specified in visual space (relative to the rendered
+#'   cube's bounding box), not data space. Use [direction()] to build this vector from an
+#'   azimuth and elevation instead of components. This argument is ignored if `position` is
+#'   provided.
 #' @param anchor Character string specifying the reference frame for light direction:
 #'   \itemize{
 #'     \item \code{"scene"} (default): Light `direction` is fixed relative to the data/scene.
@@ -66,14 +59,35 @@
 #'   intensity falloff for positional lighting using inverse square law
 #'   (intensity proportional to 1/distance²). Only used when \code{position} is specified.
 #'   Default is FALSE.
+#' @param fill,color Logical values indicating whether to light fill colors and
+#'   border colors. Both default to `TRUE`.
+#' @param tone What lighter and darker look like for a given color. One of
+#'   `"lightness"` (the default: lighter and darker versions of the same hue),
+#'   `"tint"` (mixing toward chosen highlight and shadow colors, for colored
+#'   light), or `"normals"` (coloring faces by the direction they face), or a
+#'   tone from [tone_lightness()], [tone_tint()], or [tone_normals()], which take
+#'   further options.
+#' @param shadow,highlight Strength of shadows and highlights, from 0 (none) to 1
+#'   (reaching the tone's full shadow or highlight, e.g. black or white for the
+#'   default tone). Defaults are 0.8 and 0.6.
 #' @param backface_scale,backface_offset Numeric values that determine how "frontface" light values get
 #'   modified (scaled and then offset) to derive "backface" light values. A backface is the side of a
-#'   polygon that faces the underside of a surface or the inside of a volume. Frontface light values are
-#'   typically in the range `[-1, 1]` (unless `contrast` is boosted). The default scale of -1 gives
-#'   backfaces highly contrasting lighting to frontfaces. To light backfaces the same as frontfaces,
-#'   set scale to 1. To uniformly darken (brighten) all backfaces, use a negative (positive) offset.
+#'   polygon that faces the underside of a surface or the inside of a volume. Frontface light values,
+#'   the cosines of faces' angles to the light, are in the range `[-1, 1]`. The default scale of -1
+#'   gives backfaces highly contrasting lighting to frontfaces. To light backfaces the same as
+#'   frontfaces, set scale to 1. To uniformly darken (brighten) all backfaces, use a negative
+#'   (positive) offset.
+#' @param method `r lifecycle::badge("deprecated")` Use `ramp` instead: `"diffuse"` is
+#'   now `ramp = "smooth"`, `"direct"` is `ramp = "hard"`, and `"rgb"` is
+#'   `tone = "normals"`.
+#' @param mode `r lifecycle::badge("deprecated")` Lighting now changes the lightness of
+#'   colors in the perceptual OKLab color space, keeping their hue, so `mode` is no
+#'   longer needed. For now, `"hsv"` and `"hsl"` still give the color math of ggcube
+#'   0.3.
+#' @param contrast `r lifecycle::badge("deprecated")` Use `shadow` and `highlight`
+#'   instead. `contrast` scales both of their defaults.
 #'
-#' @return A \code{lighting} object that can be added to a plot or passed to polygon-based 3D layers
+#' @return A \code{light} object that can be added to a plot or passed to polygon-based 3D layers
 #'   or to `coord_3d()`.
 #' @examples
 #' # base plot used in examples
@@ -83,22 +97,28 @@
 #'
 #' # Light qualities ----------------------------------------------------------
 #'
-#' # default `"diffuse"` lighting
+#' # default lighting
 #' p
 #'
 #' \donttest{
 #'
-#' # use `"direct"` lighting to apply full shade to unlit surfaces
-#' p + light(method = "direct")
+#' # stronger shadows and highlights
+#' p + light(shadow = 1, highlight = 0.9)
 #'
-#' # use `"hsl"` mode to fade highlights to white
-#' p + light(mode = "hsl")
+#' # subtler lighting
+#' p + light(shadow = 0.4, highlight = 0.3)
 #'
-#' # adjust lighting intensity with `contrast`
-#' p + light(mode = "hsl", contrast = 1.5)
+#' # a sharp edge between lit and unlit sides
+#' p + light("hard")
 #'
-#' # use `"rgb"` lighting to map face orientation to 3D color space
-#' p + light(method = "rgb")
+#' # flat bands of light, with options given by a ramp function
+#' p + light(ramp_steps(n = 3))
+#'
+#' # colored light: warm highlights and cool shadows
+#' p + light(tone = tone_tint(shadow = "midnightblue", highlight = "lightyellow"))
+#'
+#' # color faces by the direction they face
+#' p + light(tone = "normals")
 #'
 #'
 #' # Lighting targets ---------------------------------------------------------
@@ -110,16 +130,15 @@
 #' p + geom_hull_3d(aes(fill = x, color = x)) +
 #'       scale_fill_viridis_c() +
 #'       scale_color_viridis_c() +
-#'       guides(fill = guide_colorbar_3d()) +
-#'       light(mode = "hsl", contrast = .9)
+#'       guides(fill = guide_colorbar_3d())
 #'
 #' # disable lighting entirely
 #' p + light("none")
 #'
 #' # if provided, layer-level lighting overrides plot-level lighting
-#' p + light("direct") + # plot-level: affects original layer
+#' p + light("hard") + # plot-level: affects original layer
 #'   geom_hull_3d(aes(x = x + 2.5), fill = "#9e2602", color = "#5e1600",
-#'       light = light("direct", mode = "hsl", direction = c(0, -1, 0)))
+#'       light = light(direction = c(0, -1, 0)))
 #'
 #'
 #' # Light sources ------------------------------------------------------------
@@ -135,8 +154,7 @@
 #' # positional light source within plot
 #' ggplot(mountain, aes(x, y, z)) +
 #'   stat_surface_3d(fill = "red", color = "red") +
-#'   light(position = c(.5, .7, 95), distance_falloff = TRUE,
-#'         mode = "hsl", contrast = .9) +
+#'   light(position = c(.5, .7, 95), distance_falloff = TRUE) +
 #'   coord_3d(ratio = c(1.5, 2, 1))
 #'
 #'
@@ -148,43 +166,96 @@
 #'     xlim = c(-3, 3), ylim = c(-3, 3),
 #'     fill = "steelblue", color = "steelblue") +
 #'     coord_3d(pitch = 0, roll = -70, yaw = 0)
-#' p + light(mode = "hsl")
+#' p
 #'
 #' # use `backface_scale = 1` to light backfaces as if they're frontfaces
-#' p + light(backface_scale = 1, mode = "hsl")
+#' p + light(backface_scale = 1)
 #'
 #' # use `backface_offset` to uniformly darken (or lighten) backfaces
-#' p + light(backface_scale = 1, mode = "hsl", backface_offset = -.5)
+#' p + light(backface_scale = 1, backface_offset = -.5)
 #'
 #' }
 #'
 #' @export
-light <- function(method = "diffuse",
-                  direction = c(-.5, 0, 1),
+light <- function(ramp = "smooth",
+                  direction = c(-0.5, 0, sqrt(3) / 2),
                   anchor = "scene",
                   position = NULL,
                   distance_falloff = FALSE,
                   fill = TRUE,
                   color = TRUE,
-                  mode = "hsv",
-                  contrast = 1.0,
+                  tone = "lightness",
+                  shadow = 0.8,
+                  highlight = 0.6,
                   backface_scale = -1,
-                  backface_offset = 0) {
+                  backface_offset = 0,
+                  method = deprecated(),
+                  mode = deprecated(),
+                  contrast = deprecated()) {
 
-      # `method = "none"` disables lighting. Every other parameter describes how to
+      user_env <- rlang::caller_env()
+
+      # `method` is deprecated in favor of `ramp`, which takes its place as the
+      # first argument, so its values may also arrive positionally as `ramp`
+      if (lifecycle::is_present(method)) {
+            lifecycle::deprecate_warn("0.4.0", "light(method)", "light(ramp)",
+                                      details = method_details(method),
+                                      user_env = user_env)
+            ramp <- method
+      } else if (is.character(ramp) && length(ramp) == 1 &&
+                 ramp %in% c("diffuse", "direct", "rgb")) {
+            lifecycle::deprecate_warn("0.4.0", I(paste0('`light("', ramp, '")`')),
+                                      details = method_details(ramp),
+                                      user_env = user_env)
+      }
+      if (identical(ramp, "rgb")) {
+            ramp <- "smooth"
+            tone <- "normals"
+      }
+      ramp <- switch(if (is.character(ramp)) ramp[1] else "",
+                     diffuse = "smooth", direct = "hard", ramp)
+
+      # `ramp = "none"` disables lighting. Every other parameter describes how to
       # light a surface, so all of them are irrelevant here: return the disabled
       # spec directly without validating them. This makes `light("none")`
       # equivalent to the bare string `"none"` accepted by the `light` argument of
       # layer, coord, and plot-level functions.
-      if (identical(method, "none")) {
+      if (identical(ramp, "none")) {
             return(light(fill = FALSE, color = FALSE))
       }
 
-      # Validate method
-      valid_methods <- c("direct", "diffuse", "rgb")
-      if (!method %in% valid_methods) {
-            stop("method must be one of: ",
-                 paste(c(valid_methods, "none"), collapse = ", "))
+      if (lifecycle::is_present(mode)) {
+            lifecycle::deprecate_warn(
+                  "0.4.0", "light(mode)",
+                  details = paste("Lighting now changes the lightness of colors in the OKLab color",
+                                  "space, keeping their hue. `mode` still gives ggcube 0.3's HSV or",
+                                  "HSL color math for now, but will be removed."),
+                  user_env = user_env)
+            if (!is.character(mode) || length(mode) != 1 || !mode %in% c("hsv", "hsl")) {
+                  rlang::abort('`mode` must be "hsv" or "hsl".', call = NULL)
+            }
+            tone <- tone_legacy(mode)
+      }
+
+      if (lifecycle::is_present(contrast)) {
+            lifecycle::deprecate_warn("0.4.0", "light(contrast)", I("`light(shadow, highlight)`"),
+                                      details = "`contrast` now scales the defaults of `shadow` and `highlight`.",
+                                      user_env = user_env)
+            if (!is.numeric(contrast) || length(contrast) != 1 || is.na(contrast) || contrast < 0) {
+                  rlang::abort("`contrast` must be a single non-negative number.", call = NULL)
+            }
+            if (missing(shadow)) shadow <- min(1, shadow * contrast)
+            if (missing(highlight)) highlight <- min(1, highlight * contrast)
+      }
+
+      ramp <- as_ramp(ramp)
+      tone <- as_tone(tone)
+
+      for (arg in c("shadow", "highlight")) {
+            value <- get(arg)
+            if (!is.numeric(value) || length(value) != 1 || is.na(value) || value < 0 || value > 1) {
+                  rlang::abort(paste0("`", arg, "` must be a single number from 0 to 1."), call = NULL)
+            }
       }
 
       # Validate direction
@@ -216,24 +287,13 @@ light <- function(method = "diffuse",
             stop("color must be a single logical value")
       }
 
-      # Validate contrast
-      if (!is.numeric(contrast) || length(contrast) != 1 || contrast < 0) {
-            stop("contrast must be a single non-negative numeric value")
-      }
-
-      # Validate mode
-      valid_modes <- c("hsv", "hsl")
-      if (!mode %in% valid_modes) {
-            stop("mode must be one of: ", paste(valid_modes, collapse = ", "))
-      }
-
       # Validate anchor
       valid_anchors <- c("scene", "camera")
       if (!anchor %in% valid_anchors) {
             stop("anchor must be one of: ", paste(valid_anchors, collapse = ", "))
       }
 
-      # Convert new API to old internal representation for backward compatibility
+      # Which colors get lit
       if (fill && color) {
             shade <- "both"
       } else if (fill) {
@@ -244,41 +304,85 @@ light <- function(method = "diffuse",
             shade <- "neither"
       }
 
-      # How light values become colors: a ramp maps each face's light value to
-      # a light level in [-1, 1], `shadow` and `highlight` scale the level into
-      # an amount, and a tone turns base colors and amounts into lit colors
-      ramp <- switch(method,
-                     diffuse = ramp_smooth(neutral = 90),
-                     direct = ramp_hard(neutral = 60),
-                     rgb = ramp_smooth(neutral = 90))
-      tone <- if (method == "rgb") tone_normals() else tone_legacy(mode)
-
-      # Create lighting specification object using original internal structure
       structure(
             list(
-                  method = method,
+                  ramp = ramp,
+                  tone = tone,
+                  shadow = shadow,
+                  highlight = highlight,
                   direction = direction,
                   position = position,
                   distance_falloff = distance_falloff,
                   shade = shade,
-                  shade_strength = contrast,
-                  shade_mode = mode,
                   anchor = anchor,
                   backface_scale = backface_scale,
-                  backface_offset = backface_offset,
-                  ramp = ramp,
-                  tone = tone,
-                  shadow = contrast,
-                  highlight = contrast
+                  backface_offset = backface_offset
             ),
             class = "light"
       )
 }
 
+#' Details for deprecation messages about `light(method)`
+#'
+#' @param method A value of the deprecated `method` argument.
+#' @return Character string.
+#' @keywords internal
+#' @noRd
+method_details <- function(method) {
+      switch(if (is.character(method)) method[1] else "",
+             diffuse = 'Use `light()` or `light("smooth")` for diffuse lighting.',
+             direct = 'Use `light("hard")` for direct lighting.',
+             rgb = 'Use `light(tone = "normals")` to color faces by their orientation.',
+             'Use `ramp` instead.')
+}
+
+#' Resolve a ramp given by name or object
+#'
+#' @param ramp A ramp name or `ggcube_ramp` object.
+#' @return A `ggcube_ramp` object.
+#' @keywords internal
+#' @noRd
+as_ramp <- function(ramp) {
+      if (inherits(ramp, "ggcube_ramp")) return(ramp)
+      if (is.character(ramp) && length(ramp) == 1) {
+            out <- switch(ramp, smooth = ramp_smooth(), hard = ramp_hard(), steps = ramp_steps(),
+                          NULL)
+            if (!is.null(out)) return(out)
+      }
+      rlang::abort(c('`ramp` must be "smooth", "hard", "steps", or "none", or a ramp such as `ramp_smooth()`.',
+                     i = 'Use "none" to disable lighting.'),
+                   call = NULL)
+}
+
+#' Resolve a tone given by name or object
+#'
+#' @param tone A tone name or `ggcube_tone` object.
+#' @return A `ggcube_tone` object.
+#' @keywords internal
+#' @noRd
+as_tone <- function(tone) {
+      if (inherits(tone, "ggcube_tone")) return(tone)
+      if (is.character(tone) && length(tone) == 1) {
+            out <- switch(tone, lightness = tone_lightness(), tint = tone_tint(),
+                          normals = tone_normals(), NULL)
+            if (!is.null(out)) return(out)
+      }
+      rlang::abort('`tone` must be "lightness", "tint", or "normals", or a tone such as `tone_tint()`.',
+                   call = NULL)
+}
+
 #' @export
 print.light <- function(x, ...) {
       cat("Lighting specification:\n")
-      cat("  Method:", x$method, "\n")
+
+      if (x$shade == "neither") {
+            cat("  Disabled\n")
+            return(invisible(x))
+      }
+
+      cat("  Ramp:", format_ramp(x$ramp), "\n")
+      cat("  Tone:", format_tone(x$tone), "\n")
+      cat("  Strength: shadow", x$shadow, ", highlight", x$highlight, "\n")
 
       if (!is.null(x$position)) {
             cat("  Position: [", paste(x$position, collapse = ", "), "] (positional lighting)\n")
@@ -288,7 +392,7 @@ print.light <- function(x, ...) {
                   cat("  Distance falloff: disabled\n")
             }
       } else {
-            cat("  Direction: [", paste(x$direction, collapse = ", "), "] (directional lighting)\n")
+            cat("  Direction: [", paste(signif(x$direction, 4), collapse = ", "), "] (directional lighting)\n")
             angles <- direction_angles(x$direction)
             cat("    azimuth:", wrap_angle(angles$azimuth, "bearing", digits = 1),
                 "deg, elevation:", round(angles$elevation, 1), "deg\n")
@@ -296,21 +400,12 @@ print.light <- function(x, ...) {
 
       cat("  anchor:", x$anchor, "\n")
 
-      # Show what gets shaded using new API terms
-      shading_targets <- c()
-      if (x$shade %in% c("fill", "both")) shading_targets <- c(shading_targets, "fill")
-      if (x$shade %in% c("colour", "both")) shading_targets <- c(shading_targets, "color")
-
-      if (length(shading_targets) > 0) {
-            cat("  Shading:", paste(shading_targets, collapse = " + "),
-                "(contrast =", x$shade_strength, ", mode =", x$shade_mode, ")\n")
-      } else {
-            cat("  Shading: disabled\n")
-      }
+      targets <- c(if (x$shade %in% c("fill", "both")) "fill",
+                   if (x$shade %in% c("colour", "both")) "color")
+      cat("  Lights:", paste(targets, collapse = " + "), "\n")
 
       invisible(x)
 }
-
 
 #' Light values of faces from their normals
 #'
@@ -366,18 +461,13 @@ compute_light <- function(normals, lighting, face_centers = NULL) {
                   # Normalize falloff to prevent extreme values
                   falloff_factor <- falloff_factor / max(falloff_factor)
 
-                  # For diffuse lighting, interpolate between -1 (dark) and full lighting value
-                  if (params$method == "diffuse") {
-                        dot_products <- -1 + falloff_factor * (dot_products + 1)
+                  # Fade toward full shadow: -1 for ramps that reach full shadow
+                  # facing away from the light, and 0 (90 degrees) for hard
+                  # ramps, which reach it there
+                  if (inherits(params$ramp, "ggcube_ramp_hard")) {
+                        dot_products <- dot_products * falloff_factor
                   } else {
-                        # For other methods, scale toward appropriate dark value
-                        if (params$method == "direct") {
-                              # Direct: interpolate between 0 (dark) and full value
-                              dot_products <- dot_products * falloff_factor
-                        } else {
-                              # General case: scale the lighting values
-                              dot_products <- dot_products * falloff_factor
-                        }
+                        dot_products <- -1 + falloff_factor * (dot_products + 1)
                   }
             }
 

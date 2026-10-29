@@ -61,7 +61,7 @@ test_that("replace_legend_colors converts key glyphs to rasters in a rendered le
       library(ggplot2)
 
       p <- ggplot(mountain, aes(x, y, z, fill = x > .5, group = 1)) +
-            stat_surface_3d(light = light(mode = "hsl", direction = c(1, 0, 0))) +
+            stat_surface_3d(light = light(direction = c(1, 0, 0))) +
             guides(fill = guide_legend_3d()) +
             coord_3d(ratio = c(2, 3, 1.5))
 
@@ -107,7 +107,7 @@ test_that("replace_colorbar_colors shades the raster in a rendered colorbar guid
       library(ggplot2)
 
       p <- ggplot(mountain, aes(x, y, z, fill = z)) +
-            stat_surface_3d(light = light(mode = "hsl", direction = c(1, 0, 0))) +
+            stat_surface_3d(light = light(direction = c(1, 0, 0))) +
             guides(fill = guide_colorbar_3d()) +
             scale_fill_gradientn(colors = c("tomato", "dodgerblue")) +
             coord_3d()

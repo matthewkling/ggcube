@@ -59,7 +59,7 @@ test_that("voxel camera-anchor lighting matches camera-space ground truth", {
                   geom_bar_3d(bins = 20, width = c(.5, 1)) +
                   coord_3d(scales = "fixed", ratio = c(1, 3, .25),
                            yaw = cfg[1], roll = cfg[2], pitch = cfg[3],
-                           light = light(mode = "hsl", anchor = "camera",
+                           light = light(anchor = "camera",
                                          direction = dir)) +
                   scale_z_continuous(expand = c(0, 0))
 
@@ -90,7 +90,7 @@ test_that("voxel scene-anchor lighting is unchanged by the camera path", {
             geom_bar_3d(bins = 20, width = c(.5, 1)) +
             coord_3d(scales = "fixed", ratio = c(1, 3, .25),
                      yaw = 60, roll = -25, pitch = 10,
-                     light = light(mode = "hsl", anchor = "scene",
+                     light = light(anchor = "scene",
                                    direction = dir)) +
             scale_z_continuous(expand = c(0, 0))
 
@@ -134,7 +134,7 @@ test_that("surface camera-anchor normals are oriented, not sign-forced", {
                   fun = function(x, y) sin(x) * cos(y),
                   xlim = c(-pi, pi), ylim = c(-pi, pi),
                   fill = "steelblue", color = "steelblue") +
-            coord_3d(light = light(mode = "hsl", anchor = "camera",
+            coord_3d(light = light(anchor = "camera",
                                    direction = c(1, 1, 0)),
                      yaw = -30, roll = -40, pitch = 0)
 
@@ -405,7 +405,7 @@ light_test_plot <- function(...) {
       d$z <- d$x + d$y
       ggplot(d, aes(x, y, z)) +
             geom_surface_3d() +
-            light(mode = "hsl", direction = c(-1, 1, 0), anchor = "camera") +
+            light(tone = "tint", direction = c(-1, 1, 0), anchor = "camera") +
             coord_3d(...)
 }
 
@@ -454,7 +454,7 @@ test_that("plot-level lighting reaches panel_params", {
       pp <- ggplot_build(light_test_plot())$layout$panel_params[[1]]
 
       expect_s3_class(pp$light, "light")
-      expect_equal(pp$light$shade_mode, "hsl")
+      expect_s3_class(pp$light$tone, "ggcube_tone_tint")
       expect_equal(pp$light$anchor, "camera")
       expect_equal(pp$light$direction, c(-1, 1, 0))
 })
@@ -462,12 +462,12 @@ test_that("plot-level lighting reaches panel_params", {
 test_that("explicit `coord_3d(light = )` reaches panel_params", {
       p <- ggplot(light_test_data(), aes(x, y, z)) +
             geom_surface_3d() +
-            coord_3d(light = light(mode = "hsl", contrast = 0.5))
+            coord_3d(light = light(tone = "tint", shadow = 0.5))
       pp <- ggplot_build(p)$layout$panel_params[[1]]
 
       expect_s3_class(pp$light, "light")
-      expect_equal(pp$light$shade_mode, "hsl")
-      expect_equal(pp$light$shade_strength, 0.5)
+      expect_s3_class(pp$light$tone, "ggcube_tone_tint")
+      expect_equal(pp$light$shadow, 0.5)
 })
 
 test_that("`coord_3d(light = NULL)` disables lighting", {
@@ -487,7 +487,7 @@ test_that("unspecified lighting resolves to the package default", {
       pp <- ggplot_build(p)$layout$panel_params[[1]]
 
       expect_s3_class(pp$light, "light")
-      expect_equal(pp$light$shade_mode, light()$shade_mode)
+      expect_equal(pp$light$tone, light()$tone)
 })
 
 test_that("lighting specified in two places is an error", {
@@ -495,8 +495,8 @@ test_that("lighting specified in two places is an error", {
       # build time when the stash meets an explicit coord light.
       p <- ggplot(light_test_data(), aes(x, y, z)) +
             geom_surface_3d() +
-            light(mode = "hsl") +
-            coord_3d(light = light(mode = "hsl"))
+            light() +
+            coord_3d(light = light())
       expect_error(ggplot_build(p), "specified twice")
 
       # `coord_3d(light = )` first: the clash surfaces immediately, when
@@ -504,8 +504,8 @@ test_that("lighting specified in two places is an error", {
       expect_error(
             ggplot(light_test_data(), aes(x, y, z)) +
                   geom_surface_3d() +
-                  coord_3d(light = light(mode = "hsl")) +
-                  light(mode = "hsl"),
+                  coord_3d(light = light()) +
+                  light(),
             "specified twice"
       )
 })
@@ -543,20 +543,40 @@ test_that("polygons are lit by their own plane, the same whatever their winding"
       expect_equal(lit$ccw[["front"]], lit$ccw[["above"]])
 
       # A vertical square parallel to the default light (which has no y
-      # component) is lit evenly from either side
+      # component) is lit evenly from either side, as a face at 90 degrees to
+      # the light
       expect_equal(unname(lit$vertical), rep(lit$vertical[[1]], 4))
-      expect_equal(toupper(lit$vertical[[1]]), "#4682B4")              # steelblue, unshaded
+      expect_equal(lit$vertical[[1]], blend_light_with_colors("steelblue", 0, light()))
 })
 
 
-test_that("direct lighting lights back faces that face the light", {
+test_that("faces at 45 degrees to the light keep their base color exactly", {
+      square <- data.frame(x = c(0, 1, 1, 0), y = c(0, 0, 1, 1), z = 0.5)
+      fill <- function(light) {
+            p <- ggplot(square, aes(x, y, z)) +
+                  geom_polygon_3d(fill = "steelblue") +
+                  lims(x = c(0, 1), y = c(0, 1)) + zlim(0, 1) +
+                  coord_3d(direction = c(0.3, -0.4, 1), light = light)
+            polys <- find_grobs(find_grobs(drawn_grob(p), "ggcube_layer")[[1]], "polygon")
+            toupper(polys[[1]]$gp$fill)
+      }
+      expect_equal(fill(light(direction = direction(270, 45))), "#4682B4")
+      expect_equal(fill(light("hard", direction = direction(90, 45))), "#4682B4")
+
+      # Under the default light, from 60 degrees above the horizon, horizontal
+      # faces are highlighted
+      expect_false(fill(light()) == "#4682B4")
+})
+
+
+test_that("hard lighting lights back faces that face the light", {
       square <- data.frame(x = c(0, 1, 1, 0), y = c(0, 0, 1, 1), z = 0.5)
       fill <- function(view, light_z) {
             p <- ggplot(square, aes(x, y, z)) +
                   geom_polygon_3d(fill = "steelblue") +
                   lims(x = c(0, 1), y = c(0, 1)) + zlim(0, 1) +
                   coord_3d(direction = c(0.3, -0.4, view),
-                           light = light("direct", direction = c(0.2, 0.1, light_z)))
+                           light = light("hard", shadow = 1, direction = c(0.2, 0.1, light_z)))
             polys <- find_grobs(find_grobs(drawn_grob(p), "ggcube_layer")[[1]], "polygon")
             polys[[1]]$gp$fill
       }

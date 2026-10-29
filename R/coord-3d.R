@@ -1439,11 +1439,12 @@ process_backfaces <- function(data) {
       }
 
       # Apply lighting effects if present
+      # Normal-based tones color faces by their normals, not their light values
       if("lighting_spec" %in% names(data) && "light" %in% names(data)) {
             scl <- data$lighting_spec[[1]]$backface_scale %||% 1
             off <- data$lighting_spec[[1]]$backface_offset %||% 0
-            if((scl != 1 || off != 0) &
-               data$lighting_spec[[1]]$method != "rgb") {
+            if((scl != 1 || off != 0) &&
+               !inherits(data$lighting_spec[[1]]$tone, "ggcube_tone_normals")) {
                   data <- mutate(data, light = ifelse(.backface, light * scl + off, light))
             }
       }

@@ -99,17 +99,26 @@ test_that("tones keep alpha given in colors, and pass NA through", {
       expect_identical(tone_colors(tone_lightness(), "red", NA_real_), "red")
 })
 
-test_that("legacy hsv and hsl lighting reproduces ggcube 0.3 colors", {
+# A lighting specification with ggcube 0.3's color math: a ramp with a neutral
+# angle of 90 degrees (60 for direct lighting), and equal strengths
+legacy_light <- function(space = "hsv", ramp = ramp_smooth(90), contrast = 1,
+                         shade = "both") {
+      structure(list(ramp = ramp, tone = tone_legacy(space), shadow = contrast,
+                     highlight = contrast, shade = shade),
+                class = "light")
+}
+
+test_that("legacy hsv and hsl tones reproduce ggcube 0.3 colors", {
       # Expected values were computed with the blending code of ggcube 0.3
       cases <- list(
-            list(light(), "darkgreen", .5, "#00B200"),
-            list(light(), "darkgreen", -.5, "#003200"),
-            list(light(mode = "hsl"), "#3b6ea5", .5, "#96B6D9"),
-            list(light(mode = "hsl"), "#3b6ea5", -.75, "#0F1B29"),
-            list(light("direct"), "steelblue", .25, "#23415A"),
-            list(light("direct"), "steelblue", .8, "#58A2E1"),
-            list(light(mode = "hsl", contrast = 1.5), "gold", .3, "#FFE973"),
-            list(light(contrast = .5), "grey60", -1, "#4D4D4D")
+            list(legacy_light(), "darkgreen", .5, "#00B200"),
+            list(legacy_light(), "darkgreen", -.5, "#003200"),
+            list(legacy_light("hsl"), "#3b6ea5", .5, "#96B6D9"),
+            list(legacy_light("hsl"), "#3b6ea5", -.75, "#0F1B29"),
+            list(legacy_light(ramp = ramp_hard(60)), "steelblue", .25, "#23415A"),
+            list(legacy_light(ramp = ramp_hard(60)), "steelblue", .8, "#58A2E1"),
+            list(legacy_light("hsl", contrast = 1.5), "gold", .3, "#FFE973"),
+            list(legacy_light(contrast = .5), "grey60", -1, "#4D4D4D")
       )
       for (cs in cases) {
             expect_equal(toupper(blend_light_with_colors(cs[[2]], cs[[3]], cs[[1]])), cs[[4]],
@@ -118,7 +127,7 @@ test_that("legacy hsv and hsl lighting reproduces ggcube 0.3 colors", {
 })
 
 test_that("blend_light lights only the targeted aesthetics of lit rows", {
-      spec <- light(fill = TRUE, color = FALSE)
+      spec <- legacy_light(shade = "fill")
       coords <- data.frame(fill = c("darkgreen", "darkgreen"), colour = c("black", "black"),
                            light = c(.5, NA))
       coords$lighting_spec <- I(list(spec, spec))
@@ -129,4 +138,88 @@ test_that("blend_light lights only the targeted aesthetics of lit rows", {
       none <- coords
       none$lighting_spec <- I(rep(list(light("none")), 2))
       expect_identical(blend_light(none)$fill, coords$fill)
+})
+
+
+# light() -----------------------------------------------------------------------
+
+test_that("light() defaults to a smooth ramp, lightness tone, and light from above xmin", {
+      l <- light()
+      expect_equal(l$ramp, ramp_smooth(45))
+      expect_equal(l$tone, tone_lightness())
+      expect_equal(c(l$shadow, l$highlight), c(.8, .6))
+      expect_equal(l$direction / sqrt(sum(l$direction^2)), direction(270, 60))
+})
+
+test_that("light() takes ramps and tones by name or as objects", {
+      expect_equal(light("hard"), light(ramp_hard()))
+      expect_equal(light("steps"), light(ramp_steps(4)))
+      expect_equal(light(ramp = "smooth"), light(ramp = ramp_smooth()))
+      expect_equal(light(tone = "tint"), light(tone = tone_tint()))
+      expect_equal(light(tone = "normals"), light(tone = tone_normals()))
+      expect_equal(light(ramp_steps(3, neutral = 30))$ramp, ramp_steps(3, neutral = 30))
+})
+
+test_that("light() validates ramps, tones, and strengths", {
+      expect_error(light("bogus"), "none")
+      expect_error(light(tone = "bogus"), "`tone`")
+      expect_error(light(shadow = 1.5), "`shadow`")
+      expect_error(light(highlight = -.1), "`highlight`")
+      expect_error(light(shadow = c(.5, .5)), "`shadow`")
+})
+
+test_that("light()'s method argument is deprecated in favor of ramp", {
+      lifecycle::expect_deprecated(l <- light(method = "direct"))
+      expect_equal(l, light("hard"))
+      lifecycle::expect_deprecated(l <- light(method = "diffuse"))
+      expect_equal(l, light())
+      lifecycle::expect_deprecated(l <- light(method = "rgb"))
+      expect_equal(l, light(tone = "normals"))
+      expect_equal(suppressWarnings(light(method = "none")), light("none"))
+
+      # Old method names given positionally, as ramps
+      lifecycle::expect_deprecated(l <- light("direct"))
+      expect_equal(l, light("hard"))
+      lifecycle::expect_deprecated(l <- light("diffuse"))
+      expect_equal(l, light())
+      lifecycle::expect_deprecated(l <- light("rgb"))
+      expect_equal(l, light(tone = "normals"))
+})
+
+test_that("light()'s mode argument is deprecated, and gives legacy tones", {
+      lifecycle::expect_deprecated(l <- light(mode = "hsl"))
+      expect_equal(l$tone, tone_legacy("hsl"))
+      expect_error(suppressWarnings(light(mode = "lab")), "`mode`")
+})
+
+test_that("light()'s contrast argument is deprecated, and scales the default strengths", {
+      lifecycle::expect_deprecated(l <- light(contrast = .5))
+      expect_equal(c(l$shadow, l$highlight), c(.4, .3))
+      l <- suppressWarnings(light(contrast = 2))
+      expect_equal(c(l$shadow, l$highlight), c(1, 1))
+      l <- suppressWarnings(light(contrast = .5, shadow = .9))
+      expect_equal(c(l$shadow, l$highlight), c(.9, .3))
+})
+
+test_that("lights, ramps, and tones print", {
+      expect_output(print(light()), "smooth \\(neutral 45 deg\\)")
+      expect_output(print(light()), "lightness")
+      expect_output(print(light("none")), "Disabled")
+      expect_output(print(ramp_steps(3)), "steps \\(3 bands, neutral 45 deg\\)")
+      expect_output(print(tone_tint("navy", "gold")), "tint \\(shadow navy, highlight gold\\)")
+})
+
+test_that("3D guide gradients are centered on the scale's colors", {
+      base <- c("#440154", "#21908C", "#FDE725")
+      grad <- create_light_gradients(base, light(), shade_range = c(-.5, .5), n_steps = 21)
+      expect_equal(grad[, 11], rev(toupper(base)))
+
+      # Lighter on the highlight side, darker on the shadow side
+      L <- function(cols) linear_to_oklab(srgb_to_linear(t(col2rgb(cols)) / 255))[, 1]
+      expect_true(all(L(grad[, 21]) > L(grad[, 11])))
+      expect_true(all(L(grad[, 1]) < L(grad[, 11])))
+
+      # Normal-based tones have no gradient to show
+      flat <- create_light_gradients(base, light(tone = "normals"), n_steps = 5)
+      expect_equal(flat[, 1], rev(base))
 })

@@ -17,6 +17,8 @@ reference:
 - title: Visual styling
 - contents:
   - light
+  - ramps
+  - tones
   - annotate_3d
   - guide_3d
   - cube_theming
