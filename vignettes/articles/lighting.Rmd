@@ -184,6 +184,29 @@ shadows are a classic choice:
   plot_layout(ncol = 3)
 ```
 
+### Specular highlights
+
+`specular` adds glints where faces reflect the light toward the viewer, as on a glossy
+surface, from 0 (none, the default) to 1 (reaching the tone's full highlight at the center
+of a glint). `specular_size` sets how far glints spread, as the angle in degrees by which a
+face can turn from reflecting the light straight toward the viewer before its glint falls
+to half strength. Glints move toward the tone's full highlight color, so colored light
+gives colored glints, and with stepped ramps they're flat spots, like another band:
+
+```{r specular, fig.height = 3}
+(p + light(specular = .8) + ggtitle("specular = .8")) +
+  (p + light(specular = .8, tone = tone_tint(shadow = "midnightblue", highlight = "gold")) +
+      ggtitle("with tone_tint()")) +
+  (p + light(ramp_steps(breaks = c(60, 90)), specular = .8) + ggtitle("with ramp_steps()")) +
+  plot_layout(ncol = 3)
+```
+
+Unlike the rest of lighting, glints depend on the viewing angle, so they move as a plot
+rotates. Each face has a single color, so glints work best on smooth, finely divided
+surfaces like this sphere: flat faces, such as those of columns, glint all at once or not
+at all. Glints can also make mapped colors hard to read, so they're best kept for showing
+shape.
+
 
 
 ## Light sources

@@ -52,7 +52,8 @@ cartoon-like look. The bands run evenly from full highlight on the band
 nearest the light to full shadow on the band farthest from it, so with an
 odd number of bands the middle one shows colors unchanged. Bands are
 either \code{n} equal divisions of the brightness of \code{ramp_smooth()}, or are
-divided at the angles given by \code{breaks}.
+divided at the angles given by \code{breaks}. Specular highlights (see
+\code{\link[=light]{light()}}) are flat spots too.
 }
 
 These can also be given to \code{\link[=light]{light()}} by name, as \code{"smooth"}, \code{"hard"}, or

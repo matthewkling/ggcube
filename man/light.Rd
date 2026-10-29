@@ -15,6 +15,8 @@ light(
   tone = "lightness",
   shadow = 0.8,
   highlight = 0.6,
+  specular = 0,
+  specular_size = 15,
   backface_scale = -1,
   backface_offset = 0,
   method = deprecated(),
@@ -79,6 +81,15 @@ further options.}
 (reaching the tone's full shadow or highlight, e.g. black or white for the
 default tone). Defaults are 0.8 and 0.6.}
 
+\item{specular}{Strength of specular highlights, or glints, from 0 (none, the
+default) to 1 (reaching the tone's full highlight at the center of a glint).
+See the "Specular highlights" section.}
+
+\item{specular_size}{Size of glints: the angle in degrees by which a face can
+turn from reflecting the light straight toward the viewer before its glint
+falls to half strength, or ends, for \code{\link[=ramp_steps]{ramp_steps()}}. Must be greater than 0
+and less than 90. Default is 15.}
+
 \item{backface_scale, backface_offset}{Numeric values that determine how "frontface" light values get
 modified (scaled and then offset) to derive "backface" light values. A backface is the side of a
 polygon that faces the underside of a surface or the inside of a volume. Frontface light values,
@@ -125,11 +136,27 @@ highlighted, and faces turned further away are shadowed. \code{shadow} and
 the default tone, colors become lighter and darker versions of the same
 hue.
 }
+}
+\section{Specular highlights}{
+
+\code{specular} adds glints where faces reflect the light toward the viewer, as on
+a glossy surface. Glints move toward the tone's full highlight color: white
+for the default tone, or the highlight color of \code{\link[=tone_tint]{tone_tint()}}, for colored
+light. With \code{\link[=ramp_steps]{ramp_steps()}}, glints are flat spots, like another band; with
+other ramps, they fade gradually from their center.
+
+Unlike the rest of lighting, glints depend on the viewing angle, so they
+move as a plot is rotated. Each face has a single color, so glints work best
+on smooth, finely divided surfaces: flat faces, such as those of columns and
+voxels, glint all at once, or not at all, and the glints of coarse meshes
+fall on scattered faces. Glints can make mapped colors hard to read, and
+aren't shown in 3D guides. \code{tone_normals()} ignores them.
 
 Light-like effects can also be achieved in some stats by mapping color
 aesthetics to computed variables such as \code{after_stat(dzdx)}; see
 \code{\link[=geom_surface_3d]{geom_surface_3d()}} for examples.
 }
+
 \examples{
 # base plot used in examples
 p <- ggplot(sphere_points, aes(x, y, z)) +
@@ -154,6 +181,9 @@ p + light("hard")
 
 # flat bands of light, with options given by a ramp function
 p + light(ramp_steps(n = 3))
+
+# glints of reflected light
+p + light(specular = 0.8)
 
 # colored light: warm highlights and cool shadows
 p + light(tone = tone_tint(shadow = "midnightblue", highlight = "lightyellow"))

@@ -67,7 +67,8 @@ check_neutral <- function(neutral, max = 180) {
 #'   nearest the light to full shadow on the band farthest from it, so with an
 #'   odd number of bands the middle one shows colors unchanged. Bands are
 #'   either `n` equal divisions of the brightness of `ramp_smooth()`, or are
-#'   divided at the angles given by `breaks`.
+#'   divided at the angles given by `breaks`. Specular highlights (see
+#'   [light()]) are flat spots too.
 #'
 #' These can also be given to [light()] by name, as `"smooth"`, `"hard"`, or
 #' `"steps"`, to use their defaults.
@@ -447,15 +448,22 @@ tone_rgb_legacy <- function(rgb, amount, space) {
 #' @param lighting A lighting specification object.
 #' @param normals Matrix with 3 columns of face normals, for normal-based
 #'   tones.
+#' @param specular Numeric vector of specular strengths, or `NULL`.
 #' @return Character vector of lit colors.
 #' @keywords internal
 #' @noRd
-blend_light_with_colors <- function(colors, light_values, lighting, normals = NULL) {
+blend_light_with_colors <- function(colors, light_values, lighting, normals = NULL,
+                                    specular = NULL) {
       if (is.null(colors) || length(colors) == 0) {
             return(colors)
       }
       level <- ramp_level(lighting$ramp, as.numeric(light_values))
       amount <- ifelse(level >= 0, lighting$highlight * level, lighting$shadow * level)
+      # Glints move the rest of the way toward full highlight
+      if (!is.null(specular) && !inherits(lighting$tone, "ggcube_tone_normals")) {
+            specular[is.na(specular)] <- 0
+            amount <- amount + specular * (1 - amount)
+      }
       tone_colors(lighting$tone, colors, amount, normals, lighting$tone_direction)
 }
 
@@ -489,11 +497,12 @@ blend_light <- function(coords) {
             normals <- as.matrix(coords[c("normal_x", "normal_y", "normal_z")])
       }
 
+      specular <- coords[[".specular"]]
       if (spec$shade %in% c("fill", "both")) {
-            coords$fill <- blend_light_with_colors(coords$fill, coords$light, spec, normals)
+            coords$fill <- blend_light_with_colors(coords$fill, coords$light, spec, normals, specular)
       }
       if (spec$shade %in% c("colour", "both")) {
-            coords$colour <- blend_light_with_colors(coords$colour, coords$light, spec, normals)
+            coords$colour <- blend_light_with_colors(coords$colour, coords$light, spec, normals, specular)
       }
 
       # Outlines drawn in the fill color by default, rather than in a color the

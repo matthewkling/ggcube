@@ -21,6 +21,20 @@
 #'    the default tone, colors become lighter and darker versions of the same
 #'    hue.
 #'
+#' @section Specular highlights:
+#' `specular` adds glints where faces reflect the light toward the viewer, as on
+#' a glossy surface. Glints move toward the tone's full highlight color: white
+#' for the default tone, or the highlight color of [tone_tint()], for colored
+#' light. With [ramp_steps()], glints are flat spots, like another band; with
+#' other ramps, they fade gradually from their center.
+#'
+#' Unlike the rest of lighting, glints depend on the viewing angle, so they
+#' move as a plot is rotated. Each face has a single color, so glints work best
+#' on smooth, finely divided surfaces: flat faces, such as those of columns and
+#' voxels, glint all at once, or not at all, and the glints of coarse meshes
+#' fall on scattered faces. Glints can make mapped colors hard to read, and
+#' aren't shown in 3D guides. `tone_normals()` ignores them.
+#'
 #' Light-like effects can also be achieved in some stats by mapping color
 #' aesthetics to computed variables such as `after_stat(dzdx)`; see
 #' [geom_surface_3d()] for examples.
@@ -73,6 +87,13 @@
 #' @param shadow,highlight Strength of shadows and highlights, from 0 (none) to 1
 #'   (reaching the tone's full shadow or highlight, e.g. black or white for the
 #'   default tone). Defaults are 0.8 and 0.6.
+#' @param specular Strength of specular highlights, or glints, from 0 (none, the
+#'   default) to 1 (reaching the tone's full highlight at the center of a glint).
+#'   See the "Specular highlights" section.
+#' @param specular_size Size of glints: the angle in degrees by which a face can
+#'   turn from reflecting the light straight toward the viewer before its glint
+#'   falls to half strength, or ends, for [ramp_steps()]. Must be greater than 0
+#'   and less than 90. Default is 15.
 #' @param backface_scale,backface_offset Numeric values that determine how "frontface" light values get
 #'   modified (scaled and then offset) to derive "backface" light values. A backface is the side of a
 #'   polygon that faces the underside of a surface or the inside of a volume. Frontface light values,
@@ -116,6 +137,9 @@
 #'
 #' # flat bands of light, with options given by a ramp function
 #' p + light(ramp_steps(n = 3))
+#'
+#' # glints of reflected light
+#' p + light(specular = 0.8)
 #'
 #' # colored light: warm highlights and cool shadows
 #' p + light(tone = tone_tint(shadow = "midnightblue", highlight = "lightyellow"))
@@ -188,6 +212,8 @@ light <- function(ramp = "smooth",
                   tone = "lightness",
                   shadow = 0.8,
                   highlight = 0.6,
+                  specular = 0,
+                  specular_size = 15,
                   backface_scale = -1,
                   backface_offset = 0,
                   method = deprecated(),
@@ -252,11 +278,16 @@ light <- function(ramp = "smooth",
       ramp <- as_ramp(ramp)
       tone <- as_tone(tone)
 
-      for (arg in c("shadow", "highlight")) {
+      for (arg in c("shadow", "highlight", "specular")) {
             value <- get(arg)
             if (!is.numeric(value) || length(value) != 1 || is.na(value) || value < 0 || value > 1) {
                   rlang::abort(paste0("`", arg, "` must be a single number from 0 to 1."), call = NULL)
             }
+      }
+      if (!is.numeric(specular_size) || length(specular_size) != 1 || !is.finite(specular_size) ||
+          specular_size <= 0 || specular_size >= 90) {
+            rlang::abort("`specular_size` must be a single angle greater than 0 and less than 90 degrees.",
+                         call = NULL)
       }
 
       # Validate direction
@@ -311,6 +342,8 @@ light <- function(ramp = "smooth",
                   tone = tone,
                   shadow = shadow,
                   highlight = highlight,
+                  specular = specular,
+                  specular_size = specular_size,
                   direction = direction,
                   position = position,
                   distance_falloff = distance_falloff,
@@ -384,6 +417,9 @@ print.light <- function(x, ...) {
       cat("  Ramp:", format_ramp(x$ramp), "\n")
       cat("  Tone:", format_tone(x$tone), "\n")
       cat("  Strength: shadow", x$shadow, ", highlight", x$highlight, "\n")
+      if (isTRUE(x$specular > 0)) {
+            cat("  Specular:", x$specular, ", size", x$specular_size, "deg\n")
+      }
 
       if (!is.null(x$position)) {
             cat("  Position: [", paste(x$position, collapse = ", "), "] (positional lighting)\n")
@@ -454,13 +490,7 @@ compute_light <- function(normals, lighting, face_centers = NULL) {
 
             # Apply distance falloff if requested
             if (params$distance_falloff) {
-                  distances <- sqrt(rowSums((face_centers - matrix(rep(params$position, nrow(face_centers)),
-                                                                   nrow = nrow(face_centers), byrow = TRUE))^2))
-                  # Prevent division by zero and extreme values
-                  distances <- pmax(distances, 0.1)
-                  falloff_factor <- 1 / (distances^2)
-                  # Normalize falloff to prevent extreme values
-                  falloff_factor <- falloff_factor / max(falloff_factor)
+                  falloff_factor <- distance_falloff_factor(face_centers, params$position)
 
                   # Fade toward full shadow: -1 for ramps that reach full shadow
                   # facing away from the light, and 0 (90 degrees) for hard
@@ -490,6 +520,113 @@ compute_light <- function(normals, lighting, face_centers = NULL) {
       # clamping before the flip would leave every back face dark, including
       # those facing the light.
       dot_products
+}
+
+#' Relative light intensity of faces under distance falloff
+#'
+#' @param face_centers Matrix with 3 columns of face centers.
+#' @param position Light position, in the same space.
+#' @return Numeric vector of intensities, following the inverse square law,
+#'   relative to the nearest face's.
+#' @keywords internal
+#' @noRd
+distance_falloff_factor <- function(face_centers, position) {
+      distances <- sqrt(rowSums((face_centers - matrix(rep(position, nrow(face_centers)),
+                                                       nrow = nrow(face_centers), byrow = TRUE))^2))
+      # Prevent division by zero and extreme values
+      distances <- pmax(distances, 0.1)
+      falloff_factor <- 1 / (distances^2)
+      # Normalize falloff to prevent extreme values
+      falloff_factor / max(falloff_factor)
+}
+
+#' Specular strength of faces
+#'
+#' Blinn-Phong specular reflection: each face's glint depends on the angle
+#' between its normal and the half vector, halfway between the directions
+#' toward the light and toward the viewer. Faces are lit on the side facing
+#' the viewer, and only if that side faces the light. Computed in scene space.
+#'
+#' @param normals Matrix with 3 columns of unit face normals.
+#' @param face_centers Matrix with 3 columns of face centers in scene space.
+#' @param light Lighting specification, with `position` (if any) in visual
+#'   space.
+#' @param proj Projection parameters, or `NULL`.
+#' @param normals_in_camera Whether `normals` have been rotated into camera
+#'   space.
+#' @return Numeric vector of specular strengths in `[0, 1]`, one per face: the
+#'   amount by which each face moves toward the tone's full highlight.
+#' @keywords internal
+#' @noRd
+compute_specular <- function(normals, face_centers, light, proj, normals_in_camera = FALSE) {
+      n_faces <- nrow(normals)
+      if (!isTRUE(light$specular > 0) || is.null(proj) || n_faces == 0) return(rep(0, n_faces))
+
+      if (normals_in_camera) normals <- camera_to_scene(normals, proj)
+
+      if (!is.null(light$position)) {
+            light_dir <- calculate_positional_light_directions(face_centers, light$position)
+      } else {
+            dir <- matrix(normalize_light_direction(light$direction), nrow = 1)
+            if (light$anchor == "camera") dir <- camera_to_scene(dir, proj)
+            light_dir <- matrix(dir, n_faces, 3, byrow = TRUE)
+      }
+
+      eye <- eye_in_cube_space(proj)
+      view_dir <- if (eye$persp) {
+            matrix(eye$v, n_faces, 3, byrow = TRUE) - face_centers
+      } else {
+            matrix(eye$v, n_faces, 3, byrow = TRUE)
+      }
+      view_dir <- view_dir / sqrt(rowSums(view_dir^2))
+
+      # The side of each face that the viewer sees
+      away <- rowSums(normals * view_dir) < 0
+      normals[away, ] <- -normals[away, ]
+
+      half <- light_dir + view_dir
+      half <- half / sqrt(rowSums(half^2))
+      cos_half <- pmax(0, rowSums(normals * half))
+      cos_half[!is.finite(cos_half) | rowSums(normals * light_dir) <= 0] <- 0
+
+      strength <- light$specular * specular_shape(cos_half, light$specular_size, light$ramp)
+      if (!is.null(light$position) && isTRUE(light$distance_falloff)) {
+            strength <- strength * distance_falloff_factor(face_centers, light$position)
+      }
+      strength
+}
+
+#' Shape of a glint
+#'
+#' @param cos_half Cosines of the angles between face normals and half vectors.
+#' @param size Angle at which the glint falls to half strength.
+#' @param ramp The light's ramp: stepped ramps give flat glints that end at
+#'   `size`.
+#' @return Numeric vector of relative strengths in `[0, 1]`.
+#' @keywords internal
+#' @noRd
+specular_shape <- function(cos_half, size, ramp = NULL) {
+      if (inherits(ramp, "ggcube_ramp_steps")) {
+            return(as.numeric(cos_half >= cos_deg(size) - 1e-12))
+      }
+      exponent <- log(.5) / log(cos_deg(size))
+      cos_half^exponent
+}
+
+#' Rotate camera-space vectors into scene space
+#'
+#' The inverse of `rotate_normals_to_camera()`.
+#'
+#' @param v Matrix with 3 columns of camera-space vectors.
+#' @param proj Projection parameters.
+#' @return Matrix with 3 columns of scene-space vectors.
+#' @keywords internal
+#' @noRd
+camera_to_scene <- function(v, proj) {
+      rot <- rotate_3d(diag(3), proj$pitch, proj$roll, proj$yaw)
+      out <- v %*% t(rot)
+      out[, 3] <- -out[, 3]
+      out
 }
 
 #' Light direction used by normal-based tones
@@ -730,6 +867,14 @@ compute_light_in_coord <- function(data, standardized_coords, scale_ranges, scal
 
       # Apply lighting models
       faces <- apply_surface_light(faces, normals, face_centers, light)
+      if (isTRUE(light$specular > 0)) {
+            normals_in_camera <- if (has_precomputed_normals) {
+                  light$anchor == "camera" && !is.null(proj)
+            } else {
+                  camera_directional
+            }
+            faces$.specular <- compute_specular(normals, face_centers, light, proj, normals_in_camera)
+      }
 
       # Remove pre-existing normal columns from data before join to prevent suffixes
       poly_data <- poly_data[, !names(poly_data) %in% c("normal_x", "normal_y", "normal_z")]
@@ -885,6 +1030,9 @@ light_two_sided_polygons <- function(data, standardized_coords, light,
       if (camera_directional) normals <- rotate_normals_to_camera(normals, proj)
 
       faces <- apply_surface_light(faces, normals, face_centers, light)
+      if (isTRUE(light$specular > 0)) {
+            faces$.specular <- compute_specular(normals, face_centers, light, proj, camera_directional)
+      }
 
       out <- data[, !names(data) %in% c("normal_x", "normal_y", "normal_z"), drop = FALSE]
       out <- left_join(out, faces, by = join_by(group))

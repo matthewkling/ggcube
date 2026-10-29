@@ -462,7 +462,7 @@ opaque_color_key <- function(colors) {
 #' Fill color of a legend key cell's glyph
 #'
 #' @param cell A grob (rect or gTree) for one legend key.
-#' @return The fill of the glyph that [replace_key_glyph()] would replace, or
+#' @return The fill of the glyph that `replace_key_glyph()` would replace, or
 #'   `NA`.
 #' @keywords internal
 #' @noRd
