@@ -31,7 +31,8 @@
 #'   can be controlled using standard axis scaling functions, e.g.
 #'   \code{... + scale_x_continuous(expand = expansion(.5))}.
 #' @param clip Character string indicating clipping behavior. Use \code{"off"} (the default, recommended
-#'   for some 3D plots) to allow drawing outside the plot panel.
+#'   for some 3D plots) to allow drawing outside the plot panel. Axis labels and titles are kept
+#'   inside the panel either way: the cube is shrunk as needed to make room for them.
 #' @param panels Character vector specifying which panels to render, including one or more of the following:
 #'   \itemize{
 #'     \item \code{"background"} (the default), \code{"foreground"}: faces laying behind or in front of
@@ -261,25 +262,28 @@ coord_3d <- function(pitch = 0, roll = -60, yaw = -30,
 
       scale_depth <- resolve_scale_depth(scale_depth)
 
-      list(
-            ggproto(NULL, Coord3D,
-                    pitch = pitch, roll = roll, yaw = yaw,
-                    persp = persp, dist = dist,
-                    expand = expand, clip = clip,
-                    panels = panels,
-                    rotate_labels = rotate_labels,
-                    scales = scales,
-                    scale_depth = scale_depth,
-                    ratio = ratio,
-                    zoom = zoom,
-                    xlabels = xlabels, ylabels = ylabels, zlabels = zlabels,
-                    light = light,
-                    light_explicit = !inherits(light, "waiver"),
-                    title_position = title_position,
-                    fixed_bounds = fixed_bounds
-            ),
-            theme(plot.margin = margin(20, 20, 20, 20, "pt"))
+      coord <- ggproto(NULL, Coord3D,
+                       pitch = pitch, roll = roll, yaw = yaw,
+                       persp = persp, dist = dist,
+                       expand = expand, clip = clip,
+                       panels = panels,
+                       rotate_labels = rotate_labels,
+                       scales = scales,
+                       scale_depth = scale_depth,
+                       ratio = ratio,
+                       zoom = zoom,
+                       xlabels = xlabels, ylabels = ylabels, zlabels = zlabels,
+                       light = light,
+                       light_explicit = !inherits(light, "waiver"),
+                       title_position = title_position,
+                       fixed_bounds = fixed_bounds
       )
+
+      # Axis furniture is fitted inside the panel when drawn, except in fixed
+      # frames (animation frames), which share one framing across views and
+      # so still need a wide margin for labels to spill into.
+      if (is.null(fixed_bounds)) return(list(coord))
+      list(coord, theme(plot.margin = margin(20, 20, 20, 20, "pt")))
 }
 
 # Depth scaling -----------------------------------------------------------
@@ -588,7 +592,10 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                          panel_params$visible_faces_fg <- visible_faces_fgbg$fg
                          panel_params$visible_faces_bg <- visible_faces_fgbg$bg
 
-                         # Calculate plot bounds using SCALE BREAKS and TITLE POSITIONS
+                         # Frame the projected cube by its gridlines. Axis
+                         # furniture lies beyond them and is fitted in at
+                         # draw time, when its size in the panel is known.
+                         panel_params$frame_fixed <- !is.null(self$fixed_bounds)
                          if (length(visible_faces) > 0) {
                                all_faces <- c("xmin", "xmax", "ymin", "ymax", "zmin", "zmax")
                                full_grid <- make_scale_grid(all_faces, panel_params$scale_info,
@@ -624,8 +631,11 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                                            diff(self$fixed_bounds[1:2])
                                }
 
-                               # Apply zoom: scale bounds around center
-                               # zoom < 1 zooms in (tighter framing), zoom > 1 zooms out (more padding)
+                               # Apply zoom: scale bounds around center.
+                               # zoom > 1 zooms in (tighter framing), zoom < 1 zooms out (more padding).
+                               # The draw-time fit works from the unzoomed bounds, so
+                               # zoom is relative to the fitted framing.
+                               panel_params$fit_bounds <- panel_params$plot_bounds
                                if (!is.null(self$zoom) && self$zoom != 1) {
                                      bounds <- panel_params$plot_bounds
                                      x_center <- mean(bounds[1:2])
@@ -829,10 +839,21 @@ Coord3D <- ggproto("Coord3D", CoordCartesian,
                    },
 
                    # Merges each run of consecutive ggcube layers into one scene,
-                   # depth-sorted together when drawn
+                   # depth-sorted together when drawn, and wraps the panel's
+                   # contents so they are scaled at draw time to keep axis
+                   # furniture inside the panel. Fixed frames are left as
+                   # framed, so that every frame or view shares one scale.
                    draw_panel = function(self, panel, params, theme) {
                          panel <- group_scene_layers(panel)
-                         ggproto_parent(CoordCartesian, self)$draw_panel(panel, params, theme)
+                         drawn <- ggproto_parent(CoordCartesian, self)$draw_panel(panel, params, theme)
+                         if (isTRUE(params$frame_fixed)) return(drawn)
+
+                         furniture <- find_axis_furniture(drawn)
+                         if (is.null(furniture)) return(drawn)
+
+                         fit <- panel_fit_grob(drawn$children, furniture,
+                                               plot_bounds = params$fit_bounds)
+                         grid::setChildren(drawn, grid::gList(fit))
                    },
 
                    render_fg = function(self, panel_params, theme) {

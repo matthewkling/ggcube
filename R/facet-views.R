@@ -349,8 +349,11 @@ mark_view_layout <- function(layout) {
       layout
 }
 
+# Panels share one framing, which the draw-time fit would break, so axis
+# labels spill beyond them and need room between and around them.
 view_facet_theme <- function() {
-      theme(panel.spacing = grid::unit(20, "pt"))
+      theme(panel.spacing = grid::unit(20, "pt"),
+            plot.margin = margin(20, 20, 20, 20, "pt"))
 }
 
 
@@ -423,9 +426,10 @@ view_setup_panel_params <- function(self, panel_params, coord) {
       b <- do.call(rbind, lapply(first, `[[`, "plot_bounds"))
       shared <- c(min(b[, 1]), max(b[, 2]), min(b[, 3]), max(b[, 4]))
 
-      # Pad the shared frame so axis labels, which a standalone plot lets spill
-      # into its margin, have room inside the panel. animate_3d() and orbit_3d()
-      # pad their shared frames by the same proportion.
+      # Pad the shared frame so axis labels have room inside the panel, since
+      # shared frames skip the draw-time fit that makes room for them in a
+      # standalone plot. animate_3d() and orbit_3d() pad their shared frames by
+      # the same proportion.
       pad <- c(diff(shared[1:2]), diff(shared[3:4])) * view_frame_padding
       shared <- shared + c(-pad[1], pad[1], -pad[2], pad[2])
 

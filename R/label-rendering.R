@@ -1219,6 +1219,12 @@ create_axis_title <- function(axis, edge_gridlines, theme_elements, offsets,
                                      is_title = TRUE, fontsize = title_fontsize)
 
       if (!is.null(title_grob)) {
+            # As in ggplot2, room is made for a title as long as its axis but
+            # no longer, so a long title runs past the panel rather than
+            # shrinking the cube. See furniture_grob_extent().
+            if (!is.null(axis_selection)) {
+                  title_grob$reserve_length_pt <- projected_axis_length_pt(axis_selection, ctx)
+            }
             return(list(title_grob))
       } else {
             return(list())
@@ -1227,10 +1233,37 @@ create_axis_title <- function(axis, edge_gridlines, theme_elements, offsets,
 
 # Draw-time assembly -------------------------------------------------------
 
+# The parts of axis furniture layout that don't depend on the panel's size:
+# the edge each axis is drawn along, and its theme elements and margins. The
+# panel fit lays furniture out at several sizes, so these are worked out once
+# per panel. Axes with no edge are NULL.
+axis_furniture_plan <- function(self, panel_params, theme) {
+      effective_ratios <- compute_effective_ratios(
+            list(x = panel_params$scale_info$x$limits,
+                 y = panel_params$scale_info$y$limits,
+                 z = panel_params$scale_info$z$limits),
+            panel_params$scales,
+            panel_params$ratio
+      )
+
+      axes <- lapply(c(x = "x", y = "y", z = "z"), function(axis) {
+            selection <- get_axis_selection(axis, self, panel_params, effective_ratios)
+            if (is.null(selection)) return(NULL)
+            elements <- extract_axis_theme_elements(axis, theme)
+            list(selection = selection,
+                 theme_elements = elements,
+                 offsets = calculate_axis_offsets(elements, self$rotate_labels))
+      })
+
+      list(effective_ratios = effective_ratios, axes = axes)
+}
+
 # Build every axis label and title for the panel. Runs at draw time, so
 # `panel_width_pt` and `panel_height_pt` are the panel's true dimensions and
-# all text can be measured directly.
-render_axis_text <- function(self, panel_params, theme, panel_width_pt, panel_height_pt) {
+# all text can be measured directly. `plan` is the panel's
+# axis_furniture_plan(), computed here if not given.
+render_axis_text <- function(self, panel_params, theme, panel_width_pt, panel_height_pt,
+                             plan = NULL) {
       tryCatch({
             all_labels <- list()
             all_titles <- list()
@@ -1251,28 +1284,22 @@ render_axis_text <- function(self, panel_params, theme, panel_width_pt, panel_he
             ctx <- make_device_context(panel_params$plot_bounds,
                                        panel_width_pt, panel_height_pt)
 
-            effective_ratios <- compute_effective_ratios(
-                  list(x = panel_params$scale_info$x$limits,
-                       y = panel_params$scale_info$y$limits,
-                       z = panel_params$scale_info$z$limits),
-                  panel_params$scales,
-                  panel_params$ratio
-            )
+            if (is.null(plan)) plan <- axis_furniture_plan(self, panel_params, theme)
+            effective_ratios <- plan$effective_ratios
 
             for (axis in c("x", "y", "z")) {
 
-                  axis_selection <- get_axis_selection(axis, self, panel_params, effective_ratios)
+                  axis_plan <- plan$axes[[axis]]
 
-                  if (is.null(axis_selection)) {
+                  if (is.null(axis_plan)) {
                         next
                   }
 
+                  axis_selection <- axis_plan$selection
                   chosen_edge <- axis_selection$edge
                   chosen_face <- axis_selection$face
-
-                  theme_elements_axis <- extract_axis_theme_elements(axis, theme)
-
-                  offsets <- calculate_axis_offsets(theme_elements_axis, self$rotate_labels)
+                  theme_elements_axis <- axis_plan$theme_elements
+                  offsets <- axis_plan$offsets
 
                   edge_gridlines <- panel_params$grid_transformed[
                         panel_params$grid_transformed$face == chosen_face &
@@ -1394,6 +1421,9 @@ axis_furniture_grob <- function(self, panel_params, theme, show_text, show_title
             coord = self,
             panel_params = panel_params,
             plot_theme = theme,
+            plan = tryCatch(axis_furniture_plan(self, panel_params, theme),
+                            error = function(e) NULL),
+            cache = new.env(parent = emptyenv()),
             show_text = show_text,
             show_title = show_title,
             show_ticks = show_ticks,
@@ -1401,6 +1431,33 @@ axis_furniture_grob <- function(self, panel_params, theme, show_text, show_title
             name = name,
             cl = "ggcube_axis_furniture"
       )
+}
+
+# The furniture's elements laid out for a panel of the given size, with the
+# cube framed by `plot_bounds` (by default, the panel's own). The panel fit
+# lays out at the size it settles on before the furniture is drawn there, so
+# recent layouts are kept, keyed by size and framing, for the draw to reuse.
+furniture_elements <- function(furniture, width_pt, height_pt, plot_bounds = NULL) {
+      panel_params <- furniture$panel_params
+      if (!is.null(plot_bounds)) panel_params$plot_bounds <- plot_bounds
+
+      cache <- furniture$cache
+      for (entry in cache$entries) {
+            if (abs(entry$width - width_pt) < 1e-6 && abs(entry$height - height_pt) < 1e-6 &&
+                identical(entry$plot_bounds, panel_params$plot_bounds)) {
+                  return(entry$elements)
+            }
+      }
+
+      elements <- render_axis_text(furniture$coord, panel_params, furniture$plot_theme,
+                                   width_pt, height_pt, plan = furniture$plan)
+
+      if (!is.null(cache)) {
+            entry <- list(width = width_pt, height = height_pt,
+                          plot_bounds = panel_params$plot_bounds, elements = elements)
+            cache$entries <- c(list(entry), cache$entries[seq_len(min(length(cache$entries), 7))])
+      }
+      elements
 }
 
 #' Resolve 3D axis labels and titles at draw time
@@ -1415,8 +1472,10 @@ makeContent.ggcube_axis_furniture <- function(x) {
             panel_width_pt <- grid::convertWidth(grid::unit(1, "npc"), "pt", valueOnly = TRUE)
             panel_height_pt <- grid::convertHeight(grid::unit(1, "npc"), "pt", valueOnly = TRUE)
 
-            elements <- render_axis_text(x$coord, x$panel_params, x$plot_theme,
-                                         panel_width_pt, panel_height_pt)
+            elements <- furniture_elements(x, panel_width_pt, panel_height_pt)
+            # Layouts are reused only within a draw: text metrics depend on
+            # the device, which the next draw may not share.
+            if (!is.null(x$cache)) x$cache$entries <- NULL
 
             kids <- list()
 
@@ -1463,4 +1522,232 @@ makeContent.ggcube_axis_furniture <- function(x) {
       }
 
       grid::setChildren(x, do.call(grid::gList, children))
+}
+
+# Fitting the panel --------------------------------------------------------
+
+# Axis furniture is laid out in points outward from the cube, while the cube
+# is scaled to fill the panel, so at small sizes labels and titles reach past
+# the panel and are cut off by the edge of the device or overlap neighboring
+# plots. The panel's contents are therefore shrunk at draw time, uniformly so
+# the cube keeps its shape, until the cube and its furniture fit the panel.
+
+# Union of bounding boxes, each `c(xmin, xmax, ymin, ymax)`. NULL entries are
+# ignored, and NULL is returned if there are none.
+union_extents <- function(boxes) {
+      boxes <- Filter(function(b) !is.null(b) && all(is.finite(b)), boxes)
+      if (length(boxes) == 0) return(NULL)
+      b <- do.call(rbind, boxes)
+      c(min(b[, 1]), max(b[, 2]), min(b[, 3]), max(b[, 4]))
+}
+
+# Values of a unit given in npc, or NULL if it is in any other unit.
+npc_values <- function(x) {
+      if (!grid::is.unit(x) || length(x) == 0) return(NULL)
+      if (!all(grid::unitType(x) == "npc")) return(NULL)
+      values <- as.numeric(x)
+      values[is.finite(values)]
+}
+
+# Bounding box of a furniture grob, in points from the lower-left corner of a
+# panel `width_pt` by `height_pt`. Covers the grobs axis furniture is made of:
+# text, and line-like grobs with npc coordinates. Line widths are ignored.
+#
+# A text grob carrying `reserve_length_pt` (an axis title running along its
+# edge) is measured as if no longer than that, keeping its anchor and
+# justification, so only the part of it as long as the edge is fitted.
+furniture_grob_extent <- function(grob, width_pt, height_pt) {
+      if (inherits(grob, "gTree")) {
+            return(union_extents(lapply(grob$children, furniture_grob_extent,
+                                        width_pt, height_pt)))
+      }
+
+      if (inherits(grob, "text")) {
+            x <- npc_values(grob$x)
+            y <- npc_values(grob$y)
+            if (length(x) != 1 || length(y) != 1) return(NULL)
+
+            upright <- grid::textGrob(label = grob$label, gp = grob$gp)
+            width <- grid::convertWidth(grid::grobWidth(upright), "pt", valueOnly = TRUE)
+            height <- grid::convertHeight(grid::grobHeight(upright), "pt", valueOnly = TRUE)
+            reserve <- grob$reserve_length_pt
+            if (length(reserve) == 1 && is.finite(reserve) && reserve >= 0) {
+                  width <- min(width, reserve)
+            }
+            corners <- text_box_corner_offsets(width, height, grob$rot,
+                                               grid::resolveHJust(grob$just, grob$hjust),
+                                               grid::resolveVJust(grob$just, grob$vjust))
+            xs <- x * width_pt + corners[, 1]
+            ys <- y * height_pt + corners[, 2]
+            return(c(min(xs), max(xs), min(ys), max(ys)))
+      }
+
+      xs <- unlist(lapply(intersect(c("x", "x0", "x1"), names(grob)),
+                          function(n) npc_values(grob[[n]])))
+      ys <- unlist(lapply(intersect(c("y", "y0", "y1"), names(grob)),
+                          function(n) npc_values(grob[[n]])))
+      if (length(xs) == 0 || length(ys) == 0) return(NULL)
+      c(min(xs) * width_pt, max(xs) * width_pt, min(ys) * height_pt, max(ys) * height_pt)
+}
+
+# Bounding box, in points, of the axis furniture `furniture` (a
+# `ggcube_axis_furniture` gTree) would draw in a panel of the given size, with
+# the cube framed by `plot_bounds` (by default, the panel's own).
+axis_furniture_extent <- function(furniture, width_pt, height_pt, plot_bounds = NULL) {
+      elements <- furniture_elements(furniture, width_pt, height_pt, plot_bounds)
+      grobs <- c(if (isTRUE(furniture$show_lines)) elements$lines,
+                 if (isTRUE(furniture$show_ticks)) elements$ticks,
+                 if (isTRUE(furniture$show_text)) elements$labels,
+                 if (isTRUE(furniture$show_title)) elements$titles)
+      grobs <- grobs[!vapply(grobs, is.null, logical(1))]
+
+      union_extents(lapply(grobs, furniture_grob_extent, width_pt, height_pt))
+}
+
+# Scale and position for a panel's contents so that the cube and its axis
+# furniture fit inside a panel `width_pt` by `height_pt`.
+#
+# The contents are scaled by `scale` and their lower-left corner placed at
+# (`x`, `y`) points from the panel's. A scale of 1 means everything fits as
+# is. Furniture too large for the panel at any scale, as when the text is
+# large for the plot's size, would shrink the cube to nothing, so the scale
+# stops at `min_scale` and the overflow is shared between opposite sides.
+#
+# Furniture is set in points, so shrinking the cube leaves it the same size.
+# Each piece hangs a fixed distance off a point on the cube that moves with
+# the scale, so each edge of the furniture's extent moves linearly with scale,
+# and the overflow is piecewise linear in it. The largest scale that fits is
+# found by secant steps, which land exactly within a linear piece, bracketed
+# and backed by bisection for layouts that change with scale.
+#
+# Within the room it is given, the cube stays centered, moving only as far as
+# needed to keep the furniture inside the panel.
+fit_panel_contents <- function(furniture, width_pt, height_pt, plot_bounds = NULL,
+                               min_scale = 0.5, max_iter = 8, tolerance = 0.5) {
+      unchanged <- list(scale = 1, x = 0, y = 0)
+      if (!is.finite(width_pt) || !is.finite(height_pt) ||
+          width_pt <= 0 || height_pt <= 0) {
+            return(unchanged)
+      }
+
+      # The contents' own extent, with the furniture, relative to their corner
+      extent_at <- function(scale) {
+            w <- scale * width_pt
+            h <- scale * height_pt
+            union_extents(list(c(0, w, 0, h),
+                               axis_furniture_extent(furniture, w, h, plot_bounds)))
+      }
+      # Points by which the extent overflows the panel, in its worse direction
+      overflow <- function(e) {
+            max(e[2] - e[1] - width_pt, e[4] - e[3] - height_pt)
+      }
+
+      e <- extent_at(1)
+      g <- overflow(e)
+      if (g <= tolerance) return(unchanged)
+
+      # Overflowing at `high`; fitting at `low`, once one is found
+      high <- 1
+      low <- NULL
+      e_low <- NULL
+
+      # The overflowing span includes the cube's own, which shrinks with the
+      # scale at the rate of the panel's side in that direction, so the first
+      # step assumes the furniture's reach beyond the cube stays put.
+      slope <- if (e[2] - e[1] - width_pt >= e[4] - e[3] - height_pt) width_pt else height_pt
+      scale <- 1
+      for (i in seq_len(max_iter)) {
+            proposal <- scale - g / slope
+            lower_bound <- if (is.null(low)) min_scale else low
+            if (!is.finite(proposal) || proposal <= lower_bound || proposal >= high) {
+                  proposal <- if (is.null(low)) max(min_scale, high / 2) else (low + high) / 2
+            }
+
+            e_new <- extent_at(proposal)
+            g_new <- overflow(e_new)
+            if (proposal != scale) slope <- (g - g_new) / (scale - proposal)
+            scale <- proposal
+            g <- g_new
+
+            if (g <= tolerance) {
+                  low <- scale
+                  e_low <- e_new
+                  if (g >= -tolerance) break
+            } else {
+                  high <- scale
+                  if (scale <= min_scale) break
+            }
+            if (!is.null(low) && high - low < 0.002) break
+      }
+
+      if (is.null(low)) {
+            scale <- min_scale
+            e <- extent_at(scale)
+      } else {
+            scale <- low
+            e <- e_low
+      }
+
+      place <- function(lower, upper, size, content) {
+            low <- -lower
+            high <- size - upper
+            if (low > high) return((low + high) / 2)
+            min(max((size - content) / 2, low), high)
+      }
+
+      list(scale = scale,
+           x = place(e[1], e[2], width_pt, scale * width_pt),
+           y = place(e[3], e[4], height_pt, scale * height_pt))
+}
+
+# The first axis furniture grob in a grob tree, or NULL.
+find_axis_furniture <- function(grob) {
+      if (inherits(grob, "ggcube_axis_furniture")) return(grob)
+      if (!inherits(grob, "gTree")) return(NULL)
+      for (child in grob$children) {
+            found <- find_axis_furniture(child)
+            if (!is.null(found)) return(found)
+      }
+      NULL
+}
+
+# Deferred grob holding a panel's contents, scaled at draw time to fit the
+# cube and `furniture` inside the panel. `plot_bounds` frames the cube for
+# fitting purposes; contents are then drawn as given, so a `zoom` applied
+# after fitting keeps its meaning.
+panel_fit_grob <- function(children, furniture, plot_bounds = NULL) {
+      grid::gTree(
+            children = children,
+            furniture = furniture,
+            plot_bounds = plot_bounds,
+            name = "panel.fit.3d",
+            cl = "ggcube_panel_fit"
+      )
+}
+
+#' Fit a 3D panel's contents inside the panel at draw time
+#'
+#' @param x A `ggcube_panel_fit` gTree.
+#' @return The gTree, with a viewport that scales its contents to fit.
+#' @importFrom grid makeContext
+#' @export
+#' @keywords internal
+makeContext.ggcube_panel_fit <- function(x) {
+      width_pt <- grid::convertWidth(grid::unit(1, "npc"), "pt", valueOnly = TRUE)
+      height_pt <- grid::convertHeight(grid::unit(1, "npc"), "pt", valueOnly = TRUE)
+
+      if (!is.null(x$furniture$cache)) x$furniture$cache$entries <- NULL
+      fit <- tryCatch(
+            suppressWarnings(fit_panel_contents(x$furniture, width_pt, height_pt,
+                                                x$plot_bounds)),
+            error = function(e) NULL)
+      if (is.null(fit) || fit$scale >= 1) return(x)
+
+      x$vp <- grid::viewport(
+            x = grid::unit(fit$x, "pt"), y = grid::unit(fit$y, "pt"),
+            width = grid::unit(fit$scale * width_pt, "pt"),
+            height = grid::unit(fit$scale * height_pt, "pt"),
+            just = c(0, 0)
+      )
+      x
 }

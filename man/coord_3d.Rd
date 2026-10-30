@@ -56,7 +56,8 @@ can be controlled using standard axis scaling functions, e.g.
 \code{... + scale_x_continuous(expand = expansion(.5))}.}
 
 \item{clip}{Character string indicating clipping behavior. Use \code{"off"} (the default, recommended
-for some 3D plots) to allow drawing outside the plot panel.}
+for some 3D plots) to allow drawing outside the plot panel. Axis labels and titles are kept
+inside the panel either way: the cube is shrunk as needed to make room for them.}
 
 \item{panels}{Character vector specifying which panels to render, including one or more of the following:
 \itemize{
