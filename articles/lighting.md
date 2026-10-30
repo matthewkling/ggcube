@@ -124,7 +124,7 @@ gave them. They are lit only when you set lighting explicitly, with
 ### Shadow and highlight strength
 
 `shadow` and `highlight` set how strong shadows and highlights are, from
-0 (none) to 1 (fully black or white, with the default tone). By default,
+0 (none) to 1 (fully black or white, with the default tone). By default
 shadows are stronger than highlights (`shadow = 0.8`,
 `highlight = 0.6`), since fading to black looks more natural than fading
 to white:
@@ -141,15 +141,15 @@ to white:
 
 ### Ramps
 
-Lighting ramps control how brightness changes as a surface turns away
-from the light:
+A ramp decides how brightness changes as a surface turns away from the
+light:
 
 - **`"smooth"`** (default): Brightness changes gradually. Only surfaces
   pointing directly away from the light source are fully shadowed.
 - **`"hard"`**: All surfaces angled 90 degrees or more from the light
   are fully shadowed, giving a sharp edge between lit and unlit sides.
-- **`"steps"`**: Brightness is discretized into flat bands, for a
-  cartoon-like look.
+- **`"steps"`**: Brightness falls into flat bands, for a cartoon-like
+  look.
 - **`"none"`**: Disables lighting across the plot, except for layers
   that declare it themselves.
 
@@ -163,7 +163,7 @@ from the light:
 
 ![](lighting_files/figure-html/ramps-1.png)
 
-For more control, you can give a ramp object instead of a name:
+For more control, give a ramp object instead of a name:
 [`ramp_smooth()`](https://matthewkling.github.io/ggcube/reference/ramps.md),
 [`ramp_hard()`](https://matthewkling.github.io/ggcube/reference/ramps.md),
 and
@@ -172,13 +172,16 @@ take a `neutral` angle, at which faces keep their base color, and
 [`ramp_steps()`](https://matthewkling.github.io/ggcube/reference/ramps.md)
 takes the number of bands, `n`. A smaller `neutral` angle puts the base
 color on faces closer to facing the light, which darkens the plot
-overall:
+overall. Stepped bands run evenly from full highlight to full shadow;
+instead of `n` and `neutral`,
+[`ramp_steps()`](https://matthewkling.github.io/ggcube/reference/ramps.md)
+can take the angles from the light at which bands divide, as `breaks`:
 
 ``` r
 
 (p + light(ramp_smooth(neutral = 30)) + ggtitle("ramp_smooth(neutral = 30)")) +
   (p + light(ramp_smooth(neutral = 60)) + ggtitle("ramp_smooth(neutral = 60)")) +
-  (p + light(ramp_steps(n = 3)) + ggtitle("ramp_steps(n = 3)")) +
+  (p + light(ramp_steps(breaks = c(60, 90))) + ggtitle("ramp_steps(breaks = c(60, 90))")) +
   plot_layout(ncol = 3)
 ```
 
@@ -186,13 +189,12 @@ overall:
 
 ### Tones
 
-A lighting “tone” decides what lighter and darker look like for a given
-base color:
+A tone decides what lighter and darker look like for a given color:
 
 - **`"lightness"`** (default): Colors become lighter and darker versions
   of the same hue, reaching white at full highlight and black at full
   shadow. Lightness is changed in the perceptual OKLab color space,
-  which preserves hue as colors lighten and darken.
+  which keeps hue as colors lighten and darken.
 - **`"tint"`**: Colors mix toward a chosen highlight color and shadow
   color, for colored light.
 - **`"normals"`**: Faces are colored by the direction they face,
@@ -206,13 +208,42 @@ shadows are a classic choice:
 ``` r
 
 (p + ggtitle('"lightness" (default)')) +
-  (p + light(tone = tone_tint(shadow = "darkblue", highlight = "gold")) +
+  (p + light(tone = tone_tint(shadow = "midnightblue", highlight = "lightyellow")) +
       ggtitle("tone_tint()")) +
   (p + light(tone = "normals") + ggtitle('"normals"')) +
   plot_layout(ncol = 3)
 ```
 
 ![](lighting_files/figure-html/tones-1.png)
+
+### Specular highlights
+
+`specular` adds glints where faces reflect the light toward the viewer,
+as on a glossy surface, from 0 (none, the default) to 1 (reaching the
+tone’s full highlight at the center of a glint). `specular_size` sets
+how far glints spread, as the angle in degrees by which a face can turn
+from reflecting the light straight toward the viewer before its glint
+falls to half strength. Glints move toward the tone’s full highlight
+color, so colored light gives colored glints, and with stepped ramps
+they’re flat spots, like another band:
+
+``` r
+
+(p + light(specular = .8) + ggtitle("specular = .8")) +
+  (p + light(specular = .8, tone = tone_tint(shadow = "midnightblue", highlight = "gold")) +
+      ggtitle("with tone_tint()")) +
+  (p + light(ramp_steps(breaks = c(60, 90)), specular = .8) + ggtitle("with ramp_steps()")) +
+  plot_layout(ncol = 3)
+```
+
+![](lighting_files/figure-html/specular-1.png)
+
+Unlike the rest of lighting, glints depend on the viewing angle, so they
+move as a plot rotates. Each face has a single color, so glints work
+best on smooth, finely divided surfaces like this sphere: flat faces,
+such as those of columns, glint all at once or not at all. Glints can
+also make mapped colors hard to read, so they’re best kept for showing
+shape.
 
 ## Light sources
 

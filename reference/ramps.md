@@ -9,7 +9,7 @@ ramp_smooth(neutral = 45)
 
 ramp_hard(neutral = 45)
 
-ramp_steps(n = 4, neutral = 45)
+ramp_steps(n = 4, neutral = 45, breaks = NULL)
 ```
 
 ## Arguments
@@ -23,6 +23,15 @@ ramp_steps(n = 4, neutral = 45)
 - n:
 
   Number of bands, at least 2. Default is 4.
+
+- breaks:
+
+  Alternative to `n` and `neutral`: angles in degrees between a face and
+  the direction toward the light at which one band ends and the next
+  begins, increasing, greater than 0 and less than 180. Faces at a break
+  fall in the darker band. For example, `breaks = 90` gives a fully
+  highlighted lit side and a fully shadowed unlit side, and
+  `breaks = c(60, 90)` adds a band of unchanged color between them.
 
 ## Value
 
@@ -49,8 +58,15 @@ toward full highlight and shadow colors go is set by the `highlight` and
   90 degrees or more from the light are fully shadowed, giving a sharp
   edge between lit and unlit sides.
 
-- `ramp_steps()` groups the brightness of `ramp_smooth()` into `n` flat
-  bands, for a cartoon-like look.
+- `ramp_steps()` divides faces into flat bands of brightness, for a
+  cartoon-like look. The bands run evenly from full highlight on the
+  band nearest the light to full shadow on the band farthest from it, so
+  with an odd number of bands the middle one shows colors unchanged.
+  Bands are either `n` equal divisions of the brightness of
+  `ramp_smooth()`, or are divided at the angles given by `breaks`.
+  Specular highlights (see
+  [`light()`](https://matthewkling.github.io/ggcube/reference/light.md))
+  are flat spots too.
 
 These can also be given to
 [`light()`](https://matthewkling.github.io/ggcube/reference/light.md) by
@@ -81,4 +97,8 @@ p + light(ramp_hard())
 
 
 p + light(ramp_steps(n = 3))
+
+
+# bands divided at chosen angles from the light
+p + light(ramp_steps(breaks = c(60, 90)))
 ```

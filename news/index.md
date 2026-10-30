@@ -230,7 +230,7 @@ New options:
   and
   [`ramp_steps()`](https://matthewkling.github.io/ggcube/reference/ramps.md)
   (gradual change, a sharp edge between lit and unlit sides, or flat
-  bands), and
+  bands, divided evenly or at chosen angles from the light), and
   [`tone_lightness()`](https://matthewkling.github.io/ggcube/reference/tones.md),
   [`tone_tint()`](https://matthewkling.github.io/ggcube/reference/tones.md),
   and
@@ -264,6 +264,14 @@ New options:
   now center their shading on the scale’s colors, so the middle of the
   guide shows the colors as specified, and `shade_range` gives exactly
   the range shown, from full shadow (`-1`) to full highlight (`1`).
+- [`light()`](https://matthewkling.github.io/ggcube/reference/light.md)
+  gains `specular` and `specular_size`, for glints where faces reflect
+  the light toward the viewer, as on a glossy surface. Glints move
+  toward the tone’s full highlight color, so colored light from
+  [`tone_tint()`](https://matthewkling.github.io/ggcube/reference/tones.md)
+  gives colored glints, and with
+  [`ramp_steps()`](https://matthewkling.github.io/ggcube/reference/ramps.md)
+  they’re flat spots. They’re off by default.
 - Fixed
   [`guide_legend_3d()`](https://matthewkling.github.io/ggcube/reference/guide_3d.md)
   shading keys from the wrong colors: each key was shaded from the color

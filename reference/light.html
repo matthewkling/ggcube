@@ -73,6 +73,8 @@ which takes precedence over plot-level lighting.</p>
 <span>  tone <span class="op">=</span> <span class="st">"lightness"</span>,</span>
 <span>  shadow <span class="op">=</span> <span class="fl">0.8</span>,</span>
 <span>  highlight <span class="op">=</span> <span class="fl">0.6</span>,</span>
+<span>  specular <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  specular_size <span class="op">=</span> <span class="fl">15</span>,</span>
 <span>  backface_scale <span class="op">=</span> <span class="op">-</span><span class="fl">1</span>,</span>
 <span>  backface_offset <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  method <span class="op">=</span> <span class="fu">deprecated</span><span class="op">(</span><span class="op">)</span>,</span>
@@ -154,6 +156,19 @@ further options.</p></dd>
 default tone). Defaults are 0.8 and 0.6.</p></dd>
 
 
+<dt id="arg-specular">specular<a class="anchor" aria-label="anchor" href="#arg-specular"></a></dt>
+<dd><p>Strength of specular highlights, or glints, from 0 (none, the
+default) to 1 (reaching the tone's full highlight at the center of a glint).
+See the "Specular highlights" section.</p></dd>
+
+
+<dt id="arg-specular-size">specular_size<a class="anchor" aria-label="anchor" href="#arg-specular-size"></a></dt>
+<dd><p>Size of glints: the angle in degrees by which a face can
+turn from reflecting the light straight toward the viewer before its glint
+falls to half strength, or ends, for <code><a href="ramps.html">ramp_steps()</a></code>. Must be greater than 0
+and less than 90. Default is 15.</p></dd>
+
+
 <dt id="arg-backface-scale-backface-offset">backface_scale, backface_offset<a class="anchor" aria-label="anchor" href="#arg-backface-scale-backface-offset"></a></dt>
 <dd><p>Numeric values that determine how "frontface" light values get
 modified (scaled and then offset) to derive "backface" light values. A backface is the side of a
@@ -199,7 +214,23 @@ highlighted, and faces turned further away are shadowed. <code>shadow</code> and
 <li><p>A <em>tone</em> decides what lighter and darker look like for a given color. With
 the default tone, colors become lighter and darker versions of the same
 hue.</p></li>
-</ol><p>Light-like effects can also be achieved in some stats by mapping color
+</ol></div>
+    <div class="section level2">
+    <h2 id="specular-highlights">Specular highlights<a class="anchor" aria-label="anchor" href="#specular-highlights"></a></h2>
+
+
+<p><code>specular</code> adds glints where faces reflect the light toward the viewer, as on
+a glossy surface. Glints move toward the tone's full highlight color: white
+for the default tone, or the highlight color of <code><a href="tones.html">tone_tint()</a></code>, for colored
+light. With <code><a href="ramps.html">ramp_steps()</a></code>, glints are flat spots, like another band; with
+other ramps, they fade gradually from their center.</p>
+<p>Unlike the rest of lighting, glints depend on the viewing angle, so they
+move as a plot is rotated. Each face has a single color, so glints work best
+on smooth, finely divided surfaces: flat faces, such as those of columns and
+voxels, glint all at once, or not at all, and the glints of coarse meshes
+fall on scattered faces. Glints can make mapped colors hard to read, and
+aren't shown in 3D guides. <code><a href="tones.html">tone_normals()</a></code> ignores them.</p>
+<p>Light-like effects can also be achieved in some stats by mapping color
 aesthetics to computed variables such as <code>after_stat(dzdx)</code>; see
 <code><a href="stat_surface_3d.html">geom_surface_3d()</a></code> for examples.</p>
     </div>
@@ -235,35 +266,39 @@ aesthetics to computed variables such as <code>after_stat(dzdx)</code>; see
 <span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu">light</span><span class="op">(</span><span class="fu"><a href="ramps.html">ramp_steps</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="light-5.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># glints of reflected light</span></span></span>
+<span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu">light</span><span class="op">(</span>specular <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="light-6.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># colored light: warm highlights and cool shadows</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu">light</span><span class="op">(</span>tone <span class="op">=</span> <span class="fu"><a href="tones.html">tone_tint</a></span><span class="op">(</span>shadow <span class="op">=</span> <span class="st">"midnightblue"</span>, highlight <span class="op">=</span> <span class="st">"lightyellow"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="light-6.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="light-7.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># color faces by the direction they face</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu">light</span><span class="op">(</span>tone <span class="op">=</span> <span class="st">"normals"</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="light-7.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="light-8.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Lighting targets ---------------------------------------------------------</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># use `fill` and `color` to select which aesthetics get modified by light</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu">light</span><span class="op">(</span>fill <span class="op">=</span> <span class="cn">TRUE</span>, color <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="light-8.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="light-9.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># apply lighting to aesthetically mapped colors, with a shaded guide to match</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="geom_hull_3d.html">geom_hull_3d</a></span><span class="op">(</span><span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="va">x</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_c</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="light-9.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="light-10.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># disable lighting entirely</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu">light</span><span class="op">(</span><span class="st">"none"</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="light-10.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="light-11.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># if provided, layer-level lighting overrides plot-level lighting</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu">light</span><span class="op">(</span><span class="st">"hard"</span><span class="op">)</span> <span class="op">+</span> <span class="co"># plot-level: affects original layer</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="geom_hull_3d.html">geom_hull_3d</a></span><span class="op">(</span><span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">x</span> <span class="op">+</span> <span class="fl">2.5</span><span class="op">)</span>, fill <span class="op">=</span> <span class="st">"#9e2602"</span>, color <span class="op">=</span> <span class="st">"#5e1600"</span>,</span></span>
 <span class="r-in"><span>      light <span class="op">=</span> <span class="fu">light</span><span class="op">(</span>direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="op">-</span><span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="light-11.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="light-12.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Light sources ------------------------------------------------------------</span></span></span>
@@ -271,19 +306,19 @@ aesthetics to computed variables such as <code>after_stat(dzdx)</code>; see
 <span class="r-in"><span><span class="co"># directional light from the xmin-ymin-zmin direction</span></span></span>
 <span class="r-in"><span><span class="co"># (`direction` is relative to rotated axes with default `anchor = "scene"`)</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu">light</span><span class="op">(</span>direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="op">-</span><span class="fl">1</span>, <span class="op">-</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="light-12.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="light-13.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># directional light from top-right corner of figure</span></span></span>
 <span class="r-in"><span><span class="co"># (`anchor = "camera"` makes `direction` fixed relative to the plot)</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu">light</span><span class="op">(</span>direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span>, anchor <span class="op">=</span> <span class="st">"camera"</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="light-13.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="light-14.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># positional light source within plot</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mountain</span>, <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="stat_surface_3d.html">stat_surface_3d</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="st">"red"</span>, color <span class="op">=</span> <span class="st">"red"</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu">light</span><span class="op">(</span>position <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">.5</span>, <span class="fl">.7</span>, <span class="fl">95</span><span class="op">)</span>, distance_falloff <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span>ratio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1.5</span>, <span class="fl">2</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="light-14.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="light-15.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Backface lighting --------------------------------------------------------</span></span></span>
@@ -295,15 +330,15 @@ aesthetics to computed variables such as <code>after_stat(dzdx)</code>; see
 <span class="r-in"><span>    fill <span class="op">=</span> <span class="st">"steelblue"</span>, color <span class="op">=</span> <span class="st">"steelblue"</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>    <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span>pitch <span class="op">=</span> <span class="fl">0</span>, roll <span class="op">=</span> <span class="op">-</span><span class="fl">70</span>, yaw <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">p</span></span></span>
-<span class="r-plt img"><img src="light-15.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="light-16.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># use `backface_scale = 1` to light backfaces as if they're frontfaces</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu">light</span><span class="op">(</span>backface_scale <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="light-16.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="light-17.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># use `backface_offset` to uniformly darken (or lighten) backfaces</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu">light</span><span class="op">(</span>backface_scale <span class="op">=</span> <span class="fl">1</span>, backface_offset <span class="op">=</span> <span class="op">-</span><span class="fl">.5</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="light-17.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="light-18.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>

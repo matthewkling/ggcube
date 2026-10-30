@@ -357,13 +357,13 @@ ggplot() +
       theme_dark() +
       theme(legend.position = "none") +
       
-      # apply shading to solid fill
+      # apply shading to solid fill, with a specular highlight for shininess
       sphere(fill = "#8a2900",
-             light = light("hard", direction = c(-1, 0, 0))) +
+             light = light("hard", specular = 1, specular_size = 10)) +
       
       # apply shading to aesthetic fill
       sphere(x0 = 2.5, mapping = aes(fill = after_stat(x)),
-             light = light(direction = c(0, 0, 1), shadow = 1, highlight = 1)) +
+             light = light(direction = c(0, -1, 0))) +
       
       # map surface orientation to 3D RGB color channels
       sphere(x0 = 5, light = light(tone = "normals", direction = c(1, 0, -1)))

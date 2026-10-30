@@ -51,7 +51,7 @@
 <span></span>
 <span><span class="fu">ramp_hard</span><span class="op">(</span>neutral <span class="op">=</span> <span class="fl">45</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">ramp_steps</span><span class="op">(</span>n <span class="op">=</span> <span class="fl">4</span>, neutral <span class="op">=</span> <span class="fl">45</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">ramp_steps</span><span class="op">(</span>n <span class="op">=</span> <span class="fl">4</span>, neutral <span class="op">=</span> <span class="fl">45</span>, breaks <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -66,6 +66,15 @@ light at which colors are unchanged. Must be greater than 0 and less than
 
 <dt id="arg-n">n<a class="anchor" aria-label="anchor" href="#arg-n"></a></dt>
 <dd><p>Number of bands, at least 2. Default is 4.</p></dd>
+
+
+<dt id="arg-breaks">breaks<a class="anchor" aria-label="anchor" href="#arg-breaks"></a></dt>
+<dd><p>Alternative to <code>n</code> and <code>neutral</code>: angles in degrees between a
+face and the direction toward the light at which one band ends and the
+next begins, increasing, greater than 0 and less than 180. Faces at a
+break fall in the darker band. For example, <code>breaks = 90</code> gives a fully
+highlighted lit side and a fully shadowed unlit side, and
+<code>breaks = c(60, 90)</code> adds a band of unchanged color between them.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -85,8 +94,13 @@ from it. This is the default.</p></li>
 <li><p><code>ramp_hard()</code> is like <code>ramp_smooth()</code> toward the light, but faces at 90
 degrees or more from the light are fully shadowed, giving a sharp edge
 between lit and unlit sides.</p></li>
-<li><p><code>ramp_steps()</code> groups the brightness of <code>ramp_smooth()</code> into <code>n</code> flat bands,
-for a cartoon-like look.</p></li>
+<li><p><code>ramp_steps()</code> divides faces into flat bands of brightness, for a
+cartoon-like look. The bands run evenly from full highlight on the band
+nearest the light to full shadow on the band farthest from it, so with an
+odd number of bands the middle one shows colors unchanged. Bands are
+either <code>n</code> equal divisions of the brightness of <code>ramp_smooth()</code>, or are
+divided at the angles given by <code>breaks</code>. Specular highlights (see
+<code><a href="light.html">light()</a></code>) are flat spots too.</p></li>
 </ul><p>These can also be given to <code><a href="light.html">light()</a></code> by name, as <code>"smooth"</code>, <code>"hard"</code>, or
 <code>"steps"</code>, to use their defaults.</p>
     </div>
@@ -114,6 +128,10 @@ and darker look like.</p></div>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="light.html">light</a></span><span class="op">(</span><span class="fu">ramp_steps</span><span class="op">(</span>n <span class="op">=</span> <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="ramps-4.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># bands divided at chosen angles from the light</span></span></span>
+<span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="light.html">light</a></span><span class="op">(</span><span class="fu">ramp_steps</span><span class="op">(</span>breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">60</span>, <span class="fl">90</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="ramps-5.png" alt="" width="700" height="433"></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

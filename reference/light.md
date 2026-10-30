@@ -21,6 +21,8 @@ light(
   tone = "lightness",
   shadow = 0.8,
   highlight = 0.6,
+  specular = 0,
+  specular_size = 15,
   backface_scale = -1,
   backface_offset = 0,
   method = deprecated(),
@@ -119,6 +121,20 @@ light(
   tone's full shadow or highlight, e.g. black or white for the default
   tone). Defaults are 0.8 and 0.6.
 
+- specular:
+
+  Strength of specular highlights, or glints, from 0 (none, the default)
+  to 1 (reaching the tone's full highlight at the center of a glint).
+  See the "Specular highlights" section.
+
+- specular_size:
+
+  Size of glints: the angle in degrees by which a face can turn from
+  reflecting the light straight toward the viewer before its glint falls
+  to half strength, or ends, for
+  [`ramp_steps()`](https://matthewkling.github.io/ggcube/reference/ramps.md).
+  Must be greater than 0 and less than 90. Default is 15.
+
 - backface_scale, backface_offset:
 
   Numeric values that determine how "frontface" light values get
@@ -173,6 +189,26 @@ Lighting colors each face in three steps:
     color. With the default tone, colors become lighter and darker
     versions of the same hue.
 
+## Specular highlights
+
+`specular` adds glints where faces reflect the light toward the viewer,
+as on a glossy surface. Glints move toward the tone's full highlight
+color: white for the default tone, or the highlight color of
+[`tone_tint()`](https://matthewkling.github.io/ggcube/reference/tones.md),
+for colored light. With
+[`ramp_steps()`](https://matthewkling.github.io/ggcube/reference/ramps.md),
+glints are flat spots, like another band; with other ramps, they fade
+gradually from their center.
+
+Unlike the rest of lighting, glints depend on the viewing angle, so they
+move as a plot is rotated. Each face has a single color, so glints work
+best on smooth, finely divided surfaces: flat faces, such as those of
+columns and voxels, glint all at once, or not at all, and the glints of
+coarse meshes fall on scattered faces. Glints can make mapped colors
+hard to read, and aren't shown in 3D guides.
+[`tone_normals()`](https://matthewkling.github.io/ggcube/reference/tones.md)
+ignores them.
+
 Light-like effects can also be achieved in some stats by mapping color
 aesthetics to computed variables such as `after_stat(dzdx)`; see
 [`geom_surface_3d()`](https://matthewkling.github.io/ggcube/reference/stat_surface_3d.md)
@@ -208,6 +244,10 @@ p + light("hard")
 
 # flat bands of light, with options given by a ramp function
 p + light(ramp_steps(n = 3))
+
+
+# glints of reflected light
+p + light(specular = 0.8)
 
 
 # colored light: warm highlights and cool shadows
