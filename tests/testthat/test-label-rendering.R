@@ -343,3 +343,25 @@ test_that("calculate_axis_offsets no longer consumes the nominal tick length", {
       expect_equal(calculate_axis_offsets(base, rotate_labels = TRUE)$text_offset,
                    calculate_axis_offsets(with_tick, rotate_labels = TRUE)$text_offset)
 })
+
+test_that("unrotated text is upright unless the theme sets an angle", {
+      gridline <- data.frame(x = c(0, 1), y = c(0, 0.5))
+      unrotated_angle <- function(theme, axis, is_title) {
+            elements <- extract_axis_theme_elements(axis, theme)
+            calculate_text_rotation_and_justification(
+                  gridline, rotate_labels = FALSE, elements,
+                  is_title = is_title)$angle
+      }
+
+      # Complete themes give the y title angle = 90, a 2D convention
+      for (axis in c("x", "y", "z")) {
+            expect_equal(unrotated_angle(theme_light(), axis, TRUE), 0)
+            expect_equal(unrotated_angle(theme_light(), axis, FALSE), 0)
+      }
+
+      set <- theme_light() +
+            theme(axis.title.y = element_text(angle = 45),
+                  axis.text.x = element_text(angle = 30))
+      expect_equal(unrotated_angle(set, "y", TRUE), 45)
+      expect_equal(unrotated_angle(set, "x", FALSE), 30)
+})

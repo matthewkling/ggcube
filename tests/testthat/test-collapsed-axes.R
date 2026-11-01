@@ -30,14 +30,14 @@ test_that("round_range_outward falls back when breaks give no spacing", {
       expect_equal(round_range_outward(limits, c(20, 20)), limits)
 })
 
-test_that("chosen_justification distinguishes set values from inherited ones", {
-      expect_null(chosen_justification(0.5, 0.5))
-      expect_null(chosen_justification(NULL, 0.5))
-      expect_null(chosen_justification("top", 0.5))
-      expect_null(chosen_justification(NA_real_, 0.5))
+test_that("chosen_theme_value distinguishes set values from inherited ones", {
+      expect_null(chosen_theme_value(0.5, 0.5))
+      expect_null(chosen_theme_value(NULL, 0.5))
+      expect_null(chosen_theme_value("top", 0.5))
+      expect_null(chosen_theme_value(NA_real_, 0.5))
 
-      expect_equal(chosen_justification(2, 0.5), 2)
-      expect_equal(chosen_justification(0.5, 1), 0.5)
+      expect_equal(chosen_theme_value(2, 0.5), 2)
+      expect_equal(chosen_theme_value(0.5, 1), 0.5)
 })
 
 test_that("element_is_blank detects blanked elements", {

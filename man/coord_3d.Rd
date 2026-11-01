@@ -96,8 +96,11 @@ end of the axis, outside the plot area.
 }}
 
 \item{rotate_labels}{Logical indicating whether axis labels (text and titles) should automatically
-rotate to align with the projected axis directions. When \code{FALSE}, uses theme
-text and title angle settings.
+rotate to align with the projected axis directions. When \code{FALSE}, text is
+upright unless the theme sets an angle, e.g. \code{axis.title.y = element_text(angle = 45)}.
+As with justification below, an angle counts as set if it differs from the one the
+element inherits from \code{\link[ggplot2]{theme_grey}}, so the y axis title's
+2D default of 90 degrees is ignored; use 270 for vertical text.
 
 Automatic rotation also sets its own justification, since \code{vjust} would
 push text perpendicular to the axis it belongs to and \code{hjust} decides

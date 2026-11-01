@@ -34,7 +34,7 @@ element_is_blank <- function(element) {
       is.null(element) || inherits(element, "element_blank")
 }
 
-# Was a justification value chosen, or merely inherited?
+# Was a justification or angle value chosen, or merely inherited?
 #
 # calc_element() always resolves to a concrete number, so a set value can't be
 # recognised by its presence. It is recognised instead by differing from the
@@ -42,7 +42,10 @@ element_is_blank <- function(element) {
 # comes from. Setting a value to exactly the inherited one is therefore
 # indistinguishable from not setting it, the same limitation the margin
 # inheritance above already carries.
-chosen_justification <- function(value, default) {
+#
+# For angles this sets aside 2D layout conventions that have no meaning in 3D,
+# such as the vertical y axis title (`angle = 90`) of every complete theme.
+chosen_theme_value <- function(value, default) {
       if (is.null(value) || !is.numeric(value) || length(value) != 1) return(NULL)
       if (!is.finite(value)) return(NULL)
       if (!is.null(default) && isTRUE(all.equal(value, default))) return(NULL)
@@ -51,8 +54,8 @@ chosen_justification <- function(value, default) {
 
 element_justification <- function(element, default_element) {
       list(
-            vjust = chosen_justification(element$vjust, default_element$vjust),
-            hjust = chosen_justification(element$hjust, default_element$hjust)
+            vjust = chosen_theme_value(element$vjust, default_element$vjust),
+            hjust = chosen_theme_value(element$hjust, default_element$hjust)
       )
 }
 
@@ -102,6 +105,8 @@ extract_axis_theme_elements <- function(axis, theme) {
             title_blank = axis_title_blank,
             text_justification = element_justification(axis_text_theme, default_axis_text),
             title_justification = element_justification(axis_title_theme, default_axis_title),
+            text_angle = chosen_theme_value(axis_text_theme$angle, default_axis_text$angle),
+            title_angle = chosen_theme_value(axis_title_theme$angle, default_axis_title$angle),
             tick_length = resolve_tick_length_points(axis, theme)
       ))
 }
@@ -539,9 +544,12 @@ calculate_text_rotation_and_justification <- function(gridline_data, rotate_labe
             }
             return(result)
       } else {
+            # Unrotated text is upright unless the theme sets an angle of its
+            # own; see chosen_theme_value()
             element_type <- if (is_title) "axis_title" else "axis_text"
+            chosen_angle <- if (is_title) theme_elements$title_angle else theme_elements$text_angle
             return(list(
-                  angle = theme_elements[[element_type]]$angle %||% 0,
+                  angle = chosen_angle %||% 0,
                   hjust = theme_elements[[element_type]]$hjust %||% 0.5,
                   vjust = theme_elements[[element_type]]$vjust %||% 0.5
             ))
@@ -900,7 +908,7 @@ create_collapsed_axis_text <- function(axis, theme_elements, panel_params, ctx,
             hjust <- chosen$hjust %||% (if (outward > 0) 0 else 1)
             vjust <- chosen$vjust %||% 0.5
       } else {
-            angle_degrees <- theme_elements$axis_text$angle %||% 0
+            angle_degrees <- theme_elements$text_angle %||% 0
             hjust <- theme_elements$axis_text$hjust %||% 0.5
             vjust <- theme_elements$axis_text$vjust %||% 0.5
       }
