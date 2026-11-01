@@ -53,28 +53,35 @@ shading is enabled in 3D plots.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">guide_colorbar_3d</span><span class="op">(</span>reverse_shade <span class="op">=</span> <span class="cn">FALSE</span>, shade_range <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">0.5</span>, <span class="fl">0.5</span><span class="op">)</span>, <span class="va">...</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">guide_colorbar_3d</span><span class="op">(</span><span class="va">...</span>, reverse_shade <span class="op">=</span> <span class="cn">FALSE</span>, shade_range <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">0.5</span>, <span class="fl">0.5</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">guide_legend_3d</span><span class="op">(</span>reverse_shade <span class="op">=</span> <span class="cn">FALSE</span>, shade_range <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">0.5</span>, <span class="fl">0.5</span><span class="op">)</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">guide_legend_3d</span><span class="op">(</span><span class="va">...</span>, reverse_shade <span class="op">=</span> <span class="cn">FALSE</span>, shade_range <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">0.5</span>, <span class="fl">0.5</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">guide_colorsteps_3d</span><span class="op">(</span><span class="va">...</span>, reverse_shade <span class="op">=</span> <span class="cn">FALSE</span>, shade_range <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">0.5</span>, <span class="fl">0.5</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">guide_bins_3d</span><span class="op">(</span><span class="va">...</span>, reverse_shade <span class="op">=</span> <span class="cn">FALSE</span>, shade_range <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">0.5</span>, <span class="fl">0.5</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
 
 
-<dl><dt id="arg-reverse-shade">reverse_shade<a class="anchor" aria-label="anchor" href="#arg-reverse-shade"></a></dt>
+<dl><dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>Additional arguments passed to the corresponding ggplot2 guide:
+<code><a href="https://ggplot2.tidyverse.org/reference/guide_colourbar.html" class="external-link">ggplot2::guide_colorbar()</a></code>, <code><a href="https://ggplot2.tidyverse.org/reference/guide_legend.html" class="external-link">ggplot2::guide_legend()</a></code>,
+<code><a href="https://ggplot2.tidyverse.org/reference/guide_coloursteps.html" class="external-link">ggplot2::guide_colorsteps()</a></code>, or <code><a href="https://ggplot2.tidyverse.org/reference/guide_bins.html" class="external-link">ggplot2::guide_bins()</a></code>.</p></dd>
+
+
+<dt id="arg-reverse-shade">reverse_shade<a class="anchor" aria-label="anchor" href="#arg-reverse-shade"></a></dt>
 <dd><p>Logical. If TRUE, reverses the lighting gradient direction. By default,
-shadows are placed on the left, or on the bottom for horizontal colorbars.</p></dd>
+shadows are placed on the left, or on the bottom for horizontal colorbars and color
+steps.</p></dd>
 
 
 <dt id="arg-shade-range">shade_range<a class="anchor" aria-label="anchor" href="#arg-shade-range"></a></dt>
 <dd><p>Length-2 numeric vector in the range -1 to 1, giving the limits
 of the shading gradient. -1 is full shadow, 0 the colors as specified, and 1 full
 highlight, as set by the light's <code>shadow</code> and <code>highlight</code>. Default is <code>c(-.5, .5)</code>.</p></dd>
-
-
-<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Additional arguments passed to <code><a href="https://ggplot2.tidyverse.org/reference/guide_colourbar.html" class="external-link">guide_colorbar()</a></code> or <code><a href="https://ggplot2.tidyverse.org/reference/guide_legend.html" class="external-link">guide_legend()</a></code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -84,10 +91,13 @@ highlight, as set by the light's <code>shadow</code> and <code>highlight</code>.
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>When lighting applies to a layer that maps <code>fill</code> or <code>colour</code>, ggcube uses
-these guides by default, in place of <code><a href="https://ggplot2.tidyverse.org/reference/guide_colourbar.html" class="external-link">ggplot2::guide_colourbar()</a></code> and
-<code><a href="https://ggplot2.tidyverse.org/reference/guide_legend.html" class="external-link">ggplot2::guide_legend()</a></code>. Call them explicitly to change their options, or
+these guides by default, in place of <code><a href="https://ggplot2.tidyverse.org/reference/guide_colourbar.html" class="external-link">ggplot2::guide_colourbar()</a></code>,
+<code><a href="https://ggplot2.tidyverse.org/reference/guide_legend.html" class="external-link">ggplot2::guide_legend()</a></code>, <code><a href="https://ggplot2.tidyverse.org/reference/guide_coloursteps.html" class="external-link">ggplot2::guide_coloursteps()</a></code>, and
+<code><a href="https://ggplot2.tidyverse.org/reference/guide_bins.html" class="external-link">ggplot2::guide_bins()</a></code>. Call them explicitly to change their options, or
 use e.g. <code>guides(fill = "colourbar")</code> for an unshaded guide. Guides given to
 a scale's <code>guide</code> argument as guide objects are left as they are.</p>
+<p><code>guide_colorbar_3d()</code> shades colorbars drawn as a raster (the default) or as
+rectangles; colorbars drawn with <code>display = "gradient"</code> are left unshaded.</p>
 <p>When fill and color aesthetics map to the same variable (e.g.,
 <code>aes(fill = z, color = z)</code>), ggplot2 creates a shared scale with a
 single guide. In this case, use <code>guides(fill = guide_*_3d())</code> to
@@ -120,12 +130,26 @@ map to different variables and you want separate guides for each.</p>
 <span class="r-in"><span>   <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="guide_3d-3.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># binned scales get shaded color steps</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mountain</span>, <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span>, fill <span class="op">=</span> <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span>   <span class="fu"><a href="stat_surface_3d.html">stat_surface_3d</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span>   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_b</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span>   <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="guide_3d-4.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># or shaded bins</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mountain</span>, <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span>, fill <span class="op">=</span> <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span>   <span class="fu"><a href="stat_surface_3d.html">stat_surface_3d</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span>   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_b</a></span><span class="op">(</span>guide <span class="op">=</span> <span class="st">"bins"</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span>   <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="guide_3d-5.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># an unshaded guide</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mountain</span>, <span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span>, fill <span class="op">=</span> <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>   <span class="fu"><a href="stat_surface_3d.html">stat_surface_3d</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/guides.html" class="external-link">guides</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="st">"colourbar"</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>   <span class="fu"><a href="coord_3d.html">coord_3d</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="guide_3d-4.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="guide_3d-6.png" alt="" width="700" height="433"></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

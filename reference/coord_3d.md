@@ -79,7 +79,8 @@ coord_3d(
 
   Character string indicating clipping behavior. Use `"off"` (the
   default, recommended for some 3D plots) to allow drawing outside the
-  plot panel.
+  plot panel. Axis labels and titles are kept inside the panel either
+  way: the cube is shrunk as needed to make room for them.
 
 - panels:
 

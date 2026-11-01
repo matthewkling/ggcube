@@ -575,6 +575,8 @@ offer different tradeoffs:
   : Create a 3D annotation layer
 - [`guide_colorbar_3d()`](https://matthewkling.github.io/ggcube/reference/guide_3d.md)
   [`guide_legend_3d()`](https://matthewkling.github.io/ggcube/reference/guide_3d.md)
+  [`guide_colorsteps_3d()`](https://matthewkling.github.io/ggcube/reference/guide_3d.md)
+  [`guide_bins_3d()`](https://matthewkling.github.io/ggcube/reference/guide_3d.md)
   : Color guides showing lighting effects
 - [`cube_theming`](https://matthewkling.github.io/ggcube/reference/cube_theming.md)
   : Using themes to style 3D panels and axis labels

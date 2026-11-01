@@ -440,6 +440,30 @@ New options:
   Angles are shown in the terms the orbit was given, so
   `yaw = c(0, 360)` reports values from 0 to 360.
 
+- [`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md)
+  now keeps axis labels and titles inside the panel. They are set in
+  points beyond the cube, so in small plots, such as a 3-inch figure or
+  a cell of a patchwork grid, they could reach past the panel and be cut
+  off at the edge of the figure or run into neighboring plots. When the
+  plot is drawn, the cube is now shrunk just enough to fit them, keeping
+  its proportions, down to half the panel’s size; text too large to fit
+  even then, as in a very small plot, can still overflow. As in ggplot2,
+  an axis title gets room only up to the length of its axis, so a longer
+  title runs past the panel rather than shrinking the cube. `zoom`
+  applies on top of this fitted framing.
+  [`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md)
+  no longer sets a 20pt `plot.margin` to leave room for overflowing
+  text, so plots use their theme’s margin. Animations from
+  [`animate_3d()`](https://matthewkling.github.io/ggcube/reference/animate_3d.md)
+  and
+  [`orbit_3d()`](https://matthewkling.github.io/ggcube/reference/orbit_3d.md),
+  and
+  [`facet_wrap_views()`](https://matthewkling.github.io/ggcube/reference/facet_wrap_views.md)
+  and
+  [`facet_grid_views()`](https://matthewkling.github.io/ggcube/reference/facet_wrap_views.md),
+  keep one framing across frames or views, so they are not fitted, and
+  keep the wider margin.
+
 - Fixed a bug where
   [`geom_text_3d()`](https://matthewkling.github.io/ggcube/reference/geom_text_3d.md)
   (billboard method) could draw labels at each other’s depth-scaled

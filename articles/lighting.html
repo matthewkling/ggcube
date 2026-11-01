@@ -398,7 +398,8 @@ all backfaces.</p>
 <p>When lighting is active, standard color guides don’t reflect the
 range of shaded colors visible in the plot. So when lighting applies to
 a layer that maps <code>fill</code> or <code>color</code>, ggcube uses
-<code><a href="../reference/guide_3d.html">guide_colorbar_3d()</a></code> and <code><a href="../reference/guide_3d.html">guide_legend_3d()</a></code> in
+<code><a href="../reference/guide_3d.html">guide_colorbar_3d()</a></code>, <code><a href="../reference/guide_3d.html">guide_legend_3d()</a></code>,
+<code><a href="../reference/guide_3d.html">guide_colorsteps_3d()</a></code>, and <code><a href="../reference/guide_3d.html">guide_bins_3d()</a></code> in
 place of the standard guides, showing the shading gradient alongside
 each color, with the colors as given in the middle:</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
@@ -414,13 +415,20 @@ each color, with the colors as given in the middle:</p>
 <span>  <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span>direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="../reference/coord_3d.html">coord_3d</a></span><span class="op">(</span>ratio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">1.5</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p><img src="lighting_files/figure-html/guide_legend-1.png" class="r-plt" alt="" width="1050"></p>
-<p>Call the guides yourself to change their options: both accept
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mountain</span>, <span class="fu"><a href="../reference/aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span>, fill <span class="op">=</span> <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="../reference/stat_surface_3d.html">stat_surface_3d</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span>direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_b</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="../reference/coord_3d.html">coord_3d</a></span><span class="op">(</span>ratio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">1.5</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p><img src="lighting_files/figure-html/guide_colorsteps-1.png" class="r-plt" alt="" width="1050"></p>
+<p>Call the guides yourself to change their options: all accept
 <code>shade_range</code> to control the range of shading shown (a
 length-2 vector from -1, full shadow, to 1, full highlight), and
 <code>reverse_shade</code> to flip the gradient direction. For an
 unshaded guide, ask for a standard one,
 e.g. <code>guides(fill = "colourbar")</code>.</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mountain</span>, <span class="fu"><a href="../reference/aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span>, fill <span class="op">=</span> <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="../reference/stat_surface_3d.html">stat_surface_3d</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span>direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
