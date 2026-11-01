@@ -1,4 +1,3 @@
-
 #' Create segment rows connecting data points to a surface
 #'
 #' For each data point at (x, y, z), creates a two-row segment group
@@ -156,6 +155,41 @@ check_sort_method <- function(sort_method, fn, user_env = rlang::caller_env(2)) 
                                   "pairwise, so `sort_method` has no effect."),
                   user_env = user_env
             )
+      }
+      invisible()
+}
+
+
+#' Warn about arguments a function would otherwise ignore
+#'
+#' For functions whose `...` carries only internal arguments, so that a
+#' misspelled or unsupported argument isn't silently dropped. Mirrors the
+#' warning ggplot2 gives for unknown layer parameters.
+#'
+#' @param dots The function's `list(...)`.
+#' @param fn Name of the function, for the message.
+#' @param internal Names of internal arguments that may arrive through `...`.
+#' @keywords internal
+#' @noRd
+warn_unknown_dots <- function(dots, fn, internal = character()) {
+      if (length(dots) == 0) return(invisible())
+      dot_names <- names(dots) %||% rep("", length(dots))
+      unknown <- setdiff(dot_names[dot_names != ""], internal)
+      n_unnamed <- sum(dot_names == "")
+
+      problems <- character()
+      if (length(unknown) > 0) {
+            problems <- c(problems, paste0(
+                  "Ignoring unknown argument", if (length(unknown) > 1) "s",
+                  ": ", paste0("`", unknown, "`", collapse = ", "), "."))
+      }
+      if (n_unnamed > 0) {
+            problems <- c(problems, paste0(
+                  "Ignoring ", n_unnamed, " unnamed argument",
+                  if (n_unnamed > 1) "s", "."))
+      }
+      if (length(problems) > 0) {
+            rlang::warn(c(paste0("In `", fn, "()`:"), stats::setNames(problems, rep("x", length(problems)))))
       }
       invisible()
 }

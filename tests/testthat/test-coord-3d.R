@@ -90,3 +90,14 @@ test_that("plots with no data draw an empty cube", {
       projected <- transform_3d_standard(corners, pp$proj)
       expect_equal(pp$plot_bounds, calculate_plot_bounds(projected$x, projected$y)$bounds)
 })
+
+test_that("coord_3d() warns about arguments it doesn't recognize", {
+      expect_warning(coord_3d(rotate_lables = FALSE), "rotate_lables")
+      expect_warning(coord_3d(foo = 1, bar = 2), "`foo`, `bar`")
+      expect_warning(coord_3d(0, -60, -30, NULL, TRUE, 2, TRUE, "off",
+                              "background", "auto", "auto", "auto", "auto",
+                              TRUE, "free", TRUE, c(1, 1, 1), 1, waiver(), 5),
+                     "1 unnamed argument")
+      expect_no_warning(coord_3d(fixed_bounds = c(0, 1, 0, 1)))
+      expect_no_warning(coord_3d(pitch = 10, rotate_labels = FALSE))
+})

@@ -44,7 +44,7 @@ tiles <- list(
                   geom_surface_3d(aes(fill = z, colour = z), linewidth = .1) +
                   scale_fill_viridis_c() + scale_colour_viridis_c() +
                   coord_3d(ratio = c(1.5, 2, 1), expand = FALSE, panels = "zmin") +
-                  light(direction = c(1, 0, 0.5), mode = "hsl", method = "direct", contrast = .7) +
+                  light(shadow = 1, highlight = .8, direction = c(1, 0, .75)) +
                   theme_light() + bare
       },
 
@@ -55,6 +55,7 @@ tiles <- list(
                                 size = 3, shape = 21, stroke = .1, alpha = .5) +
                   geom_point_3d(size = 3, shape = 21, colour = "black", stroke = .1) +
                   coord_3d() +
+                  theme(panel.border = element_rect(color = "white")) +
                   bare
       },
 
@@ -76,17 +77,139 @@ tiles <- list(
                   theme_void() + bare
       },
 
-      sphere_lit = function() {
-            ggplot(sphere_points, aes(x, y, z)) +
-                  geom_hull_3d(fill = "#8a2900", colour = "#8a2900",
-                               light = light(method = "direct", mode = "hsl",
-                                             direction = c(1, -.5, 1))) +
-                  coord_3d(scales = "fixed") +
-                  theme_dark() + bare
+      sphere = function() {
+            ggplot() +
+                  coord_3d(scales = "fixed", direction = c(0, -1, 0)) +
+                  scale_fill_viridis_c() +
+                  theme_dark() +
+                  theme(legend.position = "none") +
+                  geom_isofunction_3d(fun = function(x, y, z) (x)^2 + y^2 + z^2 - 1,
+                                      xlim = c(-1.1, 1.1), ylim = c(-1.1, 1.1), zlim = c(-1.1, 1.1),
+                                      n = 40, fill = "forestgreen") +
+                  light("hard", highlight = .65, specular = .9, specular_size = 10,
+                        direction = c(-1, -.7, 1)) +
+                  theme_dark() +
+                  theme(panel.border = element_rect(color = "black", linewidth = .15)) +
+                  bare
       },
 
-      text = function() {
 
+      wireframe = function() {
+            s <- seq(-20, 20, length.out = 40)
+            orbital <- expand.grid(x = s, y = s, z = s)
+            orbital$psi <- with(orbital, (3 * z^2 - (x^2 + y^2 + z^2)) *
+                                      exp(-sqrt(x^2 + y^2 + z^2) / 3))
+
+            ggplot(orbital, aes(x, y, z, value = psi^2)) +
+                  geom_isosurface_3d(aes(alpha = after_stat(level)),
+                                     levels = c(0.02, 0.10, .50, .90) * max(orbital$psi^2),
+                                     fill = NA, color = "darkblue", show.legend = FALSE) +
+                  coord_3d(scales = "fixed", roll = -70, zoom = 1.6) +
+                  zlim(NA, 30) +
+                  light("none") +
+                  theme_void() +
+                  bare
+      },
+
+      fun = function() {
+
+            d <- expand.grid(x = seq(-pi, pi, length.out = 30),
+                             y = seq(-pi*2, pi*2, length.out = 60))
+            d$z <- cos(d$x) * sin(d$y)
+
+            ggplot(d, aes(x, y, z)) +
+                  geom_contour(aes(linewidth = after_stat(level)),
+                               color = "black",
+                               position = position_on_face("zmin", axes = c("x", "y"))) +
+                  geom_surface_3d(fill = "darkorange3", colour = "brown",
+                                  grid = "right1", linewidth = .2) +
+                  light(highlight = .8, shadow = 1) +
+                  scale_linewidth_continuous(range = c(1, .1)) +
+                  coord_3d(yaw = 160, roll = -70, scales = "fixed", ratio = c(1, 1, 2),
+                           panels = "all", expand = F) +
+                  theme_light() + bare +
+                  theme(panel.background = element_blank(),
+                        panel.border = element_rect(color = "black", linewidth = .15),
+                        panel.grid = element_blank())
+      },
+
+      smooth = function() {
+            set.seed(123)
+            d <- data.frame(x = rnorm(200), y = rnorm(200))
+            d$z <- d$x + d$x^2 - d$y^2 + rnorm(200)
+            ggplot(d, aes(x, y, z)) +
+                  geom_smooth_3d(aes(fill = after_stat(level)), light = "none",
+                                 method = "gam", formula = z ~ te(x, y),
+                                 se = TRUE, level = 0.99, colour = "black",
+                                 linewidth = .1, grid = "equilateral", n = 20) +
+                  geom_point_3d(size = .8) +
+                  scale_fill_manual(values = c("red", "darkorchid4", "steelblue")) +
+                  coord_3d() +
+                  theme(panel.border = element_rect(color = "white")) +
+                  bare
+      },
+
+
+      # distributions = function() {
+      #       ggplot(iris, aes(y = Sepal.Length, x = Species, fill = Species)) +
+      #             stat_distributions_3d(alpha = .8, colour = "black", linewidth = .2) +
+      #             scale_z_continuous(expand = expansion(mult = c(0, NA))) +
+      #             coord_3d(yaw = 40) +
+      #             theme_classic() + bare
+      # },
+
+
+      torus_rgb = function() {
+
+            set.seed(1)
+            n <- 20000
+            theta <- runif(n, 0, 2 * pi)  # position around the ring
+            phi <- runif(n, 0, 2 * pi)    # position around the tube
+            rho <- sqrt(runif(n))         # distance from the tube center
+            torus <- data.frame(
+                  x = (3 + rho * cos(phi)) * cos(theta),
+                  y = (3 + rho * cos(phi)) * sin(theta),
+                  z = rho * sin(phi)
+            )
+
+            ggplot(torus, aes(x, y, z)) +
+                  geom_hull_3d(method = "alpha", radius = 0.6) +
+                  coord_3d(scales = "fixed", zoom = 1.5) +
+                  light("rgb", direction = c(0, -1, 0)) +
+                  theme_void() + bare
+      },
+
+      density = function() {
+            ggplot(faithful, aes(eruptions, waiting)) +
+                  geom_density_3d(grid = "equilateral", n = 30, direction = "y",
+                                  colour = "white", linewidth = .1,
+                                  light = light("direct", direction = c(-1, 0, 1))) +
+                  scale_fill_viridis_c(option = "plasma") +
+                  coord_3d() +
+                  theme_dark() + theme(panel.border = element_rect(color = "black", linewidth = .15)) +
+                  bare
+      },
+
+
+      # vectors = function() {
+      #       u <- c(1, .2, .4); v <- c(.3, 1, .7)
+      #       vecs <- data.frame(xend = c(u[1], v[1]), yend = c(u[2], v[2]), zend = c(u[3], v[3]),
+      #                          label = c("u", "v"))
+      #       ggplot(vecs, aes(0, 0, 0, xend = xend, yend = yend, zend = zend)) +
+      #             annotate_3d("polygon", x = c(0, u[1], v[1]), y = c(0, u[2], v[2]),
+      #                         z = c(0, u[3], v[3]), fill = "steelblue") +
+      #             geom_plane_3d(zintercept = .3, fill = "tomato", alpha = .4) +
+      #             geom_axes_3d(labels = NULL) +
+      #             geom_segment_3d(arrow = arrow(type = "closed", length = unit(6, "pt")),
+      #                             linewidth = .8) +
+      #             geom_text_3d(aes(xend * 1.12, yend * 1.12, zend * 1.12, label = label),
+      #                          size = 5, on_top = TRUE) +
+      #             lims(x = c(-.25, 1.1), y = c(-.25, 1.1)) + zlim(-.25, 1.1) +
+      #             coord_3d(panels = "none") +
+      #             theme_void() + bare
+      # },
+
+      text = function() {
             g <- data.frame(x = c(-1, 1, 0, 0, 0, 0) * .5,
                             y = c(0, 0, -1, 1, 0, 0) * .5,
                             z = c(0, 0, 0, 0, -1, 1) * .5)
@@ -116,119 +239,28 @@ tiles <- list(
 
                   coord_3d(scales = "fixed", expand = F, roll = -70, yaw = -45, dist = 1, zoom = 2) +
 
-
                   zlim(NA, 3) +
                   theme_void()
       },
 
-      fun = function() {
 
-            d <- expand.grid(x = seq(-pi, pi, length.out = 30),
-                             y = seq(-pi*2, pi*2, length.out = 60))
-            d$z <- cos(d$x) * sin(d$y)
-
-            ggplot(d, aes(x, y, z)) +
-                  geom_contour(aes(linewidth = after_stat(level)),
-                               breaks = breaks, color = "black",
-                               position = position_on_face("zmin", axes = c("x", "y"))) +
-                  geom_surface_3d(fill = "#7a2100", colour = "#b3725b",
-                                   grid = "right1", linewidth = .2) +
-                  scale_linewidth_continuous(range = c(1, .1)) +
-                  coord_3d(yaw = 160, roll = -70, scales = "fixed", ratio = c(1, 1, 2),
-                           panels = "all", expand = F) +
+      linear_system = function() {
+            ggplot(data.frame(x = -.375, y = .5, z = .0625), aes(x, y, z)) +
+                  geom_plane_3d(yintercept = .5,
+                                fill = "tomato", color = "darkred", alpha = .8) +
+                  geom_plane_3d(slope_x = .5, slope_y = .5,
+                                fill = "dodgerblue", color = "darkblue", alpha = .8) +
+                  geom_plane_3d(slope_x = -.5, slope_y = -.25,
+                                fill = "seagreen", color = "darkgreen", alpha = .8) +
+                  geom_point_3d(aes(x = 0, y = 0, z = 0), size = 3) +
+                  geom_segment_3d(aes(xend = 0, yend = 0, zend = 0),
+                                  arrow = arrow(20, unit(.1, "in"), "first", "closed")) +
+                  lims(x = c(-1, 1), y = c(-1, 1)) + zlim(-1, 1) +
+                  coord_3d(yaw = 60, light = "none", expand = F) +
                   theme_light() + bare +
                   theme(panel.background = element_blank(),
-                        panel.border = element_rect(color = "black", linewidth = .15),
-                        panel.grid = element_blank())
+                        panel.border = element_rect(color = "black", linewidth = .15))
       },
-
-      smooth = function() {
-            set.seed(123)
-            d <- data.frame(x = rnorm(200), y = rnorm(200))
-            d$z <- d$x + d$x^2 - d$y^2 + rnorm(200)
-            ggplot(d, aes(x, y, z)) +
-                  geom_smooth_3d(aes(fill = after_stat(level)),
-                                 method = "gam", formula = z ~ te(x, y),
-                                 se = TRUE, level = 0.99, colour = "black",
-                                 linewidth = .1, grid = "equilateral", n = 20) +
-                  geom_point_3d(size = .8) +
-                  scale_fill_manual(values = c("red", "darkorchid4", "steelblue")) +
-                  coord_3d() +
-                  bare
-      },
-
-
-      # distributions = function() {
-      #       ggplot(iris, aes(y = Sepal.Length, x = Species, fill = Species)) +
-      #             stat_distributions_3d(alpha = .8, colour = "black", linewidth = .2) +
-      #             scale_z_continuous(expand = expansion(mult = c(0, NA))) +
-      #             coord_3d(yaw = 40) +
-      #             theme_classic() + bare
-      # },
-
-
-      torus_rgb = function() {
-
-            set.seed(1)
-            n <- 20000
-            theta <- runif(n, 0, 2 * pi)  # position around the ring
-            phi <- runif(n, 0, 2 * pi)    # position around the tube
-            rho <- sqrt(runif(n))         # distance from the tube center
-            torus <- data.frame(
-                  x = (3 + rho * cos(phi)) * cos(theta),
-                  y = (3 + rho * cos(phi)) * sin(theta),
-                  z = rho * sin(phi)
-            )
-
-            ggplot(torus, aes(x, y, z)) +
-                  geom_hull_3d(method = "alpha", radius = 0.6, fill = "steelblue", color = "steelblue") +
-                  coord_3d(scales = "fixed", zoom = 1.5) +
-                  light("rgb", direction = c(0, -1, 0)) +
-                  theme_void() + bare
-      },
-
-      density = function() {
-            ggplot(faithful, aes(eruptions, waiting)) +
-                  geom_density_3d(grid = "equilateral", n = 30, direction = "y",
-                                  colour = "white", linewidth = .1,
-                                  light = light("direct", direction = c(-1, 0, 1))) +
-                  scale_fill_viridis_c(option = "plasma") +
-                  coord_3d() +
-                  theme_dark() + bare
-      },
-
-
-      vectors = function() {
-            u <- c(1, .2, .4); v <- c(.3, 1, .7)
-            vecs <- data.frame(xend = c(u[1], v[1]), yend = c(u[2], v[2]), zend = c(u[3], v[3]),
-                               label = c("u", "v"))
-            ggplot(vecs, aes(0, 0, 0, xend = xend, yend = yend, zend = zend)) +
-                  annotate_3d("polygon", x = c(0, u[1], v[1]), y = c(0, u[2], v[2]),
-                              z = c(0, u[3], v[3]), fill = "steelblue") +
-                  geom_plane_3d(zintercept = .3, fill = "tomato", alpha = .4) +
-                  geom_axes_3d(labels = NULL) +
-                  geom_segment_3d(arrow = arrow(type = "closed", length = unit(6, "pt")),
-                                  linewidth = .8) +
-                  geom_text_3d(aes(xend * 1.12, yend * 1.12, zend * 1.12, label = label),
-                               size = 5, on_top = TRUE) +
-                  lims(x = c(-.25, 1.1), y = c(-.25, 1.1)) + zlim(-.25, 1.1) +
-                  coord_3d(panels = "none") +
-                  theme_void() + bare
-      },
-
-      voxels = function() {
-            set.seed(2)
-            v <- expand.grid(x = 1:12, y = 1:12, z = 1:12)
-            r <- with(v, sqrt((x - 6.5)^2 + (y - 6.5)^2 + (z - 6.5)^2))
-            v <- v[r < 6 & r > 3.5 & runif(nrow(v)) < .35, ]
-            ggplot(v, aes(x, y, z, fill = z)) +
-                  geom_voxel_3d(colour = "black", linewidth = .1) +
-                  scale_fill_viridis_c(option = "mako", begin = .3) +
-                  light("rgb", direction = c(1, -1, 1), color = F) +
-                  coord_3d() +
-                  theme_light() + bare
-      },
-
 
       layers = function(){
             d <- expand_grid(lon = 1:50, lat = 1:50, time = 1:8) %>%
@@ -247,29 +279,25 @@ tiles <- list(
                   scale_color_gradientn(colors = palette)
       },
 
-
-      linear_system = function() {
-            ggplot(data.frame(x = -.375, y = .5, z = .0625), aes(x, y, z)) +
-                  geom_plane_3d(yintercept = .5,
-                                fill = "tomato", color = "darkred", alpha = .8) +
-                  geom_plane_3d(slope_x = .5, slope_y = .5,
-                                fill = "dodgerblue", color = "darkblue", alpha = .8) +
-                  geom_plane_3d(slope_x = -.5, slope_y = -.25,
-                                fill = "seagreen", color = "darkgreen", alpha = .8) +
-                  geom_point_3d(aes(x = 0, y = 0, z = 0), size = 3) +
-                  geom_segment_3d(aes(xend = 0, yend = 0, zend = 0),
-                                  arrow = arrow(20, unit(.1, "in"), "first", "closed")) +
-                  lims(x = c(-1, 1), y = c(-1, 1)) + zlim(-1, 1) +
-                  coord_3d(yaw = 60, light = "none") +
-                  theme_void()
-
+      iso = function() {
+            gyroid <- function(x, y, z) sin(x) * cos(y) + sin(y) * cos(z) + sin(z) * cos(x)
+            ggplot() +
+                  geom_isofunction_3d(
+                        fun = gyroid, cap = TRUE, fill = "darkorchid", n = 60,
+                        xlim = c(0, 4 * pi), ylim = c(0, 4 * pi), zlim = c(0, 4 * pi)) +
+                  coord_3d() +
+                  theme_void() +
+                  light(highlight = .8, shadow = 1)
       },
 
       histogram = function() {
             ggplot(faithful, aes(waiting, eruptions)) +
-                  geom_bar_3d(fill = "steelblue", colour = "steelblue", bins = 15, width = .9) +
+                  geom_bar_3d(fill = "cyan", bins = 15, width = .9) +
                   scale_z_continuous(expand = c(0, 0)) +
-                  coord_3d(yaw = 60) +
+                  coord_3d(direction = c(1, -1, 0)) +
+                  light(anchor = "camera", direction = c(-1, 1, .5)) +
+                  theme_dark() +
+                  theme(panel.border = element_rect(color = "black", linewidth = .15)) +
                   bare
       },
 
@@ -281,8 +309,9 @@ tiles <- list(
             set.seed(1)
             m <- m[sample(nrow(m), 15000), ]
             ggplot(m, aes(X, Y, Z)) +
-                  geom_hull_3d(method = "alpha", radius = 10, fill = "darkred", colour = "darkred") +
-                  light(mode = "hsl", direction = c(-1, 1, 0), anchor = "camera") +
+                  geom_hull_3d(method = "alpha", radius = 10, fill = "red") +
+                  light(direction = c(-1, 1, 0), anchor = "camera",
+                        highlight = 1, shadow = 1) +
                   coord_3d(roll = -90, yaw = -45, dist = 1.5,
                            scales = "fixed", panels = "zmin", expand = FALSE) +
                   bare
@@ -296,7 +325,28 @@ tiles <- list(
                   geom_path_3d(linewidth = 0.3) +
                   scale_colour_gradientn(colours = c("blue", "purple", "red", "orange")) +
                   coord_3d() +
-                  theme_light() + bare
+                  theme_light() + bare +
+                  theme(panel.background = element_blank(),
+                        panel.border = element_rect(color = "black", linewidth = .15))
+      },
+
+      voxel = function() {
+            # Level-2 Menger sponge: cells of a 9 x 9 x 9 grid are removed where, at
+            # either scale, two or more of their base-3 coordinates fall in the middle
+            menger_sponge <- function(level = 2) {
+                  n <- 3^level
+                  v <- expand.grid(x = 0:(n - 1), y = 0:(n - 1), z = 0:(n - 1))
+                  keep <- rep(TRUE, nrow(v))
+                  for (k in 0:(level - 1)) {
+                        keep <- keep & rowSums((as.matrix(v) %/% 3^k) %% 3 == 1) < 2
+                  }
+                  v[keep, ]
+            }
+            ggplot(menger_sponge(3), aes(x, y, z)) +
+                  geom_voxel_3d(linewidth = 0, cull_backfaces = T) +
+                  light("rgb", direction = c(1, -1, 1)) +
+                  coord_3d(scales = "fixed", yaw = 235, roll = -70) +
+                  theme_void()
       },
 
       contours = function() {
@@ -304,35 +354,31 @@ tiles <- list(
             d <- terra::as.data.frame(d, xy = T)
             names(d)[3] <- "z"
 
-            # ggplot(d, aes(x, y, z)) +
-            #       geom_contour_3d(fill = "black", colour = "white", linewidth = .2, bins = 40) +
-            #       coord_3d(direction = c(1, 1, 1), ratio = c(2, 1, .5), light = "none") +
-            #       theme_void() + bare
-
-
             ggplot(d[d$x > quantile(d$x, .45) & d$x < quantile(d$x, .85),],
                    aes(x, y, z, color = after_stat(z))) +
                   geom_contour_3d(fill = "black", linewidth = .4, bins = 30) +
                   coord_3d(direction = c(1, 0, .5), ratio = c(1, 1, .5),
-                           dist = 1.05, light = "none", zoom = 1.5) +
-                  theme_void() + bare +
-                  scale_color_gradientn(colors = c("dodgerblue", "orangered", "gold", "white"))
-      },
-
-
-      iris_faces = function() {
-            ggplot(iris, aes(Sepal.Length, Sepal.Width, Petal.Length,
-                             colour = Species, fill = Species)) +
-                  stat_density_2d(position = position_on_face(faces = "zmin", axes = c("x", "y")),
-                                  geom = "polygon", alpha = .1, linewidth = .25) +
-                  geom_hull_3d(position = position_on_face("ymax"), alpha = .5) +
-                  geom_voxel_3d(aes(round(Sepal.Length), round(Sepal.Width), round(Petal.Length)),
-                                position = position_on_face("xmax"), alpha = .15, light = NULL) +
-                  geom_point_3d(shape = 21, colour = "black", stroke = .25, size = 1) +
-                  xlim(4, 8) +
-                  coord_3d() +
-                  bare
+                           dist = 1.05, light = "none", zoom = 1.25, expand = F) +
+                  scale_color_gradientn(colors = c("dodgerblue", "dodgerblue", "orangered", "gold", "white"),
+                                        values = c(0, .1, .4, .7, 1)) +
+                  theme_void() + bare
       }
+
+      # iris_faces = function() {
+      #       ggplot(iris, aes(Sepal.Length, Sepal.Width, Petal.Length,
+      #                        colour = Species, fill = Species)) +
+      #             stat_density_2d(position = position_on_face(faces = "zmin", axes = c("x", "y")),
+      #                             geom = "polygon", alpha = .1, linewidth = .25) +
+      #             geom_hull_3d(position = position_on_face("ymax"), alpha = .5) +
+      #             geom_voxel_3d(aes(round(Sepal.Length), round(Sepal.Width), round(Petal.Length)),
+      #                           position = position_on_face("xmax"), alpha = .15, light = NULL) +
+      #             geom_point_3d(shape = 21, colour = "black", stroke = .25, size = 1) +
+      #             xlim(4, 8) +
+      #             coord_3d() +
+      #             bare
+      # }
+
+
 )
 
 

@@ -157,7 +157,8 @@ lighting and can appear anywhere in the plot expression. Supplying \code{light}
 here as well as adding \code{\link[=light]{light()}} to the plot is an error. Use \code{NULL} to
 disable lighting, or \code{light("none")} for an equivalent lighting object.}
 
-\item{...}{Additional arguments reserved for internal use.}
+\item{...}{Reserved for internal use. Other arguments are ignored, with a
+warning.}
 }
 \value{
 A \code{Coord} object that can be added to a ggplot.

@@ -119,7 +119,8 @@
 #'   lighting and can appear anywhere in the plot expression. Supplying `light`
 #'   here as well as adding [light()] to the plot is an error. Use `NULL` to
 #'   disable lighting, or `light("none")` for an equivalent lighting object.
-#' @param ... Additional arguments reserved for internal use.
+#' @param ... Reserved for internal use. Other arguments are ignored, with a
+#'   warning.
 #'
 #' @section Collapsed axes:
 #'
@@ -226,8 +227,9 @@ coord_3d <- function(pitch = 0, roll = -60, yaw = -30,
                      light = waiver(),
                      ...) {
 
-      # Capture internal-only params from ...
+      # `...` carries only internal params; anything else is a user error
       dots <- list(...)
+      warn_unknown_dots(dots, "coord_3d", internal = "fixed_bounds")
       fixed_bounds <- dots$fixed_bounds
 
       if (!is.null(direction)) {
