@@ -141,7 +141,13 @@ coord_3d(
 
   Logical indicating whether axis labels (text and titles) should
   automatically rotate to align with the projected axis directions. When
-  `FALSE`, uses theme text and title angle settings.
+  `FALSE`, text is upright unless the theme sets an angle, e.g.
+  `axis.title.y = element_text(angle = 45)`. As with justification
+  below, an angle counts as set if it differs from the one the element
+  inherits from
+  [`theme_grey`](https://ggplot2.tidyverse.org/reference/ggtheme.html),
+  so the y axis title's 2D default of 90 degrees is ignored; use 270 for
+  vertical text.
 
   Automatic rotation also sets its own justification, since `vjust`
   would push text perpendicular to the axis it belongs to and `hjust`
@@ -220,7 +226,8 @@ coord_3d(
 
 - ...:
 
-  Additional arguments reserved for internal use.
+  Reserved for internal use. Other arguments are ignored, with a
+  warning.
 
 ## Value
 

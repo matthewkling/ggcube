@@ -163,8 +163,11 @@ end of the axis, outside the plot area.</p></li>
 
 <dt id="arg-rotate-labels">rotate_labels<a class="anchor" aria-label="anchor" href="#arg-rotate-labels"></a></dt>
 <dd><p>Logical indicating whether axis labels (text and titles) should automatically
-rotate to align with the projected axis directions. When <code>FALSE</code>, uses theme
-text and title angle settings.</p>
+rotate to align with the projected axis directions. When <code>FALSE</code>, text is
+upright unless the theme sets an angle, e.g. <code>axis.title.y = element_text(angle = 45)</code>.
+As with justification below, an angle counts as set if it differs from the one the
+element inherits from <code><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_grey</a></code>, so the y axis title's
+2D default of 90 degrees is ignored; use 270 for vertical text.</p>
 <p>Automatic rotation also sets its own justification, since <code>vjust</code> would
 push text perpendicular to the axis it belongs to and <code>hjust</code> decides
 which end of the edge the text hangs off. A <code>vjust</code> or <code>hjust</code> set
@@ -228,7 +231,8 @@ disable lighting, or <code>light("none")</code> for an equivalent lighting objec
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Additional arguments reserved for internal use.</p></dd>
+<dd><p>Reserved for internal use. Other arguments are ignored, with a
+warning.</p></dd>
 
 </dl></div>
     <div class="section level2">

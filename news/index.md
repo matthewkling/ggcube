@@ -397,6 +397,17 @@ New options:
   `direction` alongside any of the Euler angles is an error. The default
   rotation corresponds to `direction(210, 30)`.
 
+- With `coord_3d(rotate_labels = FALSE)`, the y axis title is now
+  upright like the x and z titles. It previously took the `angle = 90`
+  that complete themes give `axis.title.y` for a vertical 2D axis.
+  Angles set in the theme, other than the inherited defaults, still
+  apply.
+
+- [`coord_3d()`](https://matthewkling.github.io/ggcube/reference/coord_3d.md)
+  now warns about arguments it doesn’t recognize, rather than silently
+  ignoring them, so misspelled arguments, and arguments from other
+  ggcube functions, no longer go unnoticed.
+
 - `print.light()` now reports a directional light’s azimuth and
   elevation alongside its direction vector.
 
