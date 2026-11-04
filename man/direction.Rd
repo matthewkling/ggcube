@@ -37,11 +37,12 @@ The returned vector is scaled to unit length, but since both \code{coord_3d()} a
 # The default viewing angle, expressed as a direction
 direction(210, 30)
 
-# The default lighting angle
-direction(270, 63.43)
+# The default lighting angle: with the default camera anchor, light from
+# the upper left of the plot, tilted 45 degrees toward the viewer
+direction(315, 45)
 
-# Light from directly overhead
-light(direction = direction(0, 90))
+# Light from directly above the data
+light(direction = direction(0, 90), anchor = "scene")
 
 }
 \seealso{

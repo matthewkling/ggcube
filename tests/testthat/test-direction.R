@@ -131,9 +131,14 @@ test_that("coord_3d() rejects mixed parameterizations", {
 })
 
 test_that("print.light() reports the angular form of the direction", {
-      output <- capture.output(print(light(direction = c(-.5, 0, 1))))
+      output <- capture.output(print(light(direction = c(-.5, 0, 1), anchor = "scene")))
       expect_true(any(grepl("azimuth: 270", output)))
       expect_true(any(grepl("elevation: 63.4", output)))
+
+      # Camera-anchored angles are on the plot and toward the viewer
+      output <- capture.output(print(light()))
+      expect_true(any(grepl("bearing on the plot: 315", output)))
+      expect_true(any(grepl("toward the viewer: 45", output)))
 
       # Positional lighting has no direction to report
       output <- capture.output(print(light(position = c(1, 1, 1))))
@@ -165,6 +170,8 @@ test_that("coord_3d(direction =) stores yaw in [-180, 180)", {
 })
 
 test_that("print.light() doesn't report an azimuth of 360", {
-      output <- capture.output(print(light(direction = direction(359.97, 10))))
+      output <- capture.output(print(light(direction = direction(359.97, 10), anchor = "scene")))
       expect_true(any(grepl("azimuth: 0 ", output)))
+      output <- capture.output(print(light(direction = direction(359.97, 10))))
+      expect_true(any(grepl("plot: 0 ", output)))
 })

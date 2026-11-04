@@ -6,8 +6,8 @@
 \usage{
 light(
   ramp = "smooth",
-  direction = c(-0.5, 0, sqrt(3)/2),
-  anchor = "scene",
+  direction = c(-0.5, 0.5, sqrt(2)/2),
+  anchor = "camera",
   position = NULL,
   distance_falloff = FALSE,
   fill = TRUE,
@@ -34,25 +34,28 @@ options. \code{"none"} disables lighting, and ignores all other arguments:
 \code{light} argument of layers and \code{\link[=coord_3d]{coord_3d()}}.}
 
 \item{direction}{Numeric vector of length 3 specifying direction in 3D space (x, y, z) that
-light comes from for directional lighting. Depending on \code{anchor}, direction is relative to
-either the plot axes or the viewing pane. The default is \code{direction(270, 60)}: light from
-the xmin side of the cube, 60 degrees above horizontal. At least one value must be
-non-zero. Values are automatically normalized, so magnitude doesn't matter, only sign and
-relative magnitude. Direction is specified in visual space (relative to the rendered
-cube's bounding box), not data space. Use \code{\link[=direction]{direction()}} to build this vector from an
-azimuth and elevation instead of components. This argument is ignored if \code{position} is
-provided.}
+light comes from for directional lighting, in the frame set by \code{anchor}. The default is
+\code{direction(315, 45)}: with the default camera anchor, light from the upper left of the
+plot, tilted 45 degrees toward the viewer. At least one value must be non-zero. Values
+are automatically normalized, so magnitude doesn't matter, only sign and relative
+magnitude. Use \code{\link[=direction]{direction()}} to build this vector from an azimuth and elevation instead
+of components. This argument is ignored if \code{position} is provided.}
 
-\item{anchor}{Character string specifying the reference frame for light direction:
+\item{anchor}{Character string specifying the reference frame for light \code{direction}:
 \itemize{
-\item \code{"scene"} (default): Light \code{direction} is fixed relative to the data/scene.
-Light rotates with the plot, so regardless of rotation, \code{direction = c(1, 0, 0)}
-lights surfaces facing the "xmax" cube face, for example.
-\item \code{"camera"}: Light \code{direction} is fixed relative to the camera/viewer.
-Light direction stays in place regardless of rotation, so \code{direction = c(1, 0, 0)}
-lights surfaces facing the right side of the plot, for example.
+\item \code{"camera"} (default): Light \code{direction} is fixed relative to the viewer, so
+the visible side of the plot is lit the same way however it's rotated. x points to
+the right of the plot, y up the plot, and z toward the viewer: \code{direction = c(1, 0, 0)} lights surfaces facing the right side of the plot, and \code{direction = c(0, 0, 1)}
+lights surfaces facing the viewer.
+\item \code{"scene"}: Light \code{direction} is fixed relative to the data, in the axes of
+the rendered cube (visual space, not data units), so the light turns with the plot
+as it's rotated. \code{direction = c(1, 0, 0)} lights surfaces facing the "xmax" cube
+face, and \code{direction = c(0, 0, 1)} lights surfaces facing up, whatever the rotation.
+Use this when the light's direction means something in the data, such as the sun
+over terrain.
 }
-When all rotation parameters are zero, these options give the same result.}
+When all rotation parameters are zero, these options give the same result. Positional
+lights (\code{position}) are always placed in the data.}
 
 \item{position}{Numeric vector of length 3 specifying light source position in
 data coordinate space for positional lighting. When specified, each face gets
@@ -207,18 +210,18 @@ p + light("none")
 # if provided, layer-level lighting overrides plot-level lighting
 p + light("hard") + # plot-level: affects original layer
   geom_hull_3d(aes(x = x + 2.5), fill = "#9e2602", color = "#5e1600",
-      light = light(direction = c(0, -1, 0)))
+      light = light(direction = c(1, -1, 1)))
 
 
 # Light sources ------------------------------------------------------------
 
-# directional light from the xmin-ymin-zmin direction
-# (`direction` is relative to rotated axes with default `anchor = "scene"`)
-p + light(direction = c(-1, -1, -1))
+# directional light from the top right of the plot, toward the viewer
+# (with the default `anchor = "camera"`, `direction` is relative to the viewer)
+p + light(direction = c(1, 1, 1))
 
-# directional light from top-right corner of figure
-# (`anchor = "camera"` makes `direction` fixed relative to the plot)
-p + light(direction = c(1, 1, 0), anchor = "camera")
+# directional light from the xmin-ymin-zmin direction of the data
+# (`anchor = "scene"` makes `direction` relative to the plot axes)
+p + light(direction = c(-1, -1, -1), anchor = "scene")
 
 # positional light source within plot
 ggplot(mountain, aes(x, y, z)) +

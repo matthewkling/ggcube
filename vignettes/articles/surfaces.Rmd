@@ -72,7 +72,7 @@ p <- ggplot(mountain, aes(x, y, z, fill = z)) +
   theme_light()
 
 p + geom_surface_3d(linewidth = .2) +
-  light(direction = c(1, 0, .5), shadow = 1, highlight = 0.9)
+  light(direction = c(1, 0, .5), anchor = "scene", shadow = 1, highlight = 0.9)
 ```
 
 ### Contours
@@ -226,9 +226,8 @@ p <- ggplot(mountain, aes(x, y, z)) +
 
 (p + geom_surface_3d(aes(fill = z), light = "none") +
     ggtitle('light = "none"')) +
-  (p + geom_surface_3d(aes(fill = z),
-                       light = light(direction = c(1, 0, 0))) +
-      ggtitle("diffuse (default)")) +
+  (p + geom_surface_3d(aes(fill = z)) +
+      ggtitle("default")) +
   plot_layout(ncol = 2)
 ```
 

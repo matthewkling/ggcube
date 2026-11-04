@@ -51,9 +51,12 @@ default), lighting is left as the plot specifies. These move the
 plot-level light set with \code{\link[=light]{light()}} or \code{coord_3d(light = )}, which must be
 directional (not \code{position}-based); it is an error to use them when
 lighting is disabled or when any layer has its own \code{light}. The light's
-\code{anchor} is respected: with the default \code{anchor = "scene"} the light
-moves around the data, so animating \code{yaw} and \code{light_azimuth} together
-partly cancels out; with \code{anchor = "camera"} it moves around the viewer.}
+\code{anchor} is respected: with the default \code{anchor = "camera"} the angles
+are relative to the viewer (a bearing around the plot, and an angle toward
+the viewer) and the light stays put as the camera moves; with
+\code{anchor = "scene"} they're relative to the data and the light turns with
+the plot, so animating \code{yaw} and \code{light_azimuth} together partly cancels
+out.}
 
 \item{nframes, fps, duration}{Control animation length and speed. Specify
 any two of three; the third is computed as

@@ -44,7 +44,7 @@ tiles <- list(
                   geom_surface_3d(aes(fill = z, colour = z), linewidth = .1) +
                   scale_fill_viridis_c() + scale_colour_viridis_c() +
                   coord_3d(ratio = c(1.5, 2, 1), expand = FALSE, panels = "zmin") +
-                  light(shadow = 1, highlight = .8, direction = c(1, 0, .75)) +
+                  light(shadow = 1, highlight = .8, direction = c(1, 0, .75), anchor = "scene") +
                   theme_light() + bare
       },
 
@@ -87,7 +87,7 @@ tiles <- list(
                                       xlim = c(-1.1, 1.1), ylim = c(-1.1, 1.1), zlim = c(-1.1, 1.1),
                                       n = 40, fill = "forestgreen") +
                   light("hard", highlight = .65, specular = .9, specular_size = 10,
-                        direction = c(-1, -.7, 1)) +
+                        direction = c(-1, -.7, 1), anchor = "scene") +
                   theme_dark() +
                   theme(panel.border = element_rect(color = "black", linewidth = .15)) +
                   bare
@@ -123,7 +123,7 @@ tiles <- list(
                                position = position_on_face("zmin", axes = c("x", "y"))) +
                   geom_surface_3d(fill = "darkorange3", colour = "brown",
                                   grid = "right1", linewidth = .2) +
-                  light(highlight = .8, shadow = 1) +
+                  light(highlight = .8, shadow = 1, direction = direction(270, 60), anchor = "scene") +
                   scale_linewidth_continuous(range = c(1, .1)) +
                   coord_3d(yaw = 160, roll = -70, scales = "fixed", ratio = c(1, 1, 2),
                            panels = "all", expand = F) +
@@ -175,7 +175,7 @@ tiles <- list(
             ggplot(torus, aes(x, y, z)) +
                   geom_hull_3d(method = "alpha", radius = 0.6) +
                   coord_3d(scales = "fixed", zoom = 1.5) +
-                  light("rgb", direction = c(0, -1, 0)) +
+                  light(tone = "normals", direction = c(0, -1, 0), anchor = "scene") +
                   theme_void() + bare
       },
 
@@ -183,7 +183,7 @@ tiles <- list(
             ggplot(faithful, aes(eruptions, waiting)) +
                   geom_density_3d(grid = "equilateral", n = 30, direction = "y",
                                   colour = "white", linewidth = .1,
-                                  light = light("direct", direction = c(-1, 0, 1))) +
+                                  light = light("hard", direction = c(-1, 0, 1), anchor = "scene")) +
                   scale_fill_viridis_c(option = "plasma") +
                   coord_3d() +
                   theme_dark() + theme(panel.border = element_rect(color = "black", linewidth = .15)) +
@@ -235,7 +235,7 @@ tiles <- list(
                                   linewidth = 1, color = "darkred") +
 
                   geom_hull_3d(data = g, aes(x, y, z), color = "black", fill = "darkred", linewidth = .25) +
-                  light("direct", color = F) +
+                  light("hard", direction = direction(270, 60), anchor = "scene", color = FALSE) +
 
                   coord_3d(scales = "fixed", expand = F, roll = -70, yaw = -45, dist = 1, zoom = 2) +
 
@@ -287,7 +287,7 @@ tiles <- list(
                         xlim = c(0, 4 * pi), ylim = c(0, 4 * pi), zlim = c(0, 4 * pi)) +
                   coord_3d() +
                   theme_void() +
-                  light(highlight = .8, shadow = 1)
+                  light(highlight = .8, shadow = 1, direction = direction(270, 60), anchor = "scene")
       },
 
       histogram = function() {
@@ -295,7 +295,7 @@ tiles <- list(
                   geom_bar_3d(fill = "cyan", bins = 15, width = .9) +
                   scale_z_continuous(expand = c(0, 0)) +
                   coord_3d(direction = c(1, -1, 0)) +
-                  light(anchor = "camera", direction = c(-1, 1, .5)) +
+                  light(direction = c(-1, 1, -.5)) +
                   theme_dark() +
                   theme(panel.border = element_rect(color = "black", linewidth = .15)) +
                   bare
@@ -310,8 +310,7 @@ tiles <- list(
             m <- m[sample(nrow(m), 15000), ]
             ggplot(m, aes(X, Y, Z)) +
                   geom_hull_3d(method = "alpha", radius = 10, fill = "red") +
-                  light(direction = c(-1, 1, 0), anchor = "camera",
-                        highlight = 1, shadow = 1) +
+                  light(direction = c(-1, 1, 0), highlight = 1, shadow = 1) +
                   coord_3d(roll = -90, yaw = -45, dist = 1.5,
                            scales = "fixed", panels = "zmin", expand = FALSE) +
                   bare
@@ -344,7 +343,7 @@ tiles <- list(
             }
             ggplot(menger_sponge(3), aes(x, y, z)) +
                   geom_voxel_3d(linewidth = 0, cull_backfaces = T) +
-                  light("rgb", direction = c(1, -1, 1)) +
+                  light(tone = "normals", direction = c(1, -1, 1), anchor = "scene") +
                   coord_3d(scales = "fixed", yaw = 235, roll = -70) +
                   theme_void()
       },

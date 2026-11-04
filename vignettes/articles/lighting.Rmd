@@ -213,39 +213,57 @@ shape.
 
 ### Direction and anchoring
 
-The `direction` parameter is a length-3 vector specifying where light comes from; for example, 
-`direction = c(0, -1, 0)` lights the plot from the negative y direction. The `anchor` parameter 
-controls whether this direction is relative to the data axes or the camera:
+The `direction` parameter is a length-3 vector giving where light comes from, and the
+`anchor` parameter sets the frame it's given in:
 
-- **`anchor = "scene"`** (default): Direction is relative to the data axes and rotates
-  with the plot. `direction = c(1, 0, 0)` always lights surfaces facing the "xmax" face.
-- **`anchor = "camera"`**: Direction is fixed relative to the viewing pane.
-  `direction = c(1, 0, 0)` always lights surfaces facing the right side of the plot,
-  regardless of rotation.
+- **`anchor = "camera"`** (default): Direction is relative to the viewer, so the visible
+  side of the plot is lit the same way however it's rotated. x points to the right of the
+  plot, y up the plot, and z toward the viewer: `direction = c(1, 0, 0)` lights surfaces
+  facing the right side of the plot, and `direction = c(0, 0, 1)` lights surfaces facing
+  the viewer. The default light comes from the upper left, tilted 45 degrees toward the
+  viewer, so faces seen head-on keep exactly the color you gave them.
+- **`anchor = "scene"`**: Direction is relative to the data, in the axes of the cube, and
+  turns with the plot as it rotates. `direction = c(1, 0, 0)` lights surfaces facing the
+  "xmax" face, and `direction = c(0, 0, 1)` lights surfaces facing up, whatever the
+  rotation. This suits lights that mean something in the data, such as the sun over
+  terrain.
 
-```{r direction, fig.height = 3.5}
-(p + light("hard", direction = c(0, -1, 0)) + ggtitle('anchor = "scene"')) +
-  (p + light("hard", direction = c(0, -1, 0), anchor = "camera") +
-      ggtitle('anchor = "camera"'))
+Here's a surface from two sides, lit by the default camera light and by a scene light from
+the xmin side, 60 degrees above the horizon. The camera light lights both views alike,
+while the scene light leaves the far side of the mountain in shadow:
+
+```{r direction, fig.height = 6}
+pm <- ggplot(mountain, aes(x, y, z)) +
+  geom_surface_3d(fill = "steelblue")
+scene <- light(direction = direction(270, 60), anchor = "scene")
+
+(pm + coord_3d() + ggtitle('anchor = "camera" (default)')) +
+  (pm + coord_3d(yaw = 150) + ggtitle('anchor = "camera", yaw = 150')) +
+  (pm + coord_3d() + scene + ggtitle('anchor = "scene"')) +
+  (pm + coord_3d(yaw = 150) + scene + ggtitle('anchor = "scene", yaw = 150')) +
+  plot_layout(ncol = 2)
 ```
 
-Directions can also be given as angles with `direction()`, which takes an
-azimuth (a compass bearing, measured clockwise from the positive y axis) and an
-elevation (degrees above the xy plane). This is often easier when you want to
-raise or lower a light without changing which side it comes from. The default light
-comes from the negative x side (an azimuth of 270), 60 degrees above the horizon. Here it
-is low and then overhead:
+Directions can also be given as angles with `direction()`, which takes an azimuth and an
+elevation. With the camera anchor, the azimuth is a bearing around the plot, clockwise from
+straight up (270 is from the left, and 315 from the upper left), and the elevation is the
+angle toward the viewer: 0 is light grazing across the plot, 90 is light from straight at
+the viewer, and negative values put the light behind the plot. With the scene anchor,
+they're a compass bearing, clockwise from the positive y axis, and the angle above the xy
+plane. Angles are often easier when you want to swing a light around or tilt it toward the
+viewer without changing anything else. The default light is `direction(315, 45)`; here it
+is near grazing, and then nearly head-on:
 
 ```{r direction-angles, fig.height = 3.5}
-(p + light("hard", direction = direction(270, 10)) + ggtitle("elevation 10")) +
-  (p + light("hard", direction = direction(270, 90)) + ggtitle("elevation 90"))
+(p + light("hard", direction = direction(315, 10)) + ggtitle("elevation 10")) +
+  (p + light("hard", direction = direction(315, 80)) + ggtitle("elevation 80"))
 ```
 
 Printing a light shows its direction both ways, which can help in translating
 between the two:
 
 ```{r print-light}
-light(direction = c(-1, -1, 1))
+light(direction = c(-1, 1, 1))
 ```
 
 To compare light directions side by side, or to move the light around
@@ -259,8 +277,9 @@ interactively, see the `light_azimuth` and `light_elevation` arguments of
 
 In addition to directional lighting (parallel rays from a direction), ggcube also supports
 positional lighting from a point source. Use `position` instead of `direction` to specify
-a light source location in data coordinates. Setting `distance_falloff = TRUE` applies 
-inverse-square intensity falloff from the light source position.
+a light source location in data coordinates. Positional lights are always placed in the
+data, whatever their `anchor`. Setting `distance_falloff = TRUE` applies inverse-square
+intensity falloff from the light source position.
 
 ```{r positional}
 ggplot(mountain, aes(x, y, z)) +

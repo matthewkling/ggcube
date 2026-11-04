@@ -38,10 +38,13 @@ test_that("rotate_normals_to_camera matches the coordinate transform convention"
 
       rotated <- rotate_normals_to_camera(n, proj)
 
-      # Expected: z-flip then rotate_3d, identical to how coordinates enter camera space.
+      # Expected: z-flip then rotate_3d, identical to how coordinates enter
+      # projection space, whose z is depth away from the viewer; then z-flipped,
+      # so that the camera frame's z points toward the viewer.
       expected <- n
       expected[, 3] <- -expected[, 3]
       expected <- rotate_3d(expected, proj$pitch, proj$roll, proj$yaw)
+      expected[, 3] <- -expected[, 3]
 
       expect_equal(rotated, expected)
 
@@ -529,7 +532,8 @@ test_that("polygons are lit by their own plane, the same whatever their winding"
             p <- ggplot(square, aes(x, y, z)) +
                   geom_polygon_3d(fill = "steelblue") +
                   lims(x = c(0, 1), y = c(0, 1)) + zlim(0, 1) +
-                  coord_3d(direction = views[[view]])
+                  coord_3d(direction = views[[view]],
+                           light = light(direction = direction(270, 60), anchor = "scene"))
             polys <- find_grobs(find_grobs(drawn_grob(p), "ggcube_layer")[[1]], "polygon")
             polys[[1]]$gp$fill
       }
@@ -541,9 +545,8 @@ test_that("polygons are lit by their own plane, the same whatever their winding"
       expect_false(lit$ccw[["above"]] == lit$ccw[["below"]])
       expect_equal(lit$ccw[["front"]], lit$ccw[["above"]])
 
-      # A vertical square parallel to the default light (which has no y
-      # component) is lit evenly from either side, as a face at 90 degrees to
-      # the light
+      # A vertical square parallel to the light (which has no y component) is
+      # lit evenly from either side, as a face at 90 degrees to the light
       expect_equal(unname(lit$vertical), rep(lit$vertical[[1]], 4))
       expect_equal(lit$vertical[[1]], blend_light_with_colors("steelblue", 0, light()))
 })
@@ -559,12 +562,28 @@ test_that("faces at 45 degrees to the light keep their base color exactly", {
             polys <- find_grobs(find_grobs(drawn_grob(p), "ggcube_layer")[[1]], "polygon")
             toupper(polys[[1]]$gp$fill)
       }
-      expect_equal(fill(light(direction = direction(270, 45))), "#4682B4")
-      expect_equal(fill(light("hard", direction = direction(90, 45))), "#4682B4")
+      expect_equal(fill(light(direction = direction(270, 45), anchor = "scene")), "#4682B4")
+      expect_equal(fill(light("hard", direction = direction(90, 45), anchor = "scene")), "#4682B4")
 
-      # Under the default light, from 60 degrees above the horizon, horizontal
-      # faces are highlighted
-      expect_false(fill(light()) == "#4682B4")
+      # Under a light from 60 degrees above the horizon, horizontal faces are
+      # highlighted
+      expect_false(fill(light(direction = direction(270, 60), anchor = "scene")) == "#4682B4")
+})
+
+test_that("the default light keeps the base color of faces facing the viewer", {
+      # The default light comes from 45 degrees off the view direction, so a
+      # face seen head-on is at the neutral angle, from any view
+      square <- data.frame(x = c(0, 1, 1, 0), y = c(0, 0, 1, 1), z = 0.5)
+      fill <- function(view) {
+            p <- ggplot(square, aes(x, y, z)) +
+                  geom_polygon_3d(fill = "steelblue") +
+                  lims(x = c(0, 1), y = c(0, 1)) + zlim(0, 1) +
+                  coord_3d(direction = view, persp = FALSE)
+            polys <- find_grobs(find_grobs(drawn_grob(p), "ggcube_layer")[[1]], "polygon")
+            toupper(polys[[1]]$gp$fill)
+      }
+      expect_equal(fill(c(0, 0, 1)), "#4682B4")
+      expect_equal(fill(c(0, 0, -1)), "#4682B4")
 })
 
 
@@ -575,7 +594,8 @@ test_that("hard lighting lights back faces that face the light", {
                   geom_polygon_3d(fill = "steelblue") +
                   lims(x = c(0, 1), y = c(0, 1)) + zlim(0, 1) +
                   coord_3d(direction = c(0.3, -0.4, view),
-                           light = light("hard", shadow = 1, direction = c(0.2, 0.1, light_z)))
+                           light = light("hard", shadow = 1, direction = c(0.2, 0.1, light_z),
+                                         anchor = "scene"))
             polys <- find_grobs(find_grobs(drawn_grob(p), "ggcube_layer")[[1]], "polygon")
             polys[[1]]$gp$fill
       }
@@ -604,7 +624,7 @@ test_that("ridgeline faces are lit on the side facing the viewer", {
             p <- ggplot(mountain, aes(x, y, z)) +
                   geom_ridgeline_3d(direction = direction) +
                   coord_3d(yaw = yaw, persp = FALSE,
-                           light = light(direction = dir))
+                           light = light(direction = dir, anchor = "scene"))
 
             bf <- built_faces(p)
             eye <- eye_in_cube_space(bf$proj)$v
@@ -615,4 +635,65 @@ test_that("ridgeline faces are lit on the side facing the viewer", {
             expect_equal(lit, truth, tolerance = 1e-8,
                          info = paste("direction =", direction, "yaw =", yaw))
       }
+})
+
+
+test_that("camera-anchored directions point right, up, and toward the viewer", {
+      square <- data.frame(x = c(0, 1, 1, 0), y = c(0, 0, 1, 1), z = 0.5)
+      fill <- function(view, light) {
+            p <- ggplot(square, aes(x, y, z)) +
+                  geom_polygon_3d(fill = "steelblue") +
+                  lims(x = c(0, 1), y = c(0, 1)) + zlim(0, 1) +
+                  coord_3d(direction = view, persp = FALSE, light = light)
+            polys <- find_grobs(find_grobs(drawn_grob(p), "ggcube_layer")[[1]], "polygon")
+            toupper(polys[[1]]$gp$fill)
+      }
+      toward <- light(direction = c(0, 0, 1), anchor = "camera")
+      highlight <- toupper(blend_light_with_colors("steelblue", 1, toward))
+      shadow <- toupper(blend_light_with_colors("steelblue", -1, toward))
+
+      # A face seen head-on, from above or below, is fully lit by light from
+      # the viewer, and fully shadowed by light from behind the plot
+      for (view in list(c(0, 0, 1), c(0, 0, -1))) {
+            expect_equal(fill(view, toward), highlight, info = paste(view, collapse = ","))
+      }
+      expect_equal(fill(c(0, 0, 1), light(direction = c(0, 0, -1))), shadow)
+
+      # At zero rotation, the camera frame is the scene frame
+      zero_light <- function(anchor) light(direction = c(.3, .2, .9), anchor = anchor)
+      p <- function(anchor) {
+            ggplot(mountain, aes(x, y, z)) + geom_surface_3d(fill = "steelblue") +
+                  coord_3d(pitch = 0, roll = 0, yaw = 0, light = zero_light(anchor))
+      }
+      layer_fills <- function(p) {
+            polys <- find_grobs(find_grobs(drawn_grob(p), "ggcube_layer")[[1]], "polygon")
+            unname(unlist(lapply(polys, function(g) g$gp$fill)))
+      }
+      expect_equal(layer_fills(p("camera")), layer_fills(p("scene")))
+})
+
+test_that("positional lights are placed in the data, whatever the anchor", {
+      surface <- function(anchor) {
+            p <- ggplot(mountain, aes(x, y, z)) + geom_surface_3d(fill = "steelblue") +
+                  coord_3d(yaw = 40, light = light(position = c(.5, .5, 120), anchor = anchor))
+            polys <- find_grobs(find_grobs(drawn_grob(p), "ggcube_layer")[[1]], "polygon")
+            unname(unlist(lapply(polys, function(g) g$gp$fill)))
+      }
+      expect_equal(surface("camera"), surface("scene"))
+
+      # Including text, whose normals were previously rotated into camera space
+      # for camera-anchored positional lights
+      d <- data.frame(x = c(0, 1), y = c(0, 1), z = c(0, 1), label = c("A", "B"))
+      text <- function(anchor) {
+            p <- ggplot(d, aes(x, y, z, label = label)) +
+                  geom_text_3d(method = "polygon", facing = "xmax", fill = "steelblue",
+                               light = light(position = c(0, 0, 3), anchor = anchor)) +
+                  coord_3d(yaw = 40)
+            g <- drawn_grob(p)
+            polys <- c(find_grobs(g, "polygon"), find_grobs(g, "pathgrob"))
+            fills <- unname(unlist(lapply(polys, function(x) x$gp$fill)))
+            fills[toupper(fills) != "#EBEBEBFF"]
+      }
+      expect_equal(text("camera"), text("scene"))
+      expect_false(all(text("scene") == "steelblue"))
 })

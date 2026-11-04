@@ -174,7 +174,6 @@ installed.
 # The densest half of each species
 ggplot(iris, aes(Sepal.Length, Sepal.Width, Petal.Length, fill = Species)) +
   geom_isodensity_3d() +
-  light(direction = c(-1, 1, 0)) +
   coord_3d()
 
 # Nested translucent surfaces around Fiji earthquakes, which trace
@@ -187,7 +186,6 @@ ggplot(quakes, aes(long, lat, -depth)) +
   scale_fill_viridis_c() +
   coord_3d(yaw = 180, roll = -70, scales = "fixed", ratio = c(1, 1, .01)) +
   labs(z = "depth (km)") +
-  light(direction = c(-1, 1, 1)) +
   zlim(NA, 0) +
   theme_dark() + theme(panel.border = element_rect(color = "gray70"))
 }

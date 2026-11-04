@@ -68,9 +68,11 @@
 #'   `coord_3d(light = )`, which must be directional (not `position`-based);
 #'   it is an error to use them when lighting is disabled or when any layer
 #'   has its own `light`. The light's `anchor` is respected: with the default
-#'   `anchor = "scene"` the light moves around the data, so orbiting `yaw` and
-#'   `light_azimuth` together partly cancels out; with `anchor = "camera"` it
-#'   moves around the viewer.
+#'   `anchor = "camera"` the angles are relative to the viewer (a bearing
+#'   around the plot, and an angle toward the viewer) and the light stays put
+#'   as the camera moves; with `anchor = "scene"` they're relative to the data
+#'   and the light turns with the plot, so orbiting `yaw` and `light_azimuth`
+#'   together partly cancels out.
 #' @param n Grid resolution. For a 1D orbit, a single number giving the
 #'   frame count. For a 2D orbit, a length-2 vector giving the counts for
 #'   the horizontal and vertical screen axes respectively (in that order, x then y).

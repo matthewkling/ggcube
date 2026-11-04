@@ -450,7 +450,7 @@ gam_model <- function(){
 #' p + geom_smooth_3d(
 #'       method = "loess", method.args = list(span = 0.3),
 #'       fill = "steelblue", color = "white", n = 20,
-#'       light = light(direction = c(0, -1, 0), color = FALSE))
+#'       light = light(color = FALSE))
 #'
 #' # GLM with gamma family and log link
 #' p + geom_smooth_3d(

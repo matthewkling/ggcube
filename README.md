@@ -323,10 +323,10 @@ ggplot() +
       
       # apply shading to aesthetic fill
       sphere(x0 = 2.5, mapping = aes(fill = after_stat(x)),
-             light = light(direction = c(0, -1, 0))) +
+             light = light(direction = c(0, -1, 0), anchor = "scene")) +
       
       # map surface orientation to 3D RGB color channels
-      sphere(x0 = 5, light = light(tone = "normals", direction = c(1, 0, -1)))
+      sphere(x0 = 5, light = light(tone = "normals", direction = c(1, 0, -1), anchor = "scene"))
 ```
 
 <img src="man/figures/README-lighting-1.png" alt="" width="100%" />
@@ -351,10 +351,8 @@ mammoth <- data.frame(do.call(rbind, rjson::fromJSON(
 colnames(mammoth) <- c("Y", "X", "Z")
 
 p <- ggplot(mammoth, aes(X, Y, Z)) +
-      geom_hull_3d(method = "alpha", radius = 8, 
-                   fill = "darkred", color = "darkred") +
-      light(direction = c(-1, 1, 0), anchor = "camera",
-            shadow = 1, highlight = 1) +
+      geom_hull_3d(method = "alpha", radius = 8, fill = "red") +
+      light(direction = c(-1, 1, 0), shadow = 1, highlight = 1) +
       coord_3d(roll = -90, scales = "fixed", 
                panels = "zmin", expand = FALSE) +
       theme(axis.text = element_blank(),

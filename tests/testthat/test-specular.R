@@ -87,7 +87,8 @@ test_that("camera-space normals and directions give the same glints as scene spa
       normals <- normals / sqrt(rowSums(normals^2))
       dir <- c(-.3, .5, .8)
 
-      scene <- compute_specular(normals, centers(10), light(direction = dir, specular = 1), proj)
+      scene <- compute_specular(normals, centers(10),
+                                light(direction = dir, anchor = "scene", specular = 1), proj)
 
       camera_normals <- rotate_normals_to_camera(normals, proj)
       camera_dir <- as.vector(rotate_normals_to_camera(matrix(dir, 1), proj))

@@ -175,12 +175,13 @@ test_that("blend_light lights only the targeted aesthetics of lit rows", {
 
 # light() -----------------------------------------------------------------------
 
-test_that("light() defaults to a smooth ramp, lightness tone, and light from above xmin", {
+test_that("light() defaults to a smooth ramp, lightness tone, and camera light from the upper left", {
       l <- light()
       expect_equal(l$ramp, ramp_smooth(45))
       expect_equal(l$tone, tone_lightness())
       expect_equal(c(l$shadow, l$highlight), c(.8, .6))
-      expect_equal(l$direction / sqrt(sum(l$direction^2)), direction(270, 60))
+      expect_equal(l$anchor, "camera")
+      expect_equal(l$direction / sqrt(sum(l$direction^2)), direction(315, 45))
 })
 
 test_that("light() takes ramps and tones by name or as objects", {

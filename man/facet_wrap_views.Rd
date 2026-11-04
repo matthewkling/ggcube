@@ -109,8 +109,8 @@ Light angles move the plot-level light, set with \code{\link[=light]{light()}} o
 \code{coord_3d(light = )}, which must be directional (not \code{position}-based). It is
 an error to use them when lighting is disabled or when any layer sets its own
 \code{light}. The light's \code{anchor} is respected: with the default
-\code{anchor = "scene"} the light moves around the data, and with
-\code{anchor = "camera"} it moves around the viewer.
+\code{anchor = "camera"} light angles are relative to the viewer, and with
+\code{anchor = "scene"} they're relative to the data.
 }
 
 \section{Layout}{

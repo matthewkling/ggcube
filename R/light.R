@@ -47,24 +47,28 @@
 #'   `light("none")` is equivalent to the bare string `"none"` accepted by the
 #'   `light` argument of layers and [coord_3d()].
 #' @param direction Numeric vector of length 3 specifying direction in 3D space (x, y, z) that
-#'   light comes from for directional lighting. Depending on `anchor`, direction is relative to
-#'   either the plot axes or the viewing pane. The default is `direction(270, 60)`: light from
-#'   the xmin side of the cube, 60 degrees above horizontal. At least one value must be
-#'   non-zero. Values are automatically normalized, so magnitude doesn't matter, only sign and
-#'   relative magnitude. Direction is specified in visual space (relative to the rendered
-#'   cube's bounding box), not data space. Use [direction()] to build this vector from an
-#'   azimuth and elevation instead of components. This argument is ignored if `position` is
-#'   provided.
-#' @param anchor Character string specifying the reference frame for light direction:
+#'   light comes from for directional lighting, in the frame set by `anchor`. The default is
+#'   `direction(315, 45)`: with the default camera anchor, light from the upper left of the
+#'   plot, tilted 45 degrees toward the viewer. At least one value must be non-zero. Values
+#'   are automatically normalized, so magnitude doesn't matter, only sign and relative
+#'   magnitude. Use [direction()] to build this vector from an azimuth and elevation instead
+#'   of components. This argument is ignored if `position` is provided.
+#' @param anchor Character string specifying the reference frame for light `direction`:
 #'   \itemize{
-#'     \item \code{"scene"} (default): Light `direction` is fixed relative to the data/scene.
-#'       Light rotates with the plot, so regardless of rotation, `direction = c(1, 0, 0)`
-#'       lights surfaces facing the "xmax" cube face, for example.
-#'     \item \code{"camera"}: Light `direction` is fixed relative to the camera/viewer.
-#'       Light direction stays in place regardless of rotation, so `direction = c(1, 0, 0)`
-#'       lights surfaces facing the right side of the plot, for example.
+#'     \item \code{"camera"} (default): Light `direction` is fixed relative to the viewer, so
+#'       the visible side of the plot is lit the same way however it's rotated. x points to
+#'       the right of the plot, y up the plot, and z toward the viewer: `direction = c(1, 0,
+#'       0)` lights surfaces facing the right side of the plot, and `direction = c(0, 0, 1)`
+#'       lights surfaces facing the viewer.
+#'     \item \code{"scene"}: Light `direction` is fixed relative to the data, in the axes of
+#'       the rendered cube (visual space, not data units), so the light turns with the plot
+#'       as it's rotated. `direction = c(1, 0, 0)` lights surfaces facing the "xmax" cube
+#'       face, and `direction = c(0, 0, 1)` lights surfaces facing up, whatever the rotation.
+#'       Use this when the light's direction means something in the data, such as the sun
+#'       over terrain.
 #'   }
-#'   When all rotation parameters are zero, these options give the same result.
+#'   When all rotation parameters are zero, these options give the same result. Positional
+#'   lights (`position`) are always placed in the data.
 #' @param position Numeric vector of length 3 specifying light source position in
 #'   data coordinate space for positional lighting. When specified, each face gets
 #'   its own light direction calculated from the light position to the face center.
@@ -163,18 +167,18 @@
 #' # if provided, layer-level lighting overrides plot-level lighting
 #' p + light("hard") + # plot-level: affects original layer
 #'   geom_hull_3d(aes(x = x + 2.5), fill = "#9e2602", color = "#5e1600",
-#'       light = light(direction = c(0, -1, 0)))
+#'       light = light(direction = c(1, -1, 1)))
 #'
 #'
 #' # Light sources ------------------------------------------------------------
 #'
-#' # directional light from the xmin-ymin-zmin direction
-#' # (`direction` is relative to rotated axes with default `anchor = "scene"`)
-#' p + light(direction = c(-1, -1, -1))
+#' # directional light from the top right of the plot, toward the viewer
+#' # (with the default `anchor = "camera"`, `direction` is relative to the viewer)
+#' p + light(direction = c(1, 1, 1))
 #'
-#' # directional light from top-right corner of figure
-#' # (`anchor = "camera"` makes `direction` fixed relative to the plot)
-#' p + light(direction = c(1, 1, 0), anchor = "camera")
+#' # directional light from the xmin-ymin-zmin direction of the data
+#' # (`anchor = "scene"` makes `direction` relative to the plot axes)
+#' p + light(direction = c(-1, -1, -1), anchor = "scene")
 #'
 #' # positional light source within plot
 #' ggplot(mountain, aes(x, y, z)) +
@@ -203,8 +207,8 @@
 #'
 #' @export
 light <- function(ramp = "smooth",
-                  direction = c(-0.5, 0, sqrt(3) / 2),
-                  anchor = "scene",
+                  direction = c(-0.5, 0.5, sqrt(2) / 2),
+                  anchor = "camera",
                   position = NULL,
                   distance_falloff = FALSE,
                   fill = TRUE,
@@ -431,8 +435,13 @@ print.light <- function(x, ...) {
       } else {
             cat("  Direction: [", paste(signif(x$direction, 4), collapse = ", "), "] (directional lighting)\n")
             angles <- direction_angles(x$direction)
-            cat("    azimuth:", wrap_angle(angles$azimuth, "bearing", digits = 1),
-                "deg, elevation:", round(angles$elevation, 1), "deg\n")
+            if (identical(x$anchor, "camera")) {
+                  cat("    bearing on the plot:", wrap_angle(angles$azimuth, "bearing", digits = 1),
+                      "deg, toward the viewer:", round(angles$elevation, 1), "deg\n")
+            } else {
+                  cat("    azimuth:", wrap_angle(angles$azimuth, "bearing", digits = 1),
+                      "deg, elevation:", round(angles$elevation, 1), "deg\n")
+            }
       }
 
       cat("  anchor:", x$anchor, "\n")
@@ -623,6 +632,7 @@ specular_shape <- function(cos_half, size, ramp = NULL) {
 #' @keywords internal
 #' @noRd
 camera_to_scene <- function(v, proj) {
+      v[, 3] <- -v[, 3]
       rot <- rotate_3d(diag(3), proj$pitch, proj$roll, proj$yaw)
       out <- v %*% t(rot)
       out[, 3] <- -out[, 3]
@@ -837,7 +847,7 @@ compute_light_in_coord <- function(data, standardized_coords, scale_ranges, scal
             # Pre-existing normals (e.g. from text stat): transform to standardized space
             normals <- transform_normals_to_standard(
                   as.matrix(faces[, c("normal_x", "normal_y", "normal_z")]),
-                  scale_ranges, scales, ratio, light$anchor, proj
+                  scale_ranges, scales, ratio, camera_directional, proj
             )
       } else if (grepl("sh3d__hull", faces$group[1])) {
             # Hull/triangle data: compute normals from vertex coordinates
@@ -868,12 +878,7 @@ compute_light_in_coord <- function(data, standardized_coords, scale_ranges, scal
       # Apply lighting models
       faces <- apply_surface_light(faces, normals, face_centers, light)
       if (isTRUE(light$specular > 0)) {
-            normals_in_camera <- if (has_precomputed_normals) {
-                  light$anchor == "camera" && !is.null(proj)
-            } else {
-                  camera_directional
-            }
-            faces$.specular <- compute_specular(normals, face_centers, light, proj, normals_in_camera)
+            faces$.specular <- compute_specular(normals, face_centers, light, proj, camera_directional)
       }
 
       # Remove pre-existing normal columns from data before join to prevent suffixes
@@ -913,12 +918,13 @@ compute_light_in_coord <- function(data, standardized_coords, scale_ranges, scal
 #' @param scale_ranges List with x, y, z scale ranges
 #' @param scales Character, either "free" or "fixed"
 #' @param ratio Numeric vector of length 3
-#' @param anchor Character, "scene" or "camera"
+#' @param camera Whether to rotate the normals into camera space, for
+#'   camera-anchored directional lighting.
 #' @param proj Projection parameters (needed for camera anchor rotation)
 #' @return Matrix with 3 columns of transformed normals
 #' @keywords internal
 #' @noRd
-transform_normals_to_standard <- function(normals, scale_ranges, scales, ratio, anchor, proj = NULL) {
+transform_normals_to_standard <- function(normals, scale_ranges, scales, ratio, camera = FALSE, proj = NULL) {
 
       # Compute effective ratios (same logic as scale_to_standard multi-axis path)
       effective_ratios <- compute_effective_ratios(scale_ranges, scales, ratio)
@@ -946,11 +952,8 @@ transform_normals_to_standard <- function(normals, scale_ranges, scales, ratio, 
       lengths <- pmax(lengths, 1e-10)
       normals <- normals / lengths
 
-      # For camera-anchor lighting, apply the same transforms as the coordinates:
-      # z-flip then rotation
-      if (anchor == "camera" && !is.null(proj)) {
-            normals[, 3] <- -normals[, 3]  # z-flip
-            normals <- rotate_3d(normals, proj$pitch, proj$roll, proj$yaw)
+      if (camera && !is.null(proj)) {
+            normals <- rotate_normals_to_camera(normals, proj)
       }
 
       return(normals)
@@ -1096,10 +1099,11 @@ compute_polygon_normals <- function(poly_data, groups) {
 #'
 #' For camera-anchored directional lighting, face normals are computed in scene
 #' space (where surface orientation is well-defined) and then transformed into
-#' camera space with the same operations applied to coordinates during projection:
-#' a z-flip followed by the projection rotation. This mirrors the camera handling
-#' in transform_normals_to_standard() so that all lit geoms share one convention
-#' for entering camera space.
+#' camera space with the same operations applied to coordinates during projection
+#' (a z-flip followed by the projection rotation), then z-flipped again: in the
+#' camera frame, x points to the right of the plot, y up the plot, and z toward
+#' the viewer. At zero rotation, the camera frame is the scene frame. All lit
+#' geoms enter camera space through this function.
 #'
 #' @param normals Matrix with 3 columns (x, y, z normal components) in scene space
 #' @param proj List with pitch, roll, yaw (projection parameters)
@@ -1108,7 +1112,11 @@ compute_polygon_normals <- function(poly_data, groups) {
 #' @noRd
 rotate_normals_to_camera <- function(normals, proj) {
       normals[, 3] <- -normals[, 3]  # z-flip, matching transform_3d_standard
-      rotate_3d(normals, proj$pitch, proj$roll, proj$yaw)
+      out <- rotate_3d(normals, proj$pitch, proj$roll, proj$yaw)
+      # Projection depth increases away from the viewer; the camera frame's z
+      # points toward the viewer
+      out[, 3] <- -out[, 3]
+      out
 }
 
 #' Compute surface normals from gradients

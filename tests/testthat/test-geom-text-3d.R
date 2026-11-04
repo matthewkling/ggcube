@@ -70,7 +70,7 @@ test_that("transform_normals_to_standard preserves axis-aligned normals under un
 
       result <- ggcube:::transform_normals_to_standard(
             normals, scale_ranges, scales = "free", ratio = c(1, 1, 1),
-            anchor = "scene", proj = NULL
+            camera = FALSE, proj = NULL
       )
 
       expect_equal(result[1, ], c(0, 0, 1), tolerance = 1e-10)
@@ -83,7 +83,7 @@ test_that("transform_normals_to_standard applies inverse-transpose under non-uni
 
       result <- ggcube:::transform_normals_to_standard(
             normals, scale_ranges, scales = "free", ratio = c(1, 1, 1),
-            anchor = "scene", proj = NULL
+            camera = FALSE, proj = NULL
       )
 
       # Axis-aligned normal should remain axis-aligned regardless of scaling
@@ -93,7 +93,7 @@ test_that("transform_normals_to_standard applies inverse-transpose under non-uni
       normals_diag <- matrix(c(1, 1, 0) / sqrt(2), nrow = 1)
       result_diag <- ggcube:::transform_normals_to_standard(
             normals_diag, scale_ranges, scales = "free", ratio = c(1, 1, 1),
-            anchor = "scene", proj = NULL
+            camera = FALSE, proj = NULL
       )
 
       # x gets scaled by 10, y by 20, so inverse-transpose scales x by 10, y by 20
@@ -109,7 +109,7 @@ test_that("transform_normals_to_standard handles fixed scales", {
 
       result <- ggcube:::transform_normals_to_standard(
             normals, scale_ranges, scales = "fixed", ratio = c(1, 1, 1),
-            anchor = "scene", proj = NULL
+            camera = FALSE, proj = NULL
       )
 
       expect_equal(result[1, 1], 0, tolerance = 1e-10)
@@ -121,20 +121,22 @@ test_that("transform_normals_to_standard handles fixed scales", {
 test_that("transform_normals_to_standard applies camera rotation", {
       normals <- matrix(c(0, 0, 1), nrow = 1)
       scale_ranges <- list(x = c(0, 10), y = c(0, 10), z = c(0, 10))
-      proj <- list(pitch = 0, roll = 0, yaw = 0)
+      transform <- function(camera, proj) {
+            ggcube:::transform_normals_to_standard(
+                  normals, scale_ranges, scales = "free", ratio = c(1, 1, 1),
+                  camera = camera, proj = proj
+            )
+      }
 
-      result_scene <- ggcube:::transform_normals_to_standard(
-            normals, scale_ranges, scales = "free", ratio = c(1, 1, 1),
-            anchor = "scene", proj = proj
-      )
+      # At zero rotation the camera frame is the scene frame
+      zero <- list(pitch = 0, roll = 0, yaw = 0)
+      expect_equal(transform(FALSE, zero)[1, ], c(0, 0, 1), tolerance = 1e-10)
+      expect_equal(transform(TRUE, zero)[1, ], c(0, 0, 1), tolerance = 1e-10)
 
-      result_camera <- ggcube:::transform_normals_to_standard(
-            normals, scale_ranges, scales = "free", ratio = c(1, 1, 1),
-            anchor = "camera", proj = proj
-      )
-
-      expect_equal(result_scene[1, ], c(0, 0, 1), tolerance = 1e-10)
-      expect_equal(result_camera[1, ], c(0, 0, -1), tolerance = 1e-10)
+      # Rotated, normals enter the camera frame as other lit geoms' do
+      proj <- list(pitch = 0, roll = -60, yaw = -30)
+      expect_equal(transform(TRUE, proj), rotate_normals_to_camera(normals, proj), tolerance = 1e-10)
+      expect_equal(transform(FALSE, proj)[1, ], c(0, 0, 1), tolerance = 1e-10)
 })
 
 

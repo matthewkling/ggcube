@@ -45,9 +45,11 @@ specifies. These move the plot-level light set with \code{\link[=light]{light()}
 \code{coord_3d(light = )}, which must be directional (not \code{position}-based);
 it is an error to use them when lighting is disabled or when any layer
 has its own \code{light}. The light's \code{anchor} is respected: with the default
-\code{anchor = "scene"} the light moves around the data, so orbiting \code{yaw} and
-\code{light_azimuth} together partly cancels out; with \code{anchor = "camera"} it
-moves around the viewer.}
+\code{anchor = "camera"} the angles are relative to the viewer (a bearing
+around the plot, and an angle toward the viewer) and the light stays put
+as the camera moves; with \code{anchor = "scene"} they're relative to the data
+and the light turns with the plot, so orbiting \code{yaw} and \code{light_azimuth}
+together partly cancels out.}
 
 \item{n}{Grid resolution. For a 1D orbit, a single number giving the
 frame count. For a 2D orbit, a length-2 vector giving the counts for
