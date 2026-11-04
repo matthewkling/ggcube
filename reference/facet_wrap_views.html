@@ -179,8 +179,8 @@ value, such as <code>roll = -20</code>; otherwise they are held at the values se
 <code>coord_3d(light = )</code>, which must be directional (not <code>position</code>-based). It is
 an error to use them when lighting is disabled or when any layer sets its own
 <code>light</code>. The light's <code>anchor</code> is respected: with the default
-<code>anchor = "scene"</code> the light moves around the data, and with
-<code>anchor = "camera"</code> it moves around the viewer.</p>
+<code>anchor = "camera"</code> light angles are relative to the viewer, and with
+<code>anchor = "scene"</code> they're relative to the data.</p>
     </div>
     <div class="section level2">
     <h2 id="layout">Layout<a class="anchor" aria-label="anchor" href="#layout"></a></h2>

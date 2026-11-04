@@ -65,8 +65,7 @@ orbital$psi <- with(orbital, (3 * z^2 - (x^2 + y^2 + z^2)) *
 
 ggplot(orbital, aes(x, y, z, value = psi^2)) +
       geom_isosurface_3d(levels = 0.02 * max(orbital$psi^2), fill = "darkorchid") +
-      coord_3d(scales = "fixed", roll = -70) +
-      light(direction = c(-1, 1, 1))
+      coord_3d(scales = "fixed", roll = -70)
 ```
 
 ![](volumes_files/figure-html/isosurface-1.png)
@@ -93,8 +92,7 @@ ggplot() +
       geom_isofunction_3d(fun = torus, n = 40,
                           xlim = c(-3, 3), ylim = c(-3, 3), zlim = c(-1, 1),
                           fill = "goldenrod") +
-      coord_3d(scales = "fixed") +
-      light(direction = c(-1, 1, .5))
+      coord_3d(scales = "fixed")
 ```
 
 ![](volumes_files/figure-html/isofunction-1.png)
@@ -122,7 +120,6 @@ where they concentrate:
 p <- ggplot(iris, aes(Sepal.Length, Sepal.Width, Petal.Length,
                       fill = Species, color = Species)) +
       coord_3d() +
-      light(direction = c(1, 1, 1)) +
       theme(legend.position = "none")
 
 (p + geom_hull_3d() + ggtitle("geom_hull_3d()")) +
@@ -159,8 +156,7 @@ level <- 0.15 * max(abs(orbital$psi))
 ggplot(orbital, aes(x, y, z, value = psi)) +
       geom_isosurface_3d(levels = level, fill = "tomato") +
       geom_isosurface_3d(levels = -level, inside = "below", fill = "steelblue") +
-      coord_3d(scales = "fixed") +
-      light(direction = c(-1, 1, .5))
+      coord_3d(scales = "fixed")
 ```
 
 ![](volumes_files/figure-html/inside-1.png)
@@ -210,7 +206,6 @@ ggplot(quakes, aes(long, lat, -depth)) +
       scale_fill_viridis_c() +
       coord_3d(yaw = 180, roll = -70, scales = "fixed", ratio = c(1, 1, .01)) +
       labs(z = "depth (km)") +
-      light(direction = c(-1, 1, 1)) +
       zlim(NA, 0) +
       theme_dark() + 
       theme(panel.border = element_rect(color = "gray70"))
@@ -259,7 +254,6 @@ ggplot(orbital, aes(x, y, z, value = psi^2, fill = after_stat(level))) +
       geom_isosurface_3d(levels = c(0.02, 0.1, 0.4) * max(orbital$psi^2), cap = TRUE) +
       scale_fill_viridis_c(trans = "log10") +
       coord_3d(scales = "fixed", yaw = -130) +
-      light(direction = c(0, -1, 1)) +
       xlim(2, NA)
 ```
 
@@ -289,7 +283,6 @@ fine ones smooth but slow ones:
 
 p <- ggplot() +
       coord_3d(scales = "fixed", panels = "none") +
-      light(direction = c(-1, 1, .5)) +
       theme_void()
 resolution <- function(n) {
       p + geom_isofunction_3d(fun = torus, n = n, fill = "goldenrod",

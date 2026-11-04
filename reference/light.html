@@ -64,8 +64,8 @@ which takes precedence over plot-level lighting.</p>
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">light</span><span class="op">(</span></span>
 <span>  ramp <span class="op">=</span> <span class="st">"smooth"</span>,</span>
-<span>  direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">0.5</span>, <span class="fl">0</span>, <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fl">3</span><span class="op">)</span><span class="op">/</span><span class="fl">2</span><span class="op">)</span>,</span>
-<span>  anchor <span class="op">=</span> <span class="st">"scene"</span>,</span>
+<span>  direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">0.5</span>, <span class="fl">0.5</span>, <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span><span class="op">/</span><span class="fl">2</span><span class="op">)</span>,</span>
+<span>  anchor <span class="op">=</span> <span class="st">"camera"</span>,</span>
 <span>  position <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  distance_falloff <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  fill <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -99,24 +99,27 @@ options. <code>"none"</code> disables lighting, and ignores all other arguments:
 
 <dt id="arg-direction">direction<a class="anchor" aria-label="anchor" href="#arg-direction"></a></dt>
 <dd><p>Numeric vector of length 3 specifying direction in 3D space (x, y, z) that
-light comes from for directional lighting. Depending on <code>anchor</code>, direction is relative to
-either the plot axes or the viewing pane. The default is <code>direction(270, 60)</code>: light from
-the xmin side of the cube, 60 degrees above horizontal. At least one value must be
-non-zero. Values are automatically normalized, so magnitude doesn't matter, only sign and
-relative magnitude. Direction is specified in visual space (relative to the rendered
-cube's bounding box), not data space. Use <code><a href="direction.html">direction()</a></code> to build this vector from an
-azimuth and elevation instead of components. This argument is ignored if <code>position</code> is
-provided.</p></dd>
+light comes from for directional lighting, in the frame set by <code>anchor</code>. The default is
+<code>direction(315, 45)</code>: with the default camera anchor, light from the upper left of the
+plot, tilted 45 degrees toward the viewer. At least one value must be non-zero. Values
+are automatically normalized, so magnitude doesn't matter, only sign and relative
+magnitude. Use <code><a href="direction.html">direction()</a></code> to build this vector from an azimuth and elevation instead
+of components. This argument is ignored if <code>position</code> is provided.</p></dd>
 
 
 <dt id="arg-anchor">anchor<a class="anchor" aria-label="anchor" href="#arg-anchor"></a></dt>
-<dd><p>Character string specifying the reference frame for light direction:</p><ul><li><p><code>"scene"</code> (default): Light <code>direction</code> is fixed relative to the data/scene.
-Light rotates with the plot, so regardless of rotation, <code>direction = c(1, 0, 0)</code>
-lights surfaces facing the "xmax" cube face, for example.</p></li>
-<li><p><code>"camera"</code>: Light <code>direction</code> is fixed relative to the camera/viewer.
-Light direction stays in place regardless of rotation, so <code>direction = c(1, 0, 0)</code>
-lights surfaces facing the right side of the plot, for example.</p></li>
-</ul><p>When all rotation parameters are zero, these options give the same result.</p></dd>
+<dd><p>Character string specifying the reference frame for light <code>direction</code>:</p><ul><li><p><code>"camera"</code> (default): Light <code>direction</code> is fixed relative to the viewer, so
+the visible side of the plot is lit the same way however it's rotated. x points to
+the right of the plot, y up the plot, and z toward the viewer: <code>direction = c(1, 0, 0)</code> lights surfaces facing the right side of the plot, and <code>direction = c(0, 0, 1)</code>
+lights surfaces facing the viewer.</p></li>
+<li><p><code>"scene"</code>: Light <code>direction</code> is fixed relative to the data, in the axes of
+the rendered cube (visual space, not data units), so the light turns with the plot
+as it's rotated. <code>direction = c(1, 0, 0)</code> lights surfaces facing the "xmax" cube
+face, and <code>direction = c(0, 0, 1)</code> lights surfaces facing up, whatever the rotation.
+Use this when the light's direction means something in the data, such as the sun
+over terrain.</p></li>
+</ul><p>When all rotation parameters are zero, these options give the same result. Positional
+lights (<code>position</code>) are always placed in the data.</p></dd>
 
 
 <dt id="arg-position">position<a class="anchor" aria-label="anchor" href="#arg-position"></a></dt>
@@ -297,20 +300,20 @@ aesthetics to computed variables such as <code>after_stat(dzdx)</code>; see
 <span class="r-in"><span><span class="co"># if provided, layer-level lighting overrides plot-level lighting</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu">light</span><span class="op">(</span><span class="st">"hard"</span><span class="op">)</span> <span class="op">+</span> <span class="co"># plot-level: affects original layer</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="geom_hull_3d.html">geom_hull_3d</a></span><span class="op">(</span><span class="fu"><a href="aes.html">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">x</span> <span class="op">+</span> <span class="fl">2.5</span><span class="op">)</span>, fill <span class="op">=</span> <span class="st">"#9e2602"</span>, color <span class="op">=</span> <span class="st">"#5e1600"</span>,</span></span>
-<span class="r-in"><span>      light <span class="op">=</span> <span class="fu">light</span><span class="op">(</span>direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="op">-</span><span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>      light <span class="op">=</span> <span class="fu">light</span><span class="op">(</span>direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="op">-</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="light-12.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Light sources ------------------------------------------------------------</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># directional light from the xmin-ymin-zmin direction</span></span></span>
-<span class="r-in"><span><span class="co"># (`direction` is relative to rotated axes with default `anchor = "scene"`)</span></span></span>
-<span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu">light</span><span class="op">(</span>direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="op">-</span><span class="fl">1</span>, <span class="op">-</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># directional light from the top right of the plot, toward the viewer</span></span></span>
+<span class="r-in"><span><span class="co"># (with the default `anchor = "camera"`, `direction` is relative to the viewer)</span></span></span>
+<span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu">light</span><span class="op">(</span>direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="light-13.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># directional light from top-right corner of figure</span></span></span>
-<span class="r-in"><span><span class="co"># (`anchor = "camera"` makes `direction` fixed relative to the plot)</span></span></span>
-<span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu">light</span><span class="op">(</span>direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span>, anchor <span class="op">=</span> <span class="st">"camera"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># directional light from the xmin-ymin-zmin direction of the data</span></span></span>
+<span class="r-in"><span><span class="co"># (`anchor = "scene"` makes `direction` relative to the plot axes)</span></span></span>
+<span class="r-in"><span><span class="va">p</span> <span class="op">+</span> <span class="fu">light</span><span class="op">(</span>direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="op">-</span><span class="fl">1</span>, <span class="op">-</span><span class="fl">1</span><span class="op">)</span>, anchor <span class="op">=</span> <span class="st">"scene"</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="light-14.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># positional light source within plot</span></span></span>

@@ -101,12 +101,13 @@ points along the negative z axis.</p>
 <span class="r-in"><span><span class="fu">direction</span><span class="op">(</span><span class="fl">210</span>, <span class="fl">30</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] -0.4330127 -0.7500000  0.5000000</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># The default lighting angle</span></span></span>
-<span class="r-in"><span><span class="fu">direction</span><span class="op">(</span><span class="fl">270</span>, <span class="fl">63.43</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -4.472908e-01 -8.216600e-17  8.943886e-01</span>
+<span class="r-in"><span><span class="co"># The default lighting angle: with the default camera anchor, light from</span></span></span>
+<span class="r-in"><span><span class="co"># the upper left of the plot, tilted 45 degrees toward the viewer</span></span></span>
+<span class="r-in"><span><span class="fu">direction</span><span class="op">(</span><span class="fl">315</span>, <span class="fl">45</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -0.5000000  0.5000000  0.7071068</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Light from directly overhead</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="light.html">light</a></span><span class="op">(</span>direction <span class="op">=</span> <span class="fu">direction</span><span class="op">(</span><span class="fl">0</span>, <span class="fl">90</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># Light from directly above the data</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="light.html">light</a></span><span class="op">(</span>direction <span class="op">=</span> <span class="fu">direction</span><span class="op">(</span><span class="fl">0</span>, <span class="fl">90</span><span class="op">)</span>, anchor <span class="op">=</span> <span class="st">"scene"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Lighting specification:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Ramp: smooth (neutral 45 deg) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Tone: lightness </span>

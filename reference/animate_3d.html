@@ -104,9 +104,12 @@ default), lighting is left as the plot specifies. These move the
 plot-level light set with <code><a href="light.html">light()</a></code> or <code>coord_3d(light = )</code>, which must be
 directional (not <code>position</code>-based); it is an error to use them when
 lighting is disabled or when any layer has its own <code>light</code>. The light's
-<code>anchor</code> is respected: with the default <code>anchor = "scene"</code> the light
-moves around the data, so animating <code>yaw</code> and <code>light_azimuth</code> together
-partly cancels out; with <code>anchor = "camera"</code> it moves around the viewer.</p></dd>
+<code>anchor</code> is respected: with the default <code>anchor = "camera"</code> the angles
+are relative to the viewer (a bearing around the plot, and an angle toward
+the viewer) and the light stays put as the camera moves; with
+<code>anchor = "scene"</code> they're relative to the data and the light turns with
+the plot, so animating <code>yaw</code> and <code>light_azimuth</code> together partly cancels
+out.</p></dd>
 
 
 <dt id="arg-nframes-fps-duration">nframes, fps, duration<a class="anchor" aria-label="anchor" href="#arg-nframes-fps-duration"></a></dt>
@@ -220,7 +223,7 @@ several views side by side.</p></div>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Rendering 12 frames...</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Assembling animation...</span>
 <span class="r-in"><span><span class="fu"><a href="anim_save_3d.html">anim_save_3d</a></span><span class="op">(</span><span class="va">anim</span>, <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"rotating_surface.gif"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Animation saved to /tmp/RtmprFYrl3/rotating_surface.gif</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Animation saved to /tmp/RtmpMXReXY/rotating_surface.gif</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

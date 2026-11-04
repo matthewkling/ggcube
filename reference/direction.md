@@ -59,12 +59,13 @@ which accept the result.
 direction(210, 30)
 #> [1] -0.4330127 -0.7500000  0.5000000
 
-# The default lighting angle
-direction(270, 63.43)
-#> [1] -4.472908e-01 -8.216600e-17  8.943886e-01
+# The default lighting angle: with the default camera anchor, light from
+# the upper left of the plot, tilted 45 degrees toward the viewer
+direction(315, 45)
+#> [1] -0.5000000  0.5000000  0.7071068
 
-# Light from directly overhead
-light(direction = direction(0, 90))
+# Light from directly above the data
+light(direction = direction(0, 90), anchor = "scene")
 #> Lighting specification:
 #>   Ramp: smooth (neutral 45 deg) 
 #>   Tone: lightness 

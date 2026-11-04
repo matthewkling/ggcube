@@ -143,8 +143,8 @@ Light angles move the plot-level light, set with
 `coord_3d(light = )`, which must be directional (not `position`-based).
 It is an error to use them when lighting is disabled or when any layer
 sets its own `light`. The light's `anchor` is respected: with the
-default `anchor = "scene"` the light moves around the data, and with
-`anchor = "camera"` it moves around the viewer.
+default `anchor = "camera"` light angles are relative to the viewer, and
+with `anchor = "scene"` they're relative to the data.
 
 ## Layout
 

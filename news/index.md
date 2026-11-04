@@ -194,10 +194,30 @@ plots relative to the prior version:
 - Shadows are now stronger than highlights by default (`shadow = 0.8`,
   `highlight = 0.6`), since fading to black looks more natural than
   fading to white.
-- The default light now comes from 60 degrees above the horizon,
-  `direction(270, 60)`, rather than about 63 degrees (`c(-.5, 0, 1)`).
-  The tops and two visible sides of columns and voxels now get three
-  distinct shades.
+- Lights are now anchored to the camera by default
+  (`anchor = "camera"`), so the visible side of a plot is lit the same
+  way from any view, as in rgl and most other 3D graphics tools.
+  Previously they were anchored to the data, so views rotated away from
+  the default could be backlit or flatly lit. Directions given to
+  [`light()`](https://matthewkling.github.io/ggcube/reference/light.md)
+  without an `anchor` are now read relative to the viewer: use
+  `anchor = "scene"` for lights fixed relative to the data, such as the
+  sun over terrain. Positional lights are still placed in the data.
+- The default light now comes from the upper left of the plot, tilted 45
+  degrees toward the viewer, `direction(315, 45)`, rather than from the
+  xmin side of the data, about 63 degrees above the horizon
+  (`c(-.5, 0, 1)`). Faces seen head-on now keep their base color
+  exactly, and the tops and two visible sides of columns and voxels get
+  three distinct shades.
+- In the camera frame, z now points toward the viewer rather than away
+  from it, so `direction = c(0, 0, 1)` with `anchor = "camera"` lights
+  the faces that face the viewer, and
+  [`direction()`](https://matthewkling.github.io/ggcube/reference/direction.md)
+  reads naturally for camera-anchored lights: a bearing around the plot,
+  clockwise from straight up, and an angle toward the viewer.
+  Camera-anchored directions with a z component written for earlier
+  versions need their z negated. Camera- and scene-anchored lights now
+  agree when all rotation parameters are zero, as documented.
 - [`geom_contour_3d()`](https://matthewkling.github.io/ggcube/reference/geom_contour_3d.md)
   and
   [`geom_ridgeline_3d()`](https://matthewkling.github.io/ggcube/reference/geom_ridgeline_3d.md)
@@ -272,6 +292,24 @@ New options:
   gives colored glints, and with
   [`ramp_steps()`](https://matthewkling.github.io/ggcube/reference/ramps.md)
   they’re flat spots. They’re off by default.
+- New
+  [`guide_colorsteps_3d()`](https://matthewkling.github.io/ggcube/reference/guide_3d.md)
+  and
+  [`guide_bins_3d()`](https://matthewkling.github.io/ggcube/reference/guide_3d.md)
+  shade the guides of binned scales, and like the other 3D guides are
+  used by default when lighting applies.
+  [`guide_colorbar_3d()`](https://matthewkling.github.io/ggcube/reference/guide_3d.md)
+  now also shades colorbars drawn with `display = "rectangles"`.
+- Fixed `reverse_shade = TRUE` in horizontal 3D guides, which reversed a
+  colorbar’s colors rather than its shading, and shaded each legend key
+  from another key’s color.
+- `reverse` and other ggplot2 guide arguments given to the 3D guides now
+  reach ggplot2: `reverse = TRUE` previously matched `reverse_shade`.
+  `reverse_shade` and `shade_range` now come after `...`, so must be
+  named in full.
+- Fixed lighting of polygon text with positional lights and
+  `anchor = "camera"`, which rotated the text’s normals into camera
+  space while the light stayed in the data.
 - Fixed
   [`guide_legend_3d()`](https://matthewkling.github.io/ggcube/reference/guide_3d.md)
   shading keys from the wrong colors: each key was shaded from the color

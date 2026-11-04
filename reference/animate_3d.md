@@ -68,10 +68,12 @@ animate_3d(
   or `coord_3d(light = )`, which must be directional (not
   `position`-based); it is an error to use them when lighting is
   disabled or when any layer has its own `light`. The light's `anchor`
-  is respected: with the default `anchor = "scene"` the light moves
-  around the data, so animating `yaw` and `light_azimuth` together
-  partly cancels out; with `anchor = "camera"` it moves around the
-  viewer.
+  is respected: with the default `anchor = "camera"` the angles are
+  relative to the viewer (a bearing around the plot, and an angle toward
+  the viewer) and the light stays put as the camera moves; with
+  `anchor = "scene"` they're relative to the data and the light turns
+  with the plot, so animating `yaw` and `light_azimuth` together partly
+  cancels out.
 
 - nframes, fps, duration:
 
@@ -197,6 +199,6 @@ anim <- animate_3d(p, yaw = c(0, 360), nframes = 12)
 #> Rendering 12 frames...
 #> Assembling animation...
 anim_save_3d(anim, file.path(tempdir(), "rotating_surface.gif"))
-#> Animation saved to /tmp/RtmprFYrl3/rotating_surface.gif
+#> Animation saved to /tmp/RtmpMXReXY/rotating_surface.gif
 # }
 ```

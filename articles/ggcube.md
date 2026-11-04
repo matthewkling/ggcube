@@ -278,7 +278,7 @@ p <- ggplot() +
                           n = 40, fill = "#9e2602") +
       coord_3d(scales = "fixed")
 
-p + light("hard", direction = c(0, 0, 1))
+p + light("hard")
 ```
 
 ![](ggcube_files/figure-html/lighting-1.png)

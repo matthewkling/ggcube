@@ -48,7 +48,7 @@ colnames(mammoth) <- c("Y", "X", "Z")
 p <- ggplot(mammoth, aes(X, Y, Z)) +
       geom_hull_3d(method = "alpha", radius = 8, 
                    fill = "darkred", color = "darkred") +
-      light(direction = c(-1, 1, 0), anchor = "camera") +
+      light(direction = c(-1, 1, 0)) +
       coord_3d(roll = -90, scales = "fixed", zoom = 1.1,
                panels = "zmin", expand = FALSE) +
       theme(axis.text = element_blank(),
@@ -92,7 +92,7 @@ animate_3d(p,
 
 The light can move too, with keyframes for `light_azimuth` and
 `light_elevation`. Here the camera holds still while the light circles
-the mammoth. Because this plot’s light is anchored to the camera, the
+the mammoth. Because lights are anchored to the camera by default, the
 azimuth is measured around the view, so the light sweeps around the edge
 of the frame:
 

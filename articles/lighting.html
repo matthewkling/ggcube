@@ -295,50 +295,70 @@ showing shape.</p>
 <div class="section level3">
 <h3 id="direction-and-anchoring">Direction and anchoring<a class="anchor" aria-label="anchor" href="#direction-and-anchoring"></a>
 </h3>
-<p>The <code>direction</code> parameter is a length-3 vector specifying
-where light comes from; for example,
-<code>direction = c(0, -1, 0)</code> lights the plot from the negative y
-direction. The <code>anchor</code> parameter controls whether this
-direction is relative to the data axes or the camera:</p>
+<p>The <code>direction</code> parameter is a length-3 vector giving
+where light comes from, and the <code>anchor</code> parameter sets the
+frame it’s given in:</p>
 <ul>
 <li>
-<strong><code>anchor = "scene"</code></strong> (default): Direction
-is relative to the data axes and rotates with the plot.
-<code>direction = c(1, 0, 0)</code> always lights surfaces facing the
-“xmax” face.</li>
+<strong><code>anchor = "camera"</code></strong> (default): Direction
+is relative to the viewer, so the visible side of the plot is lit the
+same way however it’s rotated. x points to the right of the plot, y up
+the plot, and z toward the viewer: <code>direction = c(1, 0, 0)</code>
+lights surfaces facing the right side of the plot, and
+<code>direction = c(0, 0, 1)</code> lights surfaces facing the viewer.
+The default light comes from the upper left, tilted 45 degrees toward
+the viewer, so faces seen head-on keep exactly the color you gave
+them.</li>
 <li>
-<strong><code>anchor = "camera"</code></strong>: Direction is fixed
-relative to the viewing pane. <code>direction = c(1, 0, 0)</code> always
-lights surfaces facing the right side of the plot, regardless of
-rotation.</li>
+<strong><code>anchor = "scene"</code></strong>: Direction is
+relative to the data, in the axes of the cube, and turns with the plot
+as it rotates. <code>direction = c(1, 0, 0)</code> lights surfaces
+facing the “xmax” face, and <code>direction = c(0, 0, 1)</code> lights
+surfaces facing up, whatever the rotation. This suits lights that mean
+something in the data, such as the sun over terrain.</li>
 </ul>
+<p>Here’s a surface from two sides, lit by the default camera light and
+by a scene light from the xmin side, 60 degrees above the horizon. The
+camera light lights both views alike, while the scene light leaves the
+far side of the mountain in shadow:</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span><span class="st">"hard"</span>, direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="op">-</span><span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">'anchor = "scene"'</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span><span class="st">"hard"</span>, direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="op">-</span><span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span>, anchor <span class="op">=</span> <span class="st">"camera"</span><span class="op">)</span> <span class="op">+</span></span>
-<span>      <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">'anchor = "camera"'</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">pm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mountain</span>, <span class="fu"><a href="../reference/aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, <span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="../reference/stat_surface_3d.html">geom_surface_3d</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="st">"steelblue"</span><span class="op">)</span></span>
+<span><span class="va">scene</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span>direction <span class="op">=</span> <span class="fu"><a href="../reference/direction.html">direction</a></span><span class="op">(</span><span class="fl">270</span>, <span class="fl">60</span><span class="op">)</span>, anchor <span class="op">=</span> <span class="st">"scene"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="op">(</span><span class="va">pm</span> <span class="op">+</span> <span class="fu"><a href="../reference/coord_3d.html">coord_3d</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">'anchor = "camera" (default)'</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="op">(</span><span class="va">pm</span> <span class="op">+</span> <span class="fu"><a href="../reference/coord_3d.html">coord_3d</a></span><span class="op">(</span>yaw <span class="op">=</span> <span class="fl">150</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">'anchor = "camera", yaw = 150'</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="op">(</span><span class="va">pm</span> <span class="op">+</span> <span class="fu"><a href="../reference/coord_3d.html">coord_3d</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> <span class="va">scene</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">'anchor = "scene"'</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="op">(</span><span class="va">pm</span> <span class="op">+</span> <span class="fu"><a href="../reference/coord_3d.html">coord_3d</a></span><span class="op">(</span>yaw <span class="op">=</span> <span class="fl">150</span><span class="op">)</span> <span class="op">+</span> <span class="va">scene</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">'anchor = "scene", yaw = 150'</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://patchwork.data-imaginist.com/reference/plot_layout.html" class="external-link">plot_layout</a></span><span class="op">(</span>ncol <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
 <p><img src="lighting_files/figure-html/direction-1.png" class="r-plt" alt="" width="1050"></p>
 <p>Directions can also be given as angles with <code><a href="../reference/direction.html">direction()</a></code>,
-which takes an azimuth (a compass bearing, measured clockwise from the
-positive y axis) and an elevation (degrees above the xy plane). This is
-often easier when you want to raise or lower a light without changing
-which side it comes from. The default light comes from the negative x
-side (an azimuth of 270), 60 degrees above the horizon. Here it is low
-and then overhead:</p>
+which takes an azimuth and an elevation. With the camera anchor, the
+azimuth is a bearing around the plot, clockwise from straight up (270 is
+from the left, and 315 from the upper left), and the elevation is the
+angle toward the viewer: 0 is light grazing across the plot, 90 is light
+from straight at the viewer, and negative values put the light behind
+the plot. With the scene anchor, they’re a compass bearing, clockwise
+from the positive y axis, and the angle above the xy plane. Angles are
+often easier when you want to swing a light around or tilt it toward the
+viewer without changing anything else. The default light is
+<code>direction(315, 45)</code>; here it is near grazing, and then
+nearly head-on:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span><span class="st">"hard"</span>, direction <span class="op">=</span> <span class="fu"><a href="../reference/direction.html">direction</a></span><span class="op">(</span><span class="fl">270</span>, <span class="fl">10</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"elevation 10"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span><span class="st">"hard"</span>, direction <span class="op">=</span> <span class="fu"><a href="../reference/direction.html">direction</a></span><span class="op">(</span><span class="fl">270</span>, <span class="fl">90</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"elevation 90"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span><span class="st">"hard"</span>, direction <span class="op">=</span> <span class="fu"><a href="../reference/direction.html">direction</a></span><span class="op">(</span><span class="fl">315</span>, <span class="fl">10</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"elevation 10"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="op">(</span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span><span class="st">"hard"</span>, direction <span class="op">=</span> <span class="fu"><a href="../reference/direction.html">direction</a></span><span class="op">(</span><span class="fl">315</span>, <span class="fl">80</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"elevation 80"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p><img src="lighting_files/figure-html/direction-angles-1.png" class="r-plt" alt="" width="1050"></p>
 <p>Printing a light shows its direction both ways, which can help in
 translating between the two:</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span>direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="op">-</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/light.html">light</a></span><span class="op">(</span>direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Lighting specification:</span></span>
 <span><span class="co">#&gt;   Ramp: smooth (neutral 45 deg) </span></span>
 <span><span class="co">#&gt;   Tone: lightness </span></span>
 <span><span class="co">#&gt;   Strength: shadow 0.8 , highlight 0.6 </span></span>
-<span><span class="co">#&gt;   Direction: [ -1, -1, 1 ] (directional lighting)</span></span>
-<span><span class="co">#&gt;     azimuth: 225 deg, elevation: 35.3 deg</span></span>
-<span><span class="co">#&gt;   anchor: scene </span></span>
+<span><span class="co">#&gt;   Direction: [ -1, 1, 1 ] (directional lighting)</span></span>
+<span><span class="co">#&gt;     bearing on the plot: 315 deg, toward the viewer: 35.3 deg</span></span>
+<span><span class="co">#&gt;   anchor: camera </span></span>
 <span><span class="co">#&gt;   Lights: fill + color</span></span></code></pre></div>
 <p>To compare light directions side by side, or to move the light around
 interactively, see the <code>light_azimuth</code> and
@@ -354,7 +374,8 @@ multiple views</a> article.</p>
 <p>In addition to directional lighting (parallel rays from a direction),
 ggcube also supports positional lighting from a point source. Use
 <code>position</code> instead of <code>direction</code> to specify a
-light source location in data coordinates. Setting
+light source location in data coordinates. Positional lights are always
+placed in the data, whatever their <code>anchor</code>. Setting
 <code>distance_falloff = TRUE</code> applies inverse-square intensity
 falloff from the light source position.</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">

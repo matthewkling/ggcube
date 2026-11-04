@@ -241,7 +241,7 @@ ggplot(rbind(d, d2), aes(x, y, z, group = g, fill = g)) +
 
 # terrain surface with topographic hillshade and elevational fill
 ggplot(mountain, aes(x, y, z, fill = z)) +
-      geom_surface_3d(light = light(direction = c(1, 0, .5),
+      geom_surface_3d(light = light(direction = c(1, 0, .5), anchor = "scene",
                                     shadow = 1, highlight = 0.9),
                       linewidth = .2) +
       coord_3d(ratio = c(1, 1.5, .75)) +
